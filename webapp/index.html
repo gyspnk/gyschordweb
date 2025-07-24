@@ -11,7 +11,7 @@
       list-style: none;
       padding: 0;
       margin: 1.5rem 0 0 0;
-      max-width: 600px;
+      max-width: 450px;
       margin-left: auto;
       margin-right: auto;
     }
@@ -42,14 +42,7 @@
     .pujian-list li a:hover {
       color: #0d47a1;
     }
-    .pujian-list li::before {
-      content: '\e405'; /* material icon: music_note */
-      font-family: 'Material Icons';
-      font-size: 1.4rem;
-      color: #1976d2;
-      margin-right: 0.7rem;
-      flex-shrink: 0;
-    }
+
     .pujian-nomor {
       display: inline-flex;
       align-items: center;
@@ -75,11 +68,15 @@
 </head>
 <body>
   <header class="app-header">
-    Kidung Rohani
+    Kidung Rohani With Chord
   </header>
+  <div class="search-spacer"></div>
   <div id="search-container" class="md-search-container">
     <span class="material-icons search-icon">search</span>
     <input id="search-input" class="md-search-input" type="text" placeholder="Cari judul atau nomor..." autocomplete="off" />
+    <button id="clear-search" type="button" aria-label="Bersihkan pencarian" style="display:none" class="clear-search-btn">
+      <span class="material-icons">close</span>
+    </button>
   </div>
   <main class="app-content" id="main-content">
     <div class="welcome-text">Selamat datang di Kidung Rohani!</div>

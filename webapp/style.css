@@ -1,19 +1,376 @@
-/* Sticky search bar for Pujian */
-  .md-search-container {
+.pujian-list li:first-child {
+  margin-top: 7em;
+}
+html, body {
+  height: 100vh;
+  overflow: hidden;
+}
+/* Spacer for empty area above search bar */
+.search-spacer {
+  height: 1.2em;
+  width: 4.5em;
+  display: inline-block;
   position: sticky;
-  top: 0;
-  z-index: 100;
+  top: 4.2em; /* stick below header, adjust if header height changes */
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  z-index: 30;
+  background: transparent;
+}
+body[data-accent] .pujian-list li:hover .pujian-nomor {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 40%, transparent 60%);
+}
+body[data-accent="ungu"] {
+  --accent: #8e24aa;
+  --accent-dark: #4a148c;
+}
+body[data-accent="pink"] {
+  --accent: #d81b60;
+  --accent-dark: #880e4f;
+}
+body[data-accent="birutua"] {
+  --accent: #1565c0;
+  --accent-dark: #003c8f;
+}
+body[data-accent="teal"] {
+  --accent: #00897b;
+  --accent-dark: #004d40;
+}
+body[data-accent="oranye"] {
+  --accent: #fb8c00;
+  --accent-dark: #e65100;
+}
+body[data-accent="coklat"] {
+  --accent: #6d4c41;
+  --accent-dark: #3e2723;
+}
+body[data-accent="abu"] {
+  --accent: #546e7a;
+  --accent-dark: #263238;
+}
+body[data-accent="ungu"] {
+  --accent: #8e24aa;
+  --accent-dark: #4a148c;
+}
+/* Nomor pujian ikut warna aksen saat hover */
+.pujian-list li:hover .pujian-nomor {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 40%, transparent 60%);
+}
+body.dark-theme .pujian-list li:hover .pujian-nomor {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--primary) 60%, transparent 40%);
+}
+/* Primary color mengikuti aksen utama */
+body[data-accent] {
+  --primary: var(--accent, #1976d2);
+  --primary-dark: var(--accent-dark, #0d47a1);
+}
+body[data-accent] .app-header {
+  background: var(--primary);
+}
+body[data-accent] .nav-btn.selected, body[data-accent] .nav-btn:active {
+  background: color-mix(in srgb, var(--primary) 15%, #e3f2fd 85%);
+  color: var(--primary-dark);
+}
+body[data-accent] .pujian-nomor {
+  background: var(--primary);
+}
+body[data-accent] .pujian-list li a {
+  color: var(--primary);
+}
+body[data-accent] .pujian-list li a:hover {
+  color: var(--primary-dark);
+}
+body[data-accent] .md-search-container {
+  box-shadow: 0 2px 10px 0 color-mix(in srgb, var(--primary) 20%, #1976d2 80%), 0 1.5px 4px rgba(0,0,0,0.04);
+}
+body[data-accent] .md-search-input:focus {
+  border: 1.5px solid var(--primary);
+}
+body[data-accent] .clear-search-btn.selected, body[data-accent] .clear-search-btn:hover {
+  color: var(--primary-dark);
+}
+/* Material Design Switch */
+.md-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  vertical-align: middle;
+}
+.md-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.md-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #ccc;
+  border-radius: 24px;
+  transition: background 0.2s;
+}
+.md-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
   background: #fff;
-  max-width: 600px;
-  margin: 1.1rem auto 0.1rem auto;
-  padding: 0.7em 1.2em 0.7em 1.2em;
-  border-radius: 2em;
-  box-shadow: 0 2px 10px 0 rgba(25, 118, 210, 0.13), 0 1.5px 4px rgba(0,0,0,0.04);
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+.md-switch input:checked + .md-slider {
+  background: var(--accent, #1976d2);
+}
+.md-switch input:checked + .md-slider:before {
+  transform: translateX(20px);
+}
+.md-switch .md-slider {
+  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.10);
+}
+
+/* Material Palette for Accent */
+.accent-palette {
+  display: flex;
+  gap: 0.7em;
+  margin-top: 0.5em;
+  flex-wrap: wrap;
+}
+.accent-color {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  transition: border 0.18s, box-shadow 0.18s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  outline: none;
   display: flex;
   align-items: center;
-  gap: 0.7em;
-  border-bottom: none;
-  transition: box-shadow 0.18s, background 0.18s;
+  justify-content: center;
+}
+.accent-color.selected {
+  border: 2.5px solid var(--accent, #1976d2);
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.18);
+}
+.accent-color[data-color="biru"] { background: #1976d2; }
+.accent-color[data-color="merah"] { background: #e53935; }
+.accent-color[data-color="hijau"] { background: #43a047; }
+.accent-color[data-color="kuning"] { background: #fbc02d; }
+.accent-color[data-color="ungu"] { background: #8e24aa; }
+.accent-color[data-color="pink"] { background: #d81b60; }
+.accent-color[data-color="birutua"] { background: #1565c0; }
+.accent-color[data-color="teal"] { background: #00897b; }
+.accent-color[data-color="oranye"] { background: #fb8c00; }
+.accent-color[data-color="coklat"] { background: #6d4c41; }
+.accent-color[data-color="abu"] { background: #546e7a; }
+/* Aksen warna juga berlaku di tema terang */
+body[data-accent] .app-header {
+  background: var(--accent, #1976d2);
+}
+body[data-accent] .pujian-nomor {
+  background: var(--accent, #1976d2);
+}
+body[data-accent] .nav-btn.selected, body[data-accent] .nav-btn:active {
+  background: #e3f2fd;
+  color: var(--accent-dark, #0d47a1);
+}
+body[data-accent] .pujian-list li a {
+  color: var(--accent, #1976d2);
+}
+body[data-accent] .pujian-list li a:hover {
+  color: var(--accent-dark, #0d47a1);
+}
+/* ===================== */
+/* Tema Gelap & Aksen   */
+/* ===================== */
+
+body.dark-theme {
+  background: color-mix(in srgb, var(--primary, #1976d2) 16%, #181a20 84%);
+  color: #e0e0e0;
+}
+.dark-theme .app-header {
+  background: #232634;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.dark-theme .app-content {
+  background: color-mix(in srgb, var(--primary, #1976d2) 16%, #181a20 84%);
+}
+.dark-theme .pujian-list li {
+  background: #232634;
+  color: #e0e0e0;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.10), 0 1.5px 4px rgba(0,0,0,0.10);
+}
+.dark-theme .pujian-list li a {
+  color: var(--accent, #90caf9);
+}
+.dark-theme .pujian-list li a:hover {
+  color: var(--accent-dark, #42a5f5);
+}
+.dark-theme .pujian-nomor {
+  background: var(--accent, #1976d2);
+  color: #fff;
+}
+.dark-theme .bottom-nav {
+  background: #232634;
+  color: #e0e0e0;
+}
+.dark-theme .nav-btn.selected, .dark-theme .nav-btn:active {
+  background: #1a2233;
+  color: var(--accent-dark, #42a5f5);
+}
+.dark-theme .md-search-container {
+  background: #232634;
+}
+.dark-theme .md-search-input, .dark-theme #search-input {
+  background: #232634;
+  color: #e0e0e0;
+  border: 1.5px solid #333a4d;
+}
+.dark-theme .md-search-input::placeholder, .dark-theme #search-input::placeholder {
+  color: #b0b8c1;
+}
+.dark-theme .clear-search-btn {
+  color: #b0b8c1;
+}
+.dark-theme .clear-search-btn:hover {
+  background: #232634;
+  color: var(--accent-dark, #42a5f5);
+}
+
+body[data-accent="biru"] {
+  --accent: #1976d2;
+  --accent-dark: #0d47a1;
+}
+body[data-accent="merah"] {
+  --accent: #e53935;
+  --accent-dark: #b71c1c;
+}
+body[data-accent="hijau"] {
+  --accent: #43a047;
+  --accent-dark: #1b5e20;
+}
+body[data-accent="kuning"] {
+  --accent: #fbc02d;
+  --accent-dark: #f57c00;
+}
+/* Tombol clear (silang) di search bar */
+.clear-search-btn {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2em;
+  margin-left: 0.2em;
+  color: #b0b8c1;
+  border-radius: 50%;
+  transition: background 0.15s, color 0.15s;
+  font-size: 1.5em;
+}
+.clear-search-btn:hover {
+  background: #e3eaf2;
+  color: #1976d2;
+}
+/* Sticky search bar for Pujian */
+/* Search container: improved contrast for dark theme */
+#search-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  margin: 0.2em auto 0.6em auto; /* margin lebih kecil, lebih rapat */
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+  background: var(--surface, #fff);
+  border-radius: 1.7em;
+  box-shadow: 0 1px 6px 0 rgba(0,0,0,0.07);
+  padding: 0.2em 0.7em 0.2em 1.1em;
+  border: 1.5px solid transparent;
+  transition: background 0.2s, box-shadow 0.2s, border 0.2s;
+  position: sticky;
+  top: 5.4em; /* header (4.2em) + spacer (1.2em) */
+  z-index: 20;
+}
+
+body.dark-theme .search-spacer {
+  background: transparent;
+}
+body.dark-theme #search-container {
+  background: color-mix(in srgb, var(--surface-dark, #23272e) 90%, var(--primary, #2196f3) 10%);
+  border: 1.5px solid color-mix(in srgb, var(--primary, #2196f3) 60%, #fff 40%);
+  box-shadow: 0 2px 10px 0 rgba(0,0,0,0.18);
+  position: sticky;
+  top: 5.4em; /* header (4.2em) + spacer (1.2em) */
+  z-index: 20;
+}
+
+body.dark-theme #search-container {
+  background: color-mix(in srgb, var(--surface-dark, #23272e) 90%, var(--primary, #2196f3) 10%);
+  border: 1.5px solid color-mix(in srgb, var(--primary, #2196f3) 60%, #fff 40%);
+  box-shadow: 0 2px 10px 0 rgba(0,0,0,0.18);
+}
+
+#search-container input[type="text"] {
+  background: transparent;
+  color: inherit;
+  border: none;
+  outline: none;
+  font-size: 1.1em;
+  flex: 1;
+  padding: 0.5em 0.2em;
+}
+
+body.dark-theme #search-container input[type="text"] {
+  color: #fff;
+  caret-color: var(--primary, #2196f3);
+}
+
+#clear-search {
+  background: none;
+  border: none;
+  color: var(--primary, #2196f3);
+  font-size: 1.3em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0 0.2em;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+
+#clear-search:hover {
+  background: color-mix(in srgb, var(--primary, #2196f3) 15%, #fff 85%);
+}
+
+body.dark-theme #clear-search {
+  color: var(--primary, #90caf9);
+}
+
+body.dark-theme #clear-search:hover {
+  background: color-mix(in srgb, var(--primary, #2196f3) 30%, #23272e 70%);
+}
+/* Removed stray transition property that was outside of any selector */
+.md-search-container {
+  height: 4.2em; /* tinggi tetap agar benar-benar terpusat vertikal */
 }
 .md-search-container:focus-within, .md-search-container:hover {
   box-shadow: 0 4px 24px 0 rgba(25,118,210,0.18), 0 3px 8px rgba(0,0,0,0.08);
@@ -22,23 +379,33 @@
 .md-search-input {
   flex: 1;
   width: 100%;
+  min-height: 2.6em;
   padding: 0.7em 1em;
   border-radius: 2em;
   border: none;
-  outline: none;
+ display: flex;
   font-size: 1.08rem;
-  font-weight: 600;
+  gap: 0.7rem;
+  flex-wrap: nowrap;
   background: transparent;
   box-shadow: none;
   transition: box-shadow 0.18s, border 0.18s, background 0.18s;
   color: #222;
   letter-spacing: 0.01em;
+  align-self: center; /* pastikan input di tengah vertikal */
 }
 .md-search-input:focus {
   background: #eaf2fb;
 }
 .md-search-input::placeholder {
   color: #b0b8c1;
+  flex-shrink: 1;
+  flex-grow: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   opacity: 1;
   font-weight: 500;
 }
@@ -61,6 +428,22 @@
   width: 100%;
   padding: 0.7em 1em;
   border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.7em;
+  height: 2.1em;
+  background: #1976d2;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.08rem;
+  border-radius: 8px;
+  margin-right: 1.1em;
+  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.10);
+  letter-spacing: 0.03em;
+  padding: 0 0.7em;
+  transition: background 0.2s;
+  flex-shrink: 0;
   border: none;
   outline: none;
   font-size: 1.05rem;
@@ -80,14 +463,16 @@
 }
 #search-input {
   width: 100%;
-  padding: 0.7em 1em;
+  min-width: 400px;
+  max-width: 1000px;
+  padding: 0.7em 2em;
   border-radius: 8px;
   border: 1.5px solid #bcd;
   outline: none;
   font-size: 1rem;
   box-sizing: border-box;
   box-shadow: 0 1px 4px rgba(25,118,210,0.04);
-  margin-bottom: 0.7em;
+  /* margin-bottom dihilangkan */
   background: #fff;
 }
 /* Material Design List for Pujian */
@@ -98,6 +483,12 @@
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+  position: relative;
+}
+.pujian-list::after {
+  content: '';
+  display: block;
+  height: 2em; /* Spacer at bottom for navbar clearance */
 }
 .pujian-list li {
   background: #fff;
@@ -110,34 +501,44 @@
   align-items: center;
   gap: 1rem;
 }
+
+body.dark-theme .pujian-list li {
+  background: #23272e;
+  box-shadow:
+    0 0 0 0px var(--primary, #2196f3),
+    0 2px 8px rgba(33,150,243,0.10),
+    0 0 12px 2px color-mix(in srgb, var(--primary, #2196f3) 60%, transparent 40%);
+}
 .pujian-list li:hover {
+  background: color-mix(in srgb, var(--primary, #2196f3) 16%, #fff 84%);
   box-shadow: 0 4px 16px rgba(25, 118, 210, 0.16), 0 3px 8px rgba(0,0,0,0.08);
   transform: translateY(-2px) scale(1.01);
+  transition: background 0.18s;
+}
+
+body.dark-theme .pujian-list li:hover {
+  background: color-mix(in srgb, var(--primary, #2196f3) 28%, #23272e 72%);
+}
+
+body[data-accent] .pujian-list li a:hover {
+  color: var(--primary-dark, #0d47a1);
 }
 .pujian-list li a {
   color: #1976d2;
   text-decoration: none;
   font-size: 1.08rem;
   font-weight: 500;
-  flex: 1;
   transition: color 0.2s;
   word-break: break-word;
 }
 .pujian-list li a:hover {
   color: #0d47a1;
 }
-.pujian-list li::before {
-  content: '\e405'; /* material icon: music_note */
-  font-family: 'Material Icons';
-  font-size: 1.4rem;
-  color: #1976d2;
-  margin-right: 0.7rem;
-  flex-shrink: 0;
-}
+
 body {
   margin: 0;
   font-family: 'Roboto', Arial, sans-serif;
-  background: #f5f5f5;
+  background: color-mix(in srgb, var(--primary, #1976d2) 8%, #f5f5f5 92%);
   color: #222;
   min-height: 100vh;
   display: flex;
@@ -153,12 +554,70 @@ body {
   text-align: center;
   letter-spacing: 1px;
   box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
+/* Make .app-content fill the area between header and navbar */
 .app-content {
-  flex: 1;
-  padding: 2rem 1rem 5rem 1rem;
+  position: absolute;
+  top: 4.2em; /* header height */
+  left: 0;
+  right: 0;
+  bottom: 4.3em; /* navbar height (same as padding before) */
+  padding: 0.5rem 1.2rem 0 2.1rem; /* equal left and right padding for centered content */
   box-sizing: border-box;
+  background: color-mix(in srgb, var(--primary, #1976d2) 8%, #f5f5f5 92%);
+  overflow-y: auto;
+  /* Hide native scrollbar for all browsers */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+.app-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom scrollbar container */
+/* Widened custom scrollbar */
+/* Extra wide custom scrollbar */
+.custom-scrollbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 32px;
+  height: 100%;
+  z-index: 10;
+  background: var(--scrollbar-track, rgba(220,225,240,0.92)); /* fallback, will be updated by JS */
+  border-radius: 16px;
+  transition: background 0.2s;
+  user-select: none;
+}
+.custom-scrollbar-thumb {
+  position: absolute;
+  left: 6px;
+  width: 20px;
+  min-height: 40px;
+  border-radius: 12px;
+  background: var(--accent-main, #2196f3);
+  box-shadow: 0 1px 10px 0 rgba(0,0,0,0.13);
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+body.dark-theme .custom-scrollbar {
+  background: var(--scrollbar-track-dark, rgba(24,26,32,0.96));
+}
+body.dark-theme .custom-scrollbar {
+  background: rgba(30,30,30,0.7);
+}
+.custom-scrollbar-thumb:active,
+body.scrollbar-dragging .custom-scrollbar-thumb {
+  filter: brightness(0.92);
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.18);
+}
+.custom-scrollbar[style*="display: none"] {
+  pointer-events: none;
+  opacity: 0;
 }
 
 .welcome-text {
@@ -168,17 +627,56 @@ body {
   color: #555;
 }
 
+/* Nav bar with accent and glow */
 .bottom-nav {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  background: #fff;
-  box-shadow: 0 -2px 8px rgba(25, 118, 210, 0.08);
+  background: var(--primary, #1976d2);
+  color: #fff;
+  box-shadow:
+    0 -2px 16px 0 color-mix(in srgb, var(--primary, #2196f3) 30%, transparent 70%),
+    0 -8px 32px 0 color-mix(in srgb, var(--primary, #2196f3) 18%, transparent 82%),
+    0 -2px 8px rgba(25, 118, 210, 0.08);
   display: flex;
   justify-content: space-around;
   padding: 0.5rem 0;
   z-index: 100;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+body.dark-theme .bottom-nav {
+  background: color-mix(in srgb, var(--primary, #2196f3) 85%, #232634 15%);
+  color: #fff;
+  box-shadow:
+    0 -2px 24px 0 color-mix(in srgb, var(--primary, #2196f3) 40%, transparent 60%),
+    0 -8px 40px 0 color-mix(in srgb, var(--primary, #2196f3) 22%, transparent 78%),
+    0 -2px 8px rgba(25, 118, 210, 0.13);
+}
+
+.bottom-nav .nav-btn {
+  background: none;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 1rem;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.3rem 1.2rem;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+  cursor: pointer;
+}
+.bottom-nav .nav-btn.selected, .bottom-nav .nav-btn:active {
+  background: color-mix(in srgb, #fff 18%, var(--primary, #2196f3) 82%);
+  color: var(--primary-dark, #0d47a1);
+}
+body.dark-theme .bottom-nav .nav-btn.selected, body.dark-theme .bottom-nav .nav-btn:active {
+  background: color-mix(in srgb, var(--primary, #2196f3) 60%, #232634 40%);
+  color: #fff;
 }
 
 .nav-btn {
