@@ -49,7 +49,9 @@ function renderPujianList() {
             searchInput.value = '';
             searchInput.oninput = function() {
               const q = this.value.trim().toLowerCase();
-              Array.from(pujianList.children).forEach(li => {
+              const items = Array.from(pujianList.children);
+              // Filter dan tampilkan/hilangkan
+              items.forEach(li => {
                 const nomor = li.getAttribute('data-nomor') || '';
                 const judul = li.getAttribute('data-judul') || '';
                 if (q === '' || nomor.includes(q) || judul.includes(q)) {
@@ -57,8 +59,20 @@ function renderPujianList() {
                 } else {
                   li.style.display = 'none';
                 }
+                // Reset margin-top
+                li.style.marginTop = '';
               });
+              // Cari li pertama yang visible, beri margin-top 7em
+              const firstVisible = items.find(li => li.style.display !== 'none');
+              if (firstVisible) firstVisible.style.marginTop = '7em';
             };
+            // Pastikan margin-top benar saat load awal
+            setTimeout(() => {
+              const items = Array.from(pujianList.children);
+              items.forEach(li => li.style.marginTop = '');
+              const firstVisible = items.find(li => li.style.display !== 'none');
+              if (firstVisible) firstVisible.style.marginTop = '7em';
+            }, 0);
           }
     })
     .catch(() => {
@@ -181,36 +195,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Create custom scrollbar elements
 
-    // Calculate offset for header and navbar
-    const header = document.querySelector('header');
-    const navbar = document.querySelector('.navbar, nav, .bottom-navbar');
-    // Fallback heights if not found
-    const headerHeight = header ? header.offsetHeight : 67; // 4.2em default
-    const navbarHeight = navbar ? navbar.offsetHeight : 69; // 4.3em default
-
+    // Pakai offset em agar konsisten dengan CSS
     let customScrollbar = document.createElement('div');
     customScrollbar.className = 'custom-scrollbar';
     let customThumb = document.createElement('div');
     customThumb.className = 'custom-scrollbar-thumb';
     customScrollbar.appendChild(customThumb);
-    // Position the scrollbar to match .app-content
+    // Tempatkan scrollbar sejajar dengan .app-content (bukan fixed 8em)
     customScrollbar.style.position = 'absolute';
-    customScrollbar.style.top = headerHeight + 'px';
-    customScrollbar.style.bottom = navbarHeight + 'px';
+    // Ambil posisi top dan height .app-content relatif ke parent, lalu beri offset jarak kecil (0.5em)
+    const appContentRect = appContent.getBoundingClientRect();
+    const parentRect = appContent.parentElement.getBoundingClientRect();
+    // Konversi 0.5em ke px (ambil dari computed style root)
+    const emPx = parseFloat(getComputedStyle(document.documentElement).fontSize) * 0.5;
+    const offsetTop = appContentRect.top - parentRect.top + emPx;
+    const offsetBottom = parentRect.bottom - appContentRect.bottom + emPx;
+    customScrollbar.style.top = offsetTop + 'px';
+    customScrollbar.style.bottom = offsetBottom + 'px';
     customScrollbar.style.right = '0';
-    customScrollbar.style.height = `calc(100% - ${headerHeight + navbarHeight}px)`;
+    customScrollbar.style.height = 'auto';
     customScrollbar.style.zIndex = '10';
     appContent.parentElement.appendChild(customScrollbar);
 
     // Position and size the scrollbar
     function updateScrollbar() {
+      // Hitung tinggi container scrollbar (dari CSS: top 8em, bottom 5em)
+      const scrollbarRect = customScrollbar.getBoundingClientRect();
+      const containerHeight = scrollbarRect.height;
       const content = appContent;
       const scrollHeight = content.scrollHeight;
       const clientHeight = content.clientHeight;
       const scrollTop = content.scrollTop;
-      const ratio = clientHeight / scrollHeight;
-      const thumbHeight = Math.max(32, clientHeight * ratio);
-      const maxThumbTop = clientHeight - thumbHeight;
+      // Thumb height proporsional, minimal 40px, tidak boleh lebih dari container
+      let thumbHeight = Math.max(40, Math.round(containerHeight * (clientHeight / scrollHeight)));
+      thumbHeight = Math.min(thumbHeight, containerHeight);
+      const maxThumbTop = containerHeight - thumbHeight;
       const maxScrollTop = scrollHeight - clientHeight;
       const thumbTop = maxScrollTop > 0 ? (scrollTop / maxScrollTop) * maxThumbTop : 0;
       customThumb.style.height = thumbHeight + 'px';
@@ -293,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     appContent.addEventListener('wheel', function(e) {
       if (e.deltaY !== 0) {
-        scrollVelocity += e.deltaY * 1.1; // acceleration factor
+        scrollVelocity += e.deltaY * 0.65; // reduced acceleration factor for smoother feel
         if (!scrollAnimating) {
           scrollAnimating = true;
           requestAnimationFrame(animateScroll);
