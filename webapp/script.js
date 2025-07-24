@@ -21,8 +21,7 @@ function renderPujianList() {
         mainContent.innerHTML = '<div class="welcome-text">Tidak dapat menampilkan daftar file. Pastikan Python HTTP server dijalankan tanpa opsi --no-dir atau gunakan ekstensi Live Server/HTTP-server yang mendukung directory listing.</div>';
         return;
       }
-          let listHtml = '<h2>Daftar Pujian (PDF)</h2>';
-          listHtml += '<ul class="pujian-list" id="pujian-list">';
+          let listHtml = '<ul class="pujian-list" id="pujian-list">';
           const items = [];
           pdfLinks.forEach(link => {
             const rawName = decodeURIComponent(link.textContent.replace('.pdf',''));
@@ -39,9 +38,7 @@ function renderPujianList() {
           });
           listHtml += '</ul>';
           mainContent.innerHTML = listHtml;
-          // Tampilkan search box
-          const searchContainer = document.getElementById('search-container');
-          if (searchContainer) searchContainer.style.display = '';
+          // Search bar kini selalu tampil, tidak perlu diubah display-nya
           const searchInput = document.getElementById('search-input');
           const pujianList = document.getElementById('pujian-list');
           if (searchInput && pujianList) {
