@@ -37,8 +37,11 @@ function renderPujianList() {
               judul = match[2] || '';
             }
             const fileHref = 'assets/' + link.getAttribute('href');
+            // Ganti semua '_' di judul dengan '?'
+            const judulDisplay = judul.replace(/_/g, '?');
+            const judulSearch = judulDisplay.toLowerCase();
             items.push({ nomor, judul, fileHref });
-            listHtml += `<li data-nomor="${nomor}" data-judul="${judul.toLowerCase()}"><span class="pujian-nomor">${nomor}</span><a href="${fileHref}" target="_blank">${judul}</a></li>`;
+            listHtml += `<li data-nomor="${nomor}" data-judul="${judul.toLowerCase()}" data-judul-search="${judulSearch}"><span class="pujian-nomor">${nomor}</span><a href="${fileHref}" target="_blank">${judulDisplay}</a></li>`;
           });
           listHtml += '</ul>';
           mainContent.innerHTML = listHtml;
@@ -50,11 +53,14 @@ function renderPujianList() {
             searchInput.oninput = function() {
               const q = this.value.trim().toLowerCase();
               const items = Array.from(pujianList.children);
-              // Filter dan tampilkan/hilangkan
+              // Fuzzy search: semua kata kunci (spasi) harus ada di nomor atau judulSearch (urutan bebas)
+              const keywords = q.split(/\s+/).filter(Boolean);
               items.forEach(li => {
                 const nomor = li.getAttribute('data-nomor') || '';
-                const judul = li.getAttribute('data-judul') || '';
-                if (q === '' || nomor.includes(q) || judul.includes(q)) {
+                const judulSearch = li.getAttribute('data-judul-search') || '';
+                // Fuzzy: semua keyword harus ada di salah satu (nomor atau judulSearch)
+                const isMatch = keywords.every(kw => nomor.includes(kw) || judulSearch.includes(kw));
+                if (q === '' || isMatch) {
                   li.style.display = '';
                 } else {
                   li.style.display = 'none';
