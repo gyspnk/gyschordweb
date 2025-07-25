@@ -60,15 +60,15 @@ function renderPujianList() {
             // Reset margin-top
             li.style.marginTop = '';
           });
-          // Cari li pertama yang visible, beri margin-top sesuai viewport
+          // Cari li pertama yang visible, beri margin-top sesuai viewport untuk space di bawah search bar
           const firstVisible = items.find(li => li.style.display !== 'none');
           if (firstVisible) {
             if (window.innerWidth <= 480) {
-              firstVisible.style.marginTop = '0.3em';
+              firstVisible.style.marginTop = '1.5em'; // Space untuk mobile kecil
             } else if (window.innerWidth <= 768) {
-              firstVisible.style.marginTop = '0.5em';
+              firstVisible.style.marginTop = '2em'; // Space untuk tablet
             } else {
-              firstVisible.style.marginTop = '1em';
+              firstVisible.style.marginTop = '2.5em'; // Space untuk desktop
             }
           }
         };
@@ -79,11 +79,11 @@ function renderPujianList() {
           const firstVisible = items.find(li => li.style.display !== 'none');
           if (firstVisible) {
             if (window.innerWidth <= 480) {
-              firstVisible.style.marginTop = '0.3em';
+              firstVisible.style.marginTop = '1.5em'; // Space untuk mobile kecil
             } else if (window.innerWidth <= 768) {
-              firstVisible.style.marginTop = '0.5em';
+              firstVisible.style.marginTop = '2em'; // Space untuk tablet
             } else {
-              firstVisible.style.marginTop = '1em';
+              firstVisible.style.marginTop = '2.5em'; // Space untuk desktop
             }
           }
         }, 0);
@@ -249,11 +249,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Update positioning for mobile
         if (window.innerWidth <= 768) {
-          customScrollbar.style.top = window.innerWidth <= 480 ? '6.5em' : '7em';
-          customScrollbar.style.bottom = window.innerWidth <= 480 ? '4em' : '4.5em';
+          customScrollbar.style.top = window.innerWidth <= 480 ? '5.8em' : '6.2em';
+          customScrollbar.style.bottom = window.innerWidth <= 480 ? '3.5em' : '4em';
         } else {
-          customScrollbar.style.top = '8em';
-          customScrollbar.style.bottom = '5em';
+          customScrollbar.style.top = '7.5em'; /* Adjusted for desktop */
+          customScrollbar.style.bottom = '4.8em';
         }
       } else {
         customScrollbar.style.display = 'none';
@@ -384,7 +384,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Scroll wheel with acceleration/inertia ---
     let scrollVelocity = 0;
     let scrollAnimating = false;
-    let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    let isTouchDevice = ('ontouchstart' in window) || 
+                       (navigator.maxTouchPoints > 0) || 
+                       (navigator.msMaxTouchPoints > 0) ||
+                       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     function animateScroll() {
       if (Math.abs(scrollVelocity) < 0.5) {
@@ -413,13 +416,33 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // For touch devices, ensure native scrolling works properly
     if (isTouchDevice) {
-      // Remove any interference with touch scrolling
+      // Enable native touch scrolling
       appContent.style.touchAction = 'pan-y';
+      appContent.style.overflowY = 'scroll';
+      appContent.style.webkitOverflowScrolling = 'touch';
+      
+      // Add smooth scrolling behavior for touch
+      appContent.style.scrollBehavior = 'smooth';
+      
+      // Ensure scroll events work on touch devices
       appContent.addEventListener('scroll', updateScrollbar, { passive: true });
+      appContent.addEventListener('touchstart', function(e) {
+        // Stop any ongoing scroll animation
+        scrollAnimating = false;
+        scrollVelocity = 0;
+      }, { passive: true });
       
       // Prevent custom scrollbar from interfering with touch
       customScrollbar.style.pointerEvents = 'none';
       customThumb.style.pointerEvents = 'auto';
+      
+      // Allow touch scrolling on the main content
+      appContent.addEventListener('touchmove', function(e) {
+        // Don't prevent default - allow native scroll
+      }, { passive: true });
+    } else {
+      // For non-touch devices, hide native scrollbar
+      appContent.style.overflowY = 'hidden';
     }
 
     // Theme-aware styling (update on theme/accent change)
