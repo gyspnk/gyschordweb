@@ -389,6 +389,9 @@ document.addEventListener('DOMContentLoaded', () => {
                        (navigator.msMaxTouchPoints > 0) ||
                        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
+    // Chrome Android detection
+    let isChromeAndroid = /Chrome.*Android|CriOS.*Android/i.test(navigator.userAgent);
+    
     function animateScroll() {
       if (Math.abs(scrollVelocity) < 0.5) {
         scrollVelocity = 0;
@@ -427,25 +430,76 @@ document.addEventListener('DOMContentLoaded', () => {
       // Don't lock body position - this was causing scroll issues
       // Instead, just prevent unwanted scrolling behaviors
       document.body.style.overscrollBehavior = 'none';
+      document.body.style.touchAction = 'pan-x pan-y'; // Allow both directions
+      
+      // Special handling for Chrome Android
+      if (isChromeAndroid) {
+        // Remove any position fixed on body that might interfere
+        document.body.style.position = 'static';
+        document.body.style.height = 'auto';
+        document.body.style.overflow = 'hidden';
+        
+        // Ensure HTML element allows scrolling
+        document.documentElement.style.touchAction = 'pan-y';
+        document.documentElement.style.overflowY = 'hidden';
+        
+        // Force re-enable touch scrolling on the content area
+        appContent.style.touchAction = 'pan-y';
+        appContent.style.webkitOverflowScrolling = 'touch';
+        appContent.style.overflowY = 'scroll';
+        
+        // Add specific Chrome Android touch handlers
+        let touchStartY = 0;
+        let touchMoveY = 0;
+        let isScrolling = false;
+        
+        appContent.addEventListener('touchstart', function(e) {
+          touchStartY = e.touches[0].clientY;
+          isScrolling = false;
+          scrollAnimating = false;
+          scrollVelocity = 0;
+        }, { passive: true });
+        
+        appContent.addEventListener('touchmove', function(e) {
+          touchMoveY = e.touches[0].clientY;
+          let deltaY = touchStartY - touchMoveY;
+          
+          if (Math.abs(deltaY) > 5) {
+            isScrolling = true;
+          }
+          
+          // Don't prevent default to allow native scrolling
+          e.stopPropagation();
+        }, { passive: true });
+        
+        appContent.addEventListener('touchend', function(e) {
+          if (isScrolling) {
+            // Let native momentum scrolling take over
+            isScrolling = false;
+          }
+        }, { passive: true });
+      } else {
+        // Standard touch device handling
+        appContent.addEventListener('touchstart', function(e) {
+          // Stop any ongoing scroll animation
+          scrollAnimating = false;
+          scrollVelocity = 0;
+        }, { passive: true });
+        
+        // Allow touch scrolling on the main content
+        appContent.addEventListener('touchmove', function(e) {
+          // Don't prevent default - allow native scroll
+          // But ensure we're only scrolling the content area
+          e.stopPropagation();
+        }, { passive: true });
+      }
       
       // Ensure scroll events work on touch devices
       appContent.addEventListener('scroll', updateScrollbar, { passive: true });
-      appContent.addEventListener('touchstart', function(e) {
-        // Stop any ongoing scroll animation
-        scrollAnimating = false;
-        scrollVelocity = 0;
-      }, { passive: true });
       
       // Prevent custom scrollbar from interfering with touch
       customScrollbar.style.pointerEvents = 'none';
       customThumb.style.pointerEvents = 'auto';
-      
-      // Allow touch scrolling on the main content
-      appContent.addEventListener('touchmove', function(e) {
-        // Don't prevent default - allow native scroll
-        // But ensure we're only scrolling the content area
-        e.stopPropagation();
-      }, { passive: true });
       
       // Prevent touch events on fixed elements from scrolling the page
       const fixedElements = document.querySelectorAll('.app-header, .bottom-nav, #search-container');
@@ -458,17 +512,56 @@ document.addEventListener('DOMContentLoaded', () => {
       // Fix for search input focus issues on mobile
       const searchInput = document.getElementById('search-input');
       if (searchInput) {
-        searchInput.addEventListener('focus', function(e) {
-          // Allow the input to be focused without breaking scroll
-          this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, { passive: true });
-        
-        searchInput.addEventListener('blur', function(e) {
-          // Restore scroll capability after input blur
-          setTimeout(() => {
-            appContent.style.touchAction = 'pan-y';
-          }, 100);
-        }, { passive: true });
+        // Special handling for Chrome Android input focus
+        if (isChromeAndroid) {
+          searchInput.addEventListener('focus', function(e) {
+            // Prevent viewport jumping and maintain scroll capability
+            setTimeout(() => {
+              this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              // Ensure scroll is still enabled after focus
+              appContent.style.touchAction = 'pan-y';
+              appContent.style.overflowY = 'scroll';
+              document.body.style.position = 'static';
+            }, 50);
+          }, { passive: true });
+          
+          searchInput.addEventListener('blur', function(e) {
+            // Ensure scroll capability is maintained after blur
+            setTimeout(() => {
+              appContent.style.touchAction = 'pan-y';
+              appContent.style.overflowY = 'scroll';
+              document.body.style.position = 'static';
+            }, 100);
+          }, { passive: true });
+          
+          // Prevent input container from interfering with scroll
+          const searchContainer = document.getElementById('search-container');
+          if (searchContainer) {
+            searchContainer.addEventListener('touchstart', function(e) {
+              // Don't prevent default to allow input focus
+            }, { passive: true });
+            
+            searchContainer.addEventListener('touchmove', function(e) {
+              // Only prevent if not interacting with input
+              if (e.target !== searchInput) {
+                e.preventDefault();
+              }
+            }, { passive: false });
+          }
+        } else {
+          // Standard mobile input handling
+          searchInput.addEventListener('focus', function(e) {
+            // Allow the input to be focused without breaking scroll
+            this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, { passive: true });
+          
+          searchInput.addEventListener('blur', function(e) {
+            // Restore scroll capability after input blur
+            setTimeout(() => {
+              appContent.style.touchAction = 'pan-y';
+            }, 100);
+          }, { passive: true });
+        }
       }
       
     } else {

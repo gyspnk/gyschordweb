@@ -321,10 +321,7 @@ body[data-accent="kuning"] {
   align-items: center;
   justify-content: center;
   gap: 0.4em; /* Reduced gap */
-  margin: 0.15em auto 0.4em auto; /* Tighter margins */
   max-width: 600px; /* Wider for desktop */
-  margin-left: auto;
-  margin-right: auto;
   background: var(--surface, #fff);
   border-radius: 1.5em; /* Slightly smaller radius */
   box-shadow: 0 1px 6px 0 rgba(0,0,0,0.07);
@@ -334,28 +331,26 @@ body[data-accent="kuning"] {
   position: fixed; /* Changed from sticky to fixed */
   top: 5em; /* Adjusted for tighter layout */
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateZ(0); /* Force hardware acceleration */
   z-index: 50; /* Higher z-index */
   box-sizing: border-box;
-  /* Prevent movement from browser UI changes */
-  transform: translateX(-50%) translateZ(0); /* Force hardware acceleration */
   will-change: transform;
+  margin: 0; /* Remove margins to prevent positioning conflicts */
 }
 
 /* Responsive adjustments for mobile */
 @media (max-width: 768px) {
   #search-container {
     max-width: calc(100vw - 2.5rem); /* More constrained for mobile */
-    margin: 0.15em auto 0.4em auto; /* Reset margins */
+    width: calc(100vw - 2.5rem); /* Match max-width */
     padding: 0.1em 0.4em 0.1em 0.6em;
     border-radius: 1.3em;
-    width: calc(100vw - 2.5rem); /* Match max-width */
     font-size: 0.9rem; /* Smaller font for mobile */
-    /* Fix positioning for mobile */
+    /* Fix positioning for mobile - remove conflicting margins */
+    position: fixed;
     left: 50%;
     transform: translateX(-50%) translateZ(0);
-    margin-left: 0; /* Reset auto margins */
-    margin-right: 0; /* Reset auto margins */
+    margin: 0; /* Remove all margins to prevent conflicts */
   }
   
   .md-search-input {
@@ -382,15 +377,14 @@ body[data-accent="kuning"] {
   #search-container {
     max-width: calc(100vw - 2rem); /* Even more constrained for small mobile */
     width: calc(100vw - 2rem); /* Match max-width */
-    margin: 0.1em auto 0.3em auto; /* Reset margins */
     padding: 0.08em 0.3em 0.08em 0.5em;
     top: 4.5em; /* Adjusted for smaller header */
     font-size: 0.8rem; /* Even smaller for small phones */
-    /* Fix positioning for small mobile */
+    /* Fix positioning for small mobile - remove conflicting margins */
+    position: fixed;
     left: 50%;
     transform: translateX(-50%) translateZ(0);
-    margin-left: 0; /* Reset auto margins */
-    margin-right: 0; /* Reset auto margins */
+    margin: 0; /* Remove all margins to prevent conflicts */
   }
   
   .md-search-input {
@@ -410,6 +404,135 @@ body[data-accent="kuning"] {
   
   .clear-search-btn {
     font-size: 1em;
+  }
+}
+
+/* Portrait orientation specific fixes */
+@media (max-width: 768px) and (orientation: portrait) {
+  #search-container {
+    /* Ensure proper centering in portrait mode */
+    position: fixed;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateZ(0);
+    margin: 0;
+    /* Prevent snapping by ensuring consistent width calculation */
+    width: calc(100vw - 2.5rem);
+    max-width: calc(100vw - 2.5rem);
+    min-width: 280px; /* Minimum width to prevent collapse */
+    /* Additional fixes for viewport stability */
+    box-sizing: border-box;
+    -webkit-transform: translateX(-50%) translateZ(0);
+    -moz-transform: translateX(-50%) translateZ(0);
+    -ms-transform: translateX(-50%) translateZ(0);
+  }
+}
+
+@media (max-width: 480px) and (orientation: portrait) {
+  #search-container {
+    /* Ensure proper centering in small portrait mode */
+    position: fixed;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateZ(0);
+    margin: 0;
+    /* Prevent snapping by ensuring consistent width calculation */
+    width: calc(100vw - 2rem);
+    max-width: calc(100vw - 2rem);
+    min-width: 260px; /* Minimum width for small devices */
+    /* Additional fixes for viewport stability */
+    box-sizing: border-box;
+    -webkit-transform: translateX(-50%) translateZ(0);
+    -moz-transform: translateX(-50%) translateZ(0);
+    -ms-transform: translateX(-50%) translateZ(0);
+  }
+}
+
+/* Prevent horizontal scrolling issues that can cause snapping */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden; /* Prevent horizontal scroll that can cause positioning issues */
+  }
+  
+  html {
+    overflow-x: hidden; /* Ensure no horizontal scroll at html level */
+  }
+  
+  /* Chrome Android specific fixes */
+  body {
+    position: static !important; /* Prevent position fixed issues */
+    height: auto !important;
+  }
+  
+  /* Ensure touch scrolling works on all mobile browsers */
+  .app-content {
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
+    overflow-y: scroll !important;
+  }
+  
+  /* Fix search input behavior on mobile */
+  #search-container input {
+    touch-action: manipulation; /* Prevent zoom on focus */
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
+/* Portrait orientation specific sizing for pujian list */
+@media (max-width: 768px) and (orientation: portrait) {
+  .pujian-list {
+    max-width: calc(100vw - 3rem); /* Narrower width in portrait */
+    margin-left: 1.5rem;
+    margin-right: 1.5rem;
+  }
+  
+  .pujian-list li {
+    padding: 0.5rem 0.7rem; /* Smaller padding in portrait */
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.85rem; /* Smaller font in portrait */
+  }
+  
+  .pujian-list li a {
+    font-size: 0.85rem; /* Smaller link text in portrait */
+    line-height: 1.3; /* Tighter line height */
+  }
+  
+  .pujian-nomor {
+    min-width: 2em; /* Smaller nomor box in portrait */
+    height: 1.6em;
+    font-size: 0.8rem; /* Smaller nomor font in portrait */
+    margin-right: 0.6em;
+    padding: 0 0.35em;
+  }
+}
+
+@media (max-width: 480px) and (orientation: portrait) {
+  .pujian-list {
+    max-width: calc(100vw - 2.5rem); /* Even narrower for small portrait */
+    margin-left: 1.25rem;
+    margin-right: 1.25rem;
+  }
+  
+  .pujian-list li {
+    padding: 0.4rem 0.6rem; /* Even smaller padding */
+    margin-bottom: 0.4rem;
+    border-radius: 5px;
+    font-size: 0.75rem; /* Smaller font for small portrait */
+  }
+  
+  .pujian-list li a {
+    font-size: 0.75rem; /* Smaller link text */
+    line-height: 1.2; /* Even tighter line height */
+  }
+  
+  .pujian-nomor {
+    min-width: 1.8em; /* Smaller nomor box */
+    height: 1.4em;
+    font-size: 0.7rem; /* Smaller nomor font */
+    margin-right: 0.5em;
+    padding: 0 0.3em;
   }
 }
 
