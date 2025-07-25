@@ -13,73 +13,68 @@ function setSelected(btn) {
 }
 
 function renderPujianList() {
-  fetch('assets/')
-    .then(response => response.text())
-    .then(html => {
-      // Parse file list from directory listing (works for Python HTTP server)
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-      const links = Array.from(doc.querySelectorAll('a'));
-      const pdfLinks = links.filter(link => link.getAttribute('href').endsWith('.pdf'));
-      if (pdfLinks.length === 0) {
-        mainContent.innerHTML = '<div class="welcome-text">Tidak dapat menampilkan daftar file. Pastikan Python HTTP server dijalankan tanpa opsi --no-dir atau gunakan ekstensi Live Server/HTTP-server yang mendukung directory listing.</div>';
+  fetch('assets-list.json')
+    .then(response => response.json())
+    .then(files => {
+      if (!Array.isArray(files) || files.length === 0) {
+        mainContent.innerHTML = '<div class="welcome-text">Tidak ada file pujian ditemukan.</div>';
         return;
       }
-          let listHtml = '<ul class="pujian-list" id="pujian-list">';
-          const items = [];
-          pdfLinks.forEach(link => {
-            const rawName = decodeURIComponent(link.textContent.replace('.pdf',''));
-            let nomor = '';
-            let judul = rawName;
-            const match = rawName.match(/^([0-9A-Za-z]+)_\s?(.*)$/);
-            if (match) {
-              nomor = match[1];
-              judul = match[2] || '';
+      let listHtml = '<ul class="pujian-list" id="pujian-list">';
+      const items = [];
+      files.forEach(file => {
+        const rawName = decodeURIComponent(file.replace('.pdf',''));
+        let nomor = '';
+        let judul = rawName;
+        const match = rawName.match(/^([0-9A-Za-z]+)_\s?(.*)$/);
+        if (match) {
+          nomor = match[1];
+          judul = match[2] || '';
+        }
+        const fileHref = 'assets/' + file;
+        // Ganti semua '_' di judul dengan '?'
+        const judulDisplay = judul.replace(/_/g, '?');
+        const judulSearch = judulDisplay.toLowerCase();
+        items.push({ nomor, judul, fileHref });
+        listHtml += `<li data-nomor="${nomor}" data-judul="${judul.toLowerCase()}" data-judul-search="${judulSearch}"><span class="pujian-nomor">${nomor}</span><a href="${fileHref}" target="_blank">${judulDisplay}</a></li>`;
+      });
+      listHtml += '</ul>';
+      mainContent.innerHTML = listHtml;
+      // Search bar kini selalu tampil, tidak perlu diubah display-nya
+      const searchInput = document.getElementById('search-input');
+      const pujianList = document.getElementById('pujian-list');
+      if (searchInput && pujianList) {
+        searchInput.value = '';
+        searchInput.oninput = function() {
+          const q = this.value.trim().toLowerCase();
+          const items = Array.from(pujianList.children);
+          // Fuzzy search: semua kata kunci (spasi) harus ada di nomor atau judulSearch (urutan bebas)
+          const keywords = q.split(/\s+/).filter(Boolean);
+          items.forEach(li => {
+            const nomor = li.getAttribute('data-nomor') || '';
+            const judulSearch = li.getAttribute('data-judul-search') || '';
+            // Fuzzy: semua keyword harus ada di salah satu (nomor atau judulSearch)
+            const isMatch = keywords.every(kw => nomor.includes(kw) || judulSearch.includes(kw));
+            if (q === '' || isMatch) {
+              li.style.display = '';
+            } else {
+              li.style.display = 'none';
             }
-            const fileHref = 'assets/' + link.getAttribute('href');
-            // Ganti semua '_' di judul dengan '?'
-            const judulDisplay = judul.replace(/_/g, '?');
-            const judulSearch = judulDisplay.toLowerCase();
-            items.push({ nomor, judul, fileHref });
-            listHtml += `<li data-nomor="${nomor}" data-judul="${judul.toLowerCase()}" data-judul-search="${judulSearch}"><span class="pujian-nomor">${nomor}</span><a href="${fileHref}" target="_blank">${judulDisplay}</a></li>`;
+            // Reset margin-top
+            li.style.marginTop = '';
           });
-          listHtml += '</ul>';
-          mainContent.innerHTML = listHtml;
-          // Search bar kini selalu tampil, tidak perlu diubah display-nya
-          const searchInput = document.getElementById('search-input');
-          const pujianList = document.getElementById('pujian-list');
-          if (searchInput && pujianList) {
-            searchInput.value = '';
-            searchInput.oninput = function() {
-              const q = this.value.trim().toLowerCase();
-              const items = Array.from(pujianList.children);
-              // Fuzzy search: semua kata kunci (spasi) harus ada di nomor atau judulSearch (urutan bebas)
-              const keywords = q.split(/\s+/).filter(Boolean);
-              items.forEach(li => {
-                const nomor = li.getAttribute('data-nomor') || '';
-                const judulSearch = li.getAttribute('data-judul-search') || '';
-                // Fuzzy: semua keyword harus ada di salah satu (nomor atau judulSearch)
-                const isMatch = keywords.every(kw => nomor.includes(kw) || judulSearch.includes(kw));
-                if (q === '' || isMatch) {
-                  li.style.display = '';
-                } else {
-                  li.style.display = 'none';
-                }
-                // Reset margin-top
-                li.style.marginTop = '';
-              });
-              // Cari li pertama yang visible, beri margin-top 7em
-              const firstVisible = items.find(li => li.style.display !== 'none');
-              if (firstVisible) firstVisible.style.marginTop = '7em';
-            };
-            // Pastikan margin-top benar saat load awal
-            setTimeout(() => {
-              const items = Array.from(pujianList.children);
-              items.forEach(li => li.style.marginTop = '');
-              const firstVisible = items.find(li => li.style.display !== 'none');
-              if (firstVisible) firstVisible.style.marginTop = '7em';
-            }, 0);
-          }
+          // Cari li pertama yang visible, beri margin-top 7em
+          const firstVisible = items.find(li => li.style.display !== 'none');
+          if (firstVisible) firstVisible.style.marginTop = '7em';
+        };
+        // Pastikan margin-top benar saat load awal
+        setTimeout(() => {
+          const items = Array.from(pujianList.children);
+          items.forEach(li => li.style.marginTop = '');
+          const firstVisible = items.find(li => li.style.display !== 'none');
+          if (firstVisible) firstVisible.style.marginTop = '7em';
+        }, 0);
+      }
     })
     .catch(() => {
       mainContent.innerHTML = '<div class="welcome-text">Gagal memuat daftar pujian.</div>';
