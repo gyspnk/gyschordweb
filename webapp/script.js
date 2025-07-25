@@ -422,7 +422,13 @@ document.addEventListener('DOMContentLoaded', () => {
       appContent.style.webkitOverflowScrolling = 'touch';
       
       // Add smooth scrolling behavior for touch
-      appContent.style.scrollBehavior = 'smooth';
+      appContent.style.scrollBehavior = 'auto'; // Changed to auto for better mobile performance
+      
+      // Prevent body scrolling to avoid UI shifts
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
       
       // Ensure scroll events work on touch devices
       appContent.addEventListener('scroll', updateScrollbar, { passive: true });
@@ -439,7 +445,18 @@ document.addEventListener('DOMContentLoaded', () => {
       // Allow touch scrolling on the main content
       appContent.addEventListener('touchmove', function(e) {
         // Don't prevent default - allow native scroll
+        // But ensure we're only scrolling the content area
+        e.stopPropagation();
       }, { passive: true });
+      
+      // Prevent touch events on fixed elements from scrolling the page
+      const fixedElements = document.querySelectorAll('.app-header, .bottom-nav, #search-container');
+      fixedElements.forEach(el => {
+        el.addEventListener('touchmove', function(e) {
+          e.preventDefault();
+        }, { passive: false });
+      });
+      
     } else {
       // For non-touch devices, hide native scrollbar
       appContent.style.overflowY = 'hidden';

@@ -16,8 +16,12 @@
 }
 html, body {
   height: 100vh;
-  height: 100dvh; /* Dynamic viewport height untuk mobile */
+  height: 100svh; /* Small viewport height - more stable than dvh */
   overflow: hidden;
+  position: fixed; /* Prevent body movement */
+  width: 100%;
+  top: 0;
+  left: 0;
 }
 /* Spacer for empty area above search bar */
 .search-spacer {
@@ -30,6 +34,9 @@ html, body {
   transform: translateX(-50%);
   z-index: 30;
   background: transparent;
+  /* Prevent movement from browser UI changes */
+  transform: translateX(-50%) translateZ(0); /* Force hardware acceleration */
+  will-change: transform;
 }
 body[data-accent] .pujian-list li:hover .pujian-nomor {
   background: var(--primary);
@@ -216,9 +223,16 @@ body.dark-theme {
   background: #232634;
   color: #fff;
   box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
-  position: sticky;
+  position: fixed; /* Ensure fixed positioning */
   top: 0;
-  z-index: 50;
+  left: 0;
+  right: 0;
+  z-index: 100; /* High z-index */
+  width: 100%;
+  box-sizing: border-box;
+  /* Prevent movement from browser UI changes */
+  transform: translateZ(0); /* Force hardware acceleration */
+  will-change: transform;
 }
 .dark-theme .app-content {
   background: color-mix(in srgb, var(--primary, #1976d2) 16%, #181a20 84%);
@@ -322,17 +336,21 @@ body[data-accent="kuning"] {
   top: 5em; /* Adjusted for tighter layout */
   left: 50%;
   transform: translateX(-50%);
-  z-index: 20;
+  z-index: 50; /* Higher z-index */
+  box-sizing: border-box;
+  /* Prevent movement from browser UI changes */
+  transform: translateX(-50%) translateZ(0); /* Force hardware acceleration */
+  will-change: transform;
 }
 
 /* Responsive adjustments for mobile */
 @media (max-width: 768px) {
   #search-container {
-    max-width: calc(100vw - 2rem);
+    max-width: calc(100vw - 2.5rem); /* More constrained for mobile */
     margin: 0.15em 0 0.4em 0;
     padding: 0.1em 0.4em 0.1em 0.6em;
     border-radius: 1.3em;
-    width: calc(100vw - 2rem);
+    width: calc(100vw - 2.5rem); /* Match max-width */
     font-size: 0.9rem; /* Smaller font for mobile */
   }
   
@@ -352,8 +370,8 @@ body[data-accent="kuning"] {
 
 @media (max-width: 480px) {
   #search-container {
-    max-width: calc(100vw - 1.5rem);
-    width: calc(100vw - 1.5rem);
+    max-width: calc(100vw - 2rem); /* Even more constrained for small mobile */
+    width: calc(100vw - 2rem); /* Match max-width */
     margin: 0.1em 0 0.3em 0;
     padding: 0.08em 0.3em 0.08em 0.5em;
     top: 4.5em; /* Adjusted for smaller header */
@@ -384,8 +402,9 @@ body.dark-theme #search-container {
   position: fixed; /* Changed from sticky to fixed */
   top: 5em; /* Adjusted for tighter layout */
   left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
+  transform: translateX(-50%) translateZ(0); /* Force hardware acceleration */
+  z-index: 50; /* Higher z-index */
+  will-change: transform;
 }
 
 body.dark-theme #search-container {
@@ -554,9 +573,9 @@ body.dark-theme #clear-search:hover {
 /* Responsive adjustments for pujian list */
 @media (max-width: 768px) {
   .pujian-list {
-    max-width: calc(100vw - 1.5rem);
-    margin-left: 0.75rem;
-    margin-right: 0.75rem;
+    max-width: calc(100vw - 2.5rem); /* Match search bar width */
+    margin-left: 1.25rem;
+    margin-right: 1.25rem;
   }
   
   .pujian-list li {
@@ -581,9 +600,9 @@ body.dark-theme #clear-search:hover {
 
 @media (max-width: 480px) {
   .pujian-list {
-    max-width: calc(100vw - 1rem);
-    margin-left: 0.5rem;
-    margin-right: 0.5rem;
+    max-width: calc(100vw - 2rem); /* Match search bar width */
+    margin-left: 1rem;
+    margin-right: 1rem;
   }
   
   .pujian-list li {
@@ -681,7 +700,12 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 50;
+  z-index: 100; /* Higher z-index to ensure it stays on top */
+  width: 100%;
+  box-sizing: border-box;
+  /* Prevent any movement from browser UI changes */
+  transform: translateZ(0); /* Force hardware acceleration */
+  will-change: transform; /* Optimize for changes */
 }
 
 /* Responsive header - optimized for mobile */
@@ -708,6 +732,9 @@ body {
   left: 0;
   right: 0;
   bottom: 4.3em; /* navbar height (same as padding before) */
+  width: 100%;
+  height: calc(100vh - 6.8em - 4.3em); /* Fallback calculation */
+  height: calc(100svh - 6.8em - 4.3em); /* Use small viewport height for stability */
   padding: 0.3rem 1rem 0 1rem; /* Reduced padding for mobile optimization */
   box-sizing: border-box;
   background: color-mix(in srgb, var(--primary, #1976d2) 8%, #f5f5f5 92%);
@@ -718,12 +745,18 @@ body {
   /* Hide native scrollbar for all browsers */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
+  /* Prevent movement from browser UI changes */
+  transform: translateZ(0); /* Force hardware acceleration */
+  will-change: scroll-position; /* Optimize for scroll changes */
 }
 
 /* Responsive app-content */
 @media (max-width: 768px) {
   .app-content {
     top: 6.2em; /* Tighter for tablet */
+    bottom: 3.8em; /* Adjusted for smaller navbar */
+    height: calc(100vh - 6.2em - 3.8em); /* Fallback */
+    height: calc(100svh - 6.2em - 3.8em); /* Stable viewport */
     padding: 0.2rem 0.5rem 0 0.5rem; /* Reduced padding */
   }
 }
@@ -731,7 +764,52 @@ body {
 @media (max-width: 480px) {
   .app-content {
     top: 5.8em; /* Even tighter for mobile */
+    bottom: 3.5em; /* Adjusted for smaller navbar */
+    height: calc(100vh - 5.8em - 3.5em); /* Fallback */
+    height: calc(100svh - 5.8em - 3.5em); /* Stable viewport */
     padding: 0.15rem 0.3rem 0 0.3rem; /* Minimal padding for small screens */
+  }
+}
+
+/* Additional mobile optimizations to prevent layout shifts */
+@media screen and (max-width: 768px) {
+  html {
+    /* Prevent zoom on input focus */
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
+  body {
+    /* Prevent rubber band scrolling */
+    overscroll-behavior: none;
+    /* Lock body position */
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  /* Force all fixed elements to stay truly fixed */
+  .app-header,
+  .bottom-nav,
+  #search-container,
+  .search-spacer {
+    position: fixed !important;
+    transform: translateZ(0); /* Force hardware acceleration */
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    perspective: 1000px;
+    -webkit-perspective: 1000px;
+  }
+  
+  /* Prevent viewport changes from affecting layout */
+  .app-content {
+    position: fixed !important;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
 }
 .app-content::-webkit-scrollbar {
@@ -963,6 +1041,7 @@ body.scrollbar-dragging .custom-scrollbar-thumb {
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100%;
   background: var(--primary, #1976d2);
   color: #fff;
   box-shadow:
@@ -972,14 +1051,19 @@ body.scrollbar-dragging .custom-scrollbar-thumb {
   display: flex;
   justify-content: space-around;
   padding: 0.5rem 0;
-  z-index: 100;
+  z-index: 100; /* Higher z-index to ensure it stays on top */
   transition: background 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  /* Prevent any movement from browser UI changes */
+  transform: translateZ(0); /* Force hardware acceleration */
+  will-change: transform; /* Optimize for changes */
 }
 
 /* Responsive bottom nav - optimized for mobile */
 @media (max-width: 768px) {
   .bottom-nav {
     padding: 0.35rem 0; /* Slightly reduced */
+    height: 3.8em; /* Fixed height for calculation */
   }
   
   .bottom-nav .nav-btn {
@@ -996,6 +1080,7 @@ body.scrollbar-dragging .custom-scrollbar-thumb {
 @media (max-width: 480px) {
   .bottom-nav {
     padding: 0.25rem 0; /* Even tighter */
+    height: 3.5em; /* Fixed height for calculation */
   }
   
   .bottom-nav .nav-btn {
