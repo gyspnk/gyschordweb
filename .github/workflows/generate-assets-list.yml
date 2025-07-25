@@ -1,0 +1,36 @@
+name: Generate assets-list.json
+
+on:
+  push:
+    paths:
+      - 'webapp/assets/**'
+      - '.github/workflows/generate-assets-list.yml'
+  workflow_dispatch:
+
+jobs:
+  generate-assets-list:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Generate assets-list.json
+        run: |
+          python webapp/generate_assets_list.py
+
+      - name: Commit and push if changed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add webapp/assets-list.json
+          git diff --cached --quiet || git commit -m "Update assets-list.json [auto]"
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
