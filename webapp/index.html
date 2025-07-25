@@ -16,10 +16,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 
-  <!-- Link ke file CSS default -->
   <link rel="stylesheet" href="style.css">
   
-  <!-- PDF.js Library -->
   <script src="https://mozilla.github.io/pdf.js/build/pdf.mjs" type="module"></script>
 </head>
 <body>
@@ -37,8 +35,7 @@
   </div>
 
   <main class="app-content" id="main-content">
-    <!-- Konten dinamis akan dimuat di sini -->
-  </main>
+    </main>
 
   <nav class="bottom-nav">
     <button class="nav-btn" id="pujian-btn" aria-label="Pujian">
@@ -51,63 +48,65 @@
     </button>
   </nav>
 
-  <!-- PDF Viewer Overlay (Full Page with Advanced Controls) -->
   <div id="pdf-viewer-overlay" class="pdf-viewer-overlay">
       <header class="pdf-viewer-header">
-        <button id="pdf-viewer-close" aria-label="Kembali">
+        <button id="pdf-viewer-close" aria-label="Kembali" class="viewer-button">
           <span class="material-symbols-outlined">arrow_back</span>
         </button>
         <div class="song-navigation">
-            <button id="song-prev" aria-label="Pujian Sebelumnya">
+            <button id="song-prev" aria-label="Pujian Sebelumnya" class="viewer-button">
                 <span class="material-symbols-outlined">skip_previous</span>
             </button>
             <div class="song-title-wrapper">
                 <h2 id="pdf-viewer-title">Judul Pujian</h2>
                 <span id="pdf-viewer-number">Nomor Pujian</span>
             </div>
-            <button id="song-next" aria-label="Pujian Berikutnya">
+            <button id="song-next" aria-label="Pujian Berikutnya" class="viewer-button">
                 <span class="material-symbols-outlined">skip_next</span>
             </button>
         </div>
-        <div class="pdf-viewer-controls">
-          <button id="zoom-out" aria-label="Perkecil">
+        <div class="pdf-viewer-controls-main">
+          <button id="zoom-out" aria-label="Perkecil" class="viewer-button">
             <span class="material-symbols-outlined">zoom_out</span>
           </button>
-          <button id="zoom-in" aria-label="Perbesar">
+          <button id="zoom-in" aria-label="Perbesar" class="viewer-button">
             <span class="material-symbols-outlined">zoom_in</span>
           </button>
-          <button id="view-mode" aria-label="Mode Tampilan">
+          <button id="view-mode" aria-label="Mode Tampilan" class="viewer-button">
             <span class="material-symbols-outlined">book</span>
           </button>
-          <button id="scroll-mode" aria-label="Mode Gulir">
+          <button id="scroll-mode" aria-label="Mode Gulir" class="viewer-button">
             <span class="material-symbols-outlined">swap_vert</span>
           </button>
-          <div class="page-navigation">
-            <button id="pdf-prev" aria-label="Halaman Sebelumnya">
-              <span class="material-symbols-outlined">chevron_left</span>
-            </button>
-            <div class="page-indicator">
-              <span id="page-num">0</span> / <span id="page-count">0</span>
-            </div>
-            <button id="pdf-next" aria-label="Halaman Berikutnya">
-              <span class="material-symbols-outlined">chevron_right</span>
-            </button>
-          </div>
         </div>
       </header>
       <div class="pdf-viewer-content">
         <div class="canvas-wrapper">
-          <!-- Canvas akan dibuat secara dinamis oleh JS -->
-        </div>
+          </div>
         <div class="loader"></div>
         <div id="orientation-warning" class="orientation-warning">
             <span class="material-symbols-outlined">screen_rotation</span>
             <p>Putar layar ke mode lanskap untuk tampilan dua halaman yang optimal.</p>
         </div>
       </div>
+      <footer class="pdf-viewer-footer">
+        <div class="zoom-controls">
+            <div id="zoom-level-indicator" class="zoom-level-indicator">100%</div>
+        </div>
+        <div class="page-navigation">
+            <button id="pdf-prev" aria-label="Halaman Sebelumnya" class="viewer-button">
+              <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+            <div class="page-indicator">
+              <span id="page-num">0</span> / <span id="page-count">0</span>
+            </div>
+            <button id="pdf-next" aria-label="Halaman Berikutnya" class="viewer-button">
+              <span class="material-symbols-outlined">chevron_right</span>
+            </button>
+        </div>
+        <div class="view-controls-placeholder"></div> </footer>
   </div>
 
-  <!-- Link ke file JS default -->
   <script src="script.js" type="module"></script>
 
 </body>

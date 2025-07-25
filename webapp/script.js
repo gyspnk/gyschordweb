@@ -1,15 +1,13 @@
 /**
- * Kidung Rohani App - Advanced PDF.js Integration (Fixed)
+ * Kidung Rohani App - Final Version
  *
  * Fitur:
- * - Bug Navigasi Pengaturan diperbaiki.
- * - Fit-to-Page & Zoom Controls with Animation.
- * - Conditional Two-Page & Scroll Mode View.
- * - Song Navigation with Animation.
- * - Orientation Detection for Two-Page View.
- * - New User Settings for Viewer Behavior.
- * - Ctrl+Scroll to zoom PDF, disabled for main UI.
- * - Zoom disabled and hidden in two-page mode.
+ * - High-DPI PDF Rendering for crisp text on mobile.
+ * - Swipe navigation for pages in single-view mode.
+ * - Redesigned viewer layout for mobile (controls in footer).
+ * - Smooth zoom animation.
+ * - Settings toggles without icons.
+ * - All previous features and bug fixes included.
  */
 
 const { pdfjsLib } = globalThis;
@@ -25,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const clearSearchBtn = document.getElementById('clear-search');
   
   const pdfViewerOverlay = document.getElementById('pdf-viewer-overlay');
+  const pdfViewerContent = document.querySelector('.pdf-viewer-content');
   const pdfViewerTitle = document.getElementById('pdf-viewer-title');
   const pdfViewerNumber = document.getElementById('pdf-viewer-number');
   const canvasWrapper = document.querySelector('.canvas-wrapper');
@@ -41,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const pageCountEl = document.getElementById('page-count');
   const viewerLoader = pdfViewerOverlay.querySelector('.loader');
   const orientationWarning = document.getElementById('orientation-warning');
+  const zoomLevelIndicator = document.getElementById('zoom-level-indicator');
 
   // --- 2. State Management ---
   let pujianItems = [];
@@ -53,6 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentScrollMode = 'horizontal';
   let pageRendering = false;
   let pageNumPending = null;
+  let touchStartX = 0;
+  let touchEndX = 0;
   
   let prefs = {
     defaultTwoPage: false,
@@ -80,8 +82,8 @@ document.addEventListener('DOMContentLoaded', () => {
     nextPageBtn.addEventListener('click', onNextPage);
     prevSongBtn.addEventListener('click', onPrevSong);
     nextSongBtn.addEventListener('click', onNextSong);
-    zoomInBtn.addEventListener('click', onZoomIn);
-    zoomOutBtn.addEventListener('click', onZoomOut);
+    zoomInBtn.addEventListener('click', () => onZoom('in'));
+    zoomOutBtn.addEventListener('click', () => onZoom('out'));
     viewModeBtn.addEventListener('click', onToggleViewMode);
     scrollModeBtn.addEventListener('click', onToggleScrollMode);
 
@@ -92,6 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.addEventListener('wheel', handleGlobalScroll, { passive: false });
+    pdfViewerContent.addEventListener('touchstart', handleTouchStart, { passive: true });
+    pdfViewerContent.addEventListener('touchend', handleTouchEnd, { passive: true });
   }
 
   // --- 5. Logika Navigasi & Render Utama ---
@@ -170,14 +174,14 @@ document.addEventListener('DOMContentLoaded', () => {
         <h2>Pengaturan Viewer</h2>
         <label class="setting-item" for="default-two-page-toggle">
           <span>Mode Dua Halaman (default)</span>
-          <span class="md-switch">
+          <span class="md-switch simple-toggle">
             <input type="checkbox" id="default-two-page-toggle" ${prefs.defaultTwoPage ? 'checked' : ''}>
             <span class="md-slider"></span>
           </span>
         </label>
         <label class="setting-item" for="default-vertical-scroll-toggle">
           <span>Scroll Vertikal (default)</span>
-          <span class="md-switch">
+          <span class="md-switch simple-toggle">
             <input type="checkbox" id="default-vertical-scroll-toggle" ${prefs.defaultVerticalScroll ? 'checked' : ''}>
             <span class="md-slider"></span>
           </span>
@@ -242,6 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderSinglePage = async (pageNum) => {
         const page = await pdfDoc.getPage(pageNum);
         const parent = pdfViewerOverlay.querySelector('.pdf-viewer-content');
+        const dpr = window.devicePixelRatio || 1;
         
         if (currentScale === 'page-fit') {
             const viewport = page.getViewport({ scale: 1 });
@@ -250,11 +255,13 @@ document.addEventListener('DOMContentLoaded', () => {
             currentScale = scale;
         }
         
-        const viewport = page.getViewport({ scale: currentScale });
+        const viewport = page.getViewport({ scale: currentScale * dpr });
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         canvas.height = viewport.height;
         canvas.width = viewport.width;
+        canvas.style.width = `${viewport.width / dpr}px`;
+        canvas.style.height = `${viewport.height / dpr}px`;
 
         await page.render({ canvasContext: context, viewport }).promise;
         return canvas;
@@ -291,6 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     pageNumEl.textContent = num;
     updatePageNavButtons();
+    updateZoomIndicator();
   }
 
   function onPrevPage() {
@@ -308,29 +316,29 @@ document.addEventListener('DOMContentLoaded', () => {
     animateNavigation(() => renderPage(currentPageNum));
   }
 
-  async function onZoomIn() {
+  function onZoom(direction) {
     if (currentViewMode === 'double') return;
     if (currentScale === 'page-fit') currentScale = initialScale;
-    currentScale += 0.2;
-    await animateNavigation(() => renderPage(currentPageNum));
-  }
-
-  async function onZoomOut() {
-    if (currentViewMode === 'double') return;
-    if (currentScale === 'page-fit') currentScale = initialScale;
-    const newScale = currentScale - 0.2;
-    currentScale = Math.max(initialScale, newScale);
-    await animateNavigation(() => renderPage(currentPageNum));
+    
+    if (direction === 'in') {
+        currentScale += 0.2;
+    } else if (direction === 'out') {
+        const newScale = currentScale - 0.2;
+        currentScale = Math.max(initialScale, newScale);
+    }
+    renderPage(currentPageNum);
   }
 
   function onToggleViewMode() {
     currentViewMode = currentViewMode === 'single' ? 'double' : 'single';
+    if (currentViewMode === 'double') currentScrollMode = 'horizontal'; // Force horizontal on two-page
     updateViewerUI();
     renderPage(currentPageNum);
   }
 
   function onToggleScrollMode() {
     currentScrollMode = currentScrollMode === 'horizontal' ? 'vertical' : 'horizontal';
+    if (currentScrollMode === 'vertical') currentViewMode = 'single'; // Force single page on vertical scroll
     updateViewerUI();
     renderPage(currentPageNum);
   }
@@ -360,9 +368,9 @@ document.addEventListener('DOMContentLoaded', () => {
     scrollModeBtn.style.display = multiPage ? 'flex' : 'none';
     
     const isTwoPage = currentViewMode === 'double';
-    // Sembunyikan tombol zoom saat mode dua halaman
     zoomInBtn.style.display = isTwoPage ? 'none' : 'flex';
     zoomOutBtn.style.display = isTwoPage ? 'none' : 'flex';
+    zoomLevelIndicator.style.display = isTwoPage ? 'none' : 'flex';
 
     viewModeBtn.querySelector('.material-symbols-outlined').textContent = isTwoPage ? 'menu_book' : 'book';
     scrollModeBtn.querySelector('.material-symbols-outlined').textContent = currentScrollMode === 'horizontal' ? 'swap_vert' : 'swap_horiz';
@@ -379,6 +387,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         orientationWarning.classList.remove('visible');
     }
+  }
+  
+  function updateZoomIndicator() {
+      const zoomPercent = Math.round((currentScale / initialScale) * 100);
+      zoomLevelIndicator.textContent = `${zoomPercent}%`;
   }
 
   function updatePageNavButtons() {
@@ -404,12 +417,35 @@ document.addEventListener('DOMContentLoaded', () => {
       event.preventDefault();
       if (document.body.classList.contains('viewer-active')) {
         if (event.deltaY < 0) {
-          onZoomIn();
+          onZoom('in');
         } else {
-          onZoomOut();
+          onZoom('out');
         }
       }
     }
+  }
+  
+  function handleTouchStart(event) {
+      if (currentViewMode === 'single' && currentScrollMode === 'horizontal') {
+          touchStartX = event.changedTouches[0].screenX;
+      }
+  }
+
+  function handleTouchEnd(event) {
+      if (currentViewMode === 'single' && currentScrollMode === 'horizontal') {
+          touchEndX = event.changedTouches[0].screenX;
+          handleSwipe();
+      }
+  }
+
+  function handleSwipe() {
+      const swipeThreshold = 50; // Jarak minimum swipe
+      if (touchEndX < touchStartX - swipeThreshold) {
+          onNextPage();
+      }
+      if (touchEndX > touchStartX + swipeThreshold) {
+          onPrevPage();
+      }
   }
 
   function handleMainContentClick(e) {
@@ -451,9 +487,17 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('dark-theme', e.target.checked ? '1' : '0');
     } else if (targetId === 'default-two-page-toggle') {
       prefs.defaultTwoPage = e.target.checked;
+      if (e.target.checked) {
+          prefs.defaultVerticalScroll = false;
+          document.getElementById('default-vertical-scroll-toggle').checked = false;
+      }
       localStorage.setItem('prefs', JSON.stringify(prefs));
     } else if (targetId === 'default-vertical-scroll-toggle') {
       prefs.defaultVerticalScroll = e.target.checked;
+      if (e.target.checked) {
+          prefs.defaultTwoPage = false;
+          document.getElementById('default-two-page-toggle').checked = false;
+      }
       localStorage.setItem('prefs', JSON.stringify(prefs));
     }
   }
