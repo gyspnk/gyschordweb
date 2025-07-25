@@ -1,598 +1,176 @@
-// Navigasi sederhana antara Pujian dan Pengaturan
-console.log('Script loaded: script.js');
-const mainContent = document.getElementById('main-content');
-const pujianBtn = document.getElementById('pujian-btn');
-const pengaturanBtn = document.getElementById('pengaturan-btn');
+/**
+ * Kidung Rohani App - Fixed and Optimized Script v2
+ *
+ * Perubahan Utama:
+ * - Bug Fix: Struktur HTML untuk switch tema diubah dengan membungkusnya dalam <label>
+ * agar seluruh area dapat diklik, memperbaiki bug interaksi.
+ * - Efisiensi: Tetap menggunakan event delegation yang optimal.
+ */
+document.addEventListener('DOMContentLoaded', () => {
+  // --- 1. Seleksi Elemen DOM ---
+  const mainContent = document.getElementById('main-content');
+  const pujianBtn = document.getElementById('pujian-btn');
+  const pengaturanBtn = document.getElementById('pengaturan-btn');
+  const searchContainer = document.getElementById('search-container');
+  const searchInput = document.getElementById('search-input');
+  const clearSearchBtn = document.getElementById('clear-search');
 
-function setSelected(btn) {
-  [pujianBtn, pengaturanBtn].forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-}
+  let pujianItems = [];
 
-function renderPujianList() {
-  fetch('assets-list.json')
-    .then(response => response.json())
-    .then(files => {
-      if (!Array.isArray(files) || files.length === 0) {
-        mainContent.innerHTML = '<div class="welcome-text">Tidak ada file pujian ditemukan.</div>';
-        return;
-      }
-      let listHtml = '<ul class="pujian-list" id="pujian-list">';
-      const items = [];
-      files.forEach(file => {
-        const rawName = decodeURIComponent(file.replace('.pdf',''));
-        let nomor = '';
-        let judul = rawName;
-        const match = rawName.match(/^([0-9A-Za-z]+)_\s?(.*)$/);
-        if (match) {
-          nomor = match[1];
-          judul = match[2] || '';
-        }
-        const fileHref = 'assets/' + file;
-        // Ganti semua '_' di judul dengan '?'
-        const judulDisplay = judul.replace(/_/g, '?');
-        const judulSearch = judulDisplay.toLowerCase();
-        items.push({ nomor, judul, fileHref });
-        listHtml += `<li data-nomor="${nomor}" data-judul="${judul.toLowerCase()}" data-judul-search="${judulSearch}"><span class="pujian-nomor">${nomor}</span><a href="${fileHref}" target="_blank">${judulDisplay}</a></li>`;
-      });
-      listHtml += '</ul>';
-      mainContent.innerHTML = listHtml;
-      // Search bar kini selalu tampil, tidak perlu diubah display-nya
-      const searchInput = document.getElementById('search-input');
-      const pujianList = document.getElementById('pujian-list');
-      if (searchInput && pujianList) {
-        searchInput.value = '';
-        searchInput.oninput = function() {
-          const q = this.value.trim().toLowerCase();
-          const items = Array.from(pujianList.children);
-          // Fuzzy search: semua kata kunci (spasi) harus ada di nomor atau judulSearch (urutan bebas)
-          const keywords = q.split(/\s+/).filter(Boolean);
-          items.forEach(li => {
-            const nomor = li.getAttribute('data-nomor') || '';
-            const judulSearch = li.getAttribute('data-judul-search') || '';
-            // Fuzzy: semua keyword harus ada di salah satu (nomor atau judulSearch)
-            const isMatch = keywords.every(kw => nomor.includes(kw) || judulSearch.includes(kw));
-            if (q === '' || isMatch) {
-              li.style.display = '';
-            } else {
-              li.style.display = 'none';
-            }
-            // Reset margin-top
-            li.style.marginTop = '';
+  // --- 2. Inisialisasi Aplikasi ---
+  function init() {
+    setupEventListeners();
+    applyStoredPreferences();
+    navigateTo('pujian');
+  }
+
+  // --- 3. Pengaturan Event Listeners ---
+  function setupEventListeners() {
+    pujianBtn.addEventListener('click', () => navigateTo('pujian'));
+    pengaturanBtn.addEventListener('click', () => navigateTo('pengaturan'));
+    searchInput.addEventListener('input', handleSearch);
+    clearSearchBtn.addEventListener('click', clearSearch);
+
+    mainContent.addEventListener('change', handleSettingsChange);
+    mainContent.addEventListener('click', handleAccentClick);
+  }
+
+  // --- 4. Logika Navigasi ---
+  function navigateTo(page) {
+    [pujianBtn, pengaturanBtn].forEach(btn => btn.classList.remove('selected'));
+    
+    if (page === 'pujian') {
+      pujianBtn.classList.add('selected');
+      searchContainer.style.display = 'flex';
+      renderPujianList();
+    } else if (page === 'pengaturan') {
+      pengaturanBtn.classList.add('selected');
+      searchContainer.style.display = 'none';
+      renderSettings();
+    }
+  }
+
+  // --- 5. Render Tampilan ---
+  function renderPujianList() {
+    if (pujianItems.length > 0) {
+      displayPujian(pujianItems);
+    } else {
+      fetch('assets-list.json')
+        .then(response => response.ok ? response.json() : Promise.reject('Failed to load'))
+        .then(files => {
+          if (!Array.isArray(files)) throw new Error('Invalid data format');
+          pujianItems = files.map(file => {
+            const rawName = decodeURIComponent(file.replace('.pdf', ''));
+            const match = rawName.match(/^([0-9A-Za-z]+)[_.\s]*(.*)$/);
+            return {
+              nomor: match ? match[1] : '',
+              judul: match ? match[2].replace(/_/g, ' ') : rawName.replace(/_/g, ' '),
+              fileHref: `assets/${file}`
+            };
           });
-          // Cari li pertama yang visible, beri margin-top sesuai viewport untuk space di bawah search bar
-          const firstVisible = items.find(li => li.style.display !== 'none');
-          if (firstVisible) {
-            if (window.innerWidth <= 480) {
-              firstVisible.style.marginTop = '2.2em'; // Increased space untuk mobile kecil
-            } else if (window.innerWidth <= 768) {
-              firstVisible.style.marginTop = '2.8em'; // Increased space untuk tablet
-            } else {
-              firstVisible.style.marginTop = '3.5em'; // Increased space untuk desktop
-            }
-          }
-        };
-        // Pastikan margin-top benar saat load awal
-        setTimeout(() => {
-          const items = Array.from(pujianList.children);
-          items.forEach(li => li.style.marginTop = '');
-          const firstVisible = items.find(li => li.style.display !== 'none');
-          if (firstVisible) {
-            if (window.innerWidth <= 480) {
-              firstVisible.style.marginTop = '2.2em'; // Increased space untuk mobile kecil
-            } else if (window.innerWidth <= 768) {
-              firstVisible.style.marginTop = '2.8em'; // Increased space untuk tablet
-            } else {
-              firstVisible.style.marginTop = '3.5em'; // Increased space untuk desktop
-            }
-          }
-        }, 0);
-      }
-    })
-    .catch(() => {
-      mainContent.innerHTML = '<div class="welcome-text">Gagal memuat daftar pujian.</div>';
-    });
-}
+          displayPujian(pujianItems);
+        })
+        .catch(error => {
+          console.error('Gagal memuat daftar pujian:', error);
+          mainContent.innerHTML = '<div class="welcome-text">Gagal memuat daftar pujian.</div>';
+        });
+    }
+  }
 
+  function displayPujian(items) {
+    if (items.length === 0) {
+      mainContent.innerHTML = '<div class="welcome-text">Tidak ada lagu pujian.</div>';
+      return;
+    }
+    const listHtml = `
+      <ul class="pujian-list" id="pujian-list">
+        ${items.map(item => `
+          <li data-nomor="${item.nomor.toLowerCase()}" data-judul="${item.judul.toLowerCase()}">
+            <span class="pujian-nomor">${item.nomor}</span>
+            <a href="${item.fileHref}" target="_blank">${item.judul}</a>
+          </li>
+        `).join('')}
+      </ul>`;
+    mainContent.innerHTML = listHtml;
+    filterPujianList();
+  }
 
-pujianBtn.addEventListener('click', () => {
-  setSelected(pujianBtn);
-  // Tampilkan search bar
-  const searchContainer = document.getElementById('search-container');
-  if (searchContainer) searchContainer.style.display = '';
-  renderPujianList();
-});
-
-
-pengaturanBtn.addEventListener('click', () => {
-  setSelected(pengaturanBtn);
-  // Sembunyikan search bar
-  const searchContainer = document.getElementById('search-container');
-  if (searchContainer) searchContainer.style.display = 'none';
-  mainContent.innerHTML = `
-    <div class="settings-panel">
-      <h2>Pengaturan Tampilan</h2>
-      <div style="margin-bottom:1.2em">
-        <label style="display:flex;align-items:center;gap:0.7em;cursor:pointer;">
-          <span style="font-size:1.1em;">Tema Gelap</span>
+  function renderSettings() {
+    const isDark = document.body.classList.contains('dark-theme');
+    const currentAccent = document.body.getAttribute('data-accent') || 'biru';
+    const colors = ['biru', 'merah', 'hijau', 'kuning', 'ungu', 'pink', 'birutua', 'teal', 'oranye', 'coklat', 'abu', 'indigo', 'cyan', 'lime', 'deep-orange'];
+    mainContent.innerHTML = `
+      <div class="settings-panel">
+        <h2>Pengaturan Tampilan</h2>
+        <label class="setting-item" for="dark-theme-toggle">
+          <span>Tema Gelap</span>
           <span class="md-switch">
-            <input type="checkbox" id="dark-theme-toggle">
+            <input type="checkbox" id="dark-theme-toggle" ${isDark ? 'checked' : ''}>
             <span class="md-slider"></span>
           </span>
         </label>
-      </div>
-      <div>
-        <div style="margin-bottom:0.5em;">Aksen warna:</div>
-        <div class="accent-palette">
-          <button class="accent-color" data-color="biru" title="Biru"></button>
-          <button class="accent-color" data-color="merah" title="Merah"></button>
-          <button class="accent-color" data-color="hijau" title="Hijau"></button>
-          <button class="accent-color" data-color="kuning" title="Kuning"></button>
-          <button class="accent-color" data-color="ungu" title="Ungu"></button>
-          <button class="accent-color" data-color="pink" title="Pink"></button>
-          <button class="accent-color" data-color="birutua" title="Biru Tua"></button>
-          <button class="accent-color" data-color="teal" title="Teal"></button>
-          <button class="accent-color" data-color="oranye" title="Oranye"></button>
-          <button class="accent-color" data-color="coklat" title="Coklat"></button>
-          <button class="accent-color" data-color="abu" title="Abu-abu"></button>
+        <div class="setting-item">
+          <label>Warna Aksen</label>
+          <div class="accent-palette">
+            ${colors.map(color => `
+              <button class="accent-color ${color === currentAccent ? 'selected' : ''}" data-color="${color}" title="${color.charAt(0).toUpperCase() + color.slice(1)}"></button>
+            `).join('')}
+          </div>
         </div>
-      </div>
-    </div>
-  `;
-  // Inisialisasi toggle dan palette
-  const darkToggle = document.getElementById('dark-theme-toggle');
-  if (darkToggle) {
-    darkToggle.checked = document.body.classList.contains('dark-theme');
-    darkToggle.addEventListener('change', function() {
-      document.body.classList.toggle('dark-theme', this.checked);
-      localStorage.setItem('dark-theme', this.checked ? '1' : '0');
+      </div>`;
+  }
+
+  // --- 6. Logika Fungsional ---
+  function handleSearch() {
+    clearSearchBtn.style.display = searchInput.value ? 'flex' : 'none';
+    filterPujianList();
+  }
+
+  function clearSearch() {
+    searchInput.value = '';
+    searchInput.focus();
+    handleSearch();
+  }
+
+  function filterPujianList() {
+    const query = searchInput.value.trim().toLowerCase();
+    const keywords = query.split(/\s+/).filter(Boolean);
+    const listElement = document.getElementById('pujian-list');
+    if (!listElement) return;
+    Array.from(listElement.children).forEach(li => {
+      const nomor = li.dataset.nomor || '';
+      const judul = li.dataset.judul || '';
+      const isMatch = keywords.every(kw => nomor.includes(kw) || judul.includes(kw));
+      li.style.display = isMatch ? 'flex' : 'none';
     });
   }
-  // Palette aksen
-  const accentBtns = document.querySelectorAll('.accent-color');
-  const currentAccent = document.body.getAttribute('data-accent') || 'biru';
-  accentBtns.forEach(btn => {
-    if (btn.dataset.color === currentAccent) btn.classList.add('selected');
-    btn.addEventListener('click', function() {
-      accentBtns.forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      document.body.setAttribute('data-accent', btn.dataset.color);
-      localStorage.setItem('accent', btn.dataset.color);
-    });
-  });
+  
+  function handleSettingsChange(e) {
+    if (e.target.id === 'dark-theme-toggle') {
+      document.body.classList.toggle('dark-theme', e.target.checked);
+      localStorage.setItem('dark-theme', e.target.checked ? '1' : '0');
+    }
+  }
+
+  function handleAccentClick(e) {
+    const accentButton = e.target.closest('.accent-color');
+    if (accentButton) {
+      const color = accentButton.dataset.color;
+      document.body.setAttribute('data-accent', color);
+      localStorage.setItem('accent', color);
+      accentButton.parentElement.querySelector('.selected')?.classList.remove('selected');
+      accentButton.classList.add('selected');
+    }
+  }
+
+  // --- 7. Manajemen Preferensi ---
+  function applyStoredPreferences() {
+    if (localStorage.getItem('dark-theme') === '1') {
+      document.body.classList.add('dark-theme');
+    }
+    const storedAccent = localStorage.getItem('accent') || 'biru';
+    document.body.setAttribute('data-accent', storedAccent);
+  }
+
+  init();
 });
-
-// Default pilih Pujian
-document.addEventListener('DOMContentLoaded', () => {
-  setSelected(pujianBtn);
-  renderPujianList();
-
-  // Fitur tombol clear search
-  const searchInput = document.getElementById('search-input');
-  const clearBtn = document.getElementById('clear-search');
-  const searchContainer = document.getElementById('search-container');
-  if (searchInput && clearBtn) {
-    function toggleClearBtn() {
-      clearBtn.style.display = searchInput.value ? 'flex' : 'none';
-    }
-    searchInput.addEventListener('input', toggleClearBtn);
-    clearBtn.addEventListener('click', function() {
-      searchInput.value = '';
-      searchInput.dispatchEvent(new Event('input'));
-      searchInput.focus();
-      toggleClearBtn();
-    });
-    toggleClearBtn();
-  }
-  // Pastikan search bar tampil saat load awal
-  if (searchContainer) searchContainer.style.display = '';
-
-  // Terapkan preferensi tema & aksen dari localStorage
-  if (localStorage.getItem('dark-theme') === '1') {
-    document.body.classList.add('dark-theme');
-  }
-  const accent = localStorage.getItem('accent');
-  if (accent) {
-    document.body.setAttribute('data-accent', accent);
-  } else {
-    document.body.setAttribute('data-accent', 'biru');
-  }
-
-  // === Custom Scrollbar Implementation ===
-  // Wait for .app-content to exist
-  setTimeout(() => {
-    const appContent = document.querySelector('.app-content');
-    if (!appContent) return;
-
-    // Check if we should show custom scrollbar based on screen size
-    function shouldShowCustomScrollbar() {
-      const isLandscapeMobile = window.matchMedia('(max-width: 640px) and (orientation: landscape)').matches;
-      return !isLandscapeMobile;
-    }
-
-    // Hide native scrollbar (for all browsers) only if custom scrollbar is enabled
-    if (shouldShowCustomScrollbar()) {
-      appContent.style.overflow = 'hidden';
-    }
-
-    // Create custom scrollbar elements
-
-    // Pakai offset em agar konsisten dengan CSS
-    let customScrollbar = document.createElement('div');
-    customScrollbar.className = 'custom-scrollbar';
-    let customThumb = document.createElement('div');
-    customThumb.className = 'custom-scrollbar-thumb';
-    customScrollbar.appendChild(customThumb);
-    // Tempatkan scrollbar sejajar dengan .app-content (bukan fixed 8em)
-    customScrollbar.style.position = 'absolute';
-    // Ambil posisi top dan height .app-content relatif ke parent, lalu beri offset jarak kecil (0.5em)
-    const appContentRect = appContent.getBoundingClientRect();
-    const parentRect = appContent.parentElement.getBoundingClientRect();
-    // Konversi 0.5em ke px (ambil dari computed style root)
-    const emPx = parseFloat(getComputedStyle(document.documentElement).fontSize) * 0.5;
-    const offsetTop = appContentRect.top - parentRect.top + emPx;
-    const offsetBottom = parentRect.bottom - appContentRect.bottom + emPx;
-    customScrollbar.style.top = offsetTop + 'px';
-    customScrollbar.style.bottom = offsetBottom + 'px';
-    customScrollbar.style.right = '0';
-    customScrollbar.style.height = 'auto';
-    customScrollbar.style.zIndex = '10';
-    appContent.parentElement.appendChild(customScrollbar);
-
-    // Update scrollbar visibility based on screen size
-    function updateScrollbarVisibility() {
-      if (shouldShowCustomScrollbar()) {
-        customScrollbar.style.display = 'block';
-        appContent.style.overflow = 'hidden';
-        appContent.style.scrollbarWidth = 'none';
-        appContent.style.msOverflowStyle = 'none';
-        
-        // Update positioning for mobile
-        if (window.innerWidth <= 768) {
-          customScrollbar.style.top = window.innerWidth <= 480 ? '5.8em' : '6.2em';
-          customScrollbar.style.bottom = window.innerWidth <= 480 ? '3.5em' : '4em';
-        } else {
-          customScrollbar.style.top = '7.5em'; /* Adjusted for desktop */
-          customScrollbar.style.bottom = '4.8em';
-        }
-      } else {
-        customScrollbar.style.display = 'none';
-        appContent.style.overflow = 'auto';
-        appContent.style.scrollbarWidth = 'thin';
-        appContent.style.msOverflowStyle = 'auto';
-      }
-    }
-
-    // Listen for orientation/resize changes
-    window.addEventListener('resize', updateScrollbarVisibility);
-    window.addEventListener('orientationchange', () => {
-      setTimeout(updateScrollbarVisibility, 100);
-    });
-    
-    // Initial visibility check
-    updateScrollbarVisibility();
-
-    // Position and size the scrollbar
-    function updateScrollbar() {
-      // Hitung tinggi container scrollbar (dari CSS: top 8em, bottom 5em)
-      const scrollbarRect = customScrollbar.getBoundingClientRect();
-      const containerHeight = scrollbarRect.height;
-      const content = appContent;
-      const scrollHeight = content.scrollHeight;
-      const clientHeight = content.clientHeight;
-      const scrollTop = content.scrollTop;
-      // Thumb height proporsional, minimal 40px, tidak boleh lebih dari container
-      let thumbHeight = Math.max(40, Math.round(containerHeight * (clientHeight / scrollHeight)));
-      thumbHeight = Math.min(thumbHeight, containerHeight);
-      const maxThumbTop = containerHeight - thumbHeight;
-      const maxScrollTop = scrollHeight - clientHeight;
-      const thumbTop = maxScrollTop > 0 ? (scrollTop / maxScrollTop) * maxThumbTop : 0;
-      customThumb.style.height = thumbHeight + 'px';
-      customThumb.style.top = thumbTop + 'px';
-      // Show/hide scrollbar if needed
-      customScrollbar.style.display = (scrollHeight > clientHeight + 2) ? 'block' : 'none';
-    }
-
-    // Sync thumb on scroll
-    appContent.addEventListener('scroll', updateScrollbar);
-    window.addEventListener('resize', updateScrollbar);
-    // Initial update
-    updateScrollbar();
-
-    // Drag logic - support both mouse and touch
-    let isDragging = false;
-    let dragStartY = 0;
-    let dragStartScroll = 0;
-    
-    function startDrag(clientY) {
-      isDragging = true;
-      dragStartY = clientY;
-      dragStartScroll = appContent.scrollTop;
-      document.body.classList.add('scrollbar-dragging');
-    }
-    
-    function updateDrag(clientY) {
-      if (!isDragging) return;
-      const content = appContent;
-      const scrollHeight = content.scrollHeight;
-      const clientHeight = content.clientHeight;
-      const ratio = clientHeight / scrollHeight;
-      const thumbHeight = Math.max(32, clientHeight * ratio);
-      const maxThumbTop = clientHeight - thumbHeight;
-      const maxScrollTop = scrollHeight - clientHeight;
-      const deltaY = clientY - dragStartY;
-      let newThumbTop = (dragStartScroll / maxScrollTop) * maxThumbTop + deltaY;
-      newThumbTop = Math.max(0, Math.min(maxThumbTop, newThumbTop));
-      const newScrollTop = (newThumbTop / maxThumbTop) * maxScrollTop;
-      appContent.scrollTop = newScrollTop;
-    }
-    
-    function endDrag() {
-      if (isDragging) {
-        isDragging = false;
-        document.body.classList.remove('scrollbar-dragging');
-      }
-    }
-    
-    // Mouse events
-    customThumb.addEventListener('mousedown', function(e) {
-      startDrag(e.clientY);
-      e.preventDefault();
-    });
-    
-    document.addEventListener('mousemove', function(e) {
-      updateDrag(e.clientY);
-    });
-    
-    document.addEventListener('mouseup', endDrag);
-    
-    // Touch events for mobile
-    customThumb.addEventListener('touchstart', function(e) {
-      startDrag(e.touches[0].clientY);
-      e.preventDefault();
-    }, { passive: false });
-    
-    document.addEventListener('touchmove', function(e) {
-      if (isDragging) {
-        updateDrag(e.touches[0].clientY);
-        e.preventDefault();
-      }
-    }, { passive: false });
-    
-    document.addEventListener('touchend', endDrag);
-
-    // Click on scrollbar track
-    customScrollbar.addEventListener('mousedown', function(e) {
-      if (e.target !== customThumb) {
-        const rect = customScrollbar.getBoundingClientRect();
-        const clickY = e.clientY - rect.top;
-        const thumbHeight = customThumb.offsetHeight;
-        const clientHeight = appContent.clientHeight;
-        const scrollHeight = appContent.scrollHeight;
-        const maxThumbTop = clientHeight - thumbHeight;
-        const maxScrollTop = scrollHeight - clientHeight;
-        let newThumbTop = clickY - thumbHeight / 2;
-        newThumbTop = Math.max(0, Math.min(maxThumbTop, newThumbTop));
-        const newScrollTop = (newThumbTop / maxThumbTop) * maxScrollTop;
-        appContent.scrollTop = newScrollTop;
-      }
-    });
-
-
-
-
-    // --- Scroll wheel with acceleration/inertia ---
-    let scrollVelocity = 0;
-    let scrollAnimating = false;
-    let isTouchDevice = ('ontouchstart' in window) || 
-                       (navigator.maxTouchPoints > 0) || 
-                       (navigator.msMaxTouchPoints > 0) ||
-                       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    // Chrome Android detection
-    let isChromeAndroid = /Chrome.*Android|CriOS.*Android/i.test(navigator.userAgent);
-    
-    function animateScroll() {
-      if (Math.abs(scrollVelocity) < 0.5) {
-        scrollVelocity = 0;
-        scrollAnimating = false;
-        return;
-      }
-      appContent.scrollTop += scrollVelocity;
-      scrollVelocity *= 0.85; // friction
-      requestAnimationFrame(animateScroll);
-    }
-    
-    // Only apply custom wheel behavior on non-touch devices
-    if (!isTouchDevice) {
-      appContent.addEventListener('wheel', function(e) {
-        if (e.deltaY !== 0) {
-          scrollVelocity += e.deltaY * 0.65; // reduced acceleration factor for smoother feel
-          if (!scrollAnimating) {
-            scrollAnimating = true;
-            requestAnimationFrame(animateScroll);
-          }
-          e.preventDefault();
-        }
-      }, { passive: false });
-    }
-    
-    // For touch devices, ensure native scrolling works properly
-    if (isTouchDevice) {
-      // Enable native touch scrolling
-      appContent.style.touchAction = 'pan-y';
-      appContent.style.overflowY = 'scroll';
-      appContent.style.webkitOverflowScrolling = 'touch';
-      
-      // Add smooth scrolling behavior for touch
-      appContent.style.scrollBehavior = 'auto'; // Changed to auto for better mobile performance
-      
-      // Don't lock body position - this was causing scroll issues
-      // Instead, just prevent unwanted scrolling behaviors
-      document.body.style.overscrollBehavior = 'none';
-      document.body.style.touchAction = 'pan-x pan-y'; // Allow both directions
-      
-      // Special handling for Chrome Android
-      if (isChromeAndroid) {
-        // Remove any position fixed on body that might interfere
-        document.body.style.position = 'static';
-        document.body.style.height = 'auto';
-        document.body.style.overflow = 'hidden';
-        
-        // Ensure HTML element allows scrolling
-        document.documentElement.style.touchAction = 'pan-y';
-        document.documentElement.style.overflowY = 'hidden';
-        
-        // Force re-enable touch scrolling on the content area
-        appContent.style.touchAction = 'pan-y';
-        appContent.style.webkitOverflowScrolling = 'touch';
-        appContent.style.overflowY = 'scroll';
-        
-        // Add specific Chrome Android touch handlers
-        let touchStartY = 0;
-        let touchMoveY = 0;
-        let isScrolling = false;
-        
-        appContent.addEventListener('touchstart', function(e) {
-          touchStartY = e.touches[0].clientY;
-          isScrolling = false;
-          scrollAnimating = false;
-          scrollVelocity = 0;
-        }, { passive: true });
-        
-        appContent.addEventListener('touchmove', function(e) {
-          touchMoveY = e.touches[0].clientY;
-          let deltaY = touchStartY - touchMoveY;
-          
-          if (Math.abs(deltaY) > 5) {
-            isScrolling = true;
-          }
-          
-          // Don't prevent default to allow native scrolling
-          e.stopPropagation();
-        }, { passive: true });
-        
-        appContent.addEventListener('touchend', function(e) {
-          if (isScrolling) {
-            // Let native momentum scrolling take over
-            isScrolling = false;
-          }
-        }, { passive: true });
-      } else {
-        // Standard touch device handling
-        appContent.addEventListener('touchstart', function(e) {
-          // Stop any ongoing scroll animation
-          scrollAnimating = false;
-          scrollVelocity = 0;
-        }, { passive: true });
-        
-        // Allow touch scrolling on the main content
-        appContent.addEventListener('touchmove', function(e) {
-          // Don't prevent default - allow native scroll
-          // But ensure we're only scrolling the content area
-          e.stopPropagation();
-        }, { passive: true });
-      }
-      
-      // Ensure scroll events work on touch devices
-      appContent.addEventListener('scroll', updateScrollbar, { passive: true });
-      
-      // Prevent custom scrollbar from interfering with touch
-      customScrollbar.style.pointerEvents = 'none';
-      customThumb.style.pointerEvents = 'auto';
-      
-      // Prevent touch events on fixed elements from scrolling the page
-      const fixedElements = document.querySelectorAll('.app-header, .bottom-nav, #search-container');
-      fixedElements.forEach(el => {
-        el.addEventListener('touchmove', function(e) {
-          e.preventDefault();
-        }, { passive: false });
-      });
-      
-      // Fix for search input focus issues on mobile
-      const searchInput = document.getElementById('search-input');
-      if (searchInput) {
-        // Special handling for Chrome Android input focus
-        if (isChromeAndroid) {
-          searchInput.addEventListener('focus', function(e) {
-            // Prevent viewport jumping and maintain scroll capability
-            setTimeout(() => {
-              this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-              // Ensure scroll is still enabled after focus
-              appContent.style.touchAction = 'pan-y';
-              appContent.style.overflowY = 'scroll';
-              document.body.style.position = 'static';
-            }, 50);
-          }, { passive: true });
-          
-          searchInput.addEventListener('blur', function(e) {
-            // Ensure scroll capability is maintained after blur
-            setTimeout(() => {
-              appContent.style.touchAction = 'pan-y';
-              appContent.style.overflowY = 'scroll';
-              document.body.style.position = 'static';
-            }, 100);
-          }, { passive: true });
-          
-          // Prevent input container from interfering with scroll
-          const searchContainer = document.getElementById('search-container');
-          if (searchContainer) {
-            searchContainer.addEventListener('touchstart', function(e) {
-              // Don't prevent default to allow input focus
-            }, { passive: true });
-            
-            searchContainer.addEventListener('touchmove', function(e) {
-              // Only prevent if not interacting with input
-              if (e.target !== searchInput) {
-                e.preventDefault();
-              }
-            }, { passive: false });
-          }
-        } else {
-          // Standard mobile input handling
-          searchInput.addEventListener('focus', function(e) {
-            // Allow the input to be focused without breaking scroll
-            this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }, { passive: true });
-          
-          searchInput.addEventListener('blur', function(e) {
-            // Restore scroll capability after input blur
-            setTimeout(() => {
-              appContent.style.touchAction = 'pan-y';
-            }, 100);
-          }, { passive: true });
-        }
-      }
-      
-    } else {
-      // For non-touch devices, hide native scrollbar
-      appContent.style.overflowY = 'hidden';
-    }
-
-    // Theme-aware styling (update on theme/accent change)
-    function updateScrollbarTheme() {
-      const isDark = document.body.classList.contains('dark-theme');
-      // Use CSS variable --accent for thumb color
-      let accentColor = getComputedStyle(document.body).getPropertyValue('--accent').trim();
-      if (!accentColor) accentColor = '#2196f3';
-      customThumb.style.background = accentColor;
-      customThumb.style.boxShadow = isDark ? '0 1px 10px 0 rgba(0,0,0,0.22)' : '0 1px 10px 0 rgba(0,0,0,0.13)';
-      // Track: more distinct for both themes
-      if (isDark) {
-        customScrollbar.style.background = 'rgba(24,26,32,0.96)';
-      } else {
-        customScrollbar.style.background = 'linear-gradient(180deg, #e3eaf2 0%, #dbe3f5 100%)';
-      }
-    }
-    updateScrollbarTheme();
-    // Listen for theme/accent changes
-    const observer = new MutationObserver(updateScrollbarTheme);
-    observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'data-accent'] });
-
-    // Recalculate on content changes
-    const resizeObs = new ResizeObserver(updateScrollbar);
-    resizeObs.observe(appContent);
-    // If list is re-rendered, update scrollbar
-    new MutationObserver(updateScrollbar).observe(appContent, { childList: true, subtree: true });
-  }, 0);
-})

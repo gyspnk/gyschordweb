@@ -2,40 +2,55 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Kidung Rohani Digital</title>
+  
+  <!-- SEO and App meta tags -->
+  <meta name="description" content="Aplikasi pencarian kidung rohani dengan lirik dan chord.">
+  <meta name="theme-color" content="#1976d2">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Kidung Rohani</title>
+
+  <!-- Modern Google Fonts & Material Symbols (Icons) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+  <!-- Main Stylesheet -->
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
 </head>
 <body>
+
   <header class="app-header">
-    Kidung Rohani With Chord
+    Kidung Rohani
   </header>
-  <div class="search-spacer"></div>
-  <div id="search-container" class="md-search-container">
-    <span class="material-icons search-icon">search</span>
-    <input id="search-input" class="md-search-input" type="text" placeholder="Cari judul atau nomor..." autocomplete="off" />
-    <button id="clear-search" type="button" aria-label="Bersihkan pencarian" style="display:none" class="clear-search-btn">
-      <span class="material-icons">close</span>
+
+  <div id="search-container">
+    <span class="material-symbols-outlined search-icon">search</span>
+    <input id="search-input" type="text" placeholder="Cari judul atau nomor..." autocomplete="off" />
+    <button id="clear-search" type="button" aria-label="Bersihkan pencarian" style="display:none">
+      <span class="material-symbols-outlined">close</span>
     </button>
   </div>
+
   <main class="app-content" id="main-content">
-    <div class="welcome-text">Selamat datang di Kidung Rohani!</div>
+    <div class="welcome-text">Selamat datang!</div>
   </main>
+
   <nav class="bottom-nav">
-    <button class="nav-btn" id="pujian-btn">
-      <span class="material-icons">music_note</span>
+    <button class="nav-btn" id="pujian-btn" aria-label="Pujian">
+      <span class="material-symbols-outlined">music_note</span>
       Pujian
     </button>
-    <button class="nav-btn" id="pengaturan-btn">
-      <span class="material-icons">settings</span>
+    <button class="nav-btn" id="pengaturan-btn" aria-label="Pengaturan">
+      <span class="material-symbols-outlined">settings</span>
       Pengaturan
     </button>
   </nav>
+
   <script src="script.js"></script>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
 </body>
 </html>

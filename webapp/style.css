@@ -1,127 +1,364 @@
-.pujian-list li:first-child {
-  margin-top: 3.5em; /* Increased space untuk desktop di bawah search bar */
+/* =================================================================== */
+/* 1. FONT, VARIABEL & GAYA DASAR
+/* =================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+:root {
+  /* Palet Warna Diperluas */
+  --accent-biru: #1976d2; --accent-biru-dark: #0d47a1;
+  --accent-merah: #d32f2f; --accent-merah-dark: #b71c1c;
+  --accent-hijau: #388e3c; --accent-hijau-dark: #1b5e20;
+  --accent-kuning: #fbc02d; --accent-kuning-dark: #f57c00;
+  --accent-ungu: #7b1fa2; --accent-ungu-dark: #4a148c;
+  --accent-pink: #c2185b; --accent-pink-dark: #880e4f;
+  --accent-birutua: #0288d1; --accent-birutua-dark: #01579b;
+  --accent-teal: #00796b; --accent-teal-dark: #004d40;
+  --accent-oranye: #f57c00; --accent-oranye-dark: #e65100;
+  --accent-coklat: #5d4037; --accent-coklat-dark: #3e2723;
+  --accent-abu: #616161; --accent-abu-dark: #212121;
+  --accent-indigo: #303f9f; --accent-indigo-dark: #1a237e;
+  --accent-cyan: #0097a7; --accent-cyan-dark: #006064;
+  --accent-lime: #afb42b; --accent-lime-dark: #827717;
+  --accent-deep-orange: #e64a19; --accent-deep-orange-dark: #bf360c;
+
+  /* Variabel UI */
+  --border-radius-sm: 8px;
+  --border-radius-md: 16px;
+  --border-radius-lg: 28px;
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-2: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+  --shadow-3: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
 }
 
-/* Responsive first child margin */
-@media (max-width: 768px) {
-  .pujian-list li:first-child {
-    margin-top: 2.8em; /* Increased space untuk tablet */
-  }
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  font-synthesis: none; /* Mencegah font sintetik */
 }
 
-@media (max-width: 480px) {
-  .pujian-list li:first-child {
-    margin-top: 2.2em; /* Increased space untuk mobile kecil */
-  }
-}
 html, body {
   height: 100vh;
-  height: 100svh; /* Small viewport height - more stable than dvh */
+  height: 100svh;
   overflow: hidden;
   margin: 0;
   padding: 0;
   width: 100%;
+  font-family: 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-/* Spacer for empty area above search bar */
-.search-spacer {
-  height: 1em; /* Reduced height */
-  width: 4em; /* Reduced width */
-  display: inline-block;
-  position: fixed; /* Changed from sticky to fixed */
-  top: 3.8em; /* Adjusted for tighter layout */
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 30;
-  background: transparent;
-  /* Prevent movement from browser UI changes */
-  transform: translateX(-50%) translateZ(0); /* Force hardware acceleration */
-  will-change: transform;
+
+body {
+  display: flex;
+  flex-direction: column;
+  overscroll-behavior: none;
+  transition: background-color 0.4s, color 0.4s;
 }
-body[data-accent] .pujian-list li:hover .pujian-nomor {
-  background: var(--primary);
+
+/* Akselerasi hardware untuk elemen fixed */
+.app-header, .bottom-nav, #search-container, .app-content {
+  transform: translateZ(0);
+}
+
+/* Styling untuk scrollbar native */
+:root {
+  scrollbar-color: var(--primary, #1976d2) transparent;
+  scrollbar-width: thin;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background-color: var(--primary, #1976d2); border-radius: 3px; }
+
+/* =================================================================== */
+/* 2. TEMA & WARNA AKSEN
+/* =================================================================== */
+/* --- TEMA TERANG (DEFAULT) --- */
+body {
+  --primary: var(--accent, var(--accent-biru));
+  --primary-dark: var(--accent-dark, var(--accent-biru-dark));
+  --text-primary: #1f1f1f;
+  --text-secondary: #5f5f5f;
+  --surface-1: #f3f6fc; /* Latar belakang utama */
+  --surface-2: #ffffff; /* Latar belakang kartu/komponen */
+  --outline: #d0d5dd;
+  --state-layer: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+/* --- TEMA GELAP --- */
+body.dark-theme {
+  --primary: var(--accent, var(--accent-biru));
+  --primary-dark: var(--accent-dark, var(--accent-biru-dark));
+  --text-primary: #e3e3e3;
+  --text-secondary: #a0a0a0;
+  --surface-1: #1a1c1e;
+  --surface-2: #242629;
+  --outline: #44474a;
+  --state-layer: color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+/* --- APLIKASI WARNA DASAR --- */
+body {
+  background-color: var(--surface-1);
+  color: var(--text-primary);
+}
+.app-header, .bottom-nav, .pujian-list li, .settings-panel, #search-container {
+  background-color: var(--surface-2);
+}
+
+/* --- DEFINISI WARNA AKSEN --- */
+body[data-accent="biru"] { --accent: var(--accent-biru); --accent-dark: var(--accent-biru-dark); }
+body[data-accent="merah"] { --accent: var(--accent-merah); --accent-dark: var(--accent-merah-dark); }
+body[data-accent="hijau"] { --accent: var(--accent-hijau); --accent-dark: var(--accent-hijau-dark); }
+body[data-accent="kuning"] { --accent: var(--accent-kuning); --accent-dark: var(--accent-kuning-dark); }
+body[data-accent="ungu"] { --accent: var(--accent-ungu); --accent-dark: var(--accent-ungu-dark); }
+body[data-accent="pink"] { --accent: var(--accent-pink); --accent-dark: var(--accent-pink-dark); }
+body[data-accent="birutua"] { --accent: var(--accent-birutua); --accent-dark: var(--accent-birutua-dark); }
+body[data-accent="teal"] { --accent: var(--accent-teal); --accent-dark: var(--accent-teal-dark); }
+body[data-accent="oranye"] { --accent: var(--accent-oranye); --accent-dark: var(--accent-oranye-dark); }
+body[data-accent="coklat"] { --accent: var(--accent-coklat); --accent-dark: var(--accent-coklat-dark); }
+body[data-accent="abu"] { --accent: var(--accent-abu); --accent-dark: var(--accent-abu-dark); }
+body[data-accent="indigo"] { --accent: var(--accent-indigo); --accent-dark: var(--accent-indigo-dark); }
+body[data-accent="cyan"] { --accent: var(--accent-cyan); --accent-dark: var(--accent-cyan-dark); }
+body[data-accent="lime"] { --accent: var(--accent-lime); --accent-dark: var(--accent-lime-dark); }
+body[data-accent="deep-orange"] { --accent: var(--accent-deep-orange); --accent-dark: var(--accent-deep-orange-dark); }
+
+/* =================================================================== */
+/* 3. KOMPONEN LAYOUT
+/* =================================================================== */
+.app-header {
+  position: fixed;
+  top: 0; left: 0; width: 100%;
+  padding: 1rem 1.5rem;
+  font-size: 1.375rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--outline);
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+.app-content {
+  position: fixed;
+  top: 61px; /* Tinggi header + border */
+  bottom: 80px; /* Tinggi nav */
+  left: 0; right: 0;
+  overflow-y: auto;
+  padding: 88px 1rem 1rem; /* Padding top untuk search bar */
+  box-sizing: border-box;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; width: 100%;
+  height: 80px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid var(--outline);
+  z-index: 100;
+}
+
+/* =================================================================== */
+/* 4. KOMPONEN UI
+/* =================================================================== */
+/* --- Search Bar --- */
+#search-container {
+  position: fixed;
+  top: 85px;
+  left: 1rem; right: 1rem;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.5rem 0.25rem 1rem;
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--outline);
+  box-shadow: var(--shadow-1);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+#search-container:focus-within {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-2);
+}
+.search-icon { color: var(--text-secondary); font-size: 1.5rem; }
+#search-input {
+  flex-grow: 1; width: 100%;
+  border: none; outline: none;
+  font-size: 1rem; font-family: inherit;
+  background: transparent; color: var(--text-primary);
+  padding: 0.75rem 0;
+}
+#search-input::placeholder { color: var(--text-secondary); opacity: 1; }
+#clear-search {
+  background: none; border: none; outline: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px;
+  color: var(--text-secondary);
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+#clear-search:hover { background-color: var(--state-layer); }
+
+/* --- Bottom Navigation --- */
+.nav-btn {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px;
+  background: none; border: none; outline: none; cursor: pointer;
+  font-family: inherit; font-size: 0.75rem; font-weight: 500;
+  color: var(--text-secondary);
+  width: 80px; height: 100%;
+  border-radius: var(--border-radius-md);
+  transition: color 0.2s;
+  overflow: hidden;
+}
+.nav-btn .material-symbols-outlined { font-size: 1.75rem; }
+.nav-btn::before { /* State Layer */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--primary);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.nav-btn:hover::before { opacity: 0.08; }
+.nav-btn:active::before { opacity: 0.12; }
+.nav-btn.selected { color: var(--primary); }
+.nav-btn.selected .material-symbols-outlined {
+  /* Ikon terisi saat aktif */
+  font-variation-settings: 'FILL' 1;
+}
+
+/* --- Pujian List --- */
+.pujian-list { list-style: none; padding: 0; margin: 0 auto; max-width: 700px; }
+.pujian-list li {
+  position: relative;
+  display: flex; align-items: center; gap: 1rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.pujian-list li:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+.pujian-list li::before { /* State Layer */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--primary);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.pujian-list li:hover::before { opacity: 0.05; }
+.pujian-nomor {
+  flex-shrink: 0;
+  width: 3em; height: 3em;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
   color: #fff;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 40%, transparent 60%);
+  font-weight: 700; font-size: 1rem;
+  background-color: var(--primary);
 }
-body[data-accent="ungu"] {
-  --accent: #8e24aa;
-  --accent-dark: #4a148c;
+.pujian-list li a {
+  text-decoration: none;
+  font-weight: 500; font-size: 1rem;
+  color: var(--text-primary);
 }
-body[data-accent="pink"] {
-  --accent: #d81b60;
-  --accent-dark: #880e4f;
+
+/* --- Settings Panel --- */
+.settings-panel {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 1rem;
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-1);
 }
-body[data-accent="birutua"] {
-  --accent: #1565c0;
-  --accent-dark: #003c8f;
-}
-body[data-accent="teal"] {
-  --accent: #00897b;
-  --accent-dark: #004d40;
-}
-body[data-accent="oranye"] {
-  --accent: #fb8c00;
-  --accent-dark: #e65100;
-}
-body[data-accent="coklat"] {
-  --accent: #6d4c41;
-  --accent-dark: #3e2723;
-}
-body[data-accent="abu"] {
-  --accent: #546e7a;
-  --accent-dark: #263238;
-}
-body[data-accent="ungu"] {
-  --accent: #8e24aa;
-  --accent-dark: #4a148c;
-}
-/* Nomor pujian ikut warna aksen saat hover */
-.pujian-list li:hover .pujian-nomor {
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 40%, transparent 60%);
-}
-body.dark-theme .pujian-list li:hover .pujian-nomor {
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 2px 12px color-mix(in srgb, var(--primary) 60%, transparent 40%);
-}
-/* Primary color mengikuti aksen utama */
-body[data-accent] {
-  --primary: var(--accent, #1976d2);
-  --primary-dark: var(--accent-dark, #0d47a1);
-}
-body[data-accent] .app-header {
-  background: var(--primary);
-}
-body[data-accent] .nav-btn.selected, body[data-accent] .nav-btn:active {
-  background: color-mix(in srgb, var(--primary) 15%, #e3f2fd 85%);
-  color: var(--primary-dark);
-}
-body[data-accent] .pujian-nomor {
-  background: var(--primary);
-}
-body[data-accent] .pujian-list li a {
+.settings-panel h2 {
+  margin: 0 0 1.5rem 0.5rem;
+  font-size: 1.25rem;
   color: var(--primary);
 }
-body[data-accent] .pujian-list li a:hover {
-  color: var(--primary-dark);
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0.5rem;
+  min-height: 56px;
 }
-body[data-accent] .md-search-container {
-  box-shadow: 0 2px 10px 0 color-mix(in srgb, var(--primary) 20%, #1976d2 80%), 0 1.5px 4px rgba(0,0,0,0.04);
+label.setting-item {
+  cursor: pointer;
 }
-body[data-accent] .md-search-input:focus {
-  border: 1.5px solid var(--primary);
+.setting-item + .setting-item { border-top: 1px solid var(--outline); }
+.setting-item label { font-size: 1rem; font-weight: 500; }
+.accent-palette {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 50%;
 }
-body[data-accent] .clear-search-btn.selected, body[data-accent] .clear-search-btn:hover {
-  color: var(--primary-dark);
+.accent-color {
+  position: relative;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--outline);
+  cursor: pointer;
+  transition: border-color 0.2s;
 }
-/* Material Design Switch */
+.accent-color::after { /* Checkmark icon */
+  content: 'check';
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  text-shadow: 0 0 3px rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.accent-color.selected { border-color: var(--primary); }
+.accent-color.selected::after { opacity: 1; }
+/* Warna untuk palet */
+.accent-color[data-color="biru"] { background-color: var(--accent-biru); }
+.accent-color[data-color="merah"] { background-color: var(--accent-merah); }
+.accent-color[data-color="hijau"] { background-color: var(--accent-hijau); }
+.accent-color[data-color="kuning"] { background-color: var(--accent-kuning); }
+.accent-color[data-color="ungu"] { background-color: var(--accent-ungu); }
+.accent-color[data-color="pink"] { background-color: var(--accent-pink); }
+.accent-color[data-color="birutua"] { background-color: var(--accent-birutua); }
+.accent-color[data-color="teal"] { background-color: var(--accent-teal); }
+.accent-color[data-color="oranye"] { background-color: var(--accent-oranye); }
+.accent-color[data-color="coklat"] { background-color: var(--accent-coklat); }
+.accent-color[data-color="abu"] { background-color: var(--accent-abu); }
+.accent-color[data-color="indigo"] { background-color: var(--accent-indigo); }
+.accent-color[data-color="cyan"] { background-color: var(--accent-cyan); }
+.accent-color[data-color="lime"] { background-color: var(--accent-lime); }
+.accent-color[data-color="deep-orange"] { background-color: var(--accent-deep-orange); }
+
+/* Material Design Switch - Rewritten */
 .md-switch {
   position: relative;
   display: inline-block;
-  width: 44px;
-  height: 24px;
-  vertical-align: middle;
+  width: 52px;
+  height: 32px;
+  flex-shrink: 0;
 }
 .md-switch input {
   opacity: 0;
@@ -130,1117 +367,54 @@ body[data-accent] .clear-search-btn.selected, body[data-accent] .clear-search-bt
 }
 .md-slider {
   position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: #ccc;
-  border-radius: 24px;
-  transition: background 0.2s;
+  inset: 0;
+  background-color: var(--outline);
+  border-radius: 16px;
+  transition: background-color 0.25s ease-in-out;
 }
-.md-slider:before {
+/* Thumb (bulatan) */
+.md-slider::before {
   position: absolute;
   content: "";
-  height: 20px;
-  width: 20px;
-  left: 2px;
-  bottom: 2px;
-  background: #fff;
+  height: 24px;
+  width: 24px;
+  left: 4px;
+  bottom: 4px;
+  background-color: #fff;
   border-radius: 50%;
-  transition: transform 0.2s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
-}
-.md-switch input:checked + .md-slider {
-  background: var(--accent, #1976d2);
-}
-.md-switch input:checked + .md-slider:before {
-  transform: translateX(20px);
-}
-.md-switch .md-slider {
-  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.10);
-}
-
-/* Material Palette for Accent */
-.accent-palette {
-  display: flex;
-  gap: 0.7em;
-  margin-top: 0.5em;
-  flex-wrap: wrap;
-}
-.accent-color {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 2.5px solid transparent;
-  cursor: pointer;
-  transition: border 0.18s, box-shadow 0.18s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  outline: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.accent-color.selected {
-  border: 2.5px solid var(--accent, #1976d2);
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.18);
-}
-.accent-color[data-color="biru"] { background: #1976d2; }
-.accent-color[data-color="merah"] { background: #e53935; }
-.accent-color[data-color="hijau"] { background: #43a047; }
-.accent-color[data-color="kuning"] { background: #fbc02d; }
-.accent-color[data-color="ungu"] { background: #8e24aa; }
-.accent-color[data-color="pink"] { background: #d81b60; }
-.accent-color[data-color="birutua"] { background: #1565c0; }
-.accent-color[data-color="teal"] { background: #00897b; }
-.accent-color[data-color="oranye"] { background: #fb8c00; }
-.accent-color[data-color="coklat"] { background: #6d4c41; }
-.accent-color[data-color="abu"] { background: #546e7a; }
-/* Aksen warna juga berlaku di tema terang */
-body[data-accent] .app-header {
-  background: var(--accent, #1976d2);
-}
-body[data-accent] .pujian-nomor {
-  background: var(--accent, #1976d2);
-}
-body[data-accent] .nav-btn.selected, body[data-accent] .nav-btn:active {
-  background: #e3f2fd;
-  color: var(--accent-dark, #0d47a1);
-}
-body[data-accent] .pujian-list li a {
-  color: var(--accent, #1976d2);
-}
-body[data-accent] .pujian-list li a:hover {
-  color: var(--accent-dark, #0d47a1);
-}
-/* ===================== */
-/* Tema Gelap & Aksen   */
-/* ===================== */
-
-body.dark-theme {
-  background: color-mix(in srgb, var(--primary, #1976d2) 16%, #181a20 84%);
-  color: #e0e0e0;
-}
-.dark-theme .app-header {
-  background: #232634;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
-  position: fixed; /* Ensure fixed positioning */
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100; /* High z-index */
-  width: 100%;
-  box-sizing: border-box;
-  /* Prevent movement from browser UI changes */
-  transform: translateZ(0); /* Force hardware acceleration */
-  will-change: transform;
-}
-.dark-theme .app-content {
-  background: color-mix(in srgb, var(--primary, #1976d2) 16%, #181a20 84%);
-}
-.dark-theme .pujian-list li {
-  background: #232634;
-  color: #e0e0e0;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.10), 0 1.5px 4px rgba(0,0,0,0.10);
-}
-.dark-theme .pujian-list li a {
-  color: var(--accent, #90caf9);
-}
-.dark-theme .pujian-list li a:hover {
-  color: var(--accent-dark, #42a5f5);
-}
-.dark-theme .pujian-nomor {
-  background: var(--accent, #1976d2);
-  color: #fff;
-}
-.dark-theme .bottom-nav {
-  background: #232634;
-  color: #e0e0e0;
-}
-.dark-theme .nav-btn.selected, .dark-theme .nav-btn:active {
-  background: #1a2233;
-  color: var(--accent-dark, #42a5f5);
-}
-.dark-theme .md-search-container {
-  background: #232634;
-}
-.dark-theme .md-search-input, .dark-theme #search-input {
-  background: #232634;
-  color: #e0e0e0;
-  border: 1.5px solid #333a4d;
-}
-.dark-theme .md-search-input::placeholder, .dark-theme #search-input::placeholder {
-  color: #b0b8c1;
-}
-.dark-theme .clear-search-btn {
-  color: #b0b8c1;
-}
-.dark-theme .clear-search-btn:hover {
-  background: #232634;
-  color: var(--accent-dark, #42a5f5);
-}
-
-body[data-accent="biru"] {
-  --accent: #1976d2;
-  --accent-dark: #0d47a1;
-}
-body[data-accent="merah"] {
-  --accent: #e53935;
-  --accent-dark: #b71c1c;
-}
-body[data-accent="hijau"] {
-  --accent: #43a047;
-  --accent-dark: #1b5e20;
-}
-body[data-accent="kuning"] {
-  --accent: #fbc02d;
-  --accent-dark: #f57c00;
-}
-/* Tombol clear (silang) di search bar */
-.clear-search-btn {
-  background: none;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 0.2em;
-  margin-left: 0.2em;
-  color: #b0b8c1;
-  border-radius: 50%;
-  transition: background 0.15s, color 0.15s;
-  font-size: 1.5em;
-}
-.clear-search-btn:hover {
-  background: #e3eaf2;
-  color: #1976d2;
-}
-/* Sticky search bar for Pujian */
-/* Search container: improved contrast for dark theme */
-#search-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4em; /* Reduced gap */
-  max-width: 600px; /* Wider for desktop */
-  background: var(--surface, #fff);
-  border-radius: 1.5em; /* Slightly smaller radius */
-  box-shadow: 0 1px 6px 0 rgba(0,0,0,0.07);
-  padding: 0.15em 0.6em 0.15em 0.9em; /* Reduced padding */
-  border: 1.5px solid transparent;
-  transition: background 0.2s, box-shadow 0.2s, border 0.2s;
-  position: fixed; /* Changed from sticky to fixed */
-  top: 5em; /* Adjusted for tighter layout */
-  left: 50%;
-  transform: translateX(-50%) translateZ(0); /* Force hardware acceleration */
-  z-index: 50; /* Higher z-index */
-  box-sizing: border-box;
-  will-change: transform;
-  margin: 0; /* Remove margins to prevent positioning conflicts */
-}
-
-/* Responsive adjustments for mobile */
-@media (max-width: 768px) {
-  #search-container {
-    max-width: calc(100vw - 2.5rem); /* More constrained for mobile */
-    width: calc(100vw - 2.5rem); /* Match max-width */
-    padding: 0.1em 0.4em 0.1em 0.6em;
-    border-radius: 1.3em;
-    font-size: 0.9rem; /* Smaller font for mobile */
-    /* Fix positioning for mobile - remove conflicting margins */
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%) translateZ(0);
-    margin: 0; /* Remove all margins to prevent conflicts */
-  }
-  
-  .md-search-input {
-    font-size: 0.85rem; /* Smaller input text */
-    padding: 0.4em 0.6em;
-    text-align: left; /* Always left align on mobile */
-  }
-  
-  .md-search-input::placeholder {
-    text-align: left; /* Left align placeholder on mobile */
-  }
-  
-  .md-search-container .search-icon {
-    font-size: 1.1em; /* Smaller search icon */
-    margin-right: 0.3em; /* Reduced margin for mobile */
-  }
-  
-  .clear-search-btn {
-    font-size: 1.1em; /* Smaller clear button */
-  }
-}
-
-@media (max-width: 480px) {
-  #search-container {
-    max-width: calc(100vw - 2rem); /* Even more constrained for small mobile */
-    width: calc(100vw - 2rem); /* Match max-width */
-    padding: 0.08em 0.3em 0.08em 0.5em;
-    top: 4.5em; /* Adjusted for smaller header */
-    font-size: 0.8rem; /* Even smaller for small phones */
-    /* Fix positioning for small mobile - remove conflicting margins */
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%) translateZ(0);
-    margin: 0; /* Remove all margins to prevent conflicts */
-  }
-  
-  .md-search-input {
-    font-size: 0.8rem; /* Smaller input text */
-    padding: 0.35em 0.5em;
-    text-align: left; /* Always left align on small mobile */
-  }
-  
-  .md-search-input::placeholder {
-    text-align: left; /* Left align placeholder on small mobile */
-  }
-  
-  .md-search-container .search-icon {
-    font-size: 1em;
-    margin-right: 0.2em; /* Even smaller margin */
-  }
-  
-  .clear-search-btn {
-    font-size: 1em;
-  }
-}
-
-/* Portrait orientation specific fixes */
-
-@media (max-width: 768px) and (orientation: portrait) {
-  #search-container {
-    position: fixed;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%) translateZ(0);
-    margin: 0;
-    width: 95vw;
-    max-width: 340px;
-    min-width: 180px;
-    font-size: 0.92rem;
-    box-sizing: border-box;
-    -webkit-transform: translateX(-50%) translateZ(0);
-    -moz-transform: translateX(-50%) translateZ(0);
-    -ms-transform: translateX(-50%) translateZ(0);
-    padding: 0.08em 0.2em 0.08em 0.5em;
-  }
-
-  .md-search-input {
-    font-size: 0.85rem;
-    padding: 0.35em 0.7em;
-    text-align: left;
-  }
-
-  .md-search-input::placeholder {
-    font-size: 0.85rem;
-    text-align: left;
-  }
-
-  .pujian-list {
-    max-width: 95vw;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .pujian-list li {
-    padding: 0.45rem 0.6rem;
-    margin-bottom: 0.45rem;
-    border-radius: 7px;
-    font-size: 0.82rem;
-    gap: 0.7rem;
-  }
-
-  .pujian-list li a {
-    font-size: 0.82rem;
-    line-height: 1.25;
-  }
-
-  .pujian-nomor {
-    min-width: 1.7em;
-    height: 1.3em;
-    font-size: 0.74rem;
-    margin-right: 0.5em;
-    padding: 0 0.25em;
-  }
-}
-
-@media (max-width: 480px) and (orientation: portrait) {
-  .pujian-list {
-    max-width: calc(100vw - 2.5rem); /* Even narrower for small portrait */
-    margin-left: 1.25rem;
-    margin-right: 1.25rem;
-  }
-  
-  .pujian-list li {
-    padding: 0.4rem 0.6rem; /* Even smaller padding */
-    margin-bottom: 0.4rem;
-    border-radius: 5px;
-    font-size: 0.75rem; /* Smaller font for small portrait */
-  }
-  
-  .pujian-list li a {
-    font-size: 0.75rem; /* Smaller link text */
-    line-height: 1.2; /* Even tighter line height */
-  }
-  
-  .pujian-nomor {
-    min-width: 1.8em; /* Smaller nomor box */
-    height: 1.4em;
-    font-size: 0.7rem; /* Smaller nomor font */
-    margin-right: 0.5em;
-    padding: 0 0.3em;
-  }
-}
-
-body.dark-theme .search-spacer {
-  background: transparent;
-}
-body.dark-theme #search-container {
-  background: color-mix(in srgb, var(--surface-dark, #23272e) 90%, var(--primary, #2196f3) 10%);
-  border: 1.5px solid color-mix(in srgb, var(--primary, #2196f3) 60%, #fff 40%);
-  box-shadow: 0 2px 10px 0 rgba(0,0,0,0.18);
-  position: fixed; /* Changed from sticky to fixed */
-  top: 5em; /* Adjusted for tighter layout */
-  left: 50%;
-  transform: translateX(-50%) translateZ(0); /* Force hardware acceleration */
-  z-index: 50; /* Higher z-index */
-  will-change: transform;
-}
-
-/* Dark theme mobile positioning fix */
-@media (max-width: 480px) {
-  body.dark-theme #search-container {
-    top: 4.5em; /* Match the mobile positioning */
-    left: 50%;
-    transform: translateX(-50%) translateZ(0);
-    margin-left: 0;
-    margin-right: 0;
-  }
-}
-
-body.dark-theme #search-container {
-  background: color-mix(in srgb, var(--surface-dark, #23272e) 90%, var(--primary, #2196f3) 10%);
-  border: 1.5px solid color-mix(in srgb, var(--primary, #2196f3) 60%, #fff 40%);
-  box-shadow: 0 2px 10px 0 rgba(0,0,0,0.18);
-}
-
-#search-container input[type="text"] {
-  background: transparent;
-  color: inherit;
-  border: none;
-  outline: none;
-  font-size: 1.1em;
-  flex: 1;
-  padding: 0.5em 0.2em;
-}
-
-body.dark-theme #search-container input[type="text"] {
-  color: #fff;
-  caret-color: var(--primary, #2196f3);
-}
-
-#clear-search {
-  background: none;
-  border: none;
-  color: var(--primary, #2196f3);
-  font-size: 1.3em;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 0 0.2em;
-  border-radius: 50%;
-  transition: background 0.15s;
-}
-
-#clear-search:hover {
-  background: color-mix(in srgb, var(--primary, #2196f3) 15%, #fff 85%);
-}
-
-body.dark-theme #clear-search {
-  color: var(--primary, #90caf9);
-}
-
-body.dark-theme #clear-search:hover {
-  background: color-mix(in srgb, var(--primary, #2196f3) 30%, #23272e 70%);
-}
-/* Removed stray transition property that was outside of any selector */
-.md-search-container {
-  height: 4.2em; /* tinggi tetap agar benar-benar terpusat vertikal */
-}
-.md-search-container:focus-within, .md-search-container:hover {
-  box-shadow: 0 4px 24px 0 rgba(25,118,210,0.18), 0 3px 8px rgba(0,0,0,0.08);
-  background: #f7fafd;
-}
-/* Baseline .md-search-input, responsif diatur di media query */
-.md-search-input {
-  flex: 1;
-  width: 100%;
-  border-radius: 2em;
-  border: none;
-  outline: none;
-  background: #fff;
-  color: #222;
-  box-shadow: 0 2px 8px rgba(25,118,210,0.08);
-  transition: box-shadow 0.18s, border 0.18s, background 0.18s;
-  letter-spacing: 0.01em;
-  font-weight: 400;
-  text-align: center;
-}
-.md-search-input:focus {
-  box-shadow: 0 4px 16px rgba(25,118,210,0.13);
-  border: 1.5px solid #1976d2;
-  background: #eaf2fb;
-  text-align: left;
-}
-.md-search-input::placeholder {
-  color: #b0b8c1;
-  opacity: 1;
-  font-weight: 500;
-  text-align: center;
-}
-.md-search-container .search-icon {
-  color: #b0b8c1;
-  font-size: 1.5em;
-  margin-right: 0.4em; /* Increased margin for better spacing */
-  transition: color 0.2s;
-  user-select: none;
-  flex-shrink: 0; /* Prevent icon from shrinking */
-}
-.md-search-container .search-icon {
-  color: #b0b8c1;
-  font-size: 1.5em;
-  margin-right: 0.4em; /* Increased margin for better spacing */
-  transition: color 0.2s;
-  user-select: none;
-  flex-shrink: 0; /* Prevent icon from shrinking */
-}
-.md-search-input {
-  flex: 1;
-  width: 100%;
-  padding: 0.7em 1em;
-  border-radius: 2em;
-  border: 1.5px solid #e3eaf2;
-  outline: none;
-  font-size: 1.05rem;
-  background: #fff;
-  color: #222;
-  box-shadow: 0 2px 8px rgba(25,118,210,0.08);
-  transition: box-shadow 0.18s, border 0.18s, background 0.18s;
-  text-align: center; /* Center the text */
-  letter-spacing: 0.01em;
-}
-.md-search-input:focus {
-  box-shadow: 0 4px 16px rgba(25,118,210,0.13);
-  border: 1.5px solid #1976d2;
-  background: #eaf2fb;
-  text-align: left; /* Left align when typing */
-}
-.md-search-input::placeholder {
-  color: #b0b8c1;
-  opacity: 1;
-  font-weight: 500;
-  text-align: center; /* Center placeholder text */
-}
-#search-input {
-  width: 100%;
-  min-width: 400px;
-  max-width: 1000px;
-  padding: 0.7em 2em;
-  border-radius: 8px;
-  border: 1.5px solid #bcd;
-  outline: none;
-  font-size: 1rem;
-  box-sizing: border-box;
-  box-shadow: 0 1px 4px rgba(25,118,210,0.04);
-  /* margin-bottom dihilangkan */
-  background: #fff;
-}
-/* Material Design List for Pujian */
-.pujian-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  /* max-width dan margin auto dihapus agar media query mobile/portrait bisa override dengan benar */
-  /* Remove any extra padding or margin for scrollbar compensation */
-}
-
-/* Responsive adjustments for pujian list */
-@media (max-width: 768px) {
-  .pujian-list {
-    max-width: calc(100vw - 2.5rem); /* Match search bar width */
-    margin-left: 1.25rem;
-    margin-right: 1.25rem;
-  }
-  
-  .pujian-list li {
-    padding: 0.6rem 0.8rem; /* Reduced padding */
-    margin-bottom: 0.6rem; /* Reduced margin */
-    border-radius: 8px;
-    font-size: 0.9rem; /* Smaller font size */
-  }
-  
-  .pujian-list li a {
-    font-size: 0.9rem; /* Smaller link text */
-  }
-  
-  .pujian-nomor {
-    min-width: 2.1em; /* Smaller nomor box */
-    height: 1.7em;
-    font-size: 0.85rem; /* Smaller nomor font */
-    margin-right: 0.7em;
-    padding: 0 0.4em;
-  }
-}
-
-@media (max-width: 480px) {
-  .pujian-list {
-    max-width: calc(100vw - 2rem); /* Match search bar width */
-    margin-left: 1rem;
-    margin-right: 1rem;
-  }
-  
-  .pujian-list li {
-    padding: 0.5rem 0.6rem; /* Even smaller padding */
-    margin-bottom: 0.5rem; /* Smaller gaps */
-    border-radius: 6px;
-    font-size: 0.8rem; /* Smaller font for small phones */
-  }
-  
-  .pujian-list li a {
-    font-size: 0.8rem; /* Smaller link text */
-  }
-  
-  .pujian-nomor {
-    min-width: 1.9em; /* Smaller nomor box */
-    height: 1.5em;
-    font-size: 0.75rem; /* Smaller nomor font */
-    margin-right: 0.6em;
-    padding: 0 0.3em;
-  }
-}
-.pujian-list {
-  position: relative;
-}
-.pujian-list::after {
-  content: '';
-  display: block;
-  height: 2em; /* Spacer at bottom for navbar clearance */
-}
-.pujian-list li {
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08), 0 1.5px 4px rgba(0,0,0,0.04);
-  transition: box-shadow 0.2s, transform 0.1s;
-  display: flex;
-  align-items: center;
-  /* margin, border-radius, padding, gap diatur di media query */
-}
-
-body.dark-theme .pujian-list li {
-  background: #23272e;
-  box-shadow:
-    0 0 0 0px var(--primary, #2196f3),
-    0 2px 8px rgba(33,150,243,0.10),
-    0 0 12px 2px color-mix(in srgb, var(--primary, #2196f3) 60%, transparent 40%);
-}
-.pujian-list li:hover {
-  background: color-mix(in srgb, var(--primary, #2196f3) 16%, #fff 84%);
-  box-shadow: 0 4px 16px rgba(25, 118, 210, 0.16), 0 3px 8px rgba(0,0,0,0.08);
-  transform: translateY(-2px) scale(1.01);
-  transition: background 0.18s;
-}
-
-body.dark-theme .pujian-list li:hover {
-  background: color-mix(in srgb, var(--primary, #2196f3) 28%, #23272e 72%);
-}
-
-body[data-accent] .pujian-list li a:hover {
-  color: var(--primary-dark, #0d47a1);
-}
-.pujian-list li a {
-  color: #1976d2;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s;
-  word-break: break-word;
-  /* font-size diatur di media query */
-}
-.pujian-list li a:hover {
-  color: #0d47a1;
-}
-
-body {
-  margin: 0;
-  font-family: 'Roboto', Arial, sans-serif;
-  background: color-mix(in srgb, var(--primary, #1976d2) 8%, #f5f5f5 92%);
-  color: #222;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-header {
-  background: #1976d2;
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: 500;
-  padding: 1.2rem 0;
-  text-align: center;
-  letter-spacing: 1px;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
-  position: fixed; /* Changed from sticky to fixed */
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100; /* Higher z-index to ensure it stays on top */
-  width: 100%;
-  box-sizing: border-box;
-  /* Prevent any movement from browser UI changes */
-  transform: translateZ(0); /* Force hardware acceleration */
-  will-change: transform; /* Optimize for changes */
-}
-
-/* Responsive header - optimized for mobile */
-@media (max-width: 768px) {
-  .app-header {
-    font-size: 1.25rem; /* Slightly smaller for tablets */
-    padding: 0.9rem 0; /* Reduced padding */
-    letter-spacing: 0.3px;
-  }
-}
-
-@media (max-width: 480px) {
-  .app-header {
-    font-size: 1.1rem; /* Smaller for mobile */
-    padding: 0.8rem 0; /* Tighter padding */
-    letter-spacing: 0.1px;
-  }
-}
-
-/* Make .app-content fill the area between header and navbar */
-.app-content {
-  position: fixed; /* Changed from absolute to fixed */
-  top: 6.8em; /* Reduced top spacing for tighter layout */
-  left: 0;
-  right: 0;
-  bottom: 4.3em; /* navbar height (same as padding before) */
-  width: 100%;
-  height: calc(100vh - 6.8em - 4.3em); /* Fallback calculation */
-  height: calc(100svh - 6.8em - 4.3em); /* Use small viewport height for stability */
-  padding: 0.3rem 1rem 0 1rem; /* Reduced padding for mobile optimization */
-  box-sizing: border-box;
-  background: color-mix(in srgb, var(--primary, #1976d2) 8%, #f5f5f5 92%);
-  overflow-y: auto;
-  overflow-x: hidden;
-  /* Enable touch scrolling for mobile */
-  -webkit-overflow-scrolling: touch;
-  /* Hide native scrollbar for all browsers */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
-  /* Prevent movement from browser UI changes */
-  transform: translateZ(0); /* Force hardware acceleration */
-  will-change: scroll-position; /* Optimize for scroll changes */
-}
-
-/* Responsive app-content */
-@media (max-width: 768px) {
-  .app-content {
-    top: 6.2em; /* Tighter for tablet */
-    bottom: 3.8em; /* Adjusted for smaller navbar */
-    height: calc(100vh - 6.2em - 3.8em); /* Fallback */
-    height: calc(100svh - 6.2em - 3.8em); /* Stable viewport */
-    padding: 0.2rem 0.5rem 0 0.5rem; /* Reduced padding */
-  }
-}
-
-@media (max-width: 480px) {
-  .app-content {
-    top: 5.8em; /* Even tighter for mobile */
-    bottom: 3.5em; /* Adjusted for smaller navbar */
-    height: calc(100vh - 5.8em - 3.5em); /* Fallback */
-    height: calc(100svh - 5.8em - 3.5em); /* Stable viewport */
-    padding: 0.15rem 0.3rem 0 0.3rem; /* Minimal padding for small screens */
-  }
-}
-
-/* Additional mobile optimizations to prevent layout shifts */
-@media screen and (max-width: 768px) {
-  html {
-    /* Prevent zoom on input focus */
-    -webkit-text-size-adjust: 100%;
-    -moz-text-size-adjust: 100%;
-    -ms-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-  }
-  
-  body {
-    /* Prevent rubber band scrolling */
-    overscroll-behavior: none;
-    /* Allow body to scroll naturally but prevent unwanted scrolling */
-    overflow: hidden;
-    margin: 0;
-    padding: 0;
-  }
-  
-  /* Force all fixed elements to stay truly fixed */
-  .app-header,
-  .bottom-nav,
-  #search-container,
-  .search-spacer {
-    position: fixed !important;
-    transform: translateZ(0); /* Force hardware acceleration */
-    -webkit-transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    perspective: 1000px;
-    -webkit-perspective: 1000px;
-  }
-  
-  /* Prevent viewport changes from affecting layout */
-  .app-content {
-    position: fixed !important;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-  }
-}
-.app-content::-webkit-scrollbar {
-  display: none;
-}
-
-/* Custom scrollbar container */
-/* Widened custom scrollbar */
-/* Extra wide custom scrollbar */
-.custom-scrollbar {
+  box-shadow: var(--shadow-1);
+  transition: transform 0.25s ease-in-out, background-color 0.25s ease-in-out;
+}
+.dark-theme .md-slider::before {
+  background-color: var(--text-secondary);
+}
+/* Icon di dalam thumb */
+.md-slider::after {
+  font-family: 'Material Symbols Outlined';
+  content: 'light_mode'; /* Ikon matahari */
   position: absolute;
-  top: 8em; /* beri jarak dari header (4.2em header + 1.2em spacer + 2.6em search bar) */
-  bottom: 5em; /* beri jarak dari navbar (4.3em navbar + 0.7em extra) */
-  right: 0;
-  width: 32px;
-  height: auto;
-  z-index: 10;
-  background: var(--scrollbar-track, rgba(220,225,240,0.92)); /* fallback, will be updated by JS */
-  border-radius: 16px;
-  transition: background 0.2s;
-  user-select: none;
-}
-
-/* Responsive scrollbar for mobile - optimized positioning */
-@media (max-width: 768px) {
-  .custom-scrollbar {
-    width: 18px; /* Smaller scrollbar */
-    right: 3px;
-    border-radius: 9px;
-    top: 6.2em; /* Adjusted for new layout */
-    bottom: 4em; /* Adjusted for smaller navbar */
-  }
-  
-  .custom-scrollbar-thumb {
-    left: 2px;
-    width: 14px;
-    border-radius: 7px;
-  }
-  
-  .pujian-list {
-    padding-right: 0.25rem; /* Minimal padding */
-  }
-}
-
-@media (max-width: 480px) {
-  .custom-scrollbar {
-    width: 14px; /* Even smaller */
-    right: 2px;
-    border-radius: 7px;
-    top: 5.8em; /* Adjusted for mobile layout */
-    bottom: 3.5em; /* Adjusted for smaller navbar */
-  }
-  
-  .custom-scrollbar-thumb {
-    left: 1px;
-    width: 12px;
-    border-radius: 6px;
-  }
-  
-  .pujian-list {
-    padding-right: 0.2rem;
-  }
-}
-
-/* Hide scrollbar on very small screens in landscape */
-@media (max-width: 640px) and (orientation: landscape) {
-  .custom-scrollbar {
-    display: none !important;
-  }
-  
-  .app-content {
-    overflow-y: auto;
-    scrollbar-width: thin;
-    -ms-overflow-style: auto;
-  }
-  
-  .app-content::-webkit-scrollbar {
-    display: block;
-    width: 4px;
-  }
-  
-  .app-content::-webkit-scrollbar-thumb {
-    background: var(--accent, #1976d2);
-    border-radius: 2px;
-  }
-  
-  .pujian-list {
-    padding-right: 0;
-  }
-}
-.custom-scrollbar-thumb {
-  position: absolute;
-  left: 6px;
-  width: 20px;
-  min-height: 40px;
-  border-radius: 12px;
-  background: var(--accent-main, #2196f3);
-  box-shadow: 0 1px 10px 0 rgba(0,0,0,0.13);
-  cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
-}
-body.dark-theme .custom-scrollbar {
-  background: var(--scrollbar-track-dark, rgba(24,26,32,0.96));
-}
-body.dark-theme .custom-scrollbar {
-  background: rgba(30,30,30,0.7);
-}
-.custom-scrollbar-thumb:active,
-body.scrollbar-dragging .custom-scrollbar-thumb {
-  filter: brightness(0.92);
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.18);
-}
-.custom-scrollbar[style*="display: none"] {
-  pointer-events: none;
-  opacity: 0;
-}
-
-.welcome-text {
-  text-align: center;
-  margin-top: 2rem;
-  font-size: 1.1rem;
-  color: #555;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
+  font-size: 16px;
+  color: var(--text-secondary);
+  left: 8px;
+  top: 8px;
+  transition: transform 0.25s ease-in-out, color 0.25s ease-in-out;
   z-index: 1;
 }
-
-/* Dark theme welcome text */
-.dark-theme .welcome-text {
-  color: #e0e0e0;
+.dark-theme .md-slider::after {
+  color: var(--surface-1);
+}
+/* Kondisi checked */
+.md-switch input:checked + .md-slider {
+  background-color: var(--primary);
+}
+.md-switch input:checked + .md-slider::before {
+  background-color: #fff;
+  transform: translateX(20px);
+}
+.md-switch input:checked + .md-slider::after {
+  content: 'dark_mode'; /* Ikon bulan */
+  color: var(--primary);
+  transform: translateX(20px);
 }
 
-/* Settings panel styling */
-.settings-panel {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 1.5rem;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08), 0 1.5px 4px rgba(0,0,0,0.04);
-}
-
-.settings-panel h2 {
-  margin: 0 0 1.5rem 0;
-  color: var(--accent, #1976d2);
-  font-size: 1.3rem;
-  font-weight: 500;
-  text-align: center;
-}
-
-/* Dark theme settings panel */
-.dark-theme .settings-panel {
-  background: #232634;
-  color: #e0e0e0;
-  box-shadow: 0 2px 8px rgba(33,150,243,0.10), 0 0 12px 2px color-mix(in srgb, var(--primary, #2196f3) 60%, transparent 40%);
-}
-
-.dark-theme .settings-panel h2 {
-  color: var(--accent, #90caf9);
-}
-
-/* Responsive settings panel - optimized for mobile */
-@media (max-width: 768px) {
-  .settings-panel {
-    max-width: calc(100vw - 1.5rem);
-    margin: 0.8rem auto;
-    padding: 1rem;
-    font-size: 0.9rem; /* Smaller font */
-  }
-  
-  .settings-panel h2 {
-    font-size: 1.1rem; /* Smaller heading */
-    margin-bottom: 1.2rem;
-  }
-  
-  .accent-palette {
-    gap: 0.5em; /* Smaller gaps between colors */
-  }
-  
-  .accent-color {
-    width: 28px; /* Smaller color buttons */
-    height: 28px;
-  }
-}
-
-@media (max-width: 480px) {
-  .settings-panel {
-    max-width: calc(100vw - 1rem);
-    margin: 0.4rem auto;
-    padding: 0.8rem;
-    font-size: 0.8rem; /* Even smaller font */
-  }
-  
-  .settings-panel h2 {
-    font-size: 1rem; /* Smaller heading */
-    margin-bottom: 1rem;
-  }
-  
-  .accent-palette {
-    gap: 0.4em; /* Even smaller gaps */
-  }
-  
-  .accent-color {
-    width: 24px; /* Smaller color buttons */
-    height: 24px;
-  }
-  
-  .md-switch {
-    width: 38px; /* Smaller switch */
-    height: 20px;
-  }
-  
-  .md-slider:before {
-    width: 16px;
-    height: 16px;
-  }
-  
-  .md-switch input:checked + .md-slider:before {
-    transform: translateX(18px);
-  }
-}
-
-/* Nav bar with accent and glow */
-.bottom-nav {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  background: var(--primary, #1976d2);
-  color: #fff;
-  box-shadow:
-    0 -2px 16px 0 color-mix(in srgb, var(--primary, #2196f3) 30%, transparent 70%),
-    0 -8px 32px 0 color-mix(in srgb, var(--primary, #2196f3) 18%, transparent 82%),
-    0 -2px 8px rgba(25, 118, 210, 0.08);
-  display: flex;
-  justify-content: space-around;
-  padding: 0.5rem 0;
-  z-index: 100; /* Higher z-index to ensure it stays on top */
-  transition: background 0.2s, box-shadow 0.2s;
-  box-sizing: border-box;
-  /* Prevent any movement from browser UI changes */
-  transform: translateZ(0); /* Force hardware acceleration */
-  will-change: transform; /* Optimize for changes */
-}
-
-/* Responsive bottom nav - optimized for mobile */
-@media (max-width: 768px) {
-  .bottom-nav {
-    padding: 0.35rem 0; /* Slightly reduced */
-    height: 3.8em; /* Fixed height for calculation */
-  }
-  
-  .bottom-nav .nav-btn {
-    padding: 0.2rem 0.9rem; /* Tighter padding */
-    font-size: 0.85rem; /* Smaller font */
-  }
-  
-  .material-icons {
-    font-size: 1.4rem; /* Smaller icons */
-    margin-bottom: 0.03rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .bottom-nav {
-    padding: 0.25rem 0; /* Even tighter */
-    height: 3.5em; /* Fixed height for calculation */
-  }
-  
-  .bottom-nav .nav-btn {
-    padding: 0.15rem 0.7rem; /* Minimal padding */
-    font-size: 0.8rem; /* Smaller font */
-  }
-  
-  .material-icons {
-    font-size: 1.3rem; /* Smaller icons for small screens */
-    margin-bottom: 0.01rem;
-  }
-}
-
-body.dark-theme .bottom-nav {
-  background: color-mix(in srgb, var(--primary, #2196f3) 85%, #232634 15%);
-  color: #fff;
-  box-shadow:
-    0 -2px 24px 0 color-mix(in srgb, var(--primary, #2196f3) 40%, transparent 60%),
-    0 -8px 40px 0 color-mix(in srgb, var(--primary, #2196f3) 22%, transparent 78%),
-    0 -2px 8px rgba(25, 118, 210, 0.13);
-}
-
-.bottom-nav .nav-btn {
-  background: none;
-  border: none;
-  outline: none;
-  color: #fff;
-  font-size: 1rem;
-  font-family: inherit;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.3rem 1.2rem;
-  border-radius: 8px;
-  transition: background 0.2s, color 0.2s;
-  cursor: pointer;
-}
-.bottom-nav .nav-btn.selected, .bottom-nav .nav-btn:active {
-  background: color-mix(in srgb, #fff 18%, var(--primary, #2196f3) 82%);
-  color: var(--primary-dark, #0d47a1);
-}
-body.dark-theme .bottom-nav .nav-btn.selected, body.dark-theme .bottom-nav .nav-btn:active {
-  background: color-mix(in srgb, var(--primary, #2196f3) 60%, #232634 40%);
-  color: #fff;
-}
-
-.nav-btn {
-  background: none;
-  border: none;
-  outline: none;
-  color: #1976d2;
-  font-size: 1rem;
-  font-family: inherit;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.3rem 1.2rem;
-  border-radius: 8px;
-  transition: background 0.2s, color 0.2s;
-  cursor: pointer;
-}
-
-.nav-btn:active, .nav-btn.selected {
-  background: #e3f2fd;
-  color: #0d47a1;
-}
-
-.material-icons {
-  font-size: 1.7rem;
-  margin-bottom: 0.1rem;
-}
+.welcome-text { text-align: center; margin-top: 4rem; font-size: 1.1rem; color: var(--text-secondary); }
