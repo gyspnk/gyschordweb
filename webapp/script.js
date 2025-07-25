@@ -1,11 +1,17 @@
 /**
- * Kidung Rohani App - Fixed and Optimized Script v2
+ * Kidung Rohani App - PDF.js Integration (Fixed)
  *
  * Perubahan Utama:
- * - Bug Fix: Struktur HTML untuk switch tema diubah dengan membungkusnya dalam <label>
- * agar seluruh area dapat diklik, memperbaiki bug interaksi.
- * - Efisiensi: Tetap menggunakan event delegation yang optimal.
+ * - Bug Fix: Menambahkan kembali fungsi handleSearch, clearSearch, filterPujianList,
+ * dan logika renderSettings yang hilang, yang menyebabkan error ReferenceError.
+ * - PDF.js: Menggunakan pustaka PDF.js untuk merender PDF ke <canvas>.
+ * - Custom Controls: Menambahkan logika untuk tombol navigasi halaman.
  */
+
+// Inisialisasi worker untuk PDF.js
+const { pdfjsLib } = globalThis;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://mozilla.github.io/pdf.js/build/pdf.worker.mjs`;
+
 document.addEventListener('DOMContentLoaded', () => {
   // --- 1. Seleksi Elemen DOM ---
   const mainContent = document.getElementById('main-content');
@@ -14,8 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchContainer = document.getElementById('search-container');
   const searchInput = document.getElementById('search-input');
   const clearSearchBtn = document.getElementById('clear-search');
+  
+  // Elemen PDF Viewer
+  const pdfViewerOverlay = document.getElementById('pdf-viewer-overlay');
+  const pdfViewerTitle = document.getElementById('pdf-viewer-title');
+  const pdfCanvas = document.getElementById('pdf-canvas');
+  const pdfViewerCloseBtn = document.getElementById('pdf-viewer-close');
+  const prevPageBtn = document.getElementById('pdf-prev');
+  const nextPageBtn = document.getElementById('pdf-next');
+  const pageNumEl = document.getElementById('page-num');
+  const pageCountEl = document.getElementById('page-count');
+  const viewerLoader = pdfViewerOverlay.querySelector('.loader');
 
   let pujianItems = [];
+  let pdfDoc = null;
+  let currentPageNum = 1;
+  let pageRendering = false;
+  let pageNumPending = null;
 
   // --- 2. Inisialisasi Aplikasi ---
   function init() {
@@ -30,15 +51,20 @@ document.addEventListener('DOMContentLoaded', () => {
     pengaturanBtn.addEventListener('click', () => navigateTo('pengaturan'));
     searchInput.addEventListener('input', handleSearch);
     clearSearchBtn.addEventListener('click', clearSearch);
-
+    
+    // Event delegation untuk semua klik di mainContent
+    mainContent.addEventListener('click', handleMainContentClick);
     mainContent.addEventListener('change', handleSettingsChange);
-    mainContent.addEventListener('click', handleAccentClick);
+    
+    // Listeners untuk PDF Viewer
+    pdfViewerCloseBtn.addEventListener('click', closePdfViewer);
+    prevPageBtn.addEventListener('click', onPrevPage);
+    nextPageBtn.addEventListener('click', onNextPage);
   }
 
-  // --- 4. Logika Navigasi ---
+  // --- 4. Logika Navigasi & Render Utama ---
   function navigateTo(page) {
     [pujianBtn, pengaturanBtn].forEach(btn => btn.classList.remove('selected'));
-    
     if (page === 'pujian') {
       pujianBtn.classList.add('selected');
       searchContainer.style.display = 'flex';
@@ -50,7 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // --- 5. Render Tampilan ---
   function renderPujianList() {
     if (pujianItems.length > 0) {
       displayPujian(pujianItems);
@@ -78,20 +103,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function displayPujian(items) {
-    if (items.length === 0) {
-      mainContent.innerHTML = '<div class="welcome-text">Tidak ada lagu pujian.</div>';
-      return;
-    }
-    const listHtml = `
+    mainContent.innerHTML = `
       <ul class="pujian-list" id="pujian-list">
         ${items.map(item => `
           <li data-nomor="${item.nomor.toLowerCase()}" data-judul="${item.judul.toLowerCase()}">
             <span class="pujian-nomor">${item.nomor}</span>
-            <a href="${item.fileHref}" target="_blank">${item.judul}</a>
+            <a href="${item.fileHref}">${item.judul}</a>
           </li>
         `).join('')}
       </ul>`;
-    mainContent.innerHTML = listHtml;
     filterPujianList();
   }
 
@@ -120,7 +140,83 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>`;
   }
 
-  // --- 6. Logika Fungsional ---
+  // --- 5. Logika PDF Viewer ---
+  function openPdfViewer(url, title) {
+    pdfViewerTitle.textContent = title;
+    document.body.classList.add('viewer-active');
+    viewerLoader.style.display = 'block';
+
+    const loadingTask = pdfjsLib.getDocument(url);
+    loadingTask.promise.then(doc => {
+      pdfDoc = doc;
+      pageCountEl.textContent = pdfDoc.numPages;
+      currentPageNum = 1;
+      renderPage(currentPageNum);
+    }, reason => {
+      console.error(`Error during PDF loading: ${reason}`);
+      alert('Gagal memuat PDF.');
+      closePdfViewer();
+    });
+  }
+
+  function renderPage(num) {
+    pageRendering = true;
+    viewerLoader.style.display = 'block';
+
+    pdfDoc.getPage(num).then(page => {
+      const viewport = page.getViewport({ scale: 2.0 });
+      const canvasContext = pdfCanvas.getContext('2d');
+      pdfCanvas.height = viewport.height;
+      pdfCanvas.width = viewport.width;
+
+      const renderContext = { canvasContext, viewport };
+      const renderTask = page.render(renderContext);
+
+      renderTask.promise.then(() => {
+        pageRendering = false;
+        viewerLoader.style.display = 'none';
+        if (pageNumPending !== null) {
+          renderPage(pageNumPending);
+          pageNumPending = null;
+        }
+      });
+    });
+
+    pageNumEl.textContent = num;
+    updateNavButtons();
+  }
+
+  function queueRenderPage(num) {
+    if (pageRendering) {
+      pageNumPending = num;
+    } else {
+      renderPage(num);
+    }
+  }
+
+  function onPrevPage() {
+    if (currentPageNum <= 1) return;
+    currentPageNum--;
+    queueRenderPage(currentPageNum);
+  }
+
+  function onNextPage() {
+    if (currentPageNum >= pdfDoc.numPages) return;
+    currentPageNum++;
+    queueRenderPage(currentPageNum);
+  }
+  
+  function updateNavButtons() {
+    prevPageBtn.disabled = (currentPageNum <= 1);
+    nextPageBtn.disabled = (currentPageNum >= pdfDoc.numPages);
+  }
+
+  function closePdfViewer() {
+    document.body.classList.remove('viewer-active');
+    pdfDoc = null;
+  }
+
+  // --- 6. Event Handlers & Logika Lainnya ---
   function handleSearch() {
     clearSearchBtn.style.display = searchInput.value ? 'flex' : 'none';
     filterPujianList();
@@ -144,15 +240,16 @@ document.addEventListener('DOMContentLoaded', () => {
       li.style.display = isMatch ? 'flex' : 'none';
     });
   }
-  
-  function handleSettingsChange(e) {
-    if (e.target.id === 'dark-theme-toggle') {
-      document.body.classList.toggle('dark-theme', e.target.checked);
-      localStorage.setItem('dark-theme', e.target.checked ? '1' : '0');
-    }
-  }
 
-  function handleAccentClick(e) {
+  function handleMainContentClick(e) {
+    const pujianItem = e.target.closest('.pujian-list li');
+    if (pujianItem) {
+      e.preventDefault();
+      const link = pujianItem.querySelector('a');
+      if (link) openPdfViewer(link.href, link.textContent);
+      return;
+    }
+
     const accentButton = e.target.closest('.accent-color');
     if (accentButton) {
       const color = accentButton.dataset.color;
@@ -160,6 +257,13 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('accent', color);
       accentButton.parentElement.querySelector('.selected')?.classList.remove('selected');
       accentButton.classList.add('selected');
+    }
+  }
+  
+  function handleSettingsChange(e) {
+    if (e.target.id === 'dark-theme-toggle') {
+      document.body.classList.toggle('dark-theme', e.target.checked);
+      localStorage.setItem('dark-theme', e.target.checked ? '1' : '0');
     }
   }
 
