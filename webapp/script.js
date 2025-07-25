@@ -1,18 +1,5 @@
 // Navigasi sederhana antara Pujian dan Pengaturan
-// Debugging             // Cari li pertama yang visible, beri margin-top sesuai viewport
-            const firstVisible = items.find(li => li.style.display !== 'none');
-            if (firstVisible) {
-              if (window.innerWidth <= 480) {
-                firstVisible.style.marginTop = '0.3em';
-              } else if (window.innerWidth <= 768) {
-                firstVisible.style.marginTop = '0.5em';
-              } else {
-                firstVisible.style.marginTop = '1em';
-              }
-            }ls
 console.log('Script loaded: script.js');
-// Uncomment the next line to trigger the debugger on load
-// debugger;
 const mainContent = document.getElementById('main-content');
 const pujianBtn = document.getElementById('pujian-btn');
 const pengaturanBtn = document.getElementById('pengaturan-btn');
@@ -73,9 +60,17 @@ function renderPujianList() {
             // Reset margin-top
             li.style.marginTop = '';
           });
-          // Cari li pertama yang visible, beri margin-top 7em
+          // Cari li pertama yang visible, beri margin-top sesuai viewport
           const firstVisible = items.find(li => li.style.display !== 'none');
-          if (firstVisible) firstVisible.style.marginTop = '7em';
+          if (firstVisible) {
+            if (window.innerWidth <= 480) {
+              firstVisible.style.marginTop = '0.3em';
+            } else if (window.innerWidth <= 768) {
+              firstVisible.style.marginTop = '0.5em';
+            } else {
+              firstVisible.style.marginTop = '1em';
+            }
+          }
         };
         // Pastikan margin-top benar saat load awal
         setTimeout(() => {
