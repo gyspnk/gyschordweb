@@ -16,6 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 
+  <!-- Link ke file CSS default -->
   <link rel="stylesheet" href="style.css">
   
   <!-- PDF.js Library -->
@@ -50,33 +51,63 @@
     </button>
   </nav>
 
-  <!-- PDF Viewer Overlay (Full Page with Canvas) -->
+  <!-- PDF Viewer Overlay (Full Page with Advanced Controls) -->
   <div id="pdf-viewer-overlay" class="pdf-viewer-overlay">
       <header class="pdf-viewer-header">
         <button id="pdf-viewer-close" aria-label="Kembali">
           <span class="material-symbols-outlined">arrow_back</span>
         </button>
-        <h2 id="pdf-viewer-title">Judul Pujian</h2>
+        <div class="song-navigation">
+            <button id="song-prev" aria-label="Pujian Sebelumnya">
+                <span class="material-symbols-outlined">skip_previous</span>
+            </button>
+            <div class="song-title-wrapper">
+                <h2 id="pdf-viewer-title">Judul Pujian</h2>
+                <span id="pdf-viewer-number">Nomor Pujian</span>
+            </div>
+            <button id="song-next" aria-label="Pujian Berikutnya">
+                <span class="material-symbols-outlined">skip_next</span>
+            </button>
+        </div>
         <div class="pdf-viewer-controls">
-          <button id="pdf-prev" aria-label="Halaman Sebelumnya">
-            <span class="material-symbols-outlined">chevron_left</span>
+          <button id="zoom-out" aria-label="Perkecil">
+            <span class="material-symbols-outlined">zoom_out</span>
           </button>
-          <div class="page-indicator">
-            <span id="page-num">0</span> / <span id="page-count">0</span>
+          <button id="zoom-in" aria-label="Perbesar">
+            <span class="material-symbols-outlined">zoom_in</span>
+          </button>
+          <button id="view-mode" aria-label="Mode Tampilan">
+            <span class="material-symbols-outlined">book</span>
+          </button>
+          <button id="scroll-mode" aria-label="Mode Gulir">
+            <span class="material-symbols-outlined">swap_vert</span>
+          </button>
+          <div class="page-navigation">
+            <button id="pdf-prev" aria-label="Halaman Sebelumnya">
+              <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+            <div class="page-indicator">
+              <span id="page-num">0</span> / <span id="page-count">0</span>
+            </div>
+            <button id="pdf-next" aria-label="Halaman Berikutnya">
+              <span class="material-symbols-outlined">chevron_right</span>
+            </button>
           </div>
-          <button id="pdf-next" aria-label="Halaman Berikutnya">
-            <span class="material-symbols-outlined">chevron_right</span>
-          </button>
         </div>
       </header>
       <div class="pdf-viewer-content">
         <div class="canvas-wrapper">
-          <canvas id="pdf-canvas"></canvas>
+          <!-- Canvas akan dibuat secara dinamis oleh JS -->
         </div>
         <div class="loader"></div>
+        <div id="orientation-warning" class="orientation-warning">
+            <span class="material-symbols-outlined">screen_rotation</span>
+            <p>Putar layar ke mode lanskap untuk tampilan dua halaman yang optimal.</p>
+        </div>
       </div>
   </div>
 
+  <!-- Link ke file JS default -->
   <script src="script.js" type="module"></script>
 
 </body>
