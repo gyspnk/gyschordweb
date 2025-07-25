@@ -5,10 +5,22 @@
     {
       "type": "chrome",
       "request": "launch",
-      "name": "Debug Webapp (Python HTTP Server)",
+      "name": "Debug Localhost (Chrome)",
       "url": "http://localhost:8000",
       "webRoot": "${workspaceFolder}/webapp",
-      // preLaunchTask dihapus agar debug tidak menunggu task
+      "preLaunchTask": "Start Python HTTP Server",
+      "serverReadyAction": {
+        "pattern": ".*Serving HTTP on.*",
+        "uriFormat": "http://localhost:8000",
+        "action": "openExternally"
+      }
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Debug Jaringan Lokal (Chrome)",
+      "url": "http://192.168.1.100:8000",
+      "webRoot": "${workspaceFolder}/webapp"
     }
   ]
 }

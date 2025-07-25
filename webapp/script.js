@@ -191,8 +191,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const appContent = document.querySelector('.app-content');
     if (!appContent) return;
 
-    // Hide native scrollbar (for all browsers)
-    appContent.style.overflow = 'hidden';
+    // Check if we should show custom scrollbar based on screen size
+    function shouldShowCustomScrollbar() {
+      const isLandscapeMobile = window.matchMedia('(max-width: 640px) and (orientation: landscape)').matches;
+      return !isLandscapeMobile;
+    }
+
+    // Hide native scrollbar (for all browsers) only if custom scrollbar is enabled
+    if (shouldShowCustomScrollbar()) {
+      appContent.style.overflow = 'hidden';
+    }
 
     // Create custom scrollbar elements
 
@@ -217,6 +225,30 @@ document.addEventListener('DOMContentLoaded', () => {
     customScrollbar.style.height = 'auto';
     customScrollbar.style.zIndex = '10';
     appContent.parentElement.appendChild(customScrollbar);
+
+    // Update scrollbar visibility based on screen size
+    function updateScrollbarVisibility() {
+      if (shouldShowCustomScrollbar()) {
+        customScrollbar.style.display = 'block';
+        appContent.style.overflow = 'hidden';
+        appContent.style.scrollbarWidth = 'none';
+        appContent.style.msOverflowStyle = 'none';
+      } else {
+        customScrollbar.style.display = 'none';
+        appContent.style.overflow = 'auto';
+        appContent.style.scrollbarWidth = 'thin';
+        appContent.style.msOverflowStyle = 'auto';
+      }
+    }
+
+    // Listen for orientation/resize changes
+    window.addEventListener('resize', updateScrollbarVisibility);
+    window.addEventListener('orientationchange', () => {
+      setTimeout(updateScrollbarVisibility, 100);
+    });
+    
+    // Initial visibility check
+    updateScrollbarVisibility();
 
     // Position and size the scrollbar
     function updateScrollbar() {
@@ -245,18 +277,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial update
     updateScrollbar();
 
-    // Drag logic
+    // Drag logic - support both mouse and touch
     let isDragging = false;
     let dragStartY = 0;
     let dragStartScroll = 0;
-    customThumb.addEventListener('mousedown', function(e) {
+    
+    function startDrag(clientY) {
       isDragging = true;
-      dragStartY = e.clientY;
+      dragStartY = clientY;
       dragStartScroll = appContent.scrollTop;
       document.body.classList.add('scrollbar-dragging');
-      e.preventDefault();
-    });
-    document.addEventListener('mousemove', function(e) {
+    }
+    
+    function updateDrag(clientY) {
       if (!isDragging) return;
       const content = appContent;
       const scrollHeight = content.scrollHeight;
@@ -265,18 +298,46 @@ document.addEventListener('DOMContentLoaded', () => {
       const thumbHeight = Math.max(32, clientHeight * ratio);
       const maxThumbTop = clientHeight - thumbHeight;
       const maxScrollTop = scrollHeight - clientHeight;
-      const deltaY = e.clientY - dragStartY;
+      const deltaY = clientY - dragStartY;
       let newThumbTop = (dragStartScroll / maxScrollTop) * maxThumbTop + deltaY;
       newThumbTop = Math.max(0, Math.min(maxThumbTop, newThumbTop));
       const newScrollTop = (newThumbTop / maxThumbTop) * maxScrollTop;
       appContent.scrollTop = newScrollTop;
-    });
-    document.addEventListener('mouseup', function() {
+    }
+    
+    function endDrag() {
       if (isDragging) {
         isDragging = false;
         document.body.classList.remove('scrollbar-dragging');
       }
+    }
+    
+    // Mouse events
+    customThumb.addEventListener('mousedown', function(e) {
+      startDrag(e.clientY);
+      e.preventDefault();
     });
+    
+    document.addEventListener('mousemove', function(e) {
+      updateDrag(e.clientY);
+    });
+    
+    document.addEventListener('mouseup', endDrag);
+    
+    // Touch events for mobile
+    customThumb.addEventListener('touchstart', function(e) {
+      startDrag(e.touches[0].clientY);
+      e.preventDefault();
+    }, { passive: false });
+    
+    document.addEventListener('touchmove', function(e) {
+      if (isDragging) {
+        updateDrag(e.touches[0].clientY);
+        e.preventDefault();
+      }
+    }, { passive: false });
+    
+    document.addEventListener('touchend', endDrag);
 
     // Click on scrollbar track
     customScrollbar.addEventListener('mousedown', function(e) {
@@ -301,6 +362,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Scroll wheel with acceleration/inertia ---
     let scrollVelocity = 0;
     let scrollAnimating = false;
+    let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
     function animateScroll() {
       if (Math.abs(scrollVelocity) < 0.5) {
         scrollVelocity = 0;
@@ -311,16 +374,25 @@ document.addEventListener('DOMContentLoaded', () => {
       scrollVelocity *= 0.85; // friction
       requestAnimationFrame(animateScroll);
     }
-    appContent.addEventListener('wheel', function(e) {
-      if (e.deltaY !== 0) {
-        scrollVelocity += e.deltaY * 0.65; // reduced acceleration factor for smoother feel
-        if (!scrollAnimating) {
-          scrollAnimating = true;
-          requestAnimationFrame(animateScroll);
+    
+    // Only apply custom wheel behavior on non-touch devices
+    if (!isTouchDevice) {
+      appContent.addEventListener('wheel', function(e) {
+        if (e.deltaY !== 0) {
+          scrollVelocity += e.deltaY * 0.65; // reduced acceleration factor for smoother feel
+          if (!scrollAnimating) {
+            scrollAnimating = true;
+            requestAnimationFrame(animateScroll);
+          }
+          e.preventDefault();
         }
-        e.preventDefault();
-      }
-    }, { passive: false });
+      }, { passive: false });
+    }
+    
+    // For touch devices, allow native scrolling but still update custom scrollbar
+    if (isTouchDevice) {
+      appContent.addEventListener('scroll', updateScrollbar, { passive: true });
+    }
 
     // Theme-aware styling (update on theme/accent change)
     function updateScrollbarTheme() {

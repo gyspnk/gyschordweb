@@ -311,6 +311,42 @@ body[data-accent="kuning"] {
   z-index: 20;
 }
 
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  #search-container {
+    max-width: calc(100% - 2rem);
+    margin: 0.2em 1rem 0.6em 1rem;
+    padding: 0.15em 0.5em 0.15em 0.8em;
+    border-radius: 1.5em;
+  }
+  
+  .md-search-input {
+    font-size: 0.95rem;
+    padding: 0.5em 0.8em;
+  }
+  
+  .md-search-container .search-icon {
+    font-size: 1.3em;
+  }
+  
+  .clear-search-btn {
+    font-size: 1.3em;
+  }
+}
+
+@media (max-width: 480px) {
+  #search-container {
+    max-width: calc(100% - 1rem);
+    margin: 0.2em 0.5rem 0.6em 0.5rem;
+    padding: 0.1em 0.4em 0.1em 0.6em;
+  }
+  
+  .md-search-input {
+    font-size: 0.9rem;
+    padding: 0.4em 0.6em;
+  }
+}
+
 body.dark-theme .search-spacer {
   background: transparent;
 }
@@ -485,6 +521,59 @@ body.dark-theme #clear-search:hover {
   margin-right: auto;
   /* Remove any extra padding or margin for scrollbar compensation */
 }
+
+/* Responsive adjustments for pujian list */
+@media (max-width: 768px) {
+  .pujian-list {
+    max-width: calc(100% - 1rem);
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+  }
+  
+  .pujian-list li {
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.8rem;
+    border-radius: 10px;
+  }
+  
+  .pujian-list li a {
+    font-size: 1rem;
+  }
+  
+  .pujian-nomor {
+    min-width: 2.4em;
+    height: 1.9em;
+    font-size: 1rem;
+    margin-right: 0.9em;
+    padding: 0 0.5em;
+  }
+}
+
+@media (max-width: 480px) {
+  .pujian-list {
+    max-width: calc(100% - 0.5rem);
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+  }
+  
+  .pujian-list li {
+    padding: 0.7rem 0.8rem;
+    margin-bottom: 0.7rem;
+    border-radius: 8px;
+  }
+  
+  .pujian-list li a {
+    font-size: 0.95rem;
+  }
+  
+  .pujian-nomor {
+    min-width: 2.2em;
+    height: 1.8em;
+    font-size: 0.95rem;
+    margin-right: 0.8em;
+    padding: 0 0.4em;
+  }
+}
 .pujian-list {
   position: relative;
 }
@@ -562,6 +651,23 @@ body {
   z-index: 50;
 }
 
+/* Responsive header */
+@media (max-width: 768px) {
+  .app-header {
+    font-size: 1.3rem;
+    padding: 1rem 0;
+    letter-spacing: 0.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    font-size: 1.2rem;
+    padding: 0.9rem 0;
+    letter-spacing: 0.2px;
+  }
+}
+
 /* Make .app-content fill the area between header and navbar */
 .app-content {
   position: absolute;
@@ -596,6 +702,70 @@ body {
   border-radius: 16px;
   transition: background 0.2s;
   user-select: none;
+}
+
+/* Responsive scrollbar for mobile */
+@media (max-width: 768px) {
+  .custom-scrollbar {
+    width: 24px;
+    right: 2px;
+    border-radius: 12px;
+  }
+  
+  .custom-scrollbar-thumb {
+    left: 4px;
+    width: 16px;
+    border-radius: 8px;
+  }
+  
+  .pujian-list {
+    padding-right: 0.5rem; /* Add padding to prevent overlap with scrollbar */
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-scrollbar {
+    width: 20px;
+    right: 1px;
+    border-radius: 10px;
+  }
+  
+  .custom-scrollbar-thumb {
+    left: 3px;
+    width: 14px;
+    border-radius: 7px;
+  }
+  
+  .pujian-list {
+    padding-right: 0.3rem;
+  }
+}
+
+/* Hide scrollbar on very small screens in landscape */
+@media (max-width: 640px) and (orientation: landscape) {
+  .custom-scrollbar {
+    display: none !important;
+  }
+  
+  .app-content {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    -ms-overflow-style: auto;
+  }
+  
+  .app-content::-webkit-scrollbar {
+    display: block;
+    width: 4px;
+  }
+  
+  .app-content::-webkit-scrollbar-thumb {
+    background: var(--accent, #1976d2);
+    border-radius: 2px;
+  }
+  
+  .pujian-list {
+    padding-right: 0;
+  }
 }
 .custom-scrollbar-thumb {
   position: absolute;
@@ -648,6 +818,39 @@ body.scrollbar-dragging .custom-scrollbar-thumb {
   padding: 0.5rem 0;
   z-index: 100;
   transition: background 0.2s, box-shadow 0.2s;
+}
+
+/* Responsive bottom nav */
+@media (max-width: 768px) {
+  .bottom-nav {
+    padding: 0.4rem 0;
+  }
+  
+  .bottom-nav .nav-btn {
+    padding: 0.25rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .material-icons {
+    font-size: 1.5rem;
+    margin-bottom: 0.05rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .bottom-nav {
+    padding: 0.3rem 0;
+  }
+  
+  .bottom-nav .nav-btn {
+    padding: 0.2rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  
+  .material-icons {
+    font-size: 1.4rem;
+    margin-bottom: 0.02rem;
+  }
 }
 
 body.dark-theme .bottom-nav {
