@@ -1,8 +1,22 @@
 .pujian-list li:first-child {
-  margin-top: 7em;
+  margin-top: 1em; /* Reduced from 7em since header is now fixed */
+}
+
+/* Responsive first child margin */
+@media (max-width: 768px) {
+  .pujian-list li:first-child {
+    margin-top: 0.5em;
+  }
+}
+
+@media (max-width: 480px) {
+  .pujian-list li:first-child {
+    margin-top: 0.3em;
+  }
 }
 html, body {
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height untuk mobile */
   overflow: hidden;
 }
 /* Spacer for empty area above search bar */
@@ -10,12 +24,10 @@ html, body {
   height: 1.2em;
   width: 4.5em;
   display: inline-block;
-  position: sticky;
+  position: fixed; /* Changed from sticky to fixed */
   top: 4.2em; /* stick below header, adjust if header height changes */
-  left: 0;
-  right: 0;
-  margin-left: auto;
-  margin-right: auto;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 30;
   background: transparent;
 }
@@ -306,18 +318,21 @@ body[data-accent="kuning"] {
   padding: 0.2em 0.7em 0.2em 1.1em;
   border: 1.5px solid transparent;
   transition: background 0.2s, box-shadow 0.2s, border 0.2s;
-  position: sticky;
+  position: fixed; /* Changed from sticky to fixed */
   top: 5.4em; /* header (4.2em) + spacer (1.2em) */
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 20;
 }
 
 /* Responsive adjustments for mobile */
 @media (max-width: 768px) {
   #search-container {
-    max-width: calc(100% - 2rem);
-    margin: 0.2em 1rem 0.6em 1rem;
+    max-width: calc(100vw - 3rem);
+    margin: 0.2em 0 0.6em 0;
     padding: 0.15em 0.5em 0.15em 0.8em;
     border-radius: 1.5em;
+    width: calc(100vw - 3rem);
   }
   
   .md-search-input {
@@ -336,9 +351,11 @@ body[data-accent="kuning"] {
 
 @media (max-width: 480px) {
   #search-container {
-    max-width: calc(100% - 1rem);
-    margin: 0.2em 0.5rem 0.6em 0.5rem;
+    max-width: calc(100vw - 2rem);
+    width: calc(100vw - 2rem);
+    margin: 0.2em 0 0.6em 0;
     padding: 0.1em 0.4em 0.1em 0.6em;
+    top: 4.8em; /* Adjusted for smaller header */
   }
   
   .md-search-input {
@@ -354,8 +371,10 @@ body.dark-theme #search-container {
   background: color-mix(in srgb, var(--surface-dark, #23272e) 90%, var(--primary, #2196f3) 10%);
   border: 1.5px solid color-mix(in srgb, var(--primary, #2196f3) 60%, #fff 40%);
   box-shadow: 0 2px 10px 0 rgba(0,0,0,0.18);
-  position: sticky;
+  position: fixed; /* Changed from sticky to fixed */
   top: 5.4em; /* header (4.2em) + spacer (1.2em) */
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 20;
 }
 
@@ -525,9 +544,9 @@ body.dark-theme #clear-search:hover {
 /* Responsive adjustments for pujian list */
 @media (max-width: 768px) {
   .pujian-list {
-    max-width: calc(100% - 1rem);
-    margin-left: 0.5rem;
-    margin-right: 0.5rem;
+    max-width: calc(100vw - 2rem);
+    margin-left: 1rem;
+    margin-right: 1rem;
   }
   
   .pujian-list li {
@@ -551,9 +570,9 @@ body.dark-theme #clear-search:hover {
 
 @media (max-width: 480px) {
   .pujian-list {
-    max-width: calc(100% - 0.5rem);
-    margin-left: 0.25rem;
-    margin-right: 0.25rem;
+    max-width: calc(100vw - 1.5rem);
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
   }
   
   .pujian-list li {
@@ -646,8 +665,10 @@ body {
   text-align: center;
   letter-spacing: 1px;
   box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
-  position: sticky;
+  position: fixed; /* Changed from sticky to fixed */
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 50;
 }
 
@@ -670,8 +691,8 @@ body {
 
 /* Make .app-content fill the area between header and navbar */
 .app-content {
-  position: absolute;
-  top: 4.2em; /* header height */
+  position: fixed; /* Changed from absolute to fixed */
+  top: 7.2em; /* Adjusted for fixed header + spacer + search */
   left: 0;
   right: 0;
   bottom: 4.3em; /* navbar height (same as padding before) */
@@ -679,9 +700,27 @@ body {
   box-sizing: border-box;
   background: color-mix(in srgb, var(--primary, #1976d2) 8%, #f5f5f5 92%);
   overflow-y: auto;
+  overflow-x: hidden;
+  /* Enable touch scrolling for mobile */
+  -webkit-overflow-scrolling: touch;
   /* Hide native scrollbar for all browsers */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Responsive app-content */
+@media (max-width: 768px) {
+  .app-content {
+    top: 6.8em; /* Adjusted for mobile header + search */
+    padding: 0.3rem 0.8rem 0 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-content {
+    top: 6.2em; /* Adjusted for smaller mobile header + search */
+    padding: 0.2rem 0.5rem 0 0.5rem;
+  }
 }
 .app-content::-webkit-scrollbar {
   display: none;
@@ -707,27 +746,11 @@ body {
 /* Responsive scrollbar for mobile */
 @media (max-width: 768px) {
   .custom-scrollbar {
-    width: 24px;
-    right: 2px;
-    border-radius: 12px;
-  }
-  
-  .custom-scrollbar-thumb {
-    left: 4px;
-    width: 16px;
-    border-radius: 8px;
-  }
-  
-  .pujian-list {
-    padding-right: 0.5rem; /* Add padding to prevent overlap with scrollbar */
-  }
-}
-
-@media (max-width: 480px) {
-  .custom-scrollbar {
     width: 20px;
-    right: 1px;
+    right: 4px;
     border-radius: 10px;
+    top: 7em; /* Adjusted for mobile header + search */
+    bottom: 4.5em; /* Adjusted for mobile navbar */
   }
   
   .custom-scrollbar-thumb {
@@ -737,7 +760,27 @@ body {
   }
   
   .pujian-list {
-    padding-right: 0.3rem;
+    padding-right: 0.3rem; /* Reduced padding to prevent overlap */
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-scrollbar {
+    width: 16px;
+    right: 2px;
+    border-radius: 8px;
+    top: 6.5em; /* Adjusted for smaller mobile header + search */
+    bottom: 4em; /* Adjusted for smaller mobile navbar */
+  }
+  
+  .custom-scrollbar-thumb {
+    left: 2px;
+    width: 12px;
+    border-radius: 6px;
+  }
+  
+  .pujian-list {
+    padding-right: 0.2rem;
   }
 }
 

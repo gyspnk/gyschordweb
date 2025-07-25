@@ -1,5 +1,15 @@
 // Navigasi sederhana antara Pujian dan Pengaturan
-// Debugging tools
+// Debugging             // Cari li pertama yang visible, beri margin-top sesuai viewport
+            const firstVisible = items.find(li => li.style.display !== 'none');
+            if (firstVisible) {
+              if (window.innerWidth <= 480) {
+                firstVisible.style.marginTop = '0.3em';
+              } else if (window.innerWidth <= 768) {
+                firstVisible.style.marginTop = '0.5em';
+              } else {
+                firstVisible.style.marginTop = '1em';
+              }
+            }ls
 console.log('Script loaded: script.js');
 // Uncomment the next line to trigger the debugger on load
 // debugger;
@@ -72,7 +82,15 @@ function renderPujianList() {
           const items = Array.from(pujianList.children);
           items.forEach(li => li.style.marginTop = '');
           const firstVisible = items.find(li => li.style.display !== 'none');
-          if (firstVisible) firstVisible.style.marginTop = '7em';
+          if (firstVisible) {
+            if (window.innerWidth <= 480) {
+              firstVisible.style.marginTop = '0.3em';
+            } else if (window.innerWidth <= 768) {
+              firstVisible.style.marginTop = '0.5em';
+            } else {
+              firstVisible.style.marginTop = '1em';
+            }
+          }
         }, 0);
       }
     })
@@ -233,6 +251,15 @@ document.addEventListener('DOMContentLoaded', () => {
         appContent.style.overflow = 'hidden';
         appContent.style.scrollbarWidth = 'none';
         appContent.style.msOverflowStyle = 'none';
+        
+        // Update positioning for mobile
+        if (window.innerWidth <= 768) {
+          customScrollbar.style.top = window.innerWidth <= 480 ? '6.5em' : '7em';
+          customScrollbar.style.bottom = window.innerWidth <= 480 ? '4em' : '4.5em';
+        } else {
+          customScrollbar.style.top = '8em';
+          customScrollbar.style.bottom = '5em';
+        }
       } else {
         customScrollbar.style.display = 'none';
         appContent.style.overflow = 'auto';
@@ -389,9 +416,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }, { passive: false });
     }
     
-    // For touch devices, allow native scrolling but still update custom scrollbar
+    // For touch devices, ensure native scrolling works properly
     if (isTouchDevice) {
+      // Remove any interference with touch scrolling
+      appContent.style.touchAction = 'pan-y';
       appContent.addEventListener('scroll', updateScrollbar, { passive: true });
+      
+      // Prevent custom scrollbar from interfering with touch
+      customScrollbar.style.pointerEvents = 'none';
+      customThumb.style.pointerEvents = 'auto';
     }
 
     // Theme-aware styling (update on theme/accent change)
