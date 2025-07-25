@@ -64,11 +64,11 @@ function renderPujianList() {
           const firstVisible = items.find(li => li.style.display !== 'none');
           if (firstVisible) {
             if (window.innerWidth <= 480) {
-              firstVisible.style.marginTop = '1.5em'; // Space untuk mobile kecil
+              firstVisible.style.marginTop = '2.2em'; // Increased space untuk mobile kecil
             } else if (window.innerWidth <= 768) {
-              firstVisible.style.marginTop = '2em'; // Space untuk tablet
+              firstVisible.style.marginTop = '2.8em'; // Increased space untuk tablet
             } else {
-              firstVisible.style.marginTop = '2.5em'; // Space untuk desktop
+              firstVisible.style.marginTop = '3.5em'; // Increased space untuk desktop
             }
           }
         };
@@ -79,11 +79,11 @@ function renderPujianList() {
           const firstVisible = items.find(li => li.style.display !== 'none');
           if (firstVisible) {
             if (window.innerWidth <= 480) {
-              firstVisible.style.marginTop = '1.5em'; // Space untuk mobile kecil
+              firstVisible.style.marginTop = '2.2em'; // Increased space untuk mobile kecil
             } else if (window.innerWidth <= 768) {
-              firstVisible.style.marginTop = '2em'; // Space untuk tablet
+              firstVisible.style.marginTop = '2.8em'; // Increased space untuk tablet
             } else {
-              firstVisible.style.marginTop = '2.5em'; // Space untuk desktop
+              firstVisible.style.marginTop = '3.5em'; // Increased space untuk desktop
             }
           }
         }, 0);
@@ -424,11 +424,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Add smooth scrolling behavior for touch
       appContent.style.scrollBehavior = 'auto'; // Changed to auto for better mobile performance
       
-      // Prevent body scrolling to avoid UI shifts
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.height = '100%';
+      // Don't lock body position - this was causing scroll issues
+      // Instead, just prevent unwanted scrolling behaviors
+      document.body.style.overscrollBehavior = 'none';
       
       // Ensure scroll events work on touch devices
       appContent.addEventListener('scroll', updateScrollbar, { passive: true });
@@ -456,6 +454,22 @@ document.addEventListener('DOMContentLoaded', () => {
           e.preventDefault();
         }, { passive: false });
       });
+      
+      // Fix for search input focus issues on mobile
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) {
+        searchInput.addEventListener('focus', function(e) {
+          // Allow the input to be focused without breaking scroll
+          this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, { passive: true });
+        
+        searchInput.addEventListener('blur', function(e) {
+          // Restore scroll capability after input blur
+          setTimeout(() => {
+            appContent.style.touchAction = 'pan-y';
+          }, 100);
+        }, { passive: true });
+      }
       
     } else {
       // For non-touch devices, hide native scrollbar

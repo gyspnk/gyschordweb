@@ -1,27 +1,26 @@
 .pujian-list li:first-child {
-  margin-top: 2.5em; /* Space untuk desktop di bawah search bar */
+  margin-top: 3.5em; /* Increased space untuk desktop di bawah search bar */
 }
 
 /* Responsive first child margin */
 @media (max-width: 768px) {
   .pujian-list li:first-child {
-    margin-top: 2em; /* Space untuk tablet */
+    margin-top: 2.8em; /* Increased space untuk tablet */
   }
 }
 
 @media (max-width: 480px) {
   .pujian-list li:first-child {
-    margin-top: 1.5em; /* Space untuk mobile kecil */
+    margin-top: 2.2em; /* Increased space untuk mobile kecil */
   }
 }
 html, body {
   height: 100vh;
   height: 100svh; /* Small viewport height - more stable than dvh */
   overflow: hidden;
-  position: fixed; /* Prevent body movement */
+  margin: 0;
+  padding: 0;
   width: 100%;
-  top: 0;
-  left: 0;
 }
 /* Spacer for empty area above search bar */
 .search-spacer {
@@ -323,7 +322,7 @@ body[data-accent="kuning"] {
   justify-content: center;
   gap: 0.4em; /* Reduced gap */
   margin: 0.15em auto 0.4em auto; /* Tighter margins */
-  max-width: 450px; /* Slightly smaller max width */
+  max-width: 600px; /* Wider for desktop */
   margin-left: auto;
   margin-right: auto;
   background: var(--surface, #fff);
@@ -347,20 +346,31 @@ body[data-accent="kuning"] {
 @media (max-width: 768px) {
   #search-container {
     max-width: calc(100vw - 2.5rem); /* More constrained for mobile */
-    margin: 0.15em 0 0.4em 0;
+    margin: 0.15em auto 0.4em auto; /* Reset margins */
     padding: 0.1em 0.4em 0.1em 0.6em;
     border-radius: 1.3em;
     width: calc(100vw - 2.5rem); /* Match max-width */
     font-size: 0.9rem; /* Smaller font for mobile */
+    /* Fix positioning for mobile */
+    left: 50%;
+    transform: translateX(-50%) translateZ(0);
+    margin-left: 0; /* Reset auto margins */
+    margin-right: 0; /* Reset auto margins */
   }
   
   .md-search-input {
     font-size: 0.85rem; /* Smaller input text */
     padding: 0.4em 0.6em;
+    text-align: left; /* Always left align on mobile */
+  }
+  
+  .md-search-input::placeholder {
+    text-align: left; /* Left align placeholder on mobile */
   }
   
   .md-search-container .search-icon {
     font-size: 1.1em; /* Smaller search icon */
+    margin-right: 0.3em; /* Reduced margin for mobile */
   }
   
   .clear-search-btn {
@@ -372,19 +382,30 @@ body[data-accent="kuning"] {
   #search-container {
     max-width: calc(100vw - 2rem); /* Even more constrained for small mobile */
     width: calc(100vw - 2rem); /* Match max-width */
-    margin: 0.1em 0 0.3em 0;
+    margin: 0.1em auto 0.3em auto; /* Reset margins */
     padding: 0.08em 0.3em 0.08em 0.5em;
     top: 4.5em; /* Adjusted for smaller header */
     font-size: 0.8rem; /* Even smaller for small phones */
+    /* Fix positioning for small mobile */
+    left: 50%;
+    transform: translateX(-50%) translateZ(0);
+    margin-left: 0; /* Reset auto margins */
+    margin-right: 0; /* Reset auto margins */
   }
   
   .md-search-input {
     font-size: 0.8rem; /* Smaller input text */
     padding: 0.35em 0.5em;
+    text-align: left; /* Always left align on small mobile */
+  }
+  
+  .md-search-input::placeholder {
+    text-align: left; /* Left align placeholder on small mobile */
   }
   
   .md-search-container .search-icon {
     font-size: 1em;
+    margin-right: 0.2em; /* Even smaller margin */
   }
   
   .clear-search-btn {
@@ -405,6 +426,17 @@ body.dark-theme #search-container {
   transform: translateX(-50%) translateZ(0); /* Force hardware acceleration */
   z-index: 50; /* Higher z-index */
   will-change: transform;
+}
+
+/* Dark theme mobile positioning fix */
+@media (max-width: 480px) {
+  body.dark-theme #search-container {
+    top: 4.5em; /* Match the mobile positioning */
+    left: 50%;
+    transform: translateX(-50%) translateZ(0);
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 
 body.dark-theme #search-container {
@@ -496,54 +528,45 @@ body.dark-theme #clear-search:hover {
 .md-search-container .search-icon {
   color: #b0b8c1;
   font-size: 1.5em;
-  margin-right: 0.2em;
+  margin-right: 0.4em; /* Increased margin for better spacing */
   transition: color 0.2s;
   user-select: none;
+  flex-shrink: 0; /* Prevent icon from shrinking */
 }
 .md-search-container .search-icon {
   color: #b0b8c1;
   font-size: 1.5em;
-  margin-right: 0.2em;
+  margin-right: 0.4em; /* Increased margin for better spacing */
   transition: color 0.2s;
   user-select: none;
+  flex-shrink: 0; /* Prevent icon from shrinking */
 }
 .md-search-input {
   flex: 1;
   width: 100%;
   padding: 0.7em 1em;
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2.7em;
-  height: 2.1em;
-  background: #1976d2;
-  color: #fff;
-  font-weight: 700;
-  font-size: 1.08rem;
-  border-radius: 8px;
-  margin-right: 1.1em;
-  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.10);
-  letter-spacing: 0.03em;
-  padding: 0 0.7em;
-  transition: background 0.2s;
-  flex-shrink: 0;
-  border: none;
+  border-radius: 2em;
+  border: 1.5px solid #e3eaf2;
   outline: none;
   font-size: 1.05rem;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(25,118,210,0.08);
-  transition: box-shadow 0.18s, border 0.18s;
   color: #222;
-  border: 1.5px solid #e3eaf2;
+  box-shadow: 0 2px 8px rgba(25,118,210,0.08);
+  transition: box-shadow 0.18s, border 0.18s, background 0.18s;
+  text-align: center; /* Center the text */
+  letter-spacing: 0.01em;
 }
 .md-search-input:focus {
   box-shadow: 0 4px 16px rgba(25,118,210,0.13);
   border: 1.5px solid #1976d2;
+  background: #eaf2fb;
+  text-align: left; /* Left align when typing */
 }
 .md-search-input::placeholder {
   color: #b0b8c1;
   opacity: 1;
+  font-weight: 500;
+  text-align: center; /* Center placeholder text */
 }
 #search-input {
   width: 100%;
@@ -784,11 +807,10 @@ body {
   body {
     /* Prevent rubber band scrolling */
     overscroll-behavior: none;
-    /* Lock body position */
-    position: fixed;
-    width: 100%;
-    height: 100%;
+    /* Allow body to scroll naturally but prevent unwanted scrolling */
     overflow: hidden;
+    margin: 0;
+    padding: 0;
   }
   
   /* Force all fixed elements to stay truly fixed */
