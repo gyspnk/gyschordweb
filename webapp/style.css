@@ -410,17 +410,15 @@ body[data-accent="kuning"] {
 /* Portrait orientation specific fixes */
 @media (max-width: 768px) and (orientation: portrait) {
   #search-container {
-    /* Ensure proper centering in portrait mode */
+    /* Centered, floating search bar for portrait */
     position: fixed;
     left: 50%;
     right: auto;
     transform: translateX(-50%) translateZ(0);
-    margin: 0;
-    /* Prevent snapping by ensuring consistent width calculation */
-    width: calc(100vw - 2.5rem);
-    max-width: calc(100vw - 2.5rem);
-    min-width: 280px; /* Minimum width to prevent collapse */
-    /* Additional fixes for viewport stability */
+    margin: 0 auto;
+    width: 100%;
+    max-width: 420px;
+    min-width: 240px;
     box-sizing: border-box;
     -webkit-transform: translateX(-50%) translateZ(0);
     -moz-transform: translateX(-50%) translateZ(0);
@@ -430,17 +428,15 @@ body[data-accent="kuning"] {
 
 @media (max-width: 480px) and (orientation: portrait) {
   #search-container {
-    /* Ensure proper centering in small portrait mode */
+    /* Centered, floating search bar for small portrait */
     position: fixed;
     left: 50%;
     right: auto;
     transform: translateX(-50%) translateZ(0);
-    margin: 0;
-    /* Prevent snapping by ensuring consistent width calculation */
-    width: calc(100vw - 2rem);
-    max-width: calc(100vw - 2rem);
-    min-width: 260px; /* Minimum width for small devices */
-    /* Additional fixes for viewport stability */
+    margin: 0 auto;
+    width: 100%;
+    max-width: 95vw;
+    min-width: 180px;
     box-sizing: border-box;
     -webkit-transform: translateX(-50%) translateZ(0);
     -moz-transform: translateX(-50%) translateZ(0);
