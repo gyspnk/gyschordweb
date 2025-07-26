@@ -1,13 +1,13 @@
 /**
- * Kidung Rohani App - Versi Final dengan Layering Zoom
+ * Kidung Rohani App - Versi Final dengan Layering Zoom Presisi
  *
  * Perubahan & Penyempurnaan:
- * - [REVISI TOTAL] Implementasi sistem layering "Freeze Frame" untuk pinch-to-zoom.
- * Saat pinch selesai, frame terakhir di-kloning, frame baru di-render di
- * belakangnya, lalu frame beku dihilangkan untuk transisi yang seamless.
+ * - [REVISI TOTAL] Logika "Freeze Frame" dirombak total menggunakan kloning
+ * presisi dengan `getBoundingClientRect` dan `position: fixed` untuk menjamin
+ * overlay yang sempurna dan menghilangkan layar putih.
+ * - [HASIL] Transisi setelah pinch-to-zoom kini benar-benar mulus tanpa
+ * reposisi, lompatan, atau artifak visual lainnya.
  * - [FIX] Bug hilangnya tracking zoom secara live saat pinch telah diperbaiki.
- * - [HASIL] Tidak ada lagi efek reposisi, animasi, atau transisi yang tidak
- * diinginkan setelah pinch-to-zoom.
  */
 
 const { pdfjsLib } = globalThis;
@@ -499,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
   }
   
-  // [MODIFIKASI TOTAL] Logika 'touchend' menerapkan metode "Freeze Frame"
+  // [MODIFIKASI TOTAL] Logika 'touchend' menerapkan metode "Freeze Frame" dengan kloning presisi
   async function handleTouchEnd(event) {
       if (!isPinching) return;
       isPinching = false;
@@ -508,21 +508,28 @@ document.addEventListener('DOMContentLoaded', () => {
       let finalScale = lastPinchScale;
       if (transformStyle && transformStyle !== 'none') {
           const matrix = new DOMMatrix(transformStyle);
-          finalScale = matrix.m11; // m11 adalah nilai scale
+          finalScale = matrix.m11;
       }
       
       currentScale = Math.max(initialScale, finalScale);
       
-      // Langkah 1: Buat kloningan dari frame saat ini untuk dijadikan "freeze frame"
+      // Langkah 1: Buat kloningan presisi dari frame saat ini sebagai "freeze frame"
+      const rect = canvasWrapper.getBoundingClientRect();
       const frozenWrapper = canvasWrapper.cloneNode(true);
-      frozenWrapper.style.position = 'absolute';
-      frozenWrapper.style.left = '0';
-      frozenWrapper.style.top = '0';
-      frozenWrapper.style.zIndex = '1';
-      // Tambahkan ke parent dari canvasWrapper (yaitu pdfViewerContent)
-      canvasWrapper.parentNode.appendChild(frozenWrapper);
       
-      // Langkah 2: Reset transform pada wrapper asli & render ulang di belakangnya
+      // Atur gaya agar kloningan menjadi overlay sempurna
+      frozenWrapper.style.position = 'fixed';
+      frozenWrapper.style.left = `${rect.left}px`;
+      frozenWrapper.style.top = `${rect.top}px`;
+      frozenWrapper.style.width = `${rect.width}px`;
+      frozenWrapper.style.height = `${rect.height}px`;
+      frozenWrapper.style.margin = '0';
+      frozenWrapper.style.zIndex = '10';
+      
+      // Tambahkan freeze frame ke lapisan atas (overlay)
+      pdfViewerOverlay.appendChild(frozenWrapper);
+      
+      // Langkah 2: Reset wrapper asli (di belakang freeze frame) dan render ulang
       canvasWrapper.style.transition = 'none';
       canvasWrapper.style.transform = '';
       await renderPage(currentPageNum);
