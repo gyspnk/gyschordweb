@@ -2,11 +2,10 @@
  * Kidung Rohani App - Versi Stabil
  *
  * Fungsionalitas:
- * - Zoom melalui tombol dan scroll-wheel berfungsi dengan baik.
- * - Transisi fade saat navigasi halaman dan lagu aktif.
- * - Tata letak stabil di berbagai perangkat.
- * - FUNGSI PINCH-TO-ZOOM SECARA GLOBAL DIMATIKAN.
- * - Peringatan "Gunakan Tombol untuk Zoom" muncul saat mencoba pinch-zoom di viewer.
+ * - Zoom melalui tombol diizinkan.
+ * - Zoom melalui Ctrl+Scroll (desktop) dan Ctrl +/- (keyboard) diizinkan.
+ * - FUNGSI PINCH-TO-ZOOM (UNTUK SEMUA PERANGKAT LAYAR SENTUH) DIMATIKAN.
+ * - Peringatan "Gunakan Tombol untuk Zoom" muncul saat mencoba pinch-zoom.
  */
 
 const { pdfjsLib } = globalThis;
@@ -112,10 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         window.addEventListener('orientationchange', handleOrientationChange);
     }
-
+    
+    // Listener untuk zoom di desktop dan mobile
     window.addEventListener('wheel', handleGlobalScroll, { passive: false });
-
-    // Event listener untuk deteksi pinch-zoom
+    window.addEventListener('keydown', handleGlobalKeydown, { passive: false });
     pdfViewerOverlay.addEventListener('touchstart', handleTouchStart, { passive: true });
     pdfViewerOverlay.addEventListener('touchmove', handleTouchMove, { passive: false }); 
     pdfViewerOverlay.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -514,15 +513,8 @@ document.addEventListener('DOMContentLoaded', () => {
     pdfDoc = null;
     currentSongIndex = -1;
   }
-
-  function handleGlobalScroll(event) {
-    if (event.ctrlKey && document.body.classList.contains('viewer-active')) {
-      event.preventDefault();
-      onZoom(event.deltaY < 0 ? 'in' : 'out');
-    }
-  }
-
-  // --- 8. Logika Pinch & Toast ---
+  
+  // --- 8. Logika Zoom Berdasarkan Input ---
   function showZoomToast() {
     if (toastTimeout) clearTimeout(toastTimeout);
     zoomToast.classList.add('show');
@@ -530,7 +522,29 @@ document.addEventListener('DOMContentLoaded', () => {
         zoomToast.classList.remove('show');
     }, 2500);
   }
+  
+  // Izinkan zoom untuk Desktop: Ctrl + Scroll
+  function handleGlobalScroll(event) {
+    if (event.ctrlKey && document.body.classList.contains('viewer-active')) {
+      event.preventDefault(); // Mencegah zoom native browser
+      onZoom(event.deltaY < 0 ? 'in' : 'out'); // Menjalankan zoom aplikasi
+    }
+  }
+  
+  // Izinkan zoom untuk Desktop: Ctrl + (+/-)
+  function handleGlobalKeydown(event) {
+    if (event.ctrlKey && document.body.classList.contains('viewer-active')) {
+        if (event.key === '+' || event.key === '=') {
+            event.preventDefault();
+            onZoom('in');
+        } else if (event.key === '-') {
+            event.preventDefault();
+            onZoom('out');
+        }
+    }
+  }
 
+  // Blokir zoom untuk Layar Sentuh: Pinch gesture
   function getPinchDistance(event) {
       const t1 = event.touches[0];
       const t2 = event.touches[1];
@@ -544,17 +558,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleTouchMove(event) {
-      // Secara aktif memblokir zoom bawaan browser
+      // Secara aktif memblokir zoom bawaan browser HANYA untuk input sentuh
       if (event.touches.length === 2) {
           event.preventDefault();
-      }
-
-      // Logika untuk menampilkan toast
-      if (event.touches.length === 2 && initialPinchDistance > 0) {
-          const newDistance = getPinchDistance(event);
-          if (Math.abs(newDistance - initialPinchDistance) > 15) { // Threshold
-              showZoomToast();
-              initialPinchDistance = 0; // Reset untuk mencegah trigger berulang
+          // Logika untuk menampilkan toast
+          if (initialPinchDistance > 0) {
+              const newDistance = getPinchDistance(event);
+              if (Math.abs(newDistance - initialPinchDistance) > 15) { // Threshold
+                  showZoomToast();
+                  initialPinchDistance = 0; // Reset untuk mencegah trigger berulang
+              }
           }
       }
   }
