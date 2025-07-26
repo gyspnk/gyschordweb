@@ -180,15 +180,17 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   overflow: auto;
   display: flex; 
   justify-content: center;
-  /* FIX: Ubah align-items ke flex-start untuk memperbaiki bug scroll ke atas */
   align-items: flex-start;
-  padding: 1rem;
+  /* FIX: Hapus padding dari container scroll */
+  padding: 0;
   box-sizing: border-box;
 }
 .canvas-wrapper {
   display: flex; justify-content: center; align-items: center;
   gap: 1rem;
   transition: opacity 0.2s ease-in-out;
+  /* FIX: Tambahkan margin untuk memberi jarak visual */
+  margin: 1rem;
 }
 .canvas-wrapper.vertical-scroll { flex-direction: column; align-items: center; }
 .canvas-wrapper.is-navigating {
@@ -205,7 +207,12 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   .landscape-controls { display: none; }
   .pdf-viewer-footer { display: flex; }
   .pdf-viewer-content {
-    padding-bottom: 96px; 
+    /* Padding bawah untuk footer tetap diperlukan */
+    padding-bottom: 80px; 
+  }
+  .canvas-wrapper {
+    /* Kurangi margin bawah agar tidak terlalu jauh dari footer */
+    margin-bottom: 0;
   }
 }
 
@@ -276,7 +283,10 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 #clear-search { color: var(--md-sys-color-on-surface-variant); }
 #clear-search:hover { background-color: var(--md-sys-state-layer-primary); }
 
-.pujian-list { list-style: none; padding: 0; margin: 0 auto; max-width: 700px; }
+.pujian-list {
+  list-style: none; padding: 0; margin: 0 auto;
+  max-width: 700px;
+}
 .pujian-list li {
   position: relative; display: flex; align-items: center; gap: 1rem;
   padding: 0.75rem 1rem; margin-bottom: 0.75rem; border-radius: var(--border-radius-lg);
@@ -294,7 +304,8 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 .pujian-list li a { text-decoration: none; font-weight: 500; font-size: 1rem; color: var(--md-sys-color-on-surface); pointer-events: none; }
 
 .settings-panel {
-  max-width: 700px; margin: 0 auto; padding: 0.5rem;
+  max-width: 700px;
+  margin: 0 auto; padding: 0.5rem;
   border-radius: var(--border-radius-lg);
   background-color: var(--md-sys-color-surface-container);
 }
@@ -350,3 +361,21 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 .md-switch input:checked + .md-slider::before { transform: translateX(20px); background-color: var(--md-sys-color-on-primary); }
 
 .welcome-text { text-align: center; margin-top: 4rem; font-size: 1.1rem; color: var(--md-sys-color-on-surface-variant); }
+
+/* =================================================================== */
+/* 6. RESPONSIVE & TABLET
+/* =================================================================== */
+
+@media (min-width: 768px) {
+  /* Perlebar area konten utama di tablet */
+  .pujian-list, .settings-panel {
+    max-width: 840px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Perlebar lagi untuk layar desktop kecil */
+  .pujian-list, .settings-panel {
+    max-width: 960px;
+  }
+}
