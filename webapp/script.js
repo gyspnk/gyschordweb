@@ -1,13 +1,13 @@
 /**
- * Kidung Rohani App - Versi Final dengan Layering Zoom Presisi
+ * Kidung Rohani App - Versi dengan Pinch-to-Zoom Murni & Perbaikan Bug
  *
  * Perubahan & Penyempurnaan:
- * - [REVISI TOTAL] Logika "Freeze Frame" dirombak total menggunakan kloning
- * presisi dengan `getBoundingClientRect` dan `position: fixed` untuk menjamin
- * overlay yang sempurna dan menghilangkan layar putih.
- * - [HASIL] Transisi setelah pinch-to-zoom kini benar-benar mulus tanpa
- * reposisi, lompatan, atau artifak visual lainnya.
- * - [FIX] Bug hilangnya tracking zoom secara live saat pinch telah diperbaiki.
+ * - [REVISI TOTAL] Logika pinch-to-zoom diubah menjadi manipulasi langsung
+ * via CSS transform tanpa render ulang di akhir, menghilangkan semua artifak
+ * visual (pop-up, reposisi, transisi).
+ * - [FIX] Bug "pop up" di awal pinch dihilangkan dengan kalkulasi skala relatif.
+ * - [FIX] Tracking zoom secara live kini berfungsi kembali dengan andal.
+ * - [OPTIMISASI] Penajaman gambar terjadi secara 'lazy' saat interaksi lain.
  */
 
 const { pdfjsLib } = globalThis;
@@ -477,10 +477,20 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.sqrt(dx * dx + dy * dy);
   }
 
+  // [MODIFIKASI TOTAL] Logika Pinch-to-Zoom disederhanakan dan diperbaiki
   function handleTouchStart(event) {
     if (event.touches.length === 2) {
         event.preventDefault();
         isPinching = true;
+        
+        // Sebelum pinch baru, "baking in" transform dari pinch sebelumnya jika ada
+        const transformStyle = window.getComputedStyle(canvasWrapper).transform;
+        if (transformStyle && transformStyle !== 'none') {
+            const matrix = new DOMMatrix(transformStyle);
+            currentScale = currentScale * matrix.m11; // Update currentScale
+            renderPage(currentPageNum); // Re-render instan untuk "bake in"
+        }
+        
         initialPinchDistance = getDistance(event.touches);
         lastPinchScale = currentScale === 'page-fit' ? initialScale : currentScale;
     }
@@ -491,57 +501,37 @@ document.addEventListener('DOMContentLoaded', () => {
           event.preventDefault();
           const newDist = getDistance(event.touches);
           const scaleFactor = newDist / initialPinchDistance;
-          const newScale = Math.max(initialScale, lastPinchScale * scaleFactor);
+          
+          // Skala transform adalah RELATIF terhadap skala yang sudah di-render
+          const transformScale = scaleFactor;
+          const visualScale = lastPinchScale * transformScale;
+
+          // Jangan biarkan zoom lebih kecil dari ukuran awal
+          if (visualScale < initialScale) {
+              return;
+          }
           
           canvasWrapper.style.transition = 'none';
-          canvasWrapper.style.transform = `scale(${newScale})`;
-          updateZoomIndicatorText(newScale);
+          canvasWrapper.style.transform = `scale(${transformScale})`;
+          updateZoomIndicatorText(visualScale);
       }
   }
   
-  // [MODIFIKASI TOTAL] Logika 'touchend' menerapkan metode "Freeze Frame" dengan kloning presisi
-  async function handleTouchEnd(event) {
+  function handleTouchEnd(event) {
       if (!isPinching) return;
       isPinching = false;
       
       const transformStyle = window.getComputedStyle(canvasWrapper).transform;
-      let finalScale = lastPinchScale;
+      let scaleFactor = 1.0;
       if (transformStyle && transformStyle !== 'none') {
           const matrix = new DOMMatrix(transformStyle);
-          finalScale = matrix.m11;
+          scaleFactor = matrix.m11;
       }
       
-      currentScale = Math.max(initialScale, finalScale);
+      // Update state final. Biarkan transform tetap ada untuk fluiditas.
+      currentScale = Math.max(initialScale, lastPinchScale * scaleFactor);
       
-      // Langkah 1: Buat kloningan presisi dari frame saat ini sebagai "freeze frame"
-      const rect = canvasWrapper.getBoundingClientRect();
-      const frozenWrapper = canvasWrapper.cloneNode(true);
-      
-      // Atur gaya agar kloningan menjadi overlay sempurna
-      frozenWrapper.style.position = 'fixed';
-      frozenWrapper.style.left = `${rect.left}px`;
-      frozenWrapper.style.top = `${rect.top}px`;
-      frozenWrapper.style.width = `${rect.width}px`;
-      frozenWrapper.style.height = `${rect.height}px`;
-      frozenWrapper.style.margin = '0';
-      frozenWrapper.style.zIndex = '10';
-      
-      // Tambahkan freeze frame ke lapisan atas (overlay)
-      pdfViewerOverlay.appendChild(frozenWrapper);
-      
-      // Langkah 2: Reset wrapper asli (di belakang freeze frame) dan render ulang
-      canvasWrapper.style.transition = 'none';
-      canvasWrapper.style.transform = '';
-      await renderPage(currentPageNum);
-      
-      // Langkah 3: Hilangkan "freeze frame" dengan transisi fade out cepat
-      frozenWrapper.style.transition = 'opacity 0.1s linear';
-      frozenWrapper.style.opacity = '0';
-      
-      // Langkah 4: Hapus elemen kloningan dari DOM setelah transisi selesai
-      setTimeout(() => {
-          frozenWrapper.remove();
-      }, 100);
+      updateZoomIndicator();
   }
 
   function setupRippleEffect() {
