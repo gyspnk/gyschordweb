@@ -124,9 +124,9 @@ h1, h2, h3 { font-weight: 500; }
   content: '';
   position: absolute;
   width: 80px;
-  height: 40px;
+  height: 56px;
   background-color: var(--md-sys-color-primary);
-  border-radius: 20px;
+  border-radius: 28px;
   opacity: 0;
   transition: opacity 0.2s;
   top: 50%;

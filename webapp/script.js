@@ -4,7 +4,7 @@
  * Fungsionalitas:
  * - Zoom melalui tombol diizinkan.
  * - Zoom melalui Ctrl+Scroll (desktop) dan Ctrl +/- (keyboard) diizinkan.
- * - FUNGSI PINCH-TO-ZOOM (UNTUK SEMUA PERANGKAT LAYAR SENTUH) DIMATIKAN.
+ * - FUNGSI PINCH-TO-ZOOM DIBLOKIR DI SELURUH APLIKASI.
  * - Peringatan "Gunakan Tombol untuk Zoom" muncul saat mencoba pinch-zoom.
  */
 
@@ -115,9 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listener untuk zoom di desktop dan mobile
     window.addEventListener('wheel', handleGlobalScroll, { passive: false });
     window.addEventListener('keydown', handleGlobalKeydown, { passive: false });
-    pdfViewerOverlay.addEventListener('touchstart', handleTouchStart, { passive: true });
-    pdfViewerOverlay.addEventListener('touchmove', handleTouchMove, { passive: false }); 
-    pdfViewerOverlay.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false }); 
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
   }
 
   // --- 5. Logika Navigasi & Render Utama ---
@@ -525,6 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Izinkan zoom untuk Desktop: Ctrl + Scroll
   function handleGlobalScroll(event) {
+    // Izinkan zoom hanya jika di dalam PDF viewer
     if (event.ctrlKey && document.body.classList.contains('viewer-active')) {
       event.preventDefault(); // Mencegah zoom native browser
       onZoom(event.deltaY < 0 ? 'in' : 'out'); // Menjalankan zoom aplikasi
@@ -533,6 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Izinkan zoom untuk Desktop: Ctrl + (+/-)
   function handleGlobalKeydown(event) {
+    // Izinkan zoom hanya jika di dalam PDF viewer
     if (event.ctrlKey && document.body.classList.contains('viewer-active')) {
         if (event.key === '+' || event.key === '=') {
             event.preventDefault();
