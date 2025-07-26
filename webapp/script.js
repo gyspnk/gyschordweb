@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event listener untuk deteksi pinch-zoom
     pdfViewerOverlay.addEventListener('touchstart', handleTouchStart, { passive: true });
-    pdfViewerOverlay.addEventListener('touchmove', handleTouchMove, { passive: true });
+    pdfViewerOverlay.addEventListener('touchmove', handleTouchMove, { passive: false }); 
     pdfViewerOverlay.addEventListener('touchend', handleTouchEnd, { passive: true });
   }
 
@@ -544,6 +544,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleTouchMove(event) {
+      // Secara aktif memblokir zoom bawaan browser
+      if (event.touches.length === 2) {
+          event.preventDefault();
+      }
+
+      // Logika untuk menampilkan toast
       if (event.touches.length === 2 && initialPinchDistance > 0) {
           const newDistance = getPinchDistance(event);
           if (Math.abs(newDistance - initialPinchDistance) > 15) { // Threshold
