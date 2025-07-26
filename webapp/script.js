@@ -1,12 +1,12 @@
 /**
- * Kidung Rohani App - Versi dengan Pinch-to-Zoom yang Natural
+ * Kidung Rohani App - Versi dengan Freeze Frame Rendering
  *
  * Perubahan & Penyempurnaan:
- * - [FITUR] Pinch-to-zoom kini berjalan mulus tanpa step dan tanpa transisi fade.
- * - [FITUR] Indikator persentase zoom diperbarui secara live saat gestur pinch
- * dilakukan untuk umpan balik instan.
- * - [OPTIMISASI] Logika zoom dipisahkan: pinch-to-zoom bersifat direct & live,
- * sementara zoom via tombol/scroll tetap menggunakan transisi singkat.
+ * - [REVISI TOTAL] Logika `handleTouchEnd` diubah total untuk menerapkan
+ * metode "Freeze Frame".
+ * - [OPTIMISASI] Saat pinch-to-zoom selesai, PDF di-render ulang di latar
+ * belakang lalu langsung menggantikan frame terakhir tanpa kedipan atau animasi,
+ * memberikan penajaman gambar yang instan dan mulus.
  */
 
 const { pdfjsLib } = globalThis;
@@ -27,7 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const songTitleWrapper = document.querySelector('.song-title-wrapper');
   const pdfViewerTitle = document.getElementById('pdf-viewer-title');
   const pdfViewerNumber = document.getElementById('pdf-viewer-number');
-  const canvasWrapper = document.querySelector('.canvas-wrapper');
+  // [MODIFIKASI] Diubah ke 'let' agar bisa diganti saat render freeze frame (meski tidak jadi dipakai)
+  let canvasWrapper = document.querySelector('.canvas-wrapper');
   const pdfViewerCloseBtn = document.getElementById('pdf-viewer-close');
 
   const pageNavigationPortrait = document.querySelector('.pdf-viewer-footer .page-navigation');
@@ -279,14 +280,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 0); 
   }
 
-  async function renderPage(num) {
+  // [MODIFIKASI] renderPage dipecah menjadi dua: renderCore dan renderPage
+  // renderCore adalah inti yang bisa dipanggil untuk render di latar belakang
+  async function renderCore(container, pageNum, scale) {
     if (!pdfDoc) return;
-    canvasWrapper.innerHTML = '';
+    container.innerHTML = ''; // Selalu bersihkan container target
 
     const renderSinglePageTask = async (pageNumToRender, scaleToUse) => {
         const page = await pdfDoc.getPage(pageNumToRender);
         const dpr = window.devicePixelRatio || 1;
-        
         const finalRenderScale = scaleToUse * dpr;
         const viewport = page.getViewport({ scale: finalRenderScale });
         const canvas = document.createElement('canvas');
@@ -298,6 +300,29 @@ document.addEventListener('DOMContentLoaded', () => {
         return canvas;
     };
     
+    if (currentScrollMode === 'vertical') {
+        container.classList.add('vertical-scroll');
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const canvas = await renderSinglePageTask(i, scale);
+            container.appendChild(canvas);
+        }
+    } else {
+        container.classList.remove('vertical-scroll');
+        const canvas1 = await renderSinglePageTask(pageNum, scale);
+        container.appendChild(canvas1);
+        if (currentViewMode === 'double' && pageNum < pdfDoc.numPages) {
+            const canvas2 = await renderSinglePageTask(pageNum + 1, scale);
+            container.appendChild(canvas2);
+        }
+    }
+  }
+
+  async function renderPage(num) {
+    if (!pdfDoc) return;
+    
+    // Hapus transform dari pinch zoom sebelum render ulang normal
+    canvasWrapper.style.transform = '';
+
     if (currentScale === 'page-fit') {
         const page1 = await pdfDoc.getPage(1);
         const viewport1 = page1.getViewport({ scale: 1 });
@@ -312,21 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-        if (currentScrollMode === 'vertical') {
-            canvasWrapper.classList.add('vertical-scroll');
-            for (let i = 1; i <= pdfDoc.numPages; i++) {
-                const canvas = await renderSinglePageTask(i, currentScale);
-                canvasWrapper.appendChild(canvas);
-            }
-        } else {
-            canvasWrapper.classList.remove('vertical-scroll');
-            const canvas1 = await renderSinglePageTask(num, currentScale);
-            canvasWrapper.appendChild(canvas1);
-            if (currentViewMode === 'double' && num < pdfDoc.numPages) {
-                const canvas2 = await renderSinglePageTask(num + 1, currentScale);
-                canvasWrapper.appendChild(canvas2);
-            }
-        }
+        await renderCore(canvasWrapper, num, currentScale);
     } catch (error) {
         console.error("Gagal merender halaman:", error);
     } finally {
@@ -442,7 +453,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 200);
   }
 
-  // [BARU] Fungsi helper untuk update teks indikator zoom secara live
   function updateZoomIndicatorText(scale) {
     const zoomPercent = Math.round((scale / initialScale) * 100);
     [zoomLevelIndicatorPortrait, zoomLevelIndicatorLandscape].forEach(el => {
@@ -471,18 +481,19 @@ document.addEventListener('DOMContentLoaded', () => {
           event.preventDefault();
           const newDist = getDistance(event.touches);
           const scaleFactor = newDist / initialPinchDistance;
-          const newScale = lastPinchScale * scaleFactor;
+          const newScale = Math.max(initialScale, lastPinchScale * scaleFactor);
           
           canvasWrapper.style.transform = `scale(${newScale})`;
-          // [MODIFIKASI] Update indikator zoom secara live saat mencubit
           updateZoomIndicatorText(newScale);
       }
   }
 
+  // [MODIFIKASI TOTAL] Logika 'touchend' menerapkan metode "Freeze Frame"
   async function handleTouchEnd(event) {
       if (!isPinching) return;
       isPinching = false;
 
+      // Dapatkan skala akhir dari transformasi CSS
       const transformStyle = window.getComputedStyle(canvasWrapper).transform;
       let finalScale = lastPinchScale;
       if (transformStyle && transformStyle !== 'none') {
@@ -491,14 +502,29 @@ document.addEventListener('DOMContentLoaded', () => {
               finalScale = parseFloat(matrixValues[1].split(', ')[0]);
           }
       }
-
-      canvasWrapper.style.transform = '';
-      canvasWrapper.style.transition = '';
       
+      // Simpan skala baru, pastikan tidak lebih kecil dari skala awal
       currentScale = Math.max(initialScale, finalScale);
       
-      // [MODIFIKASI] Render ulang secara instan TANPA transisi fade
-      await renderPage(currentPageNum);
+      // Buat kontainer sementara untuk render di latar belakang
+      const offscreenContainer = document.createElement('div');
+      
+      // Render versi tajam ke kontainer latar belakang
+      await renderCore(offscreenContainer, currentPageNum, currentScale);
+
+      // "Freeze Frame": Lakukan pertukaran instan
+      canvasWrapper.style.transition = 'none'; // Pastikan tidak ada animasi saat bertukar
+      canvasWrapper.style.transform = ''; // Hapus sisa transform
+      canvasWrapper.innerHTML = offscreenContainer.innerHTML; // Ganti konten
+      
+      // Pulihkan properti transisi setelah pertukaran selesai
+      setTimeout(() => {
+        canvasWrapper.style.transition = '';
+      }, 50);
+
+      // Update UI terakhir
+      updateZoomIndicator();
+      updateCenteringAndOverflow();
   }
 
   function setupRippleEffect() {
@@ -548,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   function updateZoomIndicator() {
-      const zoomPercent = typeof currentScale === 'number' ? Math.round((currentScale / initialScale) * 100) : 100;
+      const zoomPercent = Math.round((currentScale / initialScale) * 100);
       updateZoomIndicatorText(currentScale);
   }
 

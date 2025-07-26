@@ -67,6 +67,7 @@ body[data-accent="deep-orange"] { --accent: var(--source-deep-orange); }
 /* 3. GAYA DASAR & LAYOUT
 /* =================================================================== */
 html { font-synthesis: none; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+/* [MODIFIKASI] Menggunakan unit 'svh' untuk kompatibilitas viewport yang lebih baik di mobile */
 html, body { height: 100vh; height: 100svh; width: 100%; margin: 0; padding: 0; overflow: hidden; }
 body {
   font-family: 'Roboto', sans-serif;
@@ -166,6 +167,7 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
     position: absolute; left: 56px; right: 56px;
     display: flex; align-items: center; justify-content: center;
     gap: 0.5rem; overflow: hidden;
+    transition: left 0.2s, right 0.2s;
 }
 .song-title-wrapper {
     display: flex; flex-direction: column; align-items: center; text-align: center;
@@ -218,13 +220,12 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   border-radius: var(--border-radius-sm);
 }
 
-/* [MODIFIKASI] Seluruh aturan untuk orientasi potret dirombak */
 @media (orientation: portrait) {
   .landscape-controls { display: none; }
   .pdf-viewer-footer {
     display: flex;
-    flex-shrink: 0; /* Pastikan footer tidak mengecil */
-    height: 80px; /* Samakan dengan tinggi bottom-nav utama */
+    flex-shrink: 0;
+    height: 80px;
     background-color: var(--md-sys-color-surface-container);
     border-top: 1px solid var(--md-sys-color-outline-variant);
     justify-content: space-between;
@@ -232,12 +233,15 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
     padding: 0 0.5rem;
     box-sizing: border-box;
   }
-  /* Aturan padding-bottom dan margin-bottom yang lama dihapus karena tidak lagi diperlukan */
 }
 
 
-@media (orientation: landscape) and (min-height: 400px) {
+@media (orientation: landscape) {
   .pdf-viewer-footer { display: none; }
+  /* [MODIFIKASI] Aturan judul disatukan untuk SEMUA mode lanskap */
+  .song-navigation {
+    right: auto; left: 50%; transform: translateX(-50%);
+  }
   .landscape-controls {
     display: flex;
     align-items: center;
@@ -247,15 +251,13 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   .page-navigation-landscape, .zoom-controls-landscape {
     display: flex; align-items: center; gap: 0;
   }
-  .song-navigation {
-    right: auto; left: 50%; transform: translateX(-50%);
-  }
 }
 
 .zoom-controls, .page-navigation, .page-navigation-landscape, .zoom-controls-landscape { display: flex; align-items: center; }
 .page-indicator, .zoom-level-indicator {
   font-size: 0.9rem; font-weight: 500; color: var(--md-sys-color-on-surface-variant);
   padding: 0 0.5rem; min-width: 50px; text-align: center;
+  transition: font-size 0.2s, min-width 0.2s, display 0.2s;
 }
 .page-indicator span[id^="page-num"] {
     color: var(--md-sys-color-primary);
@@ -289,7 +291,13 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   display: flex; align-items: center; justify-content: center;
   width: 48px; height: 48px; border-radius: 50%; position: relative;
   color: var(--md-sys-color-on-surface-variant);
+  transition: width 0.2s, height 0.2s;
 }
+.icon-button .material-symbols-outlined {
+  font-size: 24px;
+  transition: font-size 0.2s;
+}
+
 .icon-button::before {
     content: ''; position: absolute; inset: 0;
     background-color: var(--md-sys-color-primary);
@@ -387,14 +395,12 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 /* =================================================================== */
 
 @media (min-width: 768px) {
-  /* Perlebar area konten utama di tablet */
   .pujian-list, .settings-panel {
     max-width: 840px;
   }
 }
 
 @media (min-width: 1024px) {
-  /* Perlebar lagi untuk layar desktop kecil */
   .pujian-list, .settings-panel {
     max-width: 960px;
   }
@@ -426,5 +432,67 @@ body.dark-theme .ripple {
   to {
     transform: scale(4);
     opacity: 0;
+  }
+}
+
+/* =================================================================== */
+/* 8. SCALING DINAMIS UNTUK LAYAR SEMPIT
+/* =================================================================== */
+
+/* Untuk tablet potret & ponsel lanskap secara umum */
+@media (max-width: 767px) {
+  .pdf-viewer-header .icon-button,
+  .pdf-viewer-footer .icon-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .pdf-viewer-header .icon-button .material-symbols-outlined,
+  .pdf-viewer-footer .icon-button .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  .page-indicator, .zoom-level-indicator {
+    font-size: 0.8rem;
+    min-width: 40px;
+    padding: 0 0.25rem;
+  }
+  
+  .song-navigation {
+    left: 48px;
+    right: 48px;
+  }
+}
+
+/* Aturan yang lebih agresif khusus untuk ponsel lanskap */
+@media (max-height: 480px) and (orientation: landscape) {
+  /* Sembunyikan indikator teks untuk menghemat ruang */
+  .page-indicator, .zoom-level-indicator {
+    display: none;
+  }
+
+  /* Perkecil lagi tombol dan ikon */
+  .pdf-viewer-header .icon-button {
+    width: 36px;
+    height: 36px;
+  }
+  .pdf-viewer-header .icon-button .material-symbols-outlined {
+    font-size: 18px;
+  }
+  
+  /* Kurangi jarak antar grup tombol */
+  .landscape-controls {
+    gap: 0.5rem;
+  }
+  .pdf-viewer-controls-main {
+    gap: 0;
+  }
+  
+  /* [MODIFIKASI] Pastikan judul tetap di tengah, tidak menggunakan left/right */
+  .song-navigation {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: calc(100% - 88px); /* Lebar = 100% - (2 * 44px) */
   }
 }
