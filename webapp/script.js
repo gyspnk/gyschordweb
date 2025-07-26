@@ -1,12 +1,12 @@
 /**
- * Kidung Rohani App - Versi dengan Freeze Frame Rendering
+ * Kidung Rohani App - Versi dengan Transisi Zoom Seamless
  *
  * Perubahan & Penyempurnaan:
- * - [REVISI TOTAL] Logika `handleTouchEnd` diubah total untuk menerapkan
- * metode "Freeze Frame".
- * - [OPTIMISASI] Saat pinch-to-zoom selesai, PDF di-render ulang di latar
- * belakang lalu langsung menggantikan frame terakhir tanpa kedipan atau animasi,
- * memberikan penajaman gambar yang instan dan mulus.
+ * - [REVISI TOTAL] Logika render dirombak untuk menghilangkan 'reposisi' atau
+ * 'snap' saat render ulang setelah pinch-to-zoom.
+ * - [OPTIMISASI] Menerapkan metode pre-calculation: layout kontainer disiapkan
+ * terlebih dahulu berdasarkan skala baru sebelum konten ditukar, memastikan
+ * transisi yang benar-benar mulus dan instan.
  */
 
 const { pdfjsLib } = globalThis;
@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const songTitleWrapper = document.querySelector('.song-title-wrapper');
   const pdfViewerTitle = document.getElementById('pdf-viewer-title');
   const pdfViewerNumber = document.getElementById('pdf-viewer-number');
-  // [MODIFIKASI] Diubah ke 'let' agar bisa diganti saat render freeze frame (meski tidak jadi dipakai)
   let canvasWrapper = document.querySelector('.canvas-wrapper');
   const pdfViewerCloseBtn = document.getElementById('pdf-viewer-close');
 
@@ -265,26 +264,40 @@ document.addEventListener('DOMContentLoaded', () => {
       canvasWrapper.classList.remove('is-navigating');
   }
 
-  function updateCenteringAndOverflow() {
-      setTimeout(() => {
-          if (canvasWrapper.scrollHeight > pdfViewerContent.clientHeight) {
-              pdfViewerContent.classList.remove('vertically-centered');
-          } else {
-              pdfViewerContent.classList.add('vertically-centered');
-          }
-          if (canvasWrapper.scrollWidth > pdfViewerContent.clientWidth) {
-              pdfViewerContent.classList.add('is-overflowing');
-          } else {
-              pdfViewerContent.classList.remove('is-overflowing');
-          }
-      }, 0); 
+  // [BARU] Fungsi pre-calculation untuk menyiapkan layout kontainer
+  async function prepareContainerForScale(scale) {
+    if (!pdfDoc) return;
+    
+    const page = await pdfDoc.getPage(currentPageNum);
+    const viewport = page.getViewport({ scale: scale });
+    
+    let finalWidth = viewport.width;
+    let finalHeight = viewport.height;
+
+    if (currentViewMode === 'double' && currentPageNum < pdfDoc.numPages) {
+        finalWidth = (viewport.width * 2) + 16; // Ditambah jarak
+    }
+    if (currentScrollMode === 'vertical') {
+        finalHeight = 9999; // Anggap selalu overflow
+    }
+
+    // Terapkan kelas layout berdasarkan dimensi yang sudah dihitung
+    if (finalHeight > pdfViewerContent.clientHeight - 32) {
+        pdfViewerContent.classList.remove('vertically-centered');
+    } else {
+        pdfViewerContent.classList.add('vertically-centered');
+    }
+
+    if (finalWidth > pdfViewerContent.clientWidth - 32) {
+        pdfViewerContent.classList.add('is-overflowing');
+    } else {
+        pdfViewerContent.classList.remove('is-overflowing');
+    }
   }
 
-  // [MODIFIKASI] renderPage dipecah menjadi dua: renderCore dan renderPage
-  // renderCore adalah inti yang bisa dipanggil untuk render di latar belakang
   async function renderCore(container, pageNum, scale) {
     if (!pdfDoc) return;
-    container.innerHTML = ''; // Selalu bersihkan container target
+    container.innerHTML = ''; 
 
     const renderSinglePageTask = async (pageNumToRender, scaleToUse) => {
         const page = await pdfDoc.getPage(pageNumToRender);
@@ -320,7 +333,6 @@ document.addEventListener('DOMContentLoaded', () => {
   async function renderPage(num) {
     if (!pdfDoc) return;
     
-    // Hapus transform dari pinch zoom sebelum render ulang normal
     canvasWrapper.style.transform = '';
 
     if (currentScale === 'page-fit') {
@@ -337,6 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
+        await prepareContainerForScale(currentScale);
         await renderCore(canvasWrapper, num, currentScale);
     } catch (error) {
         console.error("Gagal merender halaman:", error);
@@ -345,7 +358,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePageIndicator(num);
         updatePageNavButtons();
         updateZoomIndicator();
-        updateCenteringAndOverflow();
     }
   }
   
@@ -493,7 +505,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!isPinching) return;
       isPinching = false;
 
-      // Dapatkan skala akhir dari transformasi CSS
       const transformStyle = window.getComputedStyle(canvasWrapper).transform;
       let finalScale = lastPinchScale;
       if (transformStyle && transformStyle !== 'none') {
@@ -503,28 +514,25 @@ document.addEventListener('DOMContentLoaded', () => {
           }
       }
       
-      // Simpan skala baru, pastikan tidak lebih kecil dari skala awal
       currentScale = Math.max(initialScale, finalScale);
       
-      // Buat kontainer sementara untuk render di latar belakang
-      const offscreenContainer = document.createElement('div');
+      // Langkah 1: Siapkan kontainer untuk skala baru (tanpa terlihat)
+      await prepareContainerForScale(currentScale);
       
-      // Render versi tajam ke kontainer latar belakang
+      // Langkah 2: Render versi tajam di latar belakang
+      const offscreenContainer = document.createElement('div');
       await renderCore(offscreenContainer, currentPageNum, currentScale);
 
-      // "Freeze Frame": Lakukan pertukaran instan
-      canvasWrapper.style.transition = 'none'; // Pastikan tidak ada animasi saat bertukar
-      canvasWrapper.style.transform = ''; // Hapus sisa transform
-      canvasWrapper.innerHTML = offscreenContainer.innerHTML; // Ganti konten
+      // Langkah 3: Lakukan pertukaran instan (Freeze Frame Swap)
+      canvasWrapper.style.transition = 'none';
+      canvasWrapper.style.transform = '';
+      canvasWrapper.innerHTML = offscreenContainer.innerHTML;
       
-      // Pulihkan properti transisi setelah pertukaran selesai
       setTimeout(() => {
         canvasWrapper.style.transition = '';
       }, 50);
 
-      // Update UI terakhir
       updateZoomIndicator();
-      updateCenteringAndOverflow();
   }
 
   function setupRippleEffect() {
