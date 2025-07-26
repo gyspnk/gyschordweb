@@ -3,9 +3,9 @@
  *
  * Fungsionalitas:
  * - Zoom melalui tombol diizinkan.
- * - Zoom melalui Ctrl+Scroll (desktop) dan Ctrl +/- (keyboard) diizinkan.
- * - FUNGSI PINCH-TO-ZOOM DIBLOKIR DI SELURUH APLIKASI.
- * - Peringatan "Gunakan Tombol untuk Zoom" muncul saat mencoba pinch-zoom.
+ * - Zoom melalui Ctrl+Scroll (desktop) dan Ctrl +/- (keyboard) diizinkan di dalam PDF viewer.
+ * - FUNGSI PINCH-TO-ZOOM DIBLOKIR HANYA DI DALAM PDF VIEWER.
+ * - Peringatan "Gunakan Tombol untuk Zoom" muncul saat mencoba pinch-zoom di viewer.
  */
 
 const { pdfjsLib } = globalThis;
@@ -115,9 +115,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listener untuk zoom di desktop dan mobile
     window.addEventListener('wheel', handleGlobalScroll, { passive: false });
     window.addEventListener('keydown', handleGlobalKeydown, { passive: false });
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false }); 
-    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    
+    // Listener untuk pinch HANYA di PDF viewer
+    pdfViewerOverlay.addEventListener('touchstart', handleTouchStart, { passive: true });
+    pdfViewerOverlay.addEventListener('touchmove', handleTouchMove, { passive: false }); 
+    pdfViewerOverlay.addEventListener('touchend', handleTouchEnd, { passive: true });
   }
 
   // --- 5. Logika Navigasi & Render Utama ---
