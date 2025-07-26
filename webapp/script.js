@@ -1,14 +1,11 @@
 /**
- * Kidung Rohani App - Versi Final dengan Layering Zoom & Perbaikan Bug Kritis
+ * Kidung Rohani App - Versi Stabil
  *
- * Perubahan & Penyempurnaan:
- * - [REVISI TOTAL] Implementasi sistem layering "Freeze Frame" yang kokoh untuk
- * pinch-to-zoom, menghilangkan semua artifak visual (reposisi, layar putih).
- * - [FIX] Bug "pop up" di awal pinch dan pinch kedua yang berantakan telah
- * diperbaiki secara tuntas dengan kalkulasi skala relatif yang benar.
- * - [FIX] Bug regresi di mana transisi fade pada tombol dan navigasi hilang
- * telah diperbaiki.
- * - [FIX] Tracking zoom secara live kini berfungsi kembali dengan andal.
+ * Fungsionalitas:
+ * - Zoom melalui tombol dan scroll-wheel berfungsi dengan baik.
+ * - Transisi fade saat navigasi halaman dan lagu aktif.
+ * - Tata letak stabil di berbagai perangkat.
+ * - TIDAK TERMASUK fitur pinch-to-zoom.
  */
 
 const { pdfjsLib } = globalThis;
@@ -75,10 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
     defaultVerticalScroll: false,
   };
 
-  let isPinching = false;
-  let initialPinchDistance = 0;
-  let lastPinchScale = 1.0;
-
   // --- 3. Inisialisasi ---
   function init() {
     applyStoredPreferences();
@@ -115,11 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.addEventListener('wheel', handleGlobalScroll, { passive: false });
-
-    pdfViewerOverlay.addEventListener('touchstart', handleTouchStart, { passive: false });
-    pdfViewerOverlay.addEventListener('touchmove', handleTouchMove, { passive: false });
-    pdfViewerOverlay.addEventListener('touchend', handleTouchEnd);
-    pdfViewerOverlay.addEventListener('touchcancel', handleTouchEnd);
   }
 
   // --- 5. Logika Navigasi & Render Utama ---
@@ -266,38 +254,24 @@ document.addEventListener('DOMContentLoaded', () => {
       canvasWrapper.classList.remove('is-navigating');
   }
 
-  async function prepareContainerForScale(scale) {
-    if (!pdfDoc) return;
-    
-    const page = await pdfDoc.getPage(currentPageNum);
-    const viewport = page.getViewport({ scale: scale });
-    
-    let finalWidth = viewport.width;
-    let finalHeight = viewport.height;
-
-    if (currentViewMode === 'double' && currentPageNum < pdfDoc.numPages) {
-        finalWidth = (viewport.width * 2) + 16;
-    }
-    if (currentScrollMode === 'vertical') {
-        finalHeight = 9999;
-    }
-
-    if (finalHeight > pdfViewerContent.clientHeight - 32) {
-        pdfViewerContent.classList.remove('vertically-centered');
-    } else {
-        pdfViewerContent.classList.add('vertically-centered');
-    }
-
-    if (finalWidth > pdfViewerContent.clientWidth - 32) {
-        pdfViewerContent.classList.add('is-overflowing');
-    } else {
-        pdfViewerContent.classList.remove('is-overflowing');
-    }
+  function updateCenteringAndOverflow() {
+      setTimeout(() => {
+          if (canvasWrapper.scrollHeight > pdfViewerContent.clientHeight) {
+              pdfViewerContent.classList.remove('vertically-centered');
+          } else {
+              pdfViewerContent.classList.add('vertically-centered');
+          }
+          if (canvasWrapper.scrollWidth > pdfViewerContent.clientWidth) {
+              pdfViewerContent.classList.add('is-overflowing');
+          } else {
+              pdfViewerContent.classList.remove('is-overflowing');
+          }
+      }, 0); 
   }
 
-  async function renderCore(container, pageNum, scale) {
+  async function renderPage(num) {
     if (!pdfDoc) return;
-    container.innerHTML = ''; 
+    canvasWrapper.innerHTML = '';
 
     const renderSinglePageTask = async (pageNumToRender, scaleToUse) => {
         const page = await pdfDoc.getPage(pageNumToRender);
@@ -313,28 +287,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return canvas;
     };
     
-    if (currentScrollMode === 'vertical') {
-        container.classList.add('vertical-scroll');
-        for (let i = 1; i <= pdfDoc.numPages; i++) {
-            const canvas = await renderSinglePageTask(i, scale);
-            container.appendChild(canvas);
-        }
-    } else {
-        container.classList.remove('vertical-scroll');
-        const canvas1 = await renderSinglePageTask(pageNum, scale);
-        container.appendChild(canvas1);
-        if (currentViewMode === 'double' && pageNum < pdfDoc.numPages) {
-            const canvas2 = await renderSinglePageTask(pageNum + 1, scale);
-            container.appendChild(canvas2);
-        }
-    }
-  }
-
-  async function renderPage(num) {
-    if (!pdfDoc) return;
-    
-    canvasWrapper.style.transform = '';
-
     if (currentScale === 'page-fit') {
         const page1 = await pdfDoc.getPage(1);
         const viewport1 = page1.getViewport({ scale: 1 });
@@ -349,8 +301,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-        await prepareContainerForScale(currentScale);
-        await renderCore(canvasWrapper, num, currentScale);
+        if (currentScrollMode === 'vertical') {
+            canvasWrapper.classList.add('vertical-scroll');
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                const canvas = await renderSinglePageTask(i, currentScale);
+                canvasWrapper.appendChild(canvas);
+            }
+        } else {
+            canvasWrapper.classList.remove('vertical-scroll');
+            const canvas1 = await renderSinglePageTask(num, currentScale);
+            canvasWrapper.appendChild(canvas1);
+            if (currentViewMode === 'double' && num < pdfDoc.numPages) {
+                const canvas2 = await renderSinglePageTask(num + 1, currentScale);
+                canvasWrapper.appendChild(canvas2);
+            }
+        }
     } catch (error) {
         console.error("Gagal merender halaman:", error);
     } finally {
@@ -358,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePageIndicator(num);
         updatePageNavButtons();
         updateZoomIndicator();
+        updateCenteringAndOverflow();
     }
   }
   
@@ -465,99 +431,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 200);
   }
 
-  function updateZoomIndicatorText(scale) {
-    const zoomPercent = Math.round((scale / initialScale) * 100);
-    [zoomLevelIndicatorPortrait, zoomLevelIndicatorLandscape].forEach(el => {
-        if (el) el.textContent = `${zoomPercent}%`;
-    });
-  }
-
-  function getDistance(touches) {
-    const dx = touches[0].clientX - touches[1].clientX;
-    const dy = touches[0].clientY - touches[1].clientY;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-
-  // [MODIFIKASI TOTAL] Logika Pinch-to-Zoom dirombak untuk stabilitas dan pengalaman terbaik
-  function handleTouchStart(event) {
-    if (event.touches.length === 2) {
-        event.preventDefault();
-        isPinching = true;
-        // Ambil skala render saat ini sebagai basis untuk pinch
-        lastPinchScale = currentScale === 'page-fit' ? initialScale : currentScale;
-        initialPinchDistance = getDistance(event.touches);
-    }
-  }
-
-  function handleTouchMove(event) {
-      if (isPinching && event.touches.length === 2) {
-          event.preventDefault();
-          const newDist = getDistance(event.touches);
-          const scaleFactor = newDist / initialPinchDistance;
-          
-          // Skala visual adalah gabungan skala render dengan faktor pinch
-          const visualScale = lastPinchScale * scaleFactor;
-
-          // CSS transform adalah relatif terhadap skala yang sudah dirender (lastPinchScale)
-          // Ini untuk menghindari "pop up" di awal pinch
-          const transformScale = visualScale / lastPinchScale;
-          
-          canvasWrapper.style.transition = 'none';
-          canvasWrapper.style.transform = `scale(${transformScale})`;
-          updateZoomIndicatorText(visualScale);
-      }
-  }
-  
-  async function handleTouchEnd(event) {
-      if (!isPinching) return;
-      isPinching = false;
-      
-      const transformStyle = window.getComputedStyle(canvasWrapper).transform;
-      let scaleFactor = 1.0;
-      if (transformStyle && transformStyle !== 'none') {
-          const matrix = new DOMMatrix(transformStyle);
-          scaleFactor = matrix.m11;
-      }
-      
-      // Hitung skala final dan update state utama
-      const finalScale = lastPinchScale * scaleFactor;
-      currentScale = Math.max(initialScale, finalScale);
-      
-      // --- LOGIKA FREEZE FRAME BARU ---
-      // 1. Buat kloningan dari frame saat ini sebagai "freeze frame"
-      const frozenWrapper = canvasWrapper.cloneNode(true);
-      const rect = canvasWrapper.getBoundingClientRect();
-      
-      // 2. Atur gaya agar kloningan menjadi overlay sempurna
-      frozenWrapper.style.position = 'fixed';
-      frozenWrapper.style.left = `${rect.left}px`;
-      frozenWrapper.style.top = `${rect.top}px`;
-      frozenWrapper.style.width = `${rect.width}px`;
-      frozenWrapper.style.height = `${rect.height}px`;
-      frozenWrapper.style.margin = '0';
-      frozenWrapper.style.zIndex = '10';
-      frozenWrapper.style.transform = ''; // Hapus sisa transform, karena ukuran sudah diatur
-      
-      pdfViewerOverlay.appendChild(frozenWrapper);
-      
-      // 3. Sembunyikan wrapper asli, reset transform, lalu render ulang di belakang
-      canvasWrapper.style.opacity = '0';
-      canvasWrapper.style.transform = '';
-      await renderPage(currentPageNum);
-      
-      // 4. Setelah render selesai, tampilkan wrapper asli dan hilangkan freeze frame
-      canvasWrapper.style.transition = 'none';
-      canvasWrapper.style.opacity = '1';
-      
-      frozenWrapper.style.transition = 'opacity 0.1s linear';
-      frozenWrapper.style.opacity = '0';
-      
-      setTimeout(() => {
-          frozenWrapper.remove();
-          canvasWrapper.style.transition = '';
-      }, 100);
-  }
-
   function setupRippleEffect() {
     const createRipple = (event) => {
         const element = event.currentTarget;
@@ -605,8 +478,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   function updateZoomIndicator() {
-      const zoomPercent = Math.round((currentScale / initialScale) * 100);
-      updateZoomIndicatorText(currentScale);
+      const zoomPercent = typeof currentScale === 'number' ? Math.round((currentScale / initialScale) * 100) : 100;
+      [zoomLevelIndicatorPortrait, zoomLevelIndicatorLandscape].forEach(el => {
+        if(el) el.textContent = `${zoomPercent}%`
+      });
   }
 
   function updatePageNavButtons() {

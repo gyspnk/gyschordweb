@@ -67,7 +67,6 @@ body[data-accent="deep-orange"] { --accent: var(--source-deep-orange); }
 /* 3. GAYA DASAR & LAYOUT
 /* =================================================================== */
 html { font-synthesis: none; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-/* [MODIFIKASI] Menggunakan unit 'svh' untuk kompatibilitas viewport yang lebih baik di mobile */
 html, body { height: 100vh; height: 100svh; width: 100%; margin: 0; padding: 0; overflow: hidden; }
 body {
   font-family: 'Roboto', sans-serif;
@@ -238,7 +237,6 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 
 @media (orientation: landscape) {
   .pdf-viewer-footer { display: none; }
-  /* [MODIFIKASI] Aturan judul disatukan untuk SEMUA mode lanskap */
   .song-navigation {
     right: auto; left: 50%; transform: translateX(-50%);
   }
@@ -439,7 +437,6 @@ body.dark-theme .ripple {
 /* 8. SCALING DINAMIS UNTUK LAYAR SEMPIT
 /* =================================================================== */
 
-/* Untuk tablet potret & ponsel lanskap secara umum */
 @media (max-width: 767px) {
   .pdf-viewer-header .icon-button,
   .pdf-viewer-footer .icon-button {
@@ -464,14 +461,11 @@ body.dark-theme .ripple {
   }
 }
 
-/* Aturan yang lebih agresif khusus untuk ponsel lanskap */
 @media (max-height: 480px) and (orientation: landscape) {
-  /* Sembunyikan indikator teks untuk menghemat ruang */
   .page-indicator, .zoom-level-indicator {
     display: none;
   }
 
-  /* Perkecil lagi tombol dan ikon */
   .pdf-viewer-header .icon-button {
     width: 36px;
     height: 36px;
@@ -480,7 +474,6 @@ body.dark-theme .ripple {
     font-size: 18px;
   }
   
-  /* Kurangi jarak antar grup tombol */
   .landscape-controls {
     gap: 0.5rem;
   }
@@ -488,11 +481,10 @@ body.dark-theme .ripple {
     gap: 0;
   }
   
-  /* [MODIFIKASI] Pastikan judul tetap di tengah, tidak menggunakan left/right */
   .song-navigation {
     left: 50%;
     right: auto;
     transform: translateX(-50%);
-    width: calc(100% - 88px); /* Lebar = 100% - (2 * 44px) */
+    width: calc(100% - 88px);
   }
 }
