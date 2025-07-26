@@ -2,9 +2,11 @@
  * Kidung Rohani App - Versi Final
  *
  * Fungsionalitas:
- * - Zoom sentuh (pinch) diblokir secara global. Peringatan hanya muncul di viewer.
- * - Zoom desktop (Ctrl+Scroll/Keyboard) diblokir secara global, KECUALI di dalam PDF viewer.
- * - Di dalam PDF viewer, zoom desktop akan memperbesar konten PDF, bukan UI.
+ * - Zoom melalui tombol diizinkan di dalam viewer.
+ * - SEMUA METODE ZOOM LAIN (PINCH, CTRL+SCROLL, KEYBOARD) DIBLOKIR SECARA GLOBAL.
+ * - Peringatan "Gunakan Tombol untuk Zoom" HANYA MUNCUL saat mencoba zoom di dalam PDF viewer.
+ * - Tata letak kontrol viewer responsif terhadap orientasi.
+ * - Navigasi halaman disembunyikan jika hanya 1 halaman.
  */
 
 const { pdfjsLib } = globalThis;
@@ -27,15 +29,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const pdfViewerNumber = document.getElementById('pdf-viewer-number');
   let canvasWrapper = document.querySelector('.canvas-wrapper');
   const pdfViewerCloseBtn = document.getElementById('pdf-viewer-close');
-
+  
   const pageNavigationPortrait = document.querySelector('.pdf-viewer-footer .page-navigation');
   const pageNavigationLandscape = document.querySelector('.landscape-controls .page-navigation-landscape');
   
   const prevSongBtn = document.getElementById('song-prev');
   const nextSongBtn = document.getElementById('song-next');
-  const viewModeBtn = document.getElementById('view-mode');
-  const scrollModeBtn = document.getElementById('scroll-mode');
   
+  const viewModeBtnPortrait = document.getElementById('view-mode-portrait');
+  const scrollModeBtnPortrait = document.getElementById('scroll-mode-portrait');
+  const viewModeBtnLandscape = document.getElementById('view-mode-landscape');
+  const scrollModeBtnLandscape = document.getElementById('scroll-mode-landscape');
+
   const prevPageBtnPortrait = document.getElementById('pdf-prev-portrait');
   const nextPageBtnPortrait = document.getElementById('pdf-next-portrait');
   const zoomInBtnPortrait = document.getElementById('zoom-in-portrait');
@@ -72,7 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
     defaultVerticalScroll: false,
   };
   
-  // State untuk deteksi pinch
   let initialPinchDistance = 0;
   let toastTimeout = null;
 
@@ -97,8 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     prevSongBtn.addEventListener('click', onPrevSong);
     nextSongBtn.addEventListener('click', onNextSong);
-    viewModeBtn.addEventListener('click', onToggleViewMode);
-    scrollModeBtn.addEventListener('click', onToggleScrollMode);
+    
+    [viewModeBtnPortrait, viewModeBtnLandscape].forEach(btn => btn.addEventListener('click', onToggleViewMode));
+    [scrollModeBtnPortrait, scrollModeBtnLandscape].forEach(btn => btn.addEventListener('click', onToggleScrollMode));
 
     [prevPageBtnPortrait, prevPageBtnLandscape].forEach(btn => btn.addEventListener('click', onPrevPage));
     [nextPageBtnPortrait, nextPageBtnLandscape].forEach(btn => btn.addEventListener('click', onNextPage));
@@ -111,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('orientationchange', handleOrientationChange);
     }
     
-    // Listener GLOBAL untuk memblokir semua jenis zoom
     window.addEventListener('wheel', handleGlobalScroll, { passive: false });
     window.addEventListener('keydown', handleGlobalKeydown, { passive: false });
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
@@ -122,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- 5. Logika Navigasi & Render Utama ---
   function navigateTo(page) {
     [pujianBtn, pengaturanBtn].forEach(btn => btn.classList.remove('selected'));
-    document.querySelector('.app-header').style.display = 'block';
+    document.querySelector('.app-header').style.display = 'flex';
     
     if (page === 'pujian') {
       pujianBtn.classList.add('selected');
@@ -351,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   async function onZoom(direction) {
-    if (!pdfDoc) return; // Tambahan pengaman
+    if (!pdfDoc) return;
     if (currentScale === 'page-fit') {
         currentScale = initialScale;
     }
@@ -418,15 +422,21 @@ document.addEventListener('DOMContentLoaded', () => {
   
   function updateViewerUI() {
     const multiPage = pdfDoc && pdfDoc.numPages > 1;
-    viewModeBtn.style.display = multiPage ? 'flex' : 'none';
-    scrollModeBtn.style.display = multiPage ? 'flex' : 'none';
-    
-    viewModeBtn.classList.toggle('active', currentViewMode === 'double');
-    scrollModeBtn.classList.toggle('active', currentScrollMode === 'vertical');
-
+    const singlePage = !pdfDoc || pdfDoc.numPages <= 1;
     const isVertical = currentScrollMode === 'vertical';
-    pageNavigationPortrait.style.visibility = isVertical ? 'hidden' : 'visible';
-    pageNavigationLandscape.style.visibility = isVertical ? 'hidden' : 'visible';
+
+    const viewButtons = [viewModeBtnPortrait, viewModeBtnLandscape];
+    const scrollButtons = [scrollModeBtnPortrait, scrollModeBtnLandscape];
+    
+    viewButtons.forEach(btn => btn.style.display = multiPage ? 'flex' : 'none');
+    scrollButtons.forEach(btn => btn.style.display = multiPage ? 'flex' : 'none');
+    
+    viewButtons.forEach(btn => btn.classList.toggle('active', currentViewMode === 'double'));
+    scrollButtons.forEach(btn => btn.classList.toggle('active', currentScrollMode === 'vertical'));
+
+    // Sembunyikan navigasi jika hanya 1 halaman ATAU mode scroll vertikal
+    pageNavigationPortrait.style.display = (singlePage || isVertical) ? 'none' : 'flex';
+    pageNavigationLandscape.style.display = (singlePage || isVertical) ? 'none' : 'flex';
     
     checkOrientation();
   }
@@ -523,20 +533,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2500);
   }
   
-  // Izinkan zoom Ctrl+Scroll HANYA di viewer, blokir di tempat lain
   function handleGlobalScroll(event) {
     if (event.ctrlKey) {
-        event.preventDefault(); // Selalu blokir zoom default browser
+        event.preventDefault();
         if (document.body.classList.contains('viewer-active')) {
-            onZoom(event.deltaY < 0 ? 'in' : 'out'); // Jalankan zoom aplikasi jika viewer aktif
+            onZoom(event.deltaY < 0 ? 'in' : 'out');
         }
     }
   }
   
-  // Izinkan zoom Keyboard HANYA di viewer, blokir di tempat lain
   function handleGlobalKeydown(event) {
     if (event.ctrlKey && (event.key === '+' || event.key === '-' || event.key === '=')) {
-        event.preventDefault(); // Selalu blokir zoom default browser
+        event.preventDefault();
         if (document.body.classList.contains('viewer-active')) {
             if (event.key === '+' || event.key === '=') {
                 onZoom('in');
@@ -547,7 +555,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Blokir zoom Sentuh, tampilkan toast jika di viewer
   function getPinchDistance(event) {
       const t1 = event.touches[0];
       const t2 = event.touches[1];
@@ -562,7 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function handleTouchMove(event) {
       if (event.touches.length === 2) {
-          event.preventDefault(); // Selalu blokir zoom sentuh
+          event.preventDefault();
           if (document.body.classList.contains('viewer-active') && initialPinchDistance > 0) {
               const newDistance = getPinchDistance(event);
               if (Math.abs(newDistance - initialPinchDistance) > 15) {

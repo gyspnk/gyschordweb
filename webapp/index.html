@@ -87,15 +87,14 @@
               <span class="material-symbols-outlined">zoom_in</span>
             </button>
           </div>
-        </div>
-
-        <div class="pdf-viewer-controls-main">
-          <button id="view-mode" aria-label="Mode Tampilan" class="icon-button">
-            <span class="material-symbols-outlined">book</span>
-          </button>
-          <button id="scroll-mode" aria-label="Mode Gulir" class="icon-button">
-            <span class="material-symbols-outlined">swap_vert</span>
-          </button>
+          <div class="pdf-viewer-controls-main" id="controls-landscape">
+            <button id="view-mode-landscape" aria-label="Mode Tampilan" class="icon-button">
+              <span class="material-symbols-outlined">book</span>
+            </button>
+            <button id="scroll-mode-landscape" aria-label="Mode Gulir" class="icon-button">
+              <span class="material-symbols-outlined">swap_vert</span>
+            </button>
+          </div>
         </div>
       </header>
       
@@ -129,7 +128,14 @@
               <span class="material-symbols-outlined">chevron_right</span>
             </button>
         </div>
-        <div class="view-controls-placeholder"></div> 
+        <div class="pdf-viewer-controls-main" id="controls-portrait">
+          <button id="view-mode-portrait" aria-label="Mode Tampilan" class="icon-button">
+            <span class="material-symbols-outlined">book</span>
+          </button>
+          <button id="scroll-mode-portrait" aria-label="Mode Gulir" class="icon-button">
+            <span class="material-symbols-outlined">swap_vert</span>
+          </button>
+        </div>
       </footer>
   </div>
 
