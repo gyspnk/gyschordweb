@@ -154,9 +154,13 @@ h1, h2, h3 { font-weight: 500; }
 body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 
 .pdf-viewer-header {
-  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
-  padding: 0.5rem; flex-shrink: 0;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant); position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  position: relative;
 }
 .song-navigation {
     position: absolute; left: 56px; right: 56px;
@@ -178,25 +182,22 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   max-width: 100%;
 }
 #pdf-viewer-number { font-size: 0.75rem; color: var(--md-sys-color-on-surface-variant); }
-.pdf-viewer-controls-main { display: flex; align-items: center; gap: 0.25rem; margin-left: auto; }
+.pdf-viewer-controls-main { display: flex; align-items: center; gap: 0.25rem; }
 
 .pdf-viewer-content {
   position: relative; flex-grow: 1;
   overflow: auto;
   display: flex; 
   align-items: flex-start;
-  /* [FIX] Aturan default untuk centering horizontal ditambahkan kembali */
   justify-content: center;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Kelas untuk menangani overflow horizontal saat zoom 2 halaman */
 .pdf-viewer-content.is-overflowing {
   justify-content: flex-start;
 }
 
-/* Aturan untuk centering vertikal cerdas */
 .pdf-viewer-content.vertically-centered {
   align-items: center;
 }
@@ -232,13 +233,17 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 @media (orientation: landscape) and (min-height: 400px) {
   .pdf-viewer-footer { display: none; }
   .landscape-controls {
-    display: flex; align-items: center; gap: 1rem;
-    position: absolute; right: 112px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    /* [MODIFIKASI] Menggunakan margin auto untuk mendorong ke kanan secara fleksibel */
+    margin-left: auto;
   }
   .page-navigation-landscape, .zoom-controls-landscape {
     display: flex; align-items: center; gap: 0;
   }
   .song-navigation {
+    /* Judul tetap di tengah, tidak terpengaruh oleh tombol */
     right: auto; left: 50%; transform: translateX(-50%);
   }
 }

@@ -1,9 +1,13 @@
 /**
- * Kidung Rohani App - Versi dengan Optimalisasi Loader
+ * Kidung Rohani App - Versi dengan Fungsionalitas Pinch-to-Zoom
  *
  * Perubahan & Penyempurnaan:
- * - [FIX] Ikon loading kini hanya muncul saat membuka pujian baru dan tidak akan
- * muncul berulang kali saat melakukan zoom atau mengganti halaman.
+ * - [FITUR] Menambahkan fungsionalitas pinch-to-zoom (cubit untuk zoom) pada
+ * seluruh area PDF viewer untuk perangkat sentuh.
+ * - [OPTIMISASI] Zoom saat mencubit menggunakan CSS transform untuk kinerja
+ * yang mulus, dan me-render ulang PDF setelahnya untuk ketajaman gambar.
+ * - [FIX] Gestur cubit kini akan selalu mengontrol zoom PDF dan tidak akan
+ * memperbesar antarmuka aplikasi secara tidak sengaja.
  */
 
 const { pdfjsLib } = globalThis;
@@ -70,6 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
     defaultVerticalScroll: false,
   };
 
+  // [BARU] State untuk pinch-to-zoom
+  let isPinching = false;
+  let initialPinchDistance = 0;
+  let lastPinchScale = 1.0;
+
   // --- 3. Inisialisasi ---
   function init() {
     applyStoredPreferences();
@@ -100,12 +109,18 @@ document.addEventListener('DOMContentLoaded', () => {
     [zoomOutBtnPortrait, zoomOutBtnLandscape].forEach(btn => btn.addEventListener('click', () => onZoom('out')));
 
     if (screen.orientation) {
-        screen.orientation.addEventListener('change', checkOrientation);
+        screen.orientation.addEventListener('change', handleOrientationChange);
     } else {
-        window.addEventListener('orientationchange', checkOrientation);
+        window.addEventListener('orientationchange', handleOrientationChange);
     }
 
     window.addEventListener('wheel', handleGlobalScroll, { passive: false });
+
+    // [BARU] Menambahkan event listener untuk gestur sentuhan (pinch-to-zoom)
+    pdfViewerOverlay.addEventListener('touchstart', handleTouchStart, { passive: false });
+    pdfViewerOverlay.addEventListener('touchmove', handleTouchMove, { passive: false });
+    pdfViewerOverlay.addEventListener('touchend', handleTouchEnd);
+    pdfViewerOverlay.addEventListener('touchcancel', handleTouchEnd);
   }
 
   // --- 5. Logika Navigasi & Render Utama ---
@@ -207,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const song = pujianItems[currentSongIndex];
     if (!song) return;
     
-    // [MODIFIKASI] Loader ditampilkan HANYA saat membuka pujian baru.
     viewerLoader.style.display = 'block';
 
     songTitleWrapper.classList.add('is-navigating');
@@ -270,7 +284,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function renderPage(num) {
     if (!pdfDoc) return;
-    // [MODIFIKASI] Baris yang menampilkan loader dihapus dari sini.
     canvasWrapper.innerHTML = '';
 
     const renderSinglePageTask = async (pageNumToRender, scaleToUse) => {
@@ -320,8 +333,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
         console.error("Gagal merender halaman:", error);
     } finally {
-        // [MODIFIKASI] Loader disembunyikan di sini. Ini akan berjalan setelah
-        // render pertama kali atau setelah render ulang karena zoom/ganti halaman.
         viewerLoader.style.display = 'none';
         updatePageIndicator(num);
         updatePageNavButtons();
@@ -424,7 +435,69 @@ document.addEventListener('DOMContentLoaded', () => {
     checkOrientation();
   }
 
-  // --- 7. Logika Tambahan (Ripple, Dll.) ---
+  // --- 7. Logika Tambahan ---
+
+  function handleOrientationChange() {
+    checkOrientation();
+    setTimeout(() => {
+      currentScale = 'page-fit';
+      animateViewChange(() => renderPage(currentPageNum));
+    }, 200);
+  }
+
+  // [BARU] Kumpulan fungsi untuk menangani Pinch-to-Zoom
+  function getDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function handleTouchStart(event) {
+    if (event.touches.length === 2) {
+        event.preventDefault();
+        isPinching = true;
+        initialPinchDistance = getDistance(event.touches);
+        lastPinchScale = currentScale === 'page-fit' ? initialScale : currentScale;
+        canvasWrapper.style.transition = 'none'; // Matikan transisi agar zoom live
+    }
+  }
+
+  function handleTouchMove(event) {
+      if (isPinching && event.touches.length === 2) {
+          event.preventDefault();
+          const newDist = getDistance(event.touches);
+          const scaleFactor = newDist / initialPinchDistance;
+          const newScale = lastPinchScale * scaleFactor;
+          
+          // Terapkan zoom via CSS transform untuk kinerja mulus
+          canvasWrapper.style.transform = `scale(${newScale})`;
+      }
+  }
+
+  async function handleTouchEnd(event) {
+      if (!isPinching) return;
+      isPinching = false;
+
+      // Ambil nilai skala dari properti transform CSS
+      const transformStyle = window.getComputedStyle(canvasWrapper).transform;
+      let finalScale = lastPinchScale;
+      if (transformStyle && transformStyle !== 'none') {
+          const matrixValues = transformStyle.match(/matrix\((.+)\)/);
+          if (matrixValues) {
+              finalScale = parseFloat(matrixValues[1].split(', ')[0]);
+          }
+      }
+
+      // Bersihkan style inline setelah selesai
+      canvasWrapper.style.transform = '';
+      canvasWrapper.style.transition = '';
+      
+      // Pastikan skala tidak lebih kecil dari ukuran 'fit' awal
+      currentScale = Math.max(initialScale, finalScale);
+      
+      // Render ulang PDF dengan resolusi tajam pada skala akhir
+      await animateViewChange(() => renderPage(currentPageNum), 75);
+  }
 
   function setupRippleEffect() {
     const createRipple = (event) => {
