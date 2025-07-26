@@ -218,17 +218,23 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   border-radius: var(--border-radius-sm);
 }
 
-/* --- START: ORIENTATION-SPECIFIC STYLES --- */
+/* [MODIFIKASI] Seluruh aturan untuk orientasi potret dirombak */
 @media (orientation: portrait) {
   .landscape-controls { display: none; }
-  .pdf-viewer-footer { display: flex; }
-  .pdf-viewer-content {
-    padding-bottom: 80px; 
+  .pdf-viewer-footer {
+    display: flex;
+    flex-shrink: 0; /* Pastikan footer tidak mengecil */
+    height: 80px; /* Samakan dengan tinggi bottom-nav utama */
+    background-color: var(--md-sys-color-surface-container);
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0.5rem;
+    box-sizing: border-box;
   }
-  .canvas-wrapper {
-    margin-bottom: 0;
-  }
+  /* Aturan padding-bottom dan margin-bottom yang lama dihapus karena tidak lagi diperlukan */
 }
+
 
 @media (orientation: landscape) and (min-height: 400px) {
   .pdf-viewer-footer { display: none; }
@@ -236,18 +242,15 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
     display: flex;
     align-items: center;
     gap: 1rem;
-    /* [MODIFIKASI] Menggunakan margin auto untuk mendorong ke kanan secara fleksibel */
     margin-left: auto;
   }
   .page-navigation-landscape, .zoom-controls-landscape {
     display: flex; align-items: center; gap: 0;
   }
   .song-navigation {
-    /* Judul tetap di tengah, tidak terpengaruh oleh tombol */
     right: auto; left: 50%; transform: translateX(-50%);
   }
 }
-/* --- END: ORIENTATION-SPECIFIC STYLES --- */
 
 .zoom-controls, .page-navigation, .page-navigation-landscape, .zoom-controls-landscape { display: flex; align-items: center; }
 .page-indicator, .zoom-level-indicator {

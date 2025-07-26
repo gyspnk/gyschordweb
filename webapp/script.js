@@ -1,13 +1,12 @@
 /**
- * Kidung Rohani App - Versi dengan Fungsionalitas Pinch-to-Zoom
+ * Kidung Rohani App - Versi dengan Pinch-to-Zoom yang Natural
  *
  * Perubahan & Penyempurnaan:
- * - [FITUR] Menambahkan fungsionalitas pinch-to-zoom (cubit untuk zoom) pada
- * seluruh area PDF viewer untuk perangkat sentuh.
- * - [OPTIMISASI] Zoom saat mencubit menggunakan CSS transform untuk kinerja
- * yang mulus, dan me-render ulang PDF setelahnya untuk ketajaman gambar.
- * - [FIX] Gestur cubit kini akan selalu mengontrol zoom PDF dan tidak akan
- * memperbesar antarmuka aplikasi secara tidak sengaja.
+ * - [FITUR] Pinch-to-zoom kini berjalan mulus tanpa step dan tanpa transisi fade.
+ * - [FITUR] Indikator persentase zoom diperbarui secara live saat gestur pinch
+ * dilakukan untuk umpan balik instan.
+ * - [OPTIMISASI] Logika zoom dipisahkan: pinch-to-zoom bersifat direct & live,
+ * sementara zoom via tombol/scroll tetap menggunakan transisi singkat.
  */
 
 const { pdfjsLib } = globalThis;
@@ -74,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
     defaultVerticalScroll: false,
   };
 
-  // [BARU] State untuk pinch-to-zoom
   let isPinching = false;
   let initialPinchDistance = 0;
   let lastPinchScale = 1.0;
@@ -116,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('wheel', handleGlobalScroll, { passive: false });
 
-    // [BARU] Menambahkan event listener untuk gestur sentuhan (pinch-to-zoom)
     pdfViewerOverlay.addEventListener('touchstart', handleTouchStart, { passive: false });
     pdfViewerOverlay.addEventListener('touchmove', handleTouchMove, { passive: false });
     pdfViewerOverlay.addEventListener('touchend', handleTouchEnd);
@@ -445,7 +442,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 200);
   }
 
-  // [BARU] Kumpulan fungsi untuk menangani Pinch-to-Zoom
+  // [BARU] Fungsi helper untuk update teks indikator zoom secara live
+  function updateZoomIndicatorText(scale) {
+    const zoomPercent = Math.round((scale / initialScale) * 100);
+    [zoomLevelIndicatorPortrait, zoomLevelIndicatorLandscape].forEach(el => {
+        if (el) el.textContent = `${zoomPercent}%`;
+    });
+  }
+
   function getDistance(touches) {
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
@@ -458,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isPinching = true;
         initialPinchDistance = getDistance(event.touches);
         lastPinchScale = currentScale === 'page-fit' ? initialScale : currentScale;
-        canvasWrapper.style.transition = 'none'; // Matikan transisi agar zoom live
+        canvasWrapper.style.transition = 'none';
     }
   }
 
@@ -469,8 +473,9 @@ document.addEventListener('DOMContentLoaded', () => {
           const scaleFactor = newDist / initialPinchDistance;
           const newScale = lastPinchScale * scaleFactor;
           
-          // Terapkan zoom via CSS transform untuk kinerja mulus
           canvasWrapper.style.transform = `scale(${newScale})`;
+          // [MODIFIKASI] Update indikator zoom secara live saat mencubit
+          updateZoomIndicatorText(newScale);
       }
   }
 
@@ -478,7 +483,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!isPinching) return;
       isPinching = false;
 
-      // Ambil nilai skala dari properti transform CSS
       const transformStyle = window.getComputedStyle(canvasWrapper).transform;
       let finalScale = lastPinchScale;
       if (transformStyle && transformStyle !== 'none') {
@@ -488,15 +492,13 @@ document.addEventListener('DOMContentLoaded', () => {
           }
       }
 
-      // Bersihkan style inline setelah selesai
       canvasWrapper.style.transform = '';
       canvasWrapper.style.transition = '';
       
-      // Pastikan skala tidak lebih kecil dari ukuran 'fit' awal
       currentScale = Math.max(initialScale, finalScale);
       
-      // Render ulang PDF dengan resolusi tajam pada skala akhir
-      await animateViewChange(() => renderPage(currentPageNum), 75);
+      // [MODIFIKASI] Render ulang secara instan TANPA transisi fade
+      await renderPage(currentPageNum);
   }
 
   function setupRippleEffect() {
@@ -547,7 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   function updateZoomIndicator() {
       const zoomPercent = typeof currentScale === 'number' ? Math.round((currentScale / initialScale) * 100) : 100;
-      [zoomLevelIndicatorPortrait, zoomLevelIndicatorLandscape].forEach(el => el.textContent = `${zoomPercent}%`);
+      updateZoomIndicatorText(currentScale);
   }
 
   function updatePageNavButtons() {
