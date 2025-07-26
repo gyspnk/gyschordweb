@@ -5,7 +5,8 @@
  * - Zoom melalui tombol dan scroll-wheel berfungsi dengan baik.
  * - Transisi fade saat navigasi halaman dan lagu aktif.
  * - Tata letak stabil di berbagai perangkat.
- * - TIDAK TERMASUK fitur pinch-to-zoom.
+ * - FUNGSI PINCH-TO-ZOOM SECARA GLOBAL DIMATIKAN.
+ * - Peringatan "Gunakan Tombol untuk Zoom" muncul saat mencoba pinch-zoom di viewer.
  */
 
 const { pdfjsLib } = globalThis;
@@ -55,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const viewerLoader = pdfViewerOverlay.querySelector('.loader');
   const orientationWarning = document.getElementById('orientation-warning');
+  const zoomToast = document.getElementById('zoom-toast');
 
   // --- 2. State Management ---
   let pujianItems = [];
@@ -71,6 +73,10 @@ document.addEventListener('DOMContentLoaded', () => {
     defaultTwoPage: false,
     defaultVerticalScroll: false,
   };
+  
+  // State untuk deteksi pinch
+  let initialPinchDistance = 0;
+  let toastTimeout = null;
 
   // --- 3. Inisialisasi ---
   function init() {
@@ -108,6 +114,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.addEventListener('wheel', handleGlobalScroll, { passive: false });
+
+    // Event listener untuk deteksi pinch-zoom
+    pdfViewerOverlay.addEventListener('touchstart', handleTouchStart, { passive: true });
+    pdfViewerOverlay.addEventListener('touchmove', handleTouchMove, { passive: true });
+    pdfViewerOverlay.addEventListener('touchend', handleTouchEnd, { passive: true });
   }
 
   // --- 5. Logika Navigasi & Render Utama ---
@@ -510,7 +521,43 @@ document.addEventListener('DOMContentLoaded', () => {
       onZoom(event.deltaY < 0 ? 'in' : 'out');
     }
   }
+
+  // --- 8. Logika Pinch & Toast ---
+  function showZoomToast() {
+    if (toastTimeout) clearTimeout(toastTimeout);
+    zoomToast.classList.add('show');
+    toastTimeout = setTimeout(() => {
+        zoomToast.classList.remove('show');
+    }, 2500);
+  }
+
+  function getPinchDistance(event) {
+      const t1 = event.touches[0];
+      const t2 = event.touches[1];
+      return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+  }
+
+  function handleTouchStart(event) {
+      if (event.touches.length === 2) {
+          initialPinchDistance = getPinchDistance(event);
+      }
+  }
+
+  function handleTouchMove(event) {
+      if (event.touches.length === 2 && initialPinchDistance > 0) {
+          const newDistance = getPinchDistance(event);
+          if (Math.abs(newDistance - initialPinchDistance) > 15) { // Threshold
+              showZoomToast();
+              initialPinchDistance = 0; // Reset untuk mencegah trigger berulang
+          }
+      }
+  }
+
+  function handleTouchEnd(event) {
+      initialPinchDistance = 0;
+  }
   
+  // --- 9. Handlers & Helper Lainnya ---
   function handleMainContentClick(e) {
     const pujianItem = e.target.closest('.pujian-list li');
     if (pujianItem) {

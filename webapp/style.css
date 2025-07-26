@@ -488,3 +488,39 @@ body.dark-theme .ripple {
     width: calc(100% - 88px);
   }
 }
+
+/* =================================================================== */
+/* 9. TOAST NOTIFICATION
+/* =================================================================== */
+.zoom-toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translate(-50%, 20px);
+  background-color: #333;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: var(--border-radius-xl);
+  z-index: 300;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-3);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.zoom-toast.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  visibility: visible;
+}
+
+body.dark-theme .zoom-toast {
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+}
