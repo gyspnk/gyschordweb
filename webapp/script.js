@@ -1,11 +1,10 @@
 /**
- * Kidung Rohani App - Versi Stabil
+ * Kidung Rohani App - Versi Final
  *
  * Fungsionalitas:
- * - Zoom melalui tombol diizinkan.
- * - Zoom melalui Ctrl+Scroll (desktop) dan Ctrl +/- (keyboard) diizinkan di dalam PDF viewer.
- * - FUNGSI PINCH-TO-ZOOM DIBLOKIR HANYA DI DALAM PDF VIEWER.
- * - Peringatan "Gunakan Tombol untuk Zoom" muncul saat mencoba pinch-zoom di viewer.
+ * - Zoom sentuh (pinch) diblokir secara global. Peringatan hanya muncul di viewer.
+ * - Zoom desktop (Ctrl+Scroll/Keyboard) diblokir secara global, KECUALI di dalam PDF viewer.
+ * - Di dalam PDF viewer, zoom desktop akan memperbesar konten PDF, bukan UI.
  */
 
 const { pdfjsLib } = globalThis;
@@ -112,14 +111,12 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('orientationchange', handleOrientationChange);
     }
     
-    // Listener untuk zoom di desktop dan mobile
+    // Listener GLOBAL untuk memblokir semua jenis zoom
     window.addEventListener('wheel', handleGlobalScroll, { passive: false });
     window.addEventListener('keydown', handleGlobalKeydown, { passive: false });
-    
-    // Listener untuk pinch HANYA di PDF viewer
-    pdfViewerOverlay.addEventListener('touchstart', handleTouchStart, { passive: true });
-    pdfViewerOverlay.addEventListener('touchmove', handleTouchMove, { passive: false }); 
-    pdfViewerOverlay.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false }); 
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
   }
 
   // --- 5. Logika Navigasi & Render Utama ---
@@ -354,6 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   async function onZoom(direction) {
+    if (!pdfDoc) return; // Tambahan pengaman
     if (currentScale === 'page-fit') {
         currentScale = initialScale;
     }
@@ -516,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentSongIndex = -1;
   }
   
-  // --- 8. Logika Zoom Berdasarkan Input ---
+  // --- 8. Logika Zoom & Peringatan ---
   function showZoomToast() {
     if (toastTimeout) clearTimeout(toastTimeout);
     zoomToast.classList.add('show');
@@ -525,30 +523,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2500);
   }
   
-  // Izinkan zoom untuk Desktop: Ctrl + Scroll
+  // Izinkan zoom Ctrl+Scroll HANYA di viewer, blokir di tempat lain
   function handleGlobalScroll(event) {
-    // Izinkan zoom hanya jika di dalam PDF viewer
-    if (event.ctrlKey && document.body.classList.contains('viewer-active')) {
-      event.preventDefault(); // Mencegah zoom native browser
-      onZoom(event.deltaY < 0 ? 'in' : 'out'); // Menjalankan zoom aplikasi
+    if (event.ctrlKey) {
+        event.preventDefault(); // Selalu blokir zoom default browser
+        if (document.body.classList.contains('viewer-active')) {
+            onZoom(event.deltaY < 0 ? 'in' : 'out'); // Jalankan zoom aplikasi jika viewer aktif
+        }
     }
   }
   
-  // Izinkan zoom untuk Desktop: Ctrl + (+/-)
+  // Izinkan zoom Keyboard HANYA di viewer, blokir di tempat lain
   function handleGlobalKeydown(event) {
-    // Izinkan zoom hanya jika di dalam PDF viewer
-    if (event.ctrlKey && document.body.classList.contains('viewer-active')) {
-        if (event.key === '+' || event.key === '=') {
-            event.preventDefault();
-            onZoom('in');
-        } else if (event.key === '-') {
-            event.preventDefault();
-            onZoom('out');
+    if (event.ctrlKey && (event.key === '+' || event.key === '-' || event.key === '=')) {
+        event.preventDefault(); // Selalu blokir zoom default browser
+        if (document.body.classList.contains('viewer-active')) {
+            if (event.key === '+' || event.key === '=') {
+                onZoom('in');
+            } else if (event.key === '-') {
+                onZoom('out');
+            }
         }
     }
   }
 
-  // Blokir zoom untuk Layar Sentuh: Pinch gesture
+  // Blokir zoom Sentuh, tampilkan toast jika di viewer
   function getPinchDistance(event) {
       const t1 = event.touches[0];
       const t2 = event.touches[1];
@@ -562,15 +561,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleTouchMove(event) {
-      // Secara aktif memblokir zoom bawaan browser HANYA untuk input sentuh
       if (event.touches.length === 2) {
-          event.preventDefault();
-          // Logika untuk menampilkan toast
-          if (initialPinchDistance > 0) {
+          event.preventDefault(); // Selalu blokir zoom sentuh
+          if (document.body.classList.contains('viewer-active') && initialPinchDistance > 0) {
               const newDistance = getPinchDistance(event);
-              if (Math.abs(newDistance - initialPinchDistance) > 15) { // Threshold
+              if (Math.abs(newDistance - initialPinchDistance) > 15) {
                   showZoomToast();
-                  initialPinchDistance = 0; // Reset untuk mencegah trigger berulang
+                  initialPinchDistance = 0;
               }
           }
       }
