@@ -1,10 +1,9 @@
 /**
- * Kidung Rohani App - Final (Stable Zoom)
+ * Kidung Rohani App - Versi dengan Optimalisasi Loader
  *
- * Perubahan:
- * - REVERT: Semua implementasi smooth zoom (termasuk requestAnimationFrame) telah dihapus total.
- * - Fungsionalitas zoom dikembalikan ke metode direct re-render yang instan, stabil, dan selalu tajam.
- * - Semua perbaikan bug sebelumnya tetap dipertahankan.
+ * Perubahan & Penyempurnaan:
+ * - [FIX] Ikon loading kini hanya muncul saat membuka pujian baru dan tidak akan
+ * muncul berulang kali saat melakukan zoom atau mengganti halaman.
  */
 
 const { pdfjsLib } = globalThis;
@@ -21,10 +20,15 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const pdfViewerOverlay = document.getElementById('pdf-viewer-overlay');
   const pdfViewerContent = document.querySelector('.pdf-viewer-content');
+  const pdfViewerHeader = document.querySelector('.pdf-viewer-header');
+  const songTitleWrapper = document.querySelector('.song-title-wrapper');
   const pdfViewerTitle = document.getElementById('pdf-viewer-title');
   const pdfViewerNumber = document.getElementById('pdf-viewer-number');
   const canvasWrapper = document.querySelector('.canvas-wrapper');
   const pdfViewerCloseBtn = document.getElementById('pdf-viewer-close');
+
+  const pageNavigationPortrait = document.querySelector('.pdf-viewer-footer .page-navigation');
+  const pageNavigationLandscape = document.querySelector('.landscape-controls .page-navigation-landscape');
   
   const prevSongBtn = document.getElementById('song-prev');
   const nextSongBtn = document.getElementById('song-next');
@@ -70,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function init() {
     applyStoredPreferences();
     setupEventListeners();
+    setupRippleEffect();
     navigateTo('pujian');
   }
 
@@ -197,147 +202,188 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- 6. Logika PDF Viewer ---
-  async function openPdfViewer(songId, withTransition = true) {
+  async function openPdfViewer(songId) {
     currentSongIndex = parseInt(songId, 10);
     const song = pujianItems[currentSongIndex];
     if (!song) return;
-
-    const updateContent = () => {
-        pdfViewerTitle.textContent = song.judul;
-        pdfViewerNumber.textContent = `No. ${song.nomor}`;
-    };
-
-    if (withTransition) {
-        await animateNavigation(updateContent);
-    } else {
-        updateContent();
-    }
     
+    // [MODIFIKASI] Loader ditampilkan HANYA saat membuka pujian baru.
+    viewerLoader.style.display = 'block';
+
+    songTitleWrapper.classList.add('is-navigating');
+    canvasWrapper.classList.add('is-navigating');
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    pdfViewerTitle.textContent = song.judul;
+    pdfViewerNumber.textContent = `No. ${song.nomor}`;
+    songTitleWrapper.classList.remove('is-navigating');
+
     if (!document.body.classList.contains('viewer-active')) {
         document.body.classList.add('viewer-active');
     }
 
-    viewerLoader.style.display = 'block';
-    canvasWrapper.innerHTML = '';
     currentScale = 'page-fit';
     
     const options = { url: song.fileHref, standardFontDataUrl: `https://mozilla.github.io/pdf.js/standard_fonts/` };
 
     try {
-        const doc = await pdfjsLib.getDocument(options).promise;
-        pdfDoc = doc;
+        pdfDoc = await pdfjsLib.getDocument(options).promise;
         [pageCountElPortrait, pageCountElLandscape].forEach(el => el.textContent = pdfDoc.numPages);
         
         currentPageNum = 1;
-        
         currentViewMode = (pdfDoc.numPages > 1 && prefs.defaultTwoPage) ? 'double' : 'single';
-        currentScrollMode = (pdfDoc.numPages > 1 && prefs.defaultVerticalScroll) ? 'vertical' : 'horizontal';
+        currentScrollMode = (prefs.defaultVerticalScroll) ? 'vertical' : 'horizontal';
         
         updateViewerUI();
         await renderPage(currentPageNum);
         updateSongNavButtons();
+        canvasWrapper.classList.remove('is-navigating');
     } catch (reason) {
+        viewerLoader.style.display = 'none';
         console.error(`Gagal memuat PDF: ${reason}`);
         alert('Gagal memuat PDF.');
         closePdfViewer();
     }
   }
 
+  async function animateViewChange(renderFunction, duration = 150) {
+      canvasWrapper.classList.add('is-navigating');
+      await new Promise(resolve => setTimeout(resolve, duration));
+      if (renderFunction) await renderFunction();
+      canvasWrapper.classList.remove('is-navigating');
+  }
+
+  function updateCenteringAndOverflow() {
+      setTimeout(() => {
+          if (canvasWrapper.scrollHeight > pdfViewerContent.clientHeight) {
+              pdfViewerContent.classList.remove('vertically-centered');
+          } else {
+              pdfViewerContent.classList.add('vertically-centered');
+          }
+          if (canvasWrapper.scrollWidth > pdfViewerContent.clientWidth) {
+              pdfViewerContent.classList.add('is-overflowing');
+          } else {
+              pdfViewerContent.classList.remove('is-overflowing');
+          }
+      }, 0); 
+  }
+
   async function renderPage(num) {
     if (!pdfDoc) return;
-    viewerLoader.style.display = 'block';
-    canvasWrapper.innerHTML = ''; 
+    // [MODIFIKASI] Baris yang menampilkan loader dihapus dari sini.
+    canvasWrapper.innerHTML = '';
 
-    try {
-        const page = await pdfDoc.getPage(num);
+    const renderSinglePageTask = async (pageNumToRender, scaleToUse) => {
+        const page = await pdfDoc.getPage(pageNumToRender);
         const dpr = window.devicePixelRatio || 1;
         
-        if (currentScale === 'page-fit') {
-            const viewport = page.getViewport({ scale: 1 });
-            const scale = (pdfViewerContent.clientHeight - 32) / viewport.height;
-            initialScale = scale;
-            currentScale = scale;
-        }
-        
-        const finalRenderScale = currentScale * dpr;
+        const finalRenderScale = scaleToUse * dpr;
         const viewport = page.getViewport({ scale: finalRenderScale });
-
         const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
         canvas.height = viewport.height;
         canvas.width = viewport.width;
         canvas.style.width = `${viewport.width / dpr}px`;
         canvas.style.height = `${viewport.height / dpr}px`;
-        
-        await page.render({ canvasContext: context, viewport }).promise;
-        canvasWrapper.appendChild(canvas);
-        
-        if (currentViewMode === 'double' && num < pdfDoc.numPages) {
-            const page2 = await pdfDoc.getPage(num + 1);
-            const viewport2 = page2.getViewport({ scale: finalRenderScale });
-            const canvas2 = document.createElement('canvas');
-            canvas2.height = viewport2.height;
-            canvas2.width = viewport2.width;
-            canvas2.style.width = `${viewport2.width / dpr}px`;
-            canvas2.style.height = `${viewport2.height / dpr}px`;
-            await page2.render({ canvasContext: canvas2.getContext('2d'), viewport: viewport2 }).promise;
-            canvasWrapper.appendChild(canvas2);
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        return canvas;
+    };
+    
+    if (currentScale === 'page-fit') {
+        const page1 = await pdfDoc.getPage(1);
+        const viewport1 = page1.getViewport({ scale: 1 });
+        let containerWidth = pdfViewerContent.clientWidth - 32;
+        if (currentViewMode === 'double' && pdfDoc.numPages > 1) {
+            containerWidth = (containerWidth - 16) / 2;
         }
+        const scaleX = containerWidth / viewport1.width;
+        const scaleY = (pdfViewerContent.clientHeight - 32) / viewport1.height;
+        initialScale = Math.min(scaleX, scaleY);
+        currentScale = initialScale;
+    }
 
+    try {
+        if (currentScrollMode === 'vertical') {
+            canvasWrapper.classList.add('vertical-scroll');
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                const canvas = await renderSinglePageTask(i, currentScale);
+                canvasWrapper.appendChild(canvas);
+            }
+        } else {
+            canvasWrapper.classList.remove('vertical-scroll');
+            const canvas1 = await renderSinglePageTask(num, currentScale);
+            canvasWrapper.appendChild(canvas1);
+            if (currentViewMode === 'double' && num < pdfDoc.numPages) {
+                const canvas2 = await renderSinglePageTask(num + 1, currentScale);
+                canvasWrapper.appendChild(canvas2);
+            }
+        }
     } catch (error) {
         console.error("Gagal merender halaman:", error);
     } finally {
+        // [MODIFIKASI] Loader disembunyikan di sini. Ini akan berjalan setelah
+        // render pertama kali atau setelah render ulang karena zoom/ganti halaman.
         viewerLoader.style.display = 'none';
+        updatePageIndicator(num);
+        updatePageNavButtons();
+        updateZoomIndicator();
+        updateCenteringAndOverflow();
     }
-
-    updatePageIndicator(num);
-    updatePageNavButtons();
-    updateZoomIndicator();
   }
   
   function onPrevPage() {
     if (currentPageNum <= 1) return;
     const step = currentViewMode === 'double' ? 2 : 1;
     currentPageNum = Math.max(1, currentPageNum - step);
-    animateNavigation(() => renderPage(currentPageNum));
+    animateViewChange(() => renderPage(currentPageNum));
   }
 
   function onNextPage() {
     if (currentPageNum >= pdfDoc.numPages) return;
     const step = currentViewMode === 'double' ? 2 : 1;
     currentPageNum += step;
-    animateNavigation(() => renderPage(currentPageNum));
+    animateViewChange(() => renderPage(currentPageNum));
   }
   
-  // REVERT: Logika zoom kembali ke metode instan yang stabil
-  function onZoom(direction) {
-    if (currentViewMode === 'double' || currentScrollMode === 'vertical') return;
-
+  async function onZoom(direction) {
     if (currentScale === 'page-fit') {
         currentScale = initialScale;
     }
 
-    const scaleStep = 0.2;
-    if (direction === 'in') {
-        currentScale += scaleStep;
-    } else {
-        const newScale = currentScale - scaleStep;
-        currentScale = Math.max(initialScale, newScale);
-    }
-    
-    renderPage(currentPageNum);
-  }
+    const scaleStep = 0.25;
+    const oldScale = currentScale;
+    let newScale;
 
+    if (direction === 'in') {
+        newScale = oldScale + scaleStep;
+    } else {
+        newScale = Math.max(initialScale, oldScale - scaleStep);
+    }
+
+    if (newScale === oldScale) return;
+
+    const container = pdfViewerContent;
+    const scrollX = container.scrollLeft + container.clientWidth / 2;
+    const scrollY = container.scrollTop + container.clientHeight / 2;
+    const zoomRatio = newScale / oldScale;
+
+    const newScrollLeft = scrollX * zoomRatio - container.clientWidth / 2;
+    const newScrollTop = scrollY * zoomRatio - container.clientHeight / 2;
+
+    currentScale = newScale;
+    
+    await animateViewChange(() => renderPage(currentPageNum), 75);
+
+    container.scrollTop = newScrollTop;
+    container.scrollLeft = newScrollLeft;
+  }
 
   function onToggleViewMode() {
     if (pdfDoc.numPages <= 1) return;
     currentViewMode = currentViewMode === 'single' ? 'double' : 'single';
-    if (currentViewMode === 'double') {
-        currentScrollMode = 'horizontal'; 
-    }
+    currentScrollMode = 'horizontal';
     currentScale = 'page-fit';
     updateViewerUI();
-    renderPage(currentPageNum);
+    animateViewChange(() => renderPage(currentPageNum));
   }
 
   function onToggleScrollMode() {
@@ -348,43 +394,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     currentScale = 'page-fit';
     updateViewerUI();
-    renderPage(currentPageNum);
+    animateViewChange(() => renderPage(currentPageNum));
   }
 
   async function onPrevSong() {
     if (currentSongIndex > 0) {
-        await openPdfViewer(currentSongIndex - 1, true);
+        await openPdfViewer(currentSongIndex - 1);
     }
   }
 
   async function onNextSong() {
     if (currentSongIndex < pujianItems.length - 1) {
-        await openPdfViewer(currentSongIndex + 1, true);
+        await openPdfViewer(currentSongIndex + 1);
     }
   }
   
-  async function animateNavigation(updateContentCallback) {
-      canvasWrapper.classList.add('is-navigating');
-      await new Promise(resolve => setTimeout(resolve, 150));
-      if(updateContentCallback) await updateContentCallback();
-      canvasWrapper.classList.remove('is-navigating');
-      currentScale = 'page-fit';
-  }
-
   function updateViewerUI() {
     const multiPage = pdfDoc && pdfDoc.numPages > 1;
     viewModeBtn.style.display = multiPage ? 'flex' : 'none';
     scrollModeBtn.style.display = multiPage ? 'flex' : 'none';
     
-    const isTwoPage = currentViewMode === 'double';
+    viewModeBtn.classList.toggle('active', currentViewMode === 'double');
+    scrollModeBtn.classList.toggle('active', currentScrollMode === 'vertical');
+
     const isVertical = currentScrollMode === 'vertical';
-    
-    viewModeBtn.classList.toggle('active', isTwoPage);
-    scrollModeBtn.classList.toggle('active', isVertical);
+    pageNavigationPortrait.style.visibility = isVertical ? 'hidden' : 'visible';
+    pageNavigationLandscape.style.visibility = isVertical ? 'hidden' : 'visible';
     
     checkOrientation();
   }
 
+  // --- 7. Logika Tambahan (Ripple, Dll.) ---
+
+  function setupRippleEffect() {
+    const createRipple = (event) => {
+        const element = event.currentTarget;
+        
+        if (!element.classList.contains('ripple-effect')) {
+            element.classList.add('ripple-effect');
+        }
+
+        const circle = document.createElement("span");
+        const diameter = Math.max(element.clientWidth, element.clientHeight);
+        const radius = diameter / 2;
+
+        const rect = element.getBoundingClientRect();
+        circle.style.width = circle.style.height = `${diameter}px`;
+        circle.style.left = `${event.clientX - rect.left - radius}px`;
+        circle.style.top = `${event.clientY - rect.top - radius}px`;
+        circle.classList.add("ripple");
+
+        element.appendChild(circle);
+
+        setTimeout(() => {
+            circle.remove();
+        }, 600);
+    };
+
+    document.body.addEventListener('click', (e) => {
+        const rippleTarget = e.target.closest('.nav-btn, .icon-button, .pujian-list li, .accent-color');
+        if (rippleTarget) {
+            createRipple({ currentTarget: rippleTarget, clientX: e.clientX, clientY: e.clientY });
+        }
+    });
+  }
+  
   function checkOrientation() {
     const isPortrait = window.innerHeight > window.innerWidth;
     orientationWarning.classList.toggle('visible', currentViewMode === 'double' && isPortrait);
@@ -399,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   function updateZoomIndicator() {
-      const zoomPercent = currentScale === 'page-fit' ? 100 : Math.round((currentScale / initialScale) * 100);
+      const zoomPercent = typeof currentScale === 'number' ? Math.round((currentScale / initialScale) * 100) : 100;
       [zoomLevelIndicatorPortrait, zoomLevelIndicatorLandscape].forEach(el => el.textContent = `${zoomPercent}%`);
   }
 

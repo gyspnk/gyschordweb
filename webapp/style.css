@@ -166,7 +166,12 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 .song-title-wrapper {
     display: flex; flex-direction: column; align-items: center; text-align: center;
     min-width: 0;
+    transition: opacity 0.15s ease-in-out;
 }
+.song-title-wrapper.is-navigating {
+    opacity: 0;
+}
+
 .song-navigation h2 { 
   margin: 0; font-size: 1.125rem; font-weight: 500; 
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
@@ -179,17 +184,27 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   position: relative; flex-grow: 1;
   overflow: auto;
   display: flex; 
-  justify-content: center;
   align-items: flex-start;
-  /* FIX: Hapus padding dari container scroll */
+  /* [FIX] Aturan default untuk centering horizontal ditambahkan kembali */
+  justify-content: center;
   padding: 0;
   box-sizing: border-box;
 }
+
+/* Kelas untuk menangani overflow horizontal saat zoom 2 halaman */
+.pdf-viewer-content.is-overflowing {
+  justify-content: flex-start;
+}
+
+/* Aturan untuk centering vertikal cerdas */
+.pdf-viewer-content.vertically-centered {
+  align-items: center;
+}
+
 .canvas-wrapper {
   display: flex; justify-content: center; align-items: center;
   gap: 1rem;
-  transition: opacity 0.2s ease-in-out;
-  /* FIX: Tambahkan margin untuk memberi jarak visual */
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
   margin: 1rem;
 }
 .canvas-wrapper.vertical-scroll { flex-direction: column; align-items: center; }
@@ -207,11 +222,9 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   .landscape-controls { display: none; }
   .pdf-viewer-footer { display: flex; }
   .pdf-viewer-content {
-    /* Padding bawah untuk footer tetap diperlukan */
     padding-bottom: 80px; 
   }
   .canvas-wrapper {
-    /* Kurangi margin bawah agar tidak terlalu jauh dari footer */
     margin-bottom: 0;
   }
 }
@@ -230,7 +243,6 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   }
 }
 /* --- END: ORIENTATION-SPECIFIC STYLES --- */
-
 
 .zoom-controls, .page-navigation, .page-navigation-landscape, .zoom-controls-landscape { display: flex; align-items: center; }
 .page-indicator, .zoom-level-indicator {
@@ -377,5 +389,34 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   /* Perlebar lagi untuk layar desktop kecil */
   .pujian-list, .settings-panel {
     max-width: 960px;
+  }
+}
+
+/* =================================================================== */
+/* 7. ANIMASI TAMBAHAN (RIPPLE EFFECT)
+/* =================================================================== */
+
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.2);
+  transform: scale(0);
+  animation: ripple-effect-anim 0.6s linear;
+  pointer-events: none;
+}
+
+body.dark-theme .ripple {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes ripple-effect-anim {
+  to {
+    transform: scale(4);
+    opacity: 0;
   }
 }
