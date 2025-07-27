@@ -4,7 +4,7 @@ import json
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), 'assets')
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), 'assets-list.json')
 
-# List only PDF files in the assets directory
+# List only PDF files in the assets directory, Update 27/7/25 for folder restructure
 def list_pdfs():
     return sorted([
         f for f in os.listdir(ASSETS_DIR)
