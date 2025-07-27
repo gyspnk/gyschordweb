@@ -3,7 +3,7 @@ name: Generate assets-list.json
 on:
   push:
     paths:
-      - 'webapp/assets/**'
+      - 'docs/assets/**'
       - '.github/workflows/generate-assets-list.yml'
   workflow_dispatch:
 
@@ -23,7 +23,7 @@ jobs:
 
       - name: Generate assets-list.json
         run: |
-          python webapp/generate_assets_list.py
+          python docs/generate_assets_list.py
 
       - name: Commit and push if changed
         env:
@@ -31,6 +31,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add webapp/assets-list.json
+          git add docs/assets-list.json
           git diff --cached --quiet || git commit -m "Update assets-list.json [auto]"
           git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
