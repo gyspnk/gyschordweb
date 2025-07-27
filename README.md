@@ -11,8 +11,9 @@ GysChordWeb adalah aplikasi web katalog dan penampil PDF pujian/kidung rohani de
 - **Responsif**: Tata letak otomatis menyesuaikan orientasi dan ukuran layar (mobile & desktop).
 
 ## Struktur Folder
+
 ```
-webapp/
+docs/
   ├── index.html
   ├── style.css
   ├── script.js
@@ -22,7 +23,7 @@ webapp/
 
 ## Cara Menjalankan
 1. Clone repository ini
-2. Letakkan file PDF pujian di folder `webapp/assets/`
+2. Letakkan file PDF pujian di folder `docs/assets/`
 3. Pastikan file `assets-list.json` berisi daftar file PDF
 4. Buka `index.html` di browser modern (Chrome, Edge, Firefox, dsb.)
 
