@@ -60,14 +60,28 @@ if (!WeakMap.prototype.getOrInsert) {
 
 const { pdfjsLib } = globalThis;
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://mozilla.github.io/pdf.js/build/pdf.worker.mjs";
+pdfjsLib.verbosity = pdfjsLib.VerbosityLevel.ERRORS;
 
 document.addEventListener("DOMContentLoaded", () => {
   const CHORD_GRID = { cols: 42, rows: 60 };
   const EDITOR_STORAGE_KEY = "chord-editor-enabled";
   const CHORD_UI_STORAGE_KEY = "chord-ui-prefs";
+  const CHORD_ACCIDENTAL_STORAGE_KEY = "chord-accidental-mode";
+  const CHORD_FILES_INDEX_URL = "chord-assets-list.json";
   const EDITOR_ON_TAPS = 10;
   const EDITOR_OFF_TAPS = 5;
-  const NOTE_BY_NUMBER = {
+  const NOTE_NAMES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  const NOTE_NAMES_FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+  const NATURAL_NOTE_INDEX = {
+    C: 0,
+    D: 2,
+    E: 4,
+    F: 5,
+    G: 7,
+    A: 9,
+    B: 11
+  };
+  const NUMBER_TO_NOTE = {
     1: "C",
     2: "D",
     3: "E",
@@ -75,16 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
     5: "G",
     6: "A",
     7: "B"
-  };
-
-  const LETTER_TO_NUMBER = {
-    C: "1",
-    D: "2",
-    E: "3",
-    F: "4",
-    G: "5",
-    A: "6",
-    B: "7"
   };
 
   // --- 1. DOM ---
@@ -97,6 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const pdfViewerOverlay = document.getElementById("pdf-viewer-overlay");
   const pdfViewerContent = document.querySelector(".pdf-viewer-content");
+  const pdfViewerFooter = document.querySelector(".pdf-viewer-footer");
   const songTitleWrapper = document.querySelector(".song-title-wrapper");
   const pdfViewerTitle = document.getElementById("pdf-viewer-title");
   const pdfViewerNumber = document.getElementById("pdf-viewer-number");
@@ -137,9 +142,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const chordEditorToolbar = document.getElementById("chord-editor-toolbar");
   const chordSaveBtn = document.getElementById("chord-save-btn");
-  const transposeDownBtn = document.getElementById("transpose-down-btn");
-  const transposeUpBtn = document.getElementById("transpose-up-btn");
-  const transposeIndicator = document.getElementById("transpose-indicator");
+  const transposeCollapse = document.getElementById("transpose-collapse");
+  const transposeToggleBtn = document.getElementById("transpose-toggle-btn");
+  const transposeDownBtns = Array.from(document.querySelectorAll(".transpose-down-btn"));
+  const transposeUpBtns = Array.from(document.querySelectorAll(".transpose-up-btn"));
+  const transposeIndicators = Array.from(document.querySelectorAll(".transpose-indicator"));
+  const accidentalSwitchBtns = Array.from(document.querySelectorAll(".transpose-accidental-btn"));
 
   // --- 2. State ---
   let pujianItems = [];
@@ -173,6 +181,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let titleTapCount = 0;
   let titleTapTimer = null;
   let transposeStep = 0;
+  let accidentalMode = localStorage.getItem(CHORD_ACCIDENTAL_STORAGE_KEY) === "flat" ? "flat" : "sharp";
+  let availableChordFiles = null;
+  let swipeStartPoint = null;
+  let lastSwipeHandledAt = 0;
 
   // --- 3. Init ---
   function init() {
@@ -180,6 +192,8 @@ document.addEventListener("DOMContentLoaded", () => {
     setupEventListeners();
     setupRippleEffect();
     updateChordEditorUI();
+    updateTransposeUI();
+    syncTransposeCollapseState();
     navigateTo("pujian");
   }
 
@@ -207,9 +221,14 @@ document.addEventListener("DOMContentLoaded", () => {
     [zoomOutBtnPortrait, zoomOutBtnLandscape].forEach((btn) => btn.addEventListener("click", () => onZoom("out")));
 
     chordSaveBtn.addEventListener("click", saveChordConfigurationFile);
-    transposeDownBtn.addEventListener("click", () => onTranspose(-1));
-    transposeUpBtn.addEventListener("click", () => onTranspose(1));
+    transposeDownBtns.forEach((btn) => btn.addEventListener("click", () => onTranspose(-1)));
+    transposeUpBtns.forEach((btn) => btn.addEventListener("click", () => onTranspose(1)));
+    accidentalSwitchBtns.forEach((btn) => btn.addEventListener("click", onToggleAccidentalMode));
+    if (transposeToggleBtn) {
+      transposeToggleBtn.addEventListener("click", onToggleTransposeCollapse);
+    }
     canvasWrapper.addEventListener("click", onChordLayerClick);
+    document.addEventListener("click", onGlobalDocumentClick);
 
     pdfViewerTitle.addEventListener("click", handleTitleActivatorTap);
 
@@ -224,6 +243,13 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("touchstart", handleTouchStart, { passive: true });
     window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    pdfViewerContent.addEventListener("touchstart", handleViewerTouchStart, { passive: true });
+    pdfViewerContent.addEventListener("touchend", handleViewerTouchEnd, { passive: true });
+    pdfViewerContent.addEventListener("mousedown", handleViewerPointerStart);
+    pdfViewerContent.addEventListener("mouseup", handleViewerPointerEnd);
+
+    window.addEventListener("resize", onLayoutResize);
   }
 
   // --- 5. Navigasi utama ---
@@ -280,13 +306,14 @@ document.addEventListener("DOMContentLoaded", () => {
             (item) => `
           <li data-id="${item.id}" data-nomor="${item.nomor.toLowerCase()}" data-judul="${item.judul.toLowerCase()}">
             <span class="pujian-nomor">${item.nomor}</span>
-            <a href="${item.fileHref}">${item.judul}</a>
+            <a href="${item.fileHref}" class="pujian-title">${item.judul}</a>
           </li>
         `
           )
           .join("")}
       </ul>`;
     filterPujianList();
+    fitListTitles();
   }
 
   function renderSettings() {
@@ -446,6 +473,7 @@ document.addEventListener("DOMContentLoaded", () => {
     pdfViewerTitle.textContent = song.judul;
     pdfViewerNumber.textContent = `No. ${song.nomor}`;
     songTitleWrapper.classList.remove("is-navigating");
+    fitViewerTitle();
 
     if (!document.body.classList.contains("viewer-active")) {
       document.body.classList.add("viewer-active");
@@ -474,6 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
       updateViewerUI();
       await renderPage(currentPageNum);
       updateSongNavButtons();
+      fitViewerTitle();
       canvasWrapper.classList.remove("is-navigating");
     } catch (reason) {
       viewerLoader.style.display = "none";
@@ -667,6 +696,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const multiPage = pdfDoc && pdfDoc.numPages > 1;
     const singlePage = !pdfDoc || pdfDoc.numPages <= 1;
     const isVertical = currentScrollMode === "vertical";
+    const hasPageNav = !(singlePage || isVertical);
 
     const viewButtons = [viewModeBtnPortrait, viewModeBtnLandscape];
     const scrollButtons = [scrollModeBtnPortrait, scrollModeBtnLandscape];
@@ -681,8 +711,13 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.classList.toggle("active", currentScrollMode === "vertical");
     });
 
-    pageNavigationPortrait.style.display = singlePage || isVertical ? "none" : "flex";
-    pageNavigationLandscape.style.display = singlePage || isVertical ? "none" : "flex";
+    pageNavigationPortrait.style.display = hasPageNav ? "flex" : "none";
+    pageNavigationLandscape.style.display = hasPageNav ? "flex" : "none";
+    if (pdfViewerFooter) {
+      pdfViewerFooter.classList.toggle("has-page-nav", hasPageNav);
+      pdfViewerFooter.classList.toggle("no-page-nav", !hasPageNav);
+      pdfViewerFooter.classList.toggle("no-view-controls", !multiPage);
+    }
 
     checkOrientation();
     updateChordEditorUI();
@@ -729,8 +764,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadChordConfigurationForSong(song) {
-    const txtUrl = getChordTxtUrl(song);
     chordConfig = createDefaultChordConfig();
+
+    const hasConfig = await hasChordConfiguration(song);
+    if (!hasConfig) return;
+
+    const txtUrl = getChordTxtUrl(song);
 
     try {
       const response = await fetch(txtUrl, { cache: "no-store" });
@@ -739,9 +778,40 @@ document.addEventListener("DOMContentLoaded", () => {
       const payload = await response.text();
       const parsed = JSON.parse(payload);
       chordConfig = sanitizeChordConfig(parsed);
-    } catch (error) {
-      console.info("Tidak ada konfigurasi chord atau format belum valid:", error);
+    } catch {
       chordConfig = createDefaultChordConfig();
+    }
+  }
+
+  async function hasChordConfiguration(song) {
+    const filename = getChordTxtFilename(song);
+    if (!filename) return false;
+
+    const chordFiles = await getAvailableChordFiles();
+    return chordFiles.has(filename.toLowerCase());
+  }
+
+  async function getAvailableChordFiles() {
+    if (availableChordFiles instanceof Set) return availableChordFiles;
+
+    try {
+      const response = await fetch(CHORD_FILES_INDEX_URL, { cache: "no-store" });
+      if (!response.ok) {
+        availableChordFiles = new Set();
+        return availableChordFiles;
+      }
+
+      const payload = await response.json();
+      if (!Array.isArray(payload)) {
+        availableChordFiles = new Set();
+        return availableChordFiles;
+      }
+
+      availableChordFiles = new Set(payload.map((item) => String(item).toLowerCase()));
+      return availableChordFiles;
+    } catch {
+      availableChordFiles = new Set();
+      return availableChordFiles;
     }
   }
 
@@ -838,7 +908,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function promptAndSetChord(pageNum, row, col, existingText = "") {
     const promptDefault = existingText || "";
     const userInput = window.prompt(
-      "Masukkan chord (contoh: C#, Fdim, 1add9).\nKosongkan untuk hapus chord di sel ini.",
+      "Masukkan chord (contoh: C, C#, Bb, Fdim, Aadd9).\nKosongkan untuk hapus chord di sel ini.",
       promptDefault
     );
 
@@ -846,7 +916,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const encoded = encodeChordToken(userInput);
     if (encoded === null) {
-      alert("Format chord tidak valid. Gunakan root A-G atau 1-7, lalu optional #/b dan tag (dim, add9, dst).");
+      alert("Format chord tidak valid. Gunakan root A-G lalu optional #/b dan tag (dim, add9, dst).");
       return;
     }
 
@@ -865,50 +935,102 @@ document.addEventListener("DOMContentLoaded", () => {
     const accidentalRaw = match[2] || "";
     const suffix = (match[3] || "").trim();
 
-    const rootUpper = rootRaw.toUpperCase();
-    const root = /[1-7]/.test(rootRaw) ? rootRaw : LETTER_TO_NUMBER[rootUpper];
-    if (!root) return null;
+    const rootLetter = /[1-7]/.test(rootRaw) ? NUMBER_TO_NOTE[rootRaw] : rootRaw.toUpperCase();
+    const naturalIndex = NATURAL_NOTE_INDEX[rootLetter];
+    if (!Number.isInteger(naturalIndex)) return null;
 
     const accidental = accidentalRaw === "♭" ? "b" : accidentalRaw;
-    return `${root}${accidental}${suffix}`;
+    let semitone = naturalIndex;
+    if (accidental === "#") semitone += 1;
+    if (accidental === "b") semitone -= 1;
+
+    const normalizedRoot = NOTE_NAMES_SHARP[wrapSemitone(semitone)];
+    return `${normalizedRoot}${suffix}`;
   }
 
   function formatChordForDisplay(encodedToken) {
     const token = String(encodedToken || "").trim();
-    const m = token.match(/^([1-7])([#b]?)(.*)$/);
-    if (!m) return token;
+    const parsed = parseChordToken(token);
+    if (!parsed) return token;
 
-    let root = Number.parseInt(m[1], 10);
-    const accidental = m[2];
-    const suffix = m[3] || "";
-
-    root = wrapScaleNumber(root + transposeStep);
-
-    if (accidental === "#") {
-      const nextRoot = wrapScaleNumber(root + 1);
-      return `${NOTE_BY_NUMBER[nextRoot]}♭${suffix}`;
-    }
-
-    if (accidental === "b") {
-      return `${NOTE_BY_NUMBER[root]}♭${suffix}`;
-    }
-
-    return `${NOTE_BY_NUMBER[root]}${suffix}`;
+    const noteSet = accidentalMode === "flat" ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP;
+    const transposed = wrapSemitone(parsed.semitone + transposeStep);
+    return `${noteSet[transposed]}${parsed.suffix}`;
   }
 
-  function wrapScaleNumber(value) {
-    return ((value - 1) % 7 + 7) % 7 + 1;
+  function parseChordToken(token) {
+    const newFormat = token.match(/^([A-Ga-g])([#b]?)(.*)$/);
+    if (newFormat) {
+      const root = newFormat[1].toUpperCase();
+      const accidental = newFormat[2] || "";
+      const suffix = newFormat[3] || "";
+
+      let semitone = NATURAL_NOTE_INDEX[root];
+      if (!Number.isInteger(semitone)) return null;
+      if (accidental === "#") semitone += 1;
+      if (accidental === "b") semitone -= 1;
+
+      return { semitone: wrapSemitone(semitone), suffix };
+    }
+
+    const legacyFormat = token.match(/^([1-7])([#b]?)(.*)$/);
+    if (!legacyFormat) return null;
+
+    const legacyRoot = NUMBER_TO_NOTE[legacyFormat[1]];
+    let semitone = NATURAL_NOTE_INDEX[legacyRoot];
+    const accidental = legacyFormat[2] || "";
+    const suffix = legacyFormat[3] || "";
+
+    if (accidental === "#") semitone += 1;
+    if (accidental === "b") semitone -= 1;
+    return { semitone: wrapSemitone(semitone), suffix };
+  }
+
+  function wrapSemitone(value) {
+    return ((value % 12) + 12) % 12;
   }
 
   function onTranspose(step) {
-    transposeStep += step;
+    const next = transposeStep + step;
+    transposeStep = next > 11 || next < -11 ? 0 : next;
     updateTransposeUI();
-    renderPage(currentPageNum);
+    refreshVisibleChordMarkers();
   }
 
   function updateTransposeUI() {
     const sign = transposeStep > 0 ? "+" : "";
-    transposeIndicator.textContent = `Transpose ${sign}${transposeStep}`;
+    transposeIndicators.forEach((indicator) => {
+      indicator.textContent = `Transpose ${sign}${transposeStep}`;
+    });
+
+    accidentalSwitchBtns.forEach((btn) => {
+      btn.classList.toggle("active", accidentalMode === "flat");
+      const label = btn.querySelector(".accidental-label");
+      if (label) {
+        label.textContent = accidentalMode === "flat" ? "♭" : "#";
+      }
+      btn.setAttribute("aria-label", `Switcher accidental (${accidentalMode === "flat" ? "flat" : "sharp"})`);
+    });
+  }
+
+  function onToggleAccidentalMode() {
+    accidentalMode = accidentalMode === "sharp" ? "flat" : "sharp";
+    localStorage.setItem(CHORD_ACCIDENTAL_STORAGE_KEY, accidentalMode);
+    updateTransposeUI();
+    refreshVisibleChordMarkers();
+  }
+
+  function refreshVisibleChordMarkers() {
+    document.querySelectorAll(".chord-marker").forEach((marker) => {
+      marker.classList.remove("is-dissolving");
+      void marker.offsetWidth;
+      marker.classList.add("is-dissolving");
+      marker.textContent = formatChordForDisplay(marker.dataset.raw || "");
+
+      setTimeout(() => {
+        marker.classList.remove("is-dissolving");
+      }, 130);
+    });
   }
 
   function getChordAt(pageNum, row, col) {
@@ -996,10 +1118,82 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- 8. Tambahan UI ---
   function handleOrientationChange() {
     checkOrientation();
+    closeTransposeCollapse();
     setTimeout(() => {
       currentScale = "page-fit";
       animateViewChange(() => renderPage(currentPageNum));
+      fitViewerTitle();
     }, 200);
+  }
+
+  function onLayoutResize() {
+    syncTransposeCollapseState();
+    fitViewerTitle();
+    fitListTitles();
+  }
+
+  function onToggleTransposeCollapse(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!isSmallPortraitLayout()) return;
+
+    const shouldOpen = !transposeCollapse?.classList.contains("is-open");
+    transposeCollapse?.classList.toggle("is-open", shouldOpen);
+    if (transposeToggleBtn) {
+      transposeToggleBtn.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+    }
+  }
+
+  function closeTransposeCollapse() {
+    transposeCollapse?.classList.remove("is-open");
+    if (transposeToggleBtn) {
+      transposeToggleBtn.setAttribute("aria-expanded", "false");
+    }
+  }
+
+  function syncTransposeCollapseState() {
+    if (!isSmallPortraitLayout()) {
+      closeTransposeCollapse();
+    }
+  }
+
+  function isSmallPortraitLayout() {
+    return window.matchMedia("(max-width: 640px) and (orientation: portrait)").matches;
+  }
+
+  function onGlobalDocumentClick(event) {
+    if (!transposeCollapse?.classList.contains("is-open")) return;
+    if (transposeCollapse.contains(event.target)) return;
+    closeTransposeCollapse();
+  }
+
+  function fitViewerTitle() {
+    autoFitTextSingleLine(pdfViewerTitle, {
+      maxPx: 18,
+      minPx: 10
+    });
+  }
+
+  function fitListTitles() {
+    document.querySelectorAll(".pujian-title").forEach((titleEl) => {
+      autoFitTextSingleLine(titleEl, {
+        maxPx: 16,
+        minPx: 10
+      });
+    });
+  }
+
+  function autoFitTextSingleLine(element, { maxPx, minPx }) {
+    if (!element) return;
+
+    let size = Math.min(maxPx, Number.parseFloat(window.getComputedStyle(element).fontSize) || maxPx);
+    element.style.fontSize = `${size}px`;
+
+    while (size > minPx && element.scrollWidth > element.clientWidth + 1) {
+      size -= 0.5;
+      element.style.fontSize = `${size}px`;
+    }
   }
 
   function setupRippleEffect() {
@@ -1033,6 +1227,20 @@ document.addEventListener("DOMContentLoaded", () => {
         createRipple({ currentTarget: rippleTarget, clientX: e.clientX, clientY: e.clientY });
       }
     });
+
+    document.body.addEventListener(
+      "touchstart",
+      (e) => {
+        const touch = e.touches && e.touches[0];
+        if (!touch) return;
+
+        const rippleTarget = e.target.closest(".nav-btn, .icon-button, .pujian-list li, .accent-color");
+        if (rippleTarget) {
+          createRipple({ currentTarget: rippleTarget, clientX: touch.clientX, clientY: touch.clientY });
+        }
+      },
+      { passive: true }
+    );
   }
 
   function checkOrientation() {
@@ -1080,6 +1288,7 @@ document.addEventListener("DOMContentLoaded", () => {
     pdfDoc = null;
     currentSongIndex = -1;
     titleTapCount = 0;
+    closeTransposeCollapse();
   }
 
   // --- 9. Zoom & gesture guards ---
@@ -1131,6 +1340,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleTouchStart(event) {
     if (event.touches.length === 2) {
       initialPinchDistance = getPinchDistance(event);
+      swipeStartPoint = null;
     }
   }
 
@@ -1149,6 +1359,120 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function handleTouchEnd() {
     initialPinchDistance = 0;
+  }
+
+  function handleViewerTouchStart(event) {
+    if (!document.body.classList.contains("viewer-active") || event.touches.length !== 1) return;
+
+    const touch = event.touches[0];
+    const isFromControl = event.target.closest("button, input, select, label, .chord-layer.editor-mode, .chord-marker");
+
+    if (isFromControl) {
+      swipeStartPoint = null;
+      return;
+    }
+
+    swipeStartPoint = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now()
+    };
+  }
+
+  function handleViewerTouchEnd(event) {
+    if (!document.body.classList.contains("viewer-active")) {
+      swipeStartPoint = null;
+      return;
+    }
+
+    if (!swipeStartPoint || !document.body.classList.contains("viewer-active")) {
+      swipeStartPoint = null;
+      return;
+    }
+
+    const touch = event.changedTouches && event.changedTouches[0];
+    if (!touch) {
+      swipeStartPoint = null;
+      return;
+    }
+
+    const elapsed = Date.now() - swipeStartPoint.time;
+    const dx = touch.clientX - swipeStartPoint.x;
+    const dy = touch.clientY - swipeStartPoint.y;
+    swipeStartPoint = null;
+
+    processSwipeGesture(dx, dy, elapsed);
+  }
+
+  function handleViewerPointerStart(event) {
+    if (!document.body.classList.contains("viewer-active")) return;
+    if (event.button !== 0) return;
+
+    const isFromControl = event.target.closest("button, input, select, label, .chord-layer.editor-mode, .chord-marker");
+    if (isFromControl) {
+      swipeStartPoint = null;
+      return;
+    }
+
+    swipeStartPoint = {
+      x: event.clientX,
+      y: event.clientY,
+      time: Date.now()
+    };
+  }
+
+  function handleViewerPointerEnd(event) {
+    if (!document.body.classList.contains("viewer-active")) {
+      swipeStartPoint = null;
+      return;
+    }
+
+    if (!swipeStartPoint || event.button !== 0) {
+      swipeStartPoint = null;
+      return;
+    }
+
+    const elapsed = Date.now() - swipeStartPoint.time;
+    const dx = event.clientX - swipeStartPoint.x;
+    const dy = event.clientY - swipeStartPoint.y;
+    swipeStartPoint = null;
+
+    processSwipeGesture(dx, dy, elapsed);
+  }
+
+  function processSwipeGesture(dx, dy, elapsed) {
+    const now = Date.now();
+    if (now - lastSwipeHandledAt < 220) return;
+
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    if (elapsed > 850) return;
+    if (absX < 30 && absY < 30) return;
+
+    if (absY > absX * 1.2 && canSwipePdfPage()) {
+      if (dy > 30) {
+        onPrevPage();
+        lastSwipeHandledAt = now;
+      } else if (dy < -30) {
+        onNextPage();
+        lastSwipeHandledAt = now;
+      }
+      return;
+    }
+
+    if (absX > absY * 1.2) {
+      if (dx < -30) {
+        onNextSong();
+        lastSwipeHandledAt = now;
+      } else if (dx > 30) {
+        onPrevSong();
+        lastSwipeHandledAt = now;
+      }
+    }
+  }
+
+  function canSwipePdfPage() {
+    return Boolean(pdfDoc) && pdfDoc.numPages > 1 && currentViewMode === "single" && currentScrollMode === "horizontal";
   }
 
   // --- 10. Handlers lainnya ---
@@ -1217,6 +1541,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const isMatch = keywords.every((kw) => nomor.includes(kw) || judul.includes(kw));
       li.style.display = isMatch ? "flex" : "none";
     });
+    fitListTitles();
   }
 
   function handleSettingsChange(e) {

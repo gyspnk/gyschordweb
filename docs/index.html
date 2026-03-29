@@ -67,6 +67,18 @@
         </div>
         
         <div class="landscape-controls">
+          <div class="transpose-controls transpose-controls-header" id="transpose-controls-header">
+            <button class="icon-button transpose-down-btn" type="button" aria-label="Transpose turun">
+              <span class="material-symbols-outlined">remove</span>
+            </button>
+            <div class="transpose-indicator">Transpose 0</div>
+            <button class="icon-button transpose-up-btn" type="button" aria-label="Transpose naik">
+              <span class="material-symbols-outlined">add</span>
+            </button>
+            <button class="icon-button transpose-accidental-btn" type="button" aria-label="Switcher accidental">
+              <span class="accidental-label">#</span>
+            </button>
+          </div>
           <div class="page-navigation-landscape">
               <button id="pdf-prev-landscape" aria-label="Halaman Sebelumnya" class="icon-button">
                 <span class="material-symbols-outlined">chevron_left</span>
@@ -105,15 +117,6 @@
             <span class="material-symbols-outlined">screen_rotation</span>
             <p>Putar layar ke mode lanskap untuk tampilan dua halaman yang optimal.</p>
         </div>
-        <div id="chord-transpose-toolbar" class="chord-transpose-toolbar">
-          <button id="transpose-down-btn" class="icon-button" type="button" aria-label="Transpose turun">
-            <span class="material-symbols-outlined">remove</span>
-          </button>
-          <div id="transpose-indicator" class="transpose-indicator">Transpose 0</div>
-          <button id="transpose-up-btn" class="icon-button" type="button" aria-label="Transpose naik">
-            <span class="material-symbols-outlined">add</span>
-          </button>
-        </div>
         <div id="chord-editor-toolbar" class="chord-editor-toolbar" hidden>
           <div class="chord-editor-label">Chord Editor 42x60</div>
           <button id="chord-save-btn" class="icon-button" type="button" aria-label="Simpan konfigurasi chord">
@@ -123,6 +126,23 @@
       </div>
 
       <footer class="pdf-viewer-footer">
+        <div class="transpose-collapse" id="transpose-collapse">
+          <button id="transpose-toggle-btn" class="icon-button transpose-toggle-btn" type="button" aria-label="Buka kontrol transpose" aria-expanded="false">
+            <span class="material-symbols-outlined">tune</span>
+          </button>
+          <div class="transpose-controls transpose-controls-footer" id="transpose-controls-footer">
+            <button class="icon-button transpose-down-btn" type="button" aria-label="Transpose turun">
+              <span class="material-symbols-outlined">remove</span>
+            </button>
+            <div class="transpose-indicator">Transpose 0</div>
+            <button class="icon-button transpose-up-btn" type="button" aria-label="Transpose naik">
+              <span class="material-symbols-outlined">add</span>
+            </button>
+            <button class="icon-button transpose-accidental-btn" type="button" aria-label="Switcher accidental">
+              <span class="accidental-label">#</span>
+            </button>
+          </div>
+        </div>
         <div class="zoom-controls">
             <button id="zoom-out-portrait" aria-label="Perkecil" class="icon-button">
               <span class="material-symbols-outlined">zoom_out</span>

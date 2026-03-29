@@ -125,15 +125,11 @@ h1, h2, h3 { font-weight: 500; }
 .nav-btn::before {
   content: '';
   position: absolute;
-  width: 80px;
-  height: 56px;
+  inset: 8px 10px;
   background-color: var(--md-sys-color-primary);
-  border-radius: 28px;
+  border-radius: 20px;
   opacity: 0;
   transition: opacity 0.2s;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 }
 .nav-btn:hover::before { opacity: 0.08; }
 .nav-btn.selected { color: var(--md-sys-color-on-surface); }
@@ -184,7 +180,7 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 
 .song-navigation h2 { 
   margin: 0; font-size: 1.125rem; font-weight: 500; 
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+  white-space: nowrap; overflow: hidden; text-overflow: clip;
   max-width: 100%;
 }
 #pdf-viewer-number { font-size: 0.75rem; color: var(--md-sys-color-on-surface-variant); }
@@ -304,6 +300,15 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 .chord-marker.chord-fill-color-lavender { --chord-fill-color: #baa8ef; }
 .chord-marker.chord-fill-color-slate { --chord-fill-color: #9aa8bd; }
 
+.chord-marker.is-dissolving {
+  animation: chord-dissolve 120ms ease-out;
+}
+
+@keyframes chord-dissolve {
+  0% { opacity: 0.22; filter: blur(0.9px); }
+  100% { opacity: 1; filter: blur(0); }
+}
+
 .chord-layer.editor-mode .chord-marker {
   outline: 1px dashed color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
   pointer-events: auto;
@@ -341,15 +346,45 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   .pdf-viewer-header { justify-content: flex-start; }
   
   .pdf-viewer-footer {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    column-gap: 0.35rem;
     flex-shrink: 0;
     height: 80px;
     background-color: var(--md-sys-color-surface-container);
     border-top: 1px solid var(--md-sys-color-outline-variant);
-    justify-content: space-between; /* <-- Diubah */
     align-items: center;
     padding: 0 0.5rem;
     box-sizing: border-box;
+  }
+
+  .pdf-viewer-footer.has-page-nav {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+  }
+
+  .transpose-collapse {
+    justify-self: start;
+  }
+
+  .zoom-controls {
+    justify-self: center;
+  }
+
+  .pdf-viewer-footer.no-view-controls .zoom-controls {
+    justify-self: end;
+  }
+
+  .page-navigation {
+    justify-self: center;
+    min-width: 0;
+  }
+
+  .pdf-viewer-footer.has-page-nav .page-navigation {
+    justify-self: center;
+  }
+
+  #controls-portrait {
+    justify-self: end;
   }
 }
 
@@ -443,6 +478,14 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   font-weight: 700; font-size: 1rem;
 }
 .pujian-list li a { text-decoration: none; font-weight: 500; font-size: 1rem; color: var(--md-sys-color-on-surface); pointer-events: none; }
+.pujian-list li a.pujian-title {
+  flex: 1;
+  min-width: 0;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
 
 .settings-panel {
   max-width: 700px;
@@ -755,26 +798,143 @@ body.dark-theme .zoom-toast {
   color: var(--md-sys-color-on-surface);
 }
 
-.chord-transpose-toolbar {
-  position: absolute;
-  left: 1rem;
-  bottom: 1rem;
+.transpose-controls {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  background: color-mix(in srgb, var(--md-sys-color-surface) 92%, transparent);
-  border: 1px solid var(--md-sys-color-outline-variant);
+  gap: 0.15rem;
   border-radius: 999px;
-  box-shadow: var(--shadow-2);
-  backdrop-filter: blur(4px);
-  padding: 0.2rem 0.35rem;
-  z-index: 20;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background: color-mix(in srgb, var(--md-sys-color-surface) 90%, transparent);
+  padding: 0.1rem 0.25rem;
+}
+
+.transpose-controls .icon-button {
+  width: 38px;
+  height: 38px;
+}
+
+.transpose-controls .icon-button .material-symbols-outlined {
+  font-size: 19px;
+}
+
+.transpose-controls-footer {
+  display: flex;
+  margin-right: 0;
+}
+
+.transpose-collapse {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.transpose-toggle-btn {
+  display: none;
+}
+
+.transpose-controls-header {
+  display: none;
 }
 
 .transpose-indicator {
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--md-sys-color-primary);
-  min-width: 6.5rem;
+  min-width: 5.8rem;
   text-align: center;
+}
+
+.accidental-label {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+@media (orientation: landscape) {
+  .transpose-controls-footer {
+    display: none;
+  }
+
+  .transpose-controls-header {
+    display: flex;
+  }
+}
+
+@media (min-width: 1024px) {
+  .transpose-controls-header {
+    display: flex;
+  }
+
+  .transpose-controls-footer {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) and (orientation: portrait) {
+  .pdf-viewer-footer {
+    overflow: visible;
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .transpose-toggle-btn {
+    display: flex;
+  }
+
+  .transpose-controls-footer {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 0.4rem);
+    display: flex;
+    margin-right: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px) scale(0.96);
+    transform-origin: left bottom;
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+    box-shadow: var(--shadow-2);
+    backdrop-filter: blur(4px);
+    z-index: 25;
+  }
+
+  .transpose-collapse.is-open .transpose-controls-footer {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .pdf-viewer-footer.has-page-nav {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+  }
+
+  .pdf-viewer-footer.has-page-nav .zoom-controls .zoom-level-indicator {
+    display: none;
+  }
+
+  .pdf-viewer-footer.no-page-nav .zoom-controls {
+    justify-self: end;
+  }
+}
+
+@media (max-width: 430px) and (orientation: portrait) {
+  .pdf-viewer-footer {
+    padding: 0 0.3rem;
+    column-gap: 0.2rem;
+  }
+
+  .pdf-viewer-footer .icon-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .pdf-viewer-footer .icon-button .material-symbols-outlined {
+    font-size: 18px;
+  }
+
+  .page-indicator {
+    min-width: 42px;
+    font-size: 0.8rem;
+    padding: 0 0.2rem;
+  }
 }
