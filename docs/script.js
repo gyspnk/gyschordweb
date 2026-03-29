@@ -185,6 +185,12 @@ document.addEventListener("DOMContentLoaded", () => {
   let availableChordFiles = null;
   let swipeStartPoint = null;
   let lastSwipeHandledAt = 0;
+  let pinchState = null;
+  let renderRequestId = 0;
+  let zoomInProgress = false;
+  let zoomRenderStaging = false;
+  let zoomStageDocLeft = null;
+  let zoomStageDocTop = null;
 
   // --- 3. Init ---
   function init() {
@@ -240,9 +246,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.addEventListener("wheel", handleGlobalScroll, { passive: false });
     window.addEventListener("keydown", handleGlobalKeydown, { passive: false });
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchmove", handleTouchMove, { passive: false });
-    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    // Scope pinch handlers to the viewer only to avoid conflicts with global/browser gestures.
+    pdfViewerContent.addEventListener("touchstart", handleTouchStart, { passive: true });
+    pdfViewerContent.addEventListener("touchmove", handleTouchMove, { passive: false });
+    pdfViewerContent.addEventListener("touchend", handleTouchEnd, { passive: true });
 
     pdfViewerContent.addEventListener("touchstart", handleViewerTouchStart, { passive: true });
     pdfViewerContent.addEventListener("touchend", handleViewerTouchEnd, { passive: true });
@@ -520,24 +528,32 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateCenteringAndOverflow() {
-    setTimeout(() => {
-      if (canvasWrapper.scrollHeight > pdfViewerContent.clientHeight) {
-        pdfViewerContent.classList.remove("vertically-centered");
-      } else {
-        pdfViewerContent.classList.add("vertically-centered");
-      }
+    if (canvasWrapper.scrollHeight > pdfViewerContent.clientHeight) {
+      pdfViewerContent.classList.remove("vertically-centered");
+    } else {
+      pdfViewerContent.classList.add("vertically-centered");
+    }
 
-      if (canvasWrapper.scrollWidth > pdfViewerContent.clientWidth) {
-        pdfViewerContent.classList.add("is-overflowing");
-      } else {
-        pdfViewerContent.classList.remove("is-overflowing");
-      }
-    }, 0);
+    if (canvasWrapper.scrollWidth > pdfViewerContent.clientWidth) {
+      pdfViewerContent.classList.add("is-overflowing");
+    } else {
+      pdfViewerContent.classList.remove("is-overflowing");
+    }
   }
 
   async function renderPage(num) {
     if (!pdfDoc) return;
-    canvasWrapper.innerHTML = "";
+    const requestId = ++renderRequestId;
+    const oldWrapper = canvasWrapper;
+    const nextWrapper = document.createElement("div");
+    nextWrapper.className = oldWrapper.className
+      .replace(/\s*is-navigating/g, "")
+      .replace(/\s*pinch-preview/g, "")
+      .replace(/\s*zoom-animating/g, "")
+      .replace(/\s*zoom-staging/g, "")
+      .replace(/\s*zoom-staging-overlay/g, "")
+      .replace(/\s*zoom-fading-in-soft/g, "")
+      .replace(/\s*zoom-old-fading-out/g, "");
 
     const renderSinglePageTask = async (pageNumToRender, scaleToUse) => {
       const page = await pdfDoc.getPage(pageNumToRender);
@@ -586,22 +602,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       if (currentScrollMode === "vertical") {
-        canvasWrapper.classList.add("vertical-scroll");
+        nextWrapper.classList.add("vertical-scroll");
         for (let i = 1; i <= pdfDoc.numPages; i += 1) {
           const pageContainer = await renderSinglePageTask(i, currentScale);
-          canvasWrapper.appendChild(pageContainer);
+          nextWrapper.appendChild(pageContainer);
         }
       } else {
-        canvasWrapper.classList.remove("vertical-scroll");
+        nextWrapper.classList.remove("vertical-scroll");
 
         const page1 = await renderSinglePageTask(num, currentScale);
-        canvasWrapper.appendChild(page1);
+        nextWrapper.appendChild(page1);
 
         if (currentViewMode === "double" && num < pdfDoc.numPages) {
           const page2 = await renderSinglePageTask(num + 1, currentScale);
-          canvasWrapper.appendChild(page2);
+          nextWrapper.appendChild(page2);
         }
       }
+
+      if (requestId !== renderRequestId) return;
+
+      if (zoomRenderStaging) {
+        const overlayLeft = Number.isFinite(zoomStageDocLeft) ? zoomStageDocLeft : oldWrapper.offsetLeft;
+        const overlayTop = Number.isFinite(zoomStageDocTop) ? zoomStageDocTop : oldWrapper.offsetTop;
+
+        nextWrapper.classList.add("zoom-staging", "zoom-staging-overlay");
+        nextWrapper.style.left = `${overlayLeft}px`;
+        nextWrapper.style.top = `${overlayTop}px`;
+        nextWrapper.style.pointerEvents = "none";
+        oldWrapper.after(nextWrapper);
+      } else {
+        oldWrapper.replaceWith(nextWrapper);
+      }
+
+      canvasWrapper = nextWrapper;
+      canvasWrapper.addEventListener("click", onChordLayerClick);
     } catch (error) {
       console.error("Gagal merender halaman:", error);
     } finally {
@@ -628,36 +662,222 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function onZoom(direction) {
-    if (!pdfDoc) return;
-    if (currentScale === "page-fit") {
-      currentScale = initialScale;
+    // Prevent zoom spam - only allow one zoom operation at a time
+    if (!pdfDoc || zoomInProgress) return;
+    
+    try {
+      zoomInProgress = true;
+      
+      if (currentScale === "page-fit") {
+        currentScale = initialScale;
+      }
+
+      const percentStep = 25;
+      const oldScale = currentScale;
+      const currentPercent = (oldScale / initialScale) * 100;
+      const minPercent = 100;
+      const maxPercent = 800;
+
+      let nextPercent = currentPercent;
+      if (direction === "in") {
+        nextPercent = Math.min(maxPercent, currentPercent + percentStep);
+      } else {
+        nextPercent = Math.max(minPercent, currentPercent - percentStep);
+      }
+
+      const newScale = initialScale * (nextPercent / 100);
+
+      if (newScale === oldScale) return;
+
+      const container = pdfViewerContent;
+      const rect = container.getBoundingClientRect();
+      const anchorClientX = rect.left + container.clientWidth / 2;
+      const anchorClientY = rect.top + container.clientHeight / 2;
+
+      await applyScaleAndRerender({
+        oldScale,
+        newScale,
+        anchorClientX,
+        anchorClientY,
+        animatePreview: true
+      });
+    } finally {
+      zoomInProgress = false;
     }
+  }
 
-    const scaleStep = 0.25;
-    const oldScale = currentScale;
-    let newScale = oldScale;
-
-    if (direction === "in") {
-      newScale = oldScale + scaleStep;
-    } else {
-      newScale = Math.max(initialScale, oldScale - scaleStep);
-    }
-
-    if (newScale === oldScale) return;
-
+  async function applyScaleAndRerender({ oldScale, newScale, anchorClientX, anchorClientY, animatePreview = false }) {
     const container = pdfViewerContent;
-    const scrollX = container.scrollLeft + container.clientWidth / 2;
-    const scrollY = container.scrollTop + container.clientHeight / 2;
-    const zoomRatio = newScale / oldScale;
+    const rect = container.getBoundingClientRect();
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    const localX = anchorClientX - rect.left;
+    const localY = anchorClientY - rect.top;
 
-    const newScrollLeft = scrollX * zoomRatio - container.clientWidth / 2;
-    const newScrollTop = scrollY * zoomRatio - container.clientHeight / 2;
+    const zoomRatio = newScale / oldScale;
+    const activeWrapper = canvasWrapper;
+
+    // Convert viewport anchor into wrapper-document coordinates so anchoring remains
+    // stable even when layout mode changes (centered <-> overflowing).
+    const activeRect = activeWrapper.getBoundingClientRect();
+    const oldBaseX = container.scrollLeft + (activeRect.left - rect.left);
+    const oldBaseY = container.scrollTop + (activeRect.top - rect.top);
+    const anchorDocX = container.scrollLeft + localX - oldBaseX;
+    const anchorDocY = container.scrollTop + localY - oldBaseY;
+
+    // Pre-render estimate (will be corrected after render using actual new base).
+    let targetScrollX = oldBaseX + anchorDocX * zoomRatio - localX;
+    let targetScrollY = oldBaseY + anchorDocY * zoomRatio - localY;
+    targetScrollX = Math.max(0, targetScrollX);
+    targetScrollY = Math.max(0, targetScrollY);
+
+    // Pin staging overlay to old wrapper document coordinates for stable dissolve placement.
+    zoomStageDocLeft = oldBaseX;
+    zoomStageDocTop = oldBaseY;
+
+    if (animatePreview) {
+      // Transform origin must be wrapper-local to avoid drift across overflow transitions.
+      const originX = anchorDocX;
+      const originY = anchorDocY;
+
+      activeWrapper.classList.add("zoom-animating");
+      activeWrapper.style.transformOrigin = `${originX}px ${originY}px`;
+      activeWrapper.style.transform = `scale(${zoomRatio})`;
+      await new Promise((resolve) => setTimeout(resolve, 140));
+    }
 
     currentScale = newScale;
-    await animateViewChange(() => renderPage(currentPageNum), 75);
+    updateZoomIndicator();
 
-    container.scrollTop = newScrollTop;
-    container.scrollLeft = newScrollLeft;
+    // Stop preview transform before rerender so subsequent geometry reads are stable.
+    activeWrapper.classList.remove("zoom-animating");
+    activeWrapper.style.transform = "";
+    activeWrapper.style.transformOrigin = "";
+
+    // Freeze the old layer in viewport while rerender + scroll correction happens.
+    const holdRect = activeWrapper.getBoundingClientRect();
+    activeWrapper.classList.add("zoom-hold-fixed");
+    activeWrapper.style.left = `${holdRect.left}px`;
+    activeWrapper.style.top = `${holdRect.top}px`;
+    activeWrapper.style.width = `${holdRect.width}px`;
+    activeWrapper.style.height = `${holdRect.height}px`;
+    activeWrapper.style.pointerEvents = "none";
+    
+    // Do not apply pre-render scroll while old layer is still visible.
+    // Pre-scroll causes a visible first jump before final correction.
+
+    zoomRenderStaging = true;
+    try {
+      await renderPage(currentPageNum);
+    } finally {
+      zoomRenderStaging = false;
+    }
+
+    // Ensure overflow/centering classes are up-to-date before measuring new base.
+    updateCenteringAndOverflow();
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    
+    // After render, fine-tune scroll position to actual content bounds for mobile precision
+    if (canvasWrapper && canvasWrapper !== activeWrapper) {
+      const newRect = canvasWrapper.getBoundingClientRect();
+      const newBaseX = container.scrollLeft + (newRect.left - rect.left);
+      const newBaseY = container.scrollTop + (newRect.top - rect.top);
+
+      // Recompute with the real post-render base to remove drift when crossing overflow.
+      targetScrollX = newBaseX + anchorDocX * zoomRatio - localX;
+      targetScrollY = newBaseY + anchorDocY * zoomRatio - localY;
+
+      const actualMaxScrollX = Math.max(0, canvasWrapper.scrollWidth - containerWidth);
+      const actualMaxScrollY = Math.max(0, canvasWrapper.scrollHeight - containerHeight);
+      const clampedScrollX = Math.min(Math.max(0, targetScrollX), actualMaxScrollX);
+      const clampedScrollY = Math.min(Math.max(0, targetScrollY), actualMaxScrollY);
+      
+      if (Math.abs(container.scrollLeft - clampedScrollX) > 1 || Math.abs(container.scrollTop - clampedScrollY) > 1) {
+        container.scrollLeft = clampedScrollX;
+        container.scrollTop = clampedScrollY;
+      }
+
+      // Final correction pass: remove residual anchor drift caused by pixel rounding
+      // and scrollbar quantization when crossing overflow thresholds.
+      const settledRect = canvasWrapper.getBoundingClientRect();
+      const settledBaseX = container.scrollLeft + (settledRect.left - rect.left);
+      const settledBaseY = container.scrollTop + (settledRect.top - rect.top);
+      const desiredDocX = anchorDocX * zoomRatio;
+      const desiredDocY = anchorDocY * zoomRatio;
+      const currentDocX = container.scrollLeft + localX - settledBaseX;
+      const currentDocY = container.scrollTop + localY - settledBaseY;
+      const errorX = desiredDocX - currentDocX;
+      const errorY = desiredDocY - currentDocY;
+
+      if (Math.abs(errorX) > 0.5 || Math.abs(errorY) > 0.5) {
+        const correctedScrollX = Math.min(Math.max(0, container.scrollLeft + errorX), actualMaxScrollX);
+        const correctedScrollY = Math.min(Math.max(0, container.scrollTop + errorY), actualMaxScrollY);
+        container.scrollLeft = correctedScrollX;
+        container.scrollTop = correctedScrollY;
+      }
+      
+      // Reveal staged canvas only after final position is correct, with smooth blend.
+      canvasWrapper.classList.remove("zoom-staging");
+      canvasWrapper.classList.add("zoom-fading-in-soft");
+      await new Promise((resolve) => setTimeout(resolve, 110));
+
+      if (activeWrapper?.isConnected && canvasWrapper?.isConnected && canvasWrapper !== activeWrapper) {
+        activeWrapper.replaceWith(canvasWrapper);
+      }
+
+      // Critical: after swapping overlay -> normal flow, wrapper base can shift.
+      // Run one more anchor correction in final layout coordinates.
+      updateCenteringAndOverflow();
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      const flowRect = canvasWrapper.getBoundingClientRect();
+      const flowBaseX = container.scrollLeft + (flowRect.left - rect.left);
+      const flowBaseY = container.scrollTop + (flowRect.top - rect.top);
+      const flowDesiredX = anchorDocX * zoomRatio;
+      const flowDesiredY = anchorDocY * zoomRatio;
+      const flowCurrentX = container.scrollLeft + localX - flowBaseX;
+      const flowCurrentY = container.scrollTop + localY - flowBaseY;
+      const flowErrX = flowDesiredX - flowCurrentX;
+      const flowErrY = flowDesiredY - flowCurrentY;
+      const flowMaxX = Math.max(0, canvasWrapper.scrollWidth - containerWidth);
+      const flowMaxY = Math.max(0, canvasWrapper.scrollHeight - containerHeight);
+
+      if (Math.abs(flowErrX) > 0.25 || Math.abs(flowErrY) > 0.25) {
+        container.scrollLeft = Math.min(Math.max(0, container.scrollLeft + flowErrX), flowMaxX);
+        container.scrollTop = Math.min(Math.max(0, container.scrollTop + flowErrY), flowMaxY);
+      }
+
+      canvasWrapper.classList.remove("zoom-fading-in-soft", "zoom-staging-overlay");
+      canvasWrapper.style.left = "";
+      canvasWrapper.style.top = "";
+      canvasWrapper.style.width = "";
+      canvasWrapper.style.height = "";
+      canvasWrapper.style.pointerEvents = "";
+    }
+
+    activeWrapper.classList.remove("zoom-animating");
+    activeWrapper.classList.remove("zoom-hold-fixed");
+    activeWrapper.style.transform = "";
+    activeWrapper.style.transformOrigin = "";
+    activeWrapper.style.left = "";
+    activeWrapper.style.top = "";
+    activeWrapper.style.width = "";
+    activeWrapper.style.height = "";
+    activeWrapper.style.pointerEvents = "";
+
+    canvasWrapper.classList.remove("zoom-animating");
+    canvasWrapper.style.transform = "";
+    canvasWrapper.style.transformOrigin = "";
+
+    // Defensive cleanup for staged overlay properties.
+    canvasWrapper.classList.remove("zoom-staging-overlay");
+    canvasWrapper.style.left = "";
+    canvasWrapper.style.top = "";
+    canvasWrapper.style.width = "";
+    canvasWrapper.style.height = "";
+    canvasWrapper.style.pointerEvents = "";
+    zoomStageDocLeft = null;
+    zoomStageDocTop = null;
+    updateCenteringAndOverflow();
   }
 
   function onToggleViewMode() {
@@ -1338,27 +1558,102 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function handleTouchStart(event) {
-    if (event.touches.length === 2) {
-      initialPinchDistance = getPinchDistance(event);
-      swipeStartPoint = null;
-    }
+    if (event.touches.length !== 2) return;
+    if (!document.body.classList.contains("viewer-active")) return;
+    if (!event.target.closest(".pdf-viewer-content")) return;
+
+    const baseScale = typeof currentScale === "number" ? currentScale : initialScale;
+    currentScale = baseScale;
+    initialPinchDistance = getPinchDistance(event);
+    swipeStartPoint = null;
+
+    const t1 = event.touches[0];
+    const t2 = event.touches[1];
+    const centerX = (t1.clientX + t2.clientX) / 2;
+    const centerY = (t1.clientY + t2.clientY) / 2;
+    const rect = pdfViewerContent.getBoundingClientRect();
+    const activeRect = canvasWrapper.getBoundingClientRect();
+    const baseDocX = pdfViewerContent.scrollLeft + (activeRect.left - rect.left);
+    const baseDocY = pdfViewerContent.scrollTop + (activeRect.top - rect.top);
+
+    pinchState = {
+      baseScale,
+      previewScale: baseScale,
+      centerClientX: centerX,
+      centerClientY: centerY,
+      baseDocX,
+      baseDocY,
+      anchorDocX: pdfViewerContent.scrollLeft + (centerX - rect.left) - baseDocX,
+      anchorDocY: pdfViewerContent.scrollTop + (centerY - rect.top) - baseDocY
+    };
+
+    canvasWrapper.classList.add("pinch-preview");
+    updateZoomIndicator();
   }
 
   function handleTouchMove(event) {
-    if (event.touches.length !== 2) return;
-
+    if (event.touches.length !== 2 || !pinchState || initialPinchDistance <= 0) return;
     event.preventDefault();
-    if (!document.body.classList.contains("viewer-active") || initialPinchDistance <= 0) return;
 
-    const newDistance = getPinchDistance(event);
-    if (Math.abs(newDistance - initialPinchDistance) > 15) {
-      showToast("Gunakan tombol untuk zoom", "zoom_in");
-      initialPinchDistance = 0;
-    }
+    const distance = getPinchDistance(event);
+    const factor = distance / initialPinchDistance;
+    const minScale = Math.max(0.2, initialScale * 0.5);
+    const maxScale = Math.max(minScale + 0.1, initialScale * 8);
+    const nextScale = Math.min(maxScale, Math.max(minScale, pinchState.baseScale * factor));
+
+    const t1 = event.touches[0];
+    const t2 = event.touches[1];
+    const centerX = (t1.clientX + t2.clientX) / 2;
+    const centerY = (t1.clientY + t2.clientY) / 2;
+
+    pinchState.previewScale = nextScale;
+    pinchState.centerClientX = centerX;
+    pinchState.centerClientY = centerY;
+
+    const ratio = nextScale / pinchState.baseScale;
+    canvasWrapper.style.transformOrigin = "0 0";
+    canvasWrapper.style.transform = `scale(${ratio})`;
+
+    const rect = pdfViewerContent.getBoundingClientRect();
+    const localX = centerX - rect.left;
+    const localY = centerY - rect.top;
+    pdfViewerContent.scrollLeft = pinchState.baseDocX + pinchState.anchorDocX * ratio - localX;
+    pdfViewerContent.scrollTop = pinchState.baseDocY + pinchState.anchorDocY * ratio - localY;
+
+    currentScale = nextScale;
+    updateZoomIndicator();
   }
 
-  function handleTouchEnd() {
+  async function handleTouchEnd(event) {
     initialPinchDistance = 0;
+
+    if (!pinchState) return;
+    if (event.touches && event.touches.length >= 2) return;
+
+    const finalScale = pinchState.previewScale;
+    const oldScale = pinchState.baseScale;
+    const anchorClientX = pinchState.centerClientX;
+    const anchorClientY = pinchState.centerClientY;
+
+    canvasWrapper.style.transform = "";
+    canvasWrapper.style.transformOrigin = "";
+    canvasWrapper.classList.remove("pinch-preview");
+
+    pinchState = null;
+
+    if (!Number.isFinite(finalScale) || !Number.isFinite(oldScale)) return;
+    if (Math.abs(finalScale - oldScale) < 0.005) {
+      currentScale = oldScale;
+      updateZoomIndicator();
+      return;
+    }
+
+    await applyScaleAndRerender({
+      oldScale,
+      newScale: finalScale,
+      anchorClientX,
+      anchorClientY
+    });
   }
 
   function handleViewerTouchStart(event) {
@@ -1441,6 +1736,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function processSwipeGesture(dx, dy, elapsed) {
+    // Disable page/song swipe while zoomed in to avoid accidental navigation.
+    if (isViewerZoomedIn()) return;
+
     const now = Date.now();
     if (now - lastSwipeHandledAt < 220) return;
 
@@ -1473,6 +1771,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function canSwipePdfPage() {
     return Boolean(pdfDoc) && pdfDoc.numPages > 1 && currentViewMode === "single" && currentScrollMode === "horizontal";
+  }
+
+  function isViewerZoomedIn() {
+    if (!Number.isFinite(initialScale) || initialScale <= 0) return false;
+    if (typeof currentScale !== "number" || !Number.isFinite(currentScale)) return false;
+    return currentScale > initialScale * 1.001;
   }
 
   // --- 10. Handlers lainnya ---
