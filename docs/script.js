@@ -67,7 +67,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const EDITOR_STORAGE_KEY = "chord-editor-enabled";
   const CHORD_UI_STORAGE_KEY = "chord-ui-prefs";
   const CHORD_ACCIDENTAL_STORAGE_KEY = "chord-accidental-mode";
-  const CHORD_FILES_INDEX_URL = "chord-assets-list.json";
   const EDITOR_ON_TAPS = 10;
   const EDITOR_OFF_TAPS = 5;
   const CHORD_COLLAPSE_STORAGE_KEY = "chord-editor-collapsed";
@@ -184,7 +183,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let titleTapTimer = null;
   let transposeStep = 0;
   let accidentalMode = localStorage.getItem(CHORD_ACCIDENTAL_STORAGE_KEY) === "flat" ? "flat" : "sharp";
-  let availableChordFiles = null;
   let swipeStartPoint = null;
   let lastSwipeHandledAt = 0;
   let pinchState = null;
@@ -898,10 +896,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadChordConfigurationForSong(song) {
     chordConfig = createDefaultChordConfig();
-
-    const hasConfig = await hasChordConfiguration(song);
-    if (!hasConfig) return;
-
     const txtUrl = getChordTxtUrl(song);
 
     try {
@@ -913,38 +907,6 @@ document.addEventListener("DOMContentLoaded", () => {
       chordConfig = sanitizeChordConfig(parsed);
     } catch {
       chordConfig = createDefaultChordConfig();
-    }
-  }
-
-  async function hasChordConfiguration(song) {
-    const filename = getChordTxtFilename(song);
-    if (!filename) return false;
-
-    const chordFiles = await getAvailableChordFiles();
-    return chordFiles.has(filename.toLowerCase());
-  }
-
-  async function getAvailableChordFiles() {
-    if (availableChordFiles instanceof Set) return availableChordFiles;
-
-    try {
-      const response = await fetch(CHORD_FILES_INDEX_URL, { cache: "no-store" });
-      if (!response.ok) {
-        availableChordFiles = new Set();
-        return availableChordFiles;
-      }
-
-      const payload = await response.json();
-      if (!Array.isArray(payload)) {
-        availableChordFiles = new Set();
-        return availableChordFiles;
-      }
-
-      availableChordFiles = new Set(payload.map((item) => String(item).toLowerCase()));
-      return availableChordFiles;
-    } catch {
-      availableChordFiles = new Set();
-      return availableChordFiles;
     }
   }
 
