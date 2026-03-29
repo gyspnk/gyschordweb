@@ -63,7 +63,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = "https://mozilla.github.io/pdf.js/build
 pdfjsLib.verbosity = pdfjsLib.VerbosityLevel.ERRORS;
 
 document.addEventListener("DOMContentLoaded", () => {
-  const CHORD_GRID = { cols: 42, rows: 60 };
+  const CHORD_GRID = { cols: 105, rows: 149 };
   const EDITOR_STORAGE_KEY = "chord-editor-enabled";
   const CHORD_UI_STORAGE_KEY = "chord-ui-prefs";
   const CHORD_ACCIDENTAL_STORAGE_KEY = "chord-accidental-mode";

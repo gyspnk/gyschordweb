@@ -252,8 +252,8 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 .chord-layer {
   position: absolute;
   inset: 0;
-  --grid-cols: 42;
-  --grid-rows: 60;
+  --grid-cols: 105;
+  --grid-rows: 149;
 }
 
 .chord-layer.viewer-mode {
