@@ -70,8 +70,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const EDITOR_ON_TAPS = 10;
   const EDITOR_OFF_TAPS = 5;
   const CHORD_COLLAPSE_STORAGE_KEY = "chord-editor-collapsed";
-  const NOTE_NAMES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-  const NOTE_NAMES_FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+  const NOTE_NAMES_SHARP = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+  const NOTE_NAMES_FLAT = ["C", "D♭", "D", "E♭", "E", "F", "G♭", "G", "A♭", "A", "B♭", "B"];
   const NATURAL_NOTE_INDEX = {
     C: 0,
     D: 2,
@@ -1314,9 +1314,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function promptAndSetChord(pageNum, row, col, existingText = "") {
-    const promptDefault = existingText || "";
+    const promptDefault = existingText ? formatChordForDisplay(existingText) : "";
     const userInput = window.prompt(
-      "Masukkan chord (contoh: C, C#, Bb, Fdim, Aadd9).\nKosongkan untuk hapus chord di sel ini.",
+      "Masukkan chord (contoh: C, C♯, B♭, Fdim, Aadd9).\nKosongkan untuk hapus chord di sel ini.",
       promptDefault
     );
 
@@ -1336,7 +1336,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const raw = String(input || "").trim();
     if (!raw) return "";
 
-    const match = raw.match(/^([A-Ga-g1-7])([#b♭]?)(.*)$/);
+    const match = raw.match(/^([A-Ga-g1-7])([#♯b♭]?)(.*)$/);
     if (!match) return null;
 
     const rootRaw = match[1];
@@ -1347,7 +1347,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const naturalIndex = NATURAL_NOTE_INDEX[rootLetter];
     if (!Number.isInteger(naturalIndex)) return null;
 
-    const accidental = accidentalRaw === "♭" ? "b" : accidentalRaw;
+    const accidental = accidentalRaw === "♭" ? "b" : accidentalRaw === "♯" ? "#" : accidentalRaw;
     let semitone = naturalIndex;
     if (accidental === "#") semitone += 1;
     if (accidental === "b") semitone -= 1;
@@ -1363,15 +1363,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const noteSet = accidentalMode === "flat" ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP;
     const transposed = wrapSemitone(parsed.semitone + transposeStep);
-    return `${noteSet[transposed]}${parsed.suffix}`;
+    
+    // Replace 'b' with '♭' and '#' with '♯' in suffix for common chord extensions and slash chords
+    let displaySuffix = parsed.suffix;
+    if (accidentalMode === "flat") {
+      displaySuffix = displaySuffix
+        .replace(/b(\d+)/g, "♭$1") // Matches b5, b9, b13, etc.
+        .replace(/\/([A-G])b/gi, "/$1♭"); // Matches slash chords like /Bb or /db
+    } else {
+      displaySuffix = displaySuffix
+        .replace(/#(\d+)/g, "♯$1") // Matches #5, #9, #11, etc.
+        .replace(/\/([A-G])#/gi, "/$1♯"); // Matches slash chords like /F# or /f#
+    }
+    
+    // Globally replace any remaining standalone sharp/flat in suffix just in case it didn't match the specific patterns
+    displaySuffix = displaySuffix.replace(/#/g, "♯").replace(/♭/g, "♭"); // `♭` replacement already mostly handled, but we explicitly replace `#` with `♯`
+
+    return `${noteSet[transposed]}${displaySuffix}`;
   }
 
   function parseChordToken(token) {
-    const newFormat = token.match(/^([A-Ga-g])([#b]?)(.*)$/);
+    const newFormat = token.match(/^([A-Ga-g])([#♯b♭]?)(.*)$/);
     if (newFormat) {
       const root = newFormat[1].toUpperCase();
-      const accidental = newFormat[2] || "";
+      const accidentalRaw = newFormat[2] || "";
       const suffix = newFormat[3] || "";
+      
+      const accidental = accidentalRaw === "♭" ? "b" : accidentalRaw === "♯" ? "#" : accidentalRaw;
 
       let semitone = NATURAL_NOTE_INDEX[root];
       if (!Number.isInteger(semitone)) return null;
@@ -1381,13 +1399,15 @@ document.addEventListener("DOMContentLoaded", () => {
       return { semitone: wrapSemitone(semitone), suffix };
     }
 
-    const legacyFormat = token.match(/^([1-7])([#b]?)(.*)$/);
+    const legacyFormat = token.match(/^([1-7])([#♯b♭]?)(.*)$/);
     if (!legacyFormat) return null;
 
     const legacyRoot = NUMBER_TO_NOTE[legacyFormat[1]];
     let semitone = NATURAL_NOTE_INDEX[legacyRoot];
-    const accidental = legacyFormat[2] || "";
+    const accidentalRaw = legacyFormat[2] || "";
     const suffix = legacyFormat[3] || "";
+    
+    const accidental = accidentalRaw === "♭" ? "b" : accidentalRaw === "♯" ? "#" : accidentalRaw;
 
     if (accidental === "#") semitone += 1;
     if (accidental === "b") semitone -= 1;
@@ -1416,7 +1436,7 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.classList.toggle("active", accidentalMode === "flat");
       const label = btn.querySelector(".accidental-label");
       if (label) {
-        const newText = accidentalMode === "flat" ? "♭" : "#";
+        const newText = accidentalMode === "flat" ? "♭" : "♯";
         if (animateAccidental && label.textContent !== newText) {
           label.style.animation = "none";
           void label.offsetWidth; // Trigger reflow
@@ -1943,6 +1963,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // Save old visual state WITH preview transform still applied!
+    const oldVisualRect = activeWrapper.getBoundingClientRect();
+
     // Atomic swap: remove CSS preview, insert freshly rendered wrapper
     activeWrapper.classList.remove("pinch-preview");
     activeWrapper.style.transform = "";
@@ -1975,6 +1998,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const maxScrollY = Math.max(0, pdfViewerContent.scrollHeight - pdfViewerContent.clientHeight);
     pdfViewerContent.scrollLeft = Math.min(Math.max(0, targetScrollX), maxScrollX);
     pdfViewerContent.scrollTop = Math.min(Math.max(0, targetScrollY), maxScrollY);
+
+    // The new scroll is set. Calculate where the new wrapper actually landed on screen.
+    const newRect = newWrapper.getBoundingClientRect();
+
+    // How much it shifted on screen compared to the visual preview
+    const tx = oldVisualRect.left - newRect.left;
+    const ty = oldVisualRect.top - newRect.top;
+    
+    // In theory the scale should be exactly 1, but we calculate it to ensure perfect overlap
+    const scaleX = oldVisualRect.width / (newRect.width || 1);
+    const scaleY = oldVisualRect.height / (newRect.height || 1);
+
+    // If there is ANY layout shift (e.g. snapping to center, clamping), glide it!
+    if (Math.abs(tx) > 1 || Math.abs(ty) > 1 || Math.abs(scaleX - 1) > 0.01) {
+      newWrapper.style.transition = "none";
+      newWrapper.style.transformOrigin = "0 0";
+      newWrapper.style.transform = `translate(${tx}px, ${ty}px) scale(${scaleX}, ${scaleY})`;
+
+      // Force browser to recalculate styles before starting transition
+      newWrapper.getBoundingClientRect();
+
+      // "Play": smoothly glide to its natural layout position (snapped/centered)
+      newWrapper.style.transition = `transform ${ZOOM_SCROLL_SMOOTH_DURATION_MS}ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
+      newWrapper.style.transform = `translate(0px, 0px) scale(1)`;
+
+      setTimeout(() => {
+        newWrapper.style.transition = "";
+        newWrapper.style.transform = "";
+        newWrapper.style.transformOrigin = "";
+      }, ZOOM_SCROLL_SMOOTH_DURATION_MS);
+    }
 
     updateCenteringAndOverflow();
   }
