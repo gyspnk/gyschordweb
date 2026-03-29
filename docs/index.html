@@ -67,17 +67,22 @@
         </div>
         
         <div class="landscape-controls">
-          <div class="transpose-controls transpose-controls-header" id="transpose-controls-header">
-            <button class="icon-button transpose-down-btn" type="button" aria-label="Transpose turun">
-              <span class="material-symbols-outlined">remove</span>
+          <div class="transpose-collapse" id="transpose-collapse-header">
+            <button class="icon-button transpose-toggle-btn" type="button" aria-label="Buka kontrol transpose" aria-expanded="false">
+              <span class="material-symbols-outlined">tune</span>
             </button>
-            <div class="transpose-indicator">Transpose 0</div>
-            <button class="icon-button transpose-up-btn" type="button" aria-label="Transpose naik">
-              <span class="material-symbols-outlined">add</span>
-            </button>
-            <button class="icon-button transpose-accidental-btn" type="button" aria-label="Switcher accidental">
-              <span class="accidental-label">#</span>
-            </button>
+            <div class="transpose-controls transpose-controls-header" id="transpose-controls-header">
+              <button class="icon-button transpose-down-btn" type="button" aria-label="Transpose turun">
+                <span class="material-symbols-outlined">remove</span>
+              </button>
+              <div class="transpose-indicator">Transpose 0</div>
+              <button class="icon-button transpose-up-btn" type="button" aria-label="Transpose naik">
+                <span class="material-symbols-outlined">add</span>
+              </button>
+              <button class="icon-button transpose-accidental-btn" type="button" aria-label="Switcher accidental">
+                <span class="accidental-label">#</span>
+              </button>
+            </div>
           </div>
           <button id="hide-chord-btn-landscape" aria-label="Sembunyikan chord" class="icon-button hide-chord-btn hide-chord-btn-landscape" style="display:none">
             <span class="material-symbols-outlined">music_note</span>

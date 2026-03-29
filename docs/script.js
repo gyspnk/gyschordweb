@@ -195,8 +195,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const chordEditorToolbar = document.getElementById("chord-editor-toolbar");
   const chordEditorToggleBtn = document.getElementById("chord-editor-toggle-btn");
   const chordSaveBtn = document.getElementById("chord-save-btn");
-  const transposeCollapse = document.getElementById("transpose-collapse");
-  const transposeToggleBtn = document.getElementById("transpose-toggle-btn");
+  const transposeCollapses = Array.from(document.querySelectorAll(".transpose-collapse"));
+  const transposeToggleBtns = Array.from(document.querySelectorAll(".transpose-toggle-btn"));
   const transposeDownBtns = Array.from(document.querySelectorAll(".transpose-down-btn"));
   const transposeUpBtns = Array.from(document.querySelectorAll(".transpose-up-btn"));
   const transposeIndicators = Array.from(document.querySelectorAll(".transpose-indicator"));
@@ -301,8 +301,8 @@ document.addEventListener("DOMContentLoaded", () => {
     transposeDownBtns.forEach((btn) => btn.addEventListener("click", () => onTranspose(-1)));
     transposeUpBtns.forEach((btn) => btn.addEventListener("click", () => onTranspose(1)));
     accidentalSwitchBtns.forEach((btn) => btn.addEventListener("click", onToggleAccidentalMode));
-    if (transposeToggleBtn) {
-      transposeToggleBtn.addEventListener("click", onToggleTransposeCollapse);
+    if (transposeToggleBtns.length) {
+      transposeToggleBtns.forEach(btn => btn.addEventListener("click", onToggleTransposeCollapse));
     }
     canvasWrapper.addEventListener("click", onChordLayerClick);
     document.addEventListener("click", onGlobalDocumentClick);
@@ -1601,35 +1601,40 @@ document.addEventListener("DOMContentLoaded", () => {
     event.preventDefault();
     event.stopPropagation();
 
-    if (!isSmallPortraitLayout()) return;
+    if (!isCollapsibleLayout()) return;
 
-    const shouldOpen = !transposeCollapse?.classList.contains("is-open");
-    transposeCollapse?.classList.toggle("is-open", shouldOpen);
-    if (transposeToggleBtn) {
-      transposeToggleBtn.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+    const targetCollapse = event.currentTarget.closest(".transpose-collapse");
+    if (!targetCollapse) return;
+
+    const shouldOpen = !targetCollapse.classList.contains("is-open");
+    targetCollapse.classList.toggle("is-open", shouldOpen);
+    
+    const toggleBtn = targetCollapse.querySelector(".transpose-toggle-btn");
+    if (toggleBtn) {
+      toggleBtn.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
     }
   }
 
   function closeTransposeCollapse() {
-    transposeCollapse?.classList.remove("is-open");
-    if (transposeToggleBtn) {
-      transposeToggleBtn.setAttribute("aria-expanded", "false");
-    }
+    transposeCollapses.forEach(collapse => {
+      collapse.classList.remove("is-open");
+      const toggleBtn = collapse.querySelector(".transpose-toggle-btn");
+      if (toggleBtn) toggleBtn.setAttribute("aria-expanded", "false");
+    });
   }
 
   function syncTransposeCollapseState() {
-    if (!isSmallPortraitLayout()) {
+    if (!isCollapsibleLayout()) {
       closeTransposeCollapse();
     }
   }
 
-  function isSmallPortraitLayout() {
-    return window.matchMedia("(max-width: 640px) and (orientation: portrait)").matches;
+  function isCollapsibleLayout() {
+    return window.matchMedia("(max-width: 640px) and (orientation: portrait), (max-width: 950px) and (orientation: landscape)").matches;
   }
 
   function onGlobalDocumentClick(event) {
-    if (!transposeCollapse?.classList.contains("is-open")) return;
-    if (transposeCollapse.contains(event.target)) return;
+    if (event.target.closest(".transpose-collapse")) return;
     closeTransposeCollapse();
   }
 
