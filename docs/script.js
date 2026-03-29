@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let initialPinchDistance = 0;
   let toastTimeout = null;
 
-  let chordEditorEnabled = localStorage.getItem(EDITOR_STORAGE_KEY) === "1";
+  let chordEditorEnabled = false;
   let chordConfig = createDefaultChordConfig();
   let titleTapCount = 0;
   let titleTapTimer = null;
@@ -190,6 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let zoomInProgress = false;
   let zoomDeferInsert = false;
   let chordEditorCollapsed = localStorage.getItem(CHORD_COLLAPSE_STORAGE_KEY) === "1";
+  let chordsHidden = false;
 
   // --- 3. Init ---
   function init() {
@@ -199,6 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateChordEditorUI();
     updateTransposeUI();
     syncTransposeCollapseState();
+    updateHideChordButton();
     navigateTo("pujian");
   }
 
@@ -237,6 +239,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     canvasWrapper.addEventListener("click", onChordLayerClick);
     document.addEventListener("click", onGlobalDocumentClick);
+
+    const hideChordBtn = document.getElementById("hide-chord-btn");
+    if (hideChordBtn) {
+      hideChordBtn.addEventListener("click", onToggleChordsHidden);
+    }
 
     pdfViewerTitle.addEventListener("click", handleTitleActivatorTap);
 
@@ -442,19 +449,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
         <div class="setting-item setting-item-slider">
-          <span id="chord-font-base-label">Ukuran Font Default (${chordUiPrefs.baseFontRem.toFixed(2)}rem)</span>
-          <input
-            id="chord-font-base"
-            class="setting-range"
-            type="range"
-            min="0.60"
-            max="1.40"
-            step="0.02"
-            value="${chordUiPrefs.baseFontRem.toFixed(2)}"
-          >
-        </div>
-        <div class="setting-item setting-item-slider">
-          <span id="chord-font-override-label">Override Ukuran (${chordUiPrefs.fontOverridePercent}%)</span>
+          <span id="chord-font-override-label">Ukuran Font Chord (${chordUiPrefs.fontOverridePercent}%)</span>
           <input
             id="chord-font-override"
             class="setting-range"
@@ -492,6 +487,14 @@ document.addEventListener("DOMContentLoaded", () => {
     currentScale = "page-fit";
     chordConfig = createDefaultChordConfig();
 
+    // Reset transpose saat ganti lagu
+    transposeStep = 0;
+    updateTransposeUI();
+
+    // Default: chord editor nonaktif setiap buka lagu
+    chordEditorEnabled = false;
+    updateChordEditorUI();
+
     const options = {
       url: song.fileHref,
       standardFontDataUrl: "https://mozilla.github.io/pdf.js/standard_fonts/"
@@ -510,6 +513,7 @@ document.addEventListener("DOMContentLoaded", () => {
       currentScrollMode = prefs.defaultVerticalScroll ? "vertical" : "horizontal";
 
       updateViewerUI();
+      updateHideChordButton();
       await renderPage(currentPageNum);
       updateSongNavButtons();
       fitViewerTitle();
@@ -921,6 +925,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function createChordLayer(pageNum) {
     const layer = document.createElement("div");
     layer.className = `chord-layer ${chordEditorEnabled ? "editor-mode show-grid" : "viewer-mode"}`;
+    if (chordsHidden) layer.classList.add("is-hidden");
     layer.dataset.pageNum = String(pageNum);
     layer.style.setProperty("--grid-cols", String(chordConfig.grid.cols));
     layer.style.setProperty("--grid-rows", String(chordConfig.grid.rows));
@@ -1393,7 +1398,9 @@ document.addEventListener("DOMContentLoaded", () => {
     pdfDoc = null;
     currentSongIndex = -1;
     titleTapCount = 0;
+    chordsHidden = false;
     closeTransposeCollapse();
+    updateHideChordButton();
   }
 
   // --- 9. Zoom & gesture guards ---
@@ -1458,18 +1465,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const centerY = (t1.clientY + t2.clientY) / 2;
     const rect = pdfViewerContent.getBoundingClientRect();
     const activeRect = canvasWrapper.getBoundingClientRect();
-    const baseDocX = pdfViewerContent.scrollLeft + (activeRect.left - rect.left);
-    const baseDocY = pdfViewerContent.scrollTop + (activeRect.top - rect.top);
+
+    // Anchor position in wrapper-local coordinates (unscaled)
+    const anchorInWrapperX = (centerX - activeRect.left);
+    const anchorInWrapperY = (centerY - activeRect.top);
 
     pinchState = {
       baseScale,
       previewScale: baseScale,
       centerClientX: centerX,
       centerClientY: centerY,
-      baseDocX,
-      baseDocY,
-      anchorDocX: pdfViewerContent.scrollLeft + (centerX - rect.left) - baseDocX,
-      anchorDocY: pdfViewerContent.scrollTop + (centerY - rect.top) - baseDocY
+      // Anchor position in wrapper-local coords at the start of pinch
+      anchorInWrapperX,
+      anchorInWrapperY,
+      // Initial scroll offsets
+      initScrollLeft: pdfViewerContent.scrollLeft,
+      initScrollTop: pdfViewerContent.scrollTop,
+      // Anchor position relative to viewport (container-local)
+      anchorViewportX: centerX - rect.left,
+      anchorViewportY: centerY - rect.top
     };
 
     canvasWrapper.classList.add("pinch-preview");
@@ -1482,8 +1496,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const distance = getPinchDistance(event);
     const factor = distance / initialPinchDistance;
-    const minScale = Math.max(0.2, initialScale * 0.5);
-    const maxScale = Math.max(minScale + 0.1, initialScale * 8);
+    // Minimum 100%, maximum 800%
+    const minScale = initialScale;
+    const maxScale = initialScale * 8;
     const nextScale = Math.min(maxScale, Math.max(minScale, pinchState.baseScale * factor));
 
     const t1 = event.touches[0];
@@ -1496,14 +1511,38 @@ document.addEventListener("DOMContentLoaded", () => {
     pinchState.centerClientY = centerY;
 
     const ratio = nextScale / pinchState.baseScale;
-    canvasWrapper.style.transformOrigin = "0 0";
+
+    // Use the anchor point as transform origin for accurate visual preview
+    canvasWrapper.style.transformOrigin = `${pinchState.anchorInWrapperX}px ${pinchState.anchorInWrapperY}px`;
     canvasWrapper.style.transform = `scale(${ratio})`;
 
+    // Compute correct scroll to keep anchor under finger
+    // After CSS scale, the anchor point in the wrapper has moved.
+    // We want the anchor's screen position to follow the current finger center.
     const rect = pdfViewerContent.getBoundingClientRect();
-    const localX = centerX - rect.left;
-    const localY = centerY - rect.top;
-    pdfViewerContent.scrollLeft = pinchState.baseDocX + pinchState.anchorDocX * ratio - localX;
-    pdfViewerContent.scrollTop = pinchState.baseDocY + pinchState.anchorDocY * ratio - localY;
+    const currentFingerViewportX = centerX - rect.left;
+    const currentFingerViewportY = centerY - rect.top;
+
+    // The anchor's document position after scaling (wrapper origin + scaled anchor offset)
+    const wrapperBaseX = pinchState.initScrollLeft + (canvasWrapper.getBoundingClientRect().left - rect.left) - pdfViewerContent.scrollLeft + pdfViewerContent.scrollLeft;
+    // Simpler: anchor position in content-space = initScroll + anchorViewport initially.
+    // After scale with transform-origin at anchor, the anchor stays at same content position.
+    // So we just need scroll such that anchor appears at finger position.
+    const anchorContentX = pinchState.initScrollLeft + pinchState.anchorViewportX;
+    const anchorContentY = pinchState.initScrollTop + pinchState.anchorViewportY;
+
+    // With transform-origin at anchor, the anchor doesn't move in the wrapper's local pre-scale coords.
+    // But CSS scale around that point means the wrapper's bounding rect changes.
+    // The anchor in document space stays at: anchorContentX, anchorContentY
+    // We want it to appear at finger viewport position:
+    let targetScrollX = anchorContentX - currentFingerViewportX;
+    let targetScrollY = anchorContentY - currentFingerViewportY;
+
+    // Clamp scroll to viewport bounds
+    const maxScrollX = Math.max(0, pdfViewerContent.scrollWidth - pdfViewerContent.clientWidth);
+    const maxScrollY = Math.max(0, pdfViewerContent.scrollHeight - pdfViewerContent.clientHeight);
+    pdfViewerContent.scrollLeft = Math.min(Math.max(0, targetScrollX), maxScrollX);
+    pdfViewerContent.scrollTop = Math.min(Math.max(0, targetScrollY), maxScrollY);
 
     currentScale = nextScale;
     updateZoomIndicator();
@@ -1517,28 +1556,88 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const finalScale = pinchState.previewScale;
     const oldScale = pinchState.baseScale;
-    const anchorClientX = pinchState.centerClientX;
-    const anchorClientY = pinchState.centerClientY;
+    const savedPinchState = { ...pinchState };
 
-    canvasWrapper.style.transform = "";
-    canvasWrapper.style.transformOrigin = "";
-    canvasWrapper.classList.remove("pinch-preview");
+    // Record the current preview scroll position - this is what looks correct to the user
+    const previewScrollLeft = pdfViewerContent.scrollLeft;
+    const previewScrollTop = pdfViewerContent.scrollTop;
+    const ratio = finalScale / oldScale;
 
     pinchState = null;
 
-    if (!Number.isFinite(finalScale) || !Number.isFinite(oldScale)) return;
+    if (!Number.isFinite(finalScale) || !Number.isFinite(oldScale)) {
+      canvasWrapper.style.transform = "";
+      canvasWrapper.style.transformOrigin = "";
+      canvasWrapper.classList.remove("pinch-preview");
+      return;
+    }
     if (Math.abs(finalScale - oldScale) < 0.005) {
       currentScale = oldScale;
+      canvasWrapper.style.transform = "";
+      canvasWrapper.style.transformOrigin = "";
+      canvasWrapper.classList.remove("pinch-preview");
       updateZoomIndicator();
       return;
     }
 
-    await applyScaleAndRerender({
-      oldScale,
-      newScale: finalScale,
-      anchorClientX,
-      anchorClientY
-    });
+    // Keep the CSS-scaled preview visible while we render new content offscreen
+    // DO NOT remove transform yet - that causes the glitch
+    const activeWrapper = canvasWrapper;
+
+    currentScale = finalScale;
+    updateZoomIndicator();
+
+    // Render new content into a DETACHED element
+    zoomDeferInsert = true;
+    try {
+      await renderPage(currentPageNum);
+    } finally {
+      zoomDeferInsert = false;
+    }
+    const newWrapper = canvasWrapper;
+
+    if (newWrapper === activeWrapper || !newWrapper) {
+      activeWrapper.classList.remove("pinch-preview");
+      activeWrapper.style.transform = "";
+      activeWrapper.style.transformOrigin = "";
+      updateCenteringAndOverflow();
+      return;
+    }
+
+    // Atomic swap: remove CSS preview, insert freshly rendered wrapper
+    activeWrapper.classList.remove("pinch-preview");
+    activeWrapper.style.transform = "";
+    activeWrapper.style.transformOrigin = "";
+    activeWrapper.replaceWith(newWrapper);
+
+    updateCenteringAndOverflow();
+
+    // Restore scroll position based on the anchor point
+    // The anchor was at anchorInWrapperX/Y in old wrapper coords.
+    // In new wrapper it's at anchorInWrapperX * ratio, anchorInWrapperY * ratio.
+    // We want the anchor to appear at the same viewport position as during preview.
+    const containerRect = pdfViewerContent.getBoundingClientRect();
+    const newWrapperRect = newWrapper.getBoundingClientRect();
+    const newWrapperDocX = pdfViewerContent.scrollLeft + (newWrapperRect.left - containerRect.left);
+    const newWrapperDocY = pdfViewerContent.scrollTop + (newWrapperRect.top - containerRect.top);
+
+    // Anchor position in new wrapper = old anchor * ratio
+    const newAnchorInWrapperX = savedPinchState.anchorInWrapperX * ratio;
+    const newAnchorInWrapperY = savedPinchState.anchorInWrapperY * ratio;
+
+    // Place anchor at same viewport position as finger
+    const targetViewportX = savedPinchState.centerClientX - containerRect.left;
+    const targetViewportY = savedPinchState.centerClientY - containerRect.top;
+
+    const targetScrollX = newWrapperDocX + newAnchorInWrapperX - targetViewportX;
+    const targetScrollY = newWrapperDocY + newAnchorInWrapperY - targetViewportY;
+
+    const maxScrollX = Math.max(0, pdfViewerContent.scrollWidth - pdfViewerContent.clientWidth);
+    const maxScrollY = Math.max(0, pdfViewerContent.scrollHeight - pdfViewerContent.clientHeight);
+    pdfViewerContent.scrollLeft = Math.min(Math.max(0, targetScrollX), maxScrollX);
+    pdfViewerContent.scrollTop = Math.min(Math.max(0, targetScrollY), maxScrollY);
+
+    updateCenteringAndOverflow();
   }
 
   function handleViewerTouchStart(event) {
@@ -1756,11 +1855,6 @@ document.addEventListener("DOMContentLoaded", () => {
       chordUiPrefs.fill = e.target.value;
       persistChordUiPrefs();
       rerenderViewerIfActive();
-    } else if (targetId === "chord-font-base") {
-      chordUiPrefs.baseFontRem = Number.parseFloat(e.target.value);
-      persistChordUiPrefs();
-      rerenderViewerIfActive();
-      updateChordSettingsLabels();
     } else if (targetId === "chord-font-override") {
       chordUiPrefs.fontOverridePercent = Number.parseInt(e.target.value, 10);
       persistChordUiPrefs();
@@ -1779,14 +1873,34 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateChordSettingsLabels() {
-    const baseLabel = document.getElementById("chord-font-base-label");
     const overrideLabel = document.getElementById("chord-font-override-label");
-    if (baseLabel) {
-      baseLabel.textContent = `Ukuran Font Default (${chordUiPrefs.baseFontRem.toFixed(2)}rem)`;
-    }
     if (overrideLabel) {
-      overrideLabel.textContent = `Override Ukuran (${chordUiPrefs.fontOverridePercent}%)`;
+      overrideLabel.textContent = `Ukuran Font Chord (${chordUiPrefs.fontOverridePercent}%)`;
     }
+  }
+
+  // --- Toggle Hide Chord ---
+  function onToggleChordsHidden() {
+    chordsHidden = !chordsHidden;
+    document.querySelectorAll(".chord-layer").forEach((layer) => {
+      layer.classList.toggle("is-hidden", chordsHidden);
+    });
+    updateHideChordButton();
+  }
+
+  function updateHideChordButton() {
+    const btn = document.getElementById("hide-chord-btn");
+    if (!btn) return;
+
+    // Show button only when viewer is active and there are chord pages
+    const hasChords = chordConfig && Object.keys(chordConfig.pages).length > 0;
+    btn.style.display = (document.body.classList.contains("viewer-active") && hasChords) ? "flex" : "none";
+
+    const icon = btn.querySelector(".material-symbols-outlined");
+    if (icon) {
+      icon.textContent = chordsHidden ? "music_off" : "music_note";
+    }
+    btn.setAttribute("aria-label", chordsHidden ? "Tampilkan chord" : "Sembunyikan chord");
   }
 
   function applyStoredPreferences() {
