@@ -224,6 +224,117 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   border-radius: var(--border-radius-sm);
 }
 
+.pdf-page-container {
+  position: relative;
+  line-height: 0;
+}
+
+.pdf-page-container canvas {
+  display: block;
+}
+
+.chord-layer {
+  position: absolute;
+  inset: 0;
+  --grid-cols: 42;
+  --grid-rows: 60;
+}
+
+.chord-layer.viewer-mode {
+  pointer-events: none;
+}
+
+.chord-layer.editor-mode {
+  cursor: crosshair;
+}
+
+.chord-layer.editor-mode.show-grid {
+  background-image:
+    linear-gradient(to right, rgba(25, 118, 210, 0.2) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(25, 118, 210, 0.2) 1px, transparent 1px);
+  background-size: calc(100% / var(--grid-cols)) calc(100% / var(--grid-rows));
+}
+
+.chord-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Roboto', sans-serif;
+  font-size: var(--chord-font-size, 0.72rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  color: #0b4c99;
+  white-space: nowrap;
+  user-select: none;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.92);
+  min-height: 1.2em;
+  padding: 0.12rem 0.26rem;
+  border-radius: 4px;
+}
+
+.chord-marker.chord-theme-default { color: #0b4c99; }
+.chord-marker.chord-theme-warm { color: #8f2f16; }
+.chord-marker.chord-theme-ocean { color: #006a70; }
+.chord-marker.chord-theme-mono { color: #2f2f35; }
+.chord-marker.chord-theme-emerald { color: #136f3a; }
+.chord-marker.chord-theme-plum { color: #6f2a78; }
+
+.chord-marker.chord-fill-none {
+  background: transparent;
+  outline: none;
+  border-radius: 0;
+}
+
+.chord-marker.chord-fill-soft {
+  background-color: color-mix(in srgb, var(--chord-fill-color, #b9d8ff) 32%, #ffffff);
+  border-radius: 6px;
+}
+
+.chord-marker.chord-fill-solid {
+  background-color: color-mix(in srgb, var(--chord-fill-color, #b9d8ff) 65%, #ffffff);
+  border-radius: 6px;
+}
+
+.chord-marker.chord-fill-color-sky { --chord-fill-color: #8cc7ff; }
+.chord-marker.chord-fill-color-mint { --chord-fill-color: #88d7b3; }
+.chord-marker.chord-fill-color-rose { --chord-fill-color: #ef9db2; }
+.chord-marker.chord-fill-color-amber { --chord-fill-color: #f2c16e; }
+.chord-marker.chord-fill-color-lavender { --chord-fill-color: #baa8ef; }
+.chord-marker.chord-fill-color-slate { --chord-fill-color: #9aa8bd; }
+
+.chord-layer.editor-mode .chord-marker {
+  outline: 1px dashed color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
+  pointer-events: auto;
+}
+
+.chord-editor-toolbar {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: color-mix(in srgb, var(--md-sys-color-surface) 92%, transparent);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 999px;
+  box-shadow: var(--shadow-2);
+  backdrop-filter: blur(4px);
+  padding: 0.3rem 0.4rem 0.3rem 0.9rem;
+  z-index: 20;
+}
+
+body:not(.chord-editor-enabled) .chord-editor-toolbar {
+  display: none !important;
+}
+
+.chord-editor-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--md-sys-color-primary);
+}
+
 /* Tata Letak Kontrol Berdasarkan Orientasi */
 @media (orientation: portrait) {
   .landscape-controls { display: none; }
@@ -344,6 +455,111 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   display: flex; align-items: center; justify-content: space-between;
   padding: 1rem; min-height: 56px;
 }
+
+.setting-item-slider {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+
+.setting-select {
+  min-width: 170px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--border-radius-md);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  padding: 0.45rem 0.65rem;
+  font: inherit;
+}
+
+.setting-range {
+  width: 100%;
+  accent-color: var(--md-sys-color-primary);
+}
+
+.chord-theme-palette {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 55%;
+}
+
+.chord-theme-color {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--md-sys-color-outline);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: transform 0.15s ease, border-color 0.2s ease;
+}
+
+.chord-theme-color:hover {
+  transform: translateY(-1px);
+}
+
+.chord-theme-color.selected {
+  border-color: var(--md-sys-color-primary);
+}
+
+.chord-theme-color.selected::after {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.chord-theme-color[data-chord-theme="default"] { background: #0b4c99; }
+.chord-theme-color[data-chord-theme="warm"] { background: #8f2f16; }
+.chord-theme-color[data-chord-theme="ocean"] { background: #006a70; }
+.chord-theme-color[data-chord-theme="mono"] { background: #2f2f35; }
+.chord-theme-color[data-chord-theme="emerald"] { background: #136f3a; }
+.chord-theme-color[data-chord-theme="plum"] { background: #6f2a78; }
+
+.chord-fill-palette {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 55%;
+}
+
+.chord-fill-color {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 2px solid var(--md-sys-color-outline);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: transform 0.15s ease, border-color 0.2s ease;
+}
+
+.chord-fill-color:hover {
+  transform: translateY(-1px);
+}
+
+.chord-fill-color.selected {
+  border-color: var(--md-sys-color-primary);
+}
+
+.chord-fill-color.selected::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.chord-fill-color[data-chord-fill-color="sky"] { background: #8cc7ff; }
+.chord-fill-color[data-chord-fill-color="mint"] { background: #88d7b3; }
+.chord-fill-color[data-chord-fill-color="rose"] { background: #ef9db2; }
+.chord-fill-color[data-chord-fill-color="amber"] { background: #f2c16e; }
+.chord-fill-color[data-chord-fill-color="lavender"] { background: #baa8ef; }
+.chord-fill-color[data-chord-fill-color="slate"] { background: #9aa8bd; }
 .setting-item + .setting-item { border-top: 1px solid var(--md-sys-color-outline-variant); }
 .setting-item > span { font-size: 1rem; font-weight: 500; }
 .accent-palette {
@@ -537,4 +753,28 @@ body.dark-theme .ripple {
 body.dark-theme .zoom-toast {
   background-color: var(--md-sys-color-surface-container-high);
   color: var(--md-sys-color-on-surface);
+}
+
+.chord-transpose-toolbar {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: color-mix(in srgb, var(--md-sys-color-surface) 92%, transparent);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 999px;
+  box-shadow: var(--shadow-2);
+  backdrop-filter: blur(4px);
+  padding: 0.2rem 0.35rem;
+  z-index: 20;
+}
+
+.transpose-indicator {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--md-sys-color-primary);
+  min-width: 6.5rem;
+  text-align: center;
 }
