@@ -52,9 +52,6 @@
         <button id="pdf-viewer-close" aria-label="Kembali" class="icon-button">
           <span class="material-symbols-outlined">arrow_back</span>
         </button>
-        <button id="hide-chord-btn" aria-label="Sembunyikan chord" class="icon-button" style="display:none">
-          <span class="material-symbols-outlined">music_note</span>
-        </button>
         
         <div class="song-navigation">
             <button id="song-prev" aria-label="Pujian Sebelumnya" class="icon-button">
@@ -82,6 +79,9 @@
               <span class="accidental-label">#</span>
             </button>
           </div>
+          <button id="hide-chord-btn-landscape" aria-label="Sembunyikan chord" class="icon-button hide-chord-btn hide-chord-btn-landscape" style="display:none">
+            <span class="material-symbols-outlined">music_note</span>
+          </button>
           <div class="page-navigation-landscape">
               <button id="pdf-prev-landscape" aria-label="Halaman Sebelumnya" class="icon-button">
                 <span class="material-symbols-outlined">chevron_left</span>
@@ -111,6 +111,9 @@
             </button>
           </div>
         </div>
+        <button id="hide-chord-btn-portrait" aria-label="Sembunyikan chord" class="icon-button hide-chord-btn hide-chord-btn-portrait" style="display:none">
+          <span class="material-symbols-outlined">music_note</span>
+        </button>
       </header>
       
       <div id="chord-editor-toolbar" class="chord-editor-toolbar" hidden>
@@ -127,7 +130,9 @@
 
       <div class="pdf-viewer-content">
         <div class="canvas-wrapper"></div>
-        <div class="loader"></div>
+        <div class="loader-container" id="viewer-loader">
+          <div class="loader-progress" id="viewer-loader-progress"></div>
+        </div>
         <div id="orientation-warning" class="orientation-warning">
             <span class="material-symbols-outlined" >screen_rotation</span>
             <p>Putar layar ke mode lanskap untuk tampilan dua halaman yang optimal.</p>

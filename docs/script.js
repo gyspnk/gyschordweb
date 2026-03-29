@@ -90,6 +90,57 @@ document.addEventListener("DOMContentLoaded", () => {
     6: "A",
     7: "B"
   };
+  const ACCENT_CUSTOM_COLOR_KEY = "accent-custom-color";
+  const DEFAULT_CUSTOM_ACCENT = "#4f7cff";
+  const ACCENT_PRESETS = [
+    { key: "blue", label: "Biru", color: "#1976d2" },
+    { key: "red", label: "Merah", color: "#d32f2f" },
+    { key: "green", label: "Hijau", color: "#2e7d32" },
+    { key: "yellow", label: "Kuning", color: "#fbc02d" },
+    { key: "purple", label: "Ungu", color: "#7b1fa2" },
+    { key: "pink", label: "Pink", color: "#c2185b" },
+    { key: "teal", label: "Teal", color: "#00796b" },
+    { key: "orange", label: "Oranye", color: "#f57c00" },
+    { key: "brown", label: "Coklat", color: "#5d4037" },
+    { key: "gray", label: "Abu-abu", color: "#616161" },
+    { key: "indigo", label: "Nila", color: "#303f9f" },
+    { key: "cyan", label: "Sian", color: "#0097a7" },
+    { key: "custom", label: "Warna Kustom", color: null }
+  ];
+  const CHORD_THEME_PRESETS = [
+    { key: "blue", label: "Biru", color: "#0b4c99" },
+    { key: "red", label: "Merah", color: "#9c1616" },
+    { key: "green", label: "Hijau", color: "#1b5a20" },
+    { key: "yellow", label: "Kuning", color: "#b38200" },
+    { key: "purple", label: "Ungu", color: "#59117a" },
+    { key: "pink", label: "Pink", color: "#960e44" },
+    { key: "teal", label: "Teal", color: "#004d43" },
+    { key: "orange", label: "Oranye", color: "#b35600" },
+    { key: "brown", label: "Coklat", color: "#3e2923" },
+    { key: "gray", label: "Abu-abu", color: "#383838" },
+    { key: "indigo", label: "Nila", color: "#1e2870" },
+    { key: "cyan", label: "Sian", color: "#00646e" }
+  ];
+  const CHORD_FILL_PRESETS = [
+    { key: "blue", label: "Biru", color: "#b8dbff" },
+    { key: "red", label: "Merah", color: "#ffc4c4" },
+    { key: "green", label: "Hijau", color: "#b8f0bc" },
+    { key: "yellow", label: "Kuning", color: "#ffecb3" },
+    { key: "purple", label: "Ungu", color: "#e3bdf2" },
+    { key: "pink", label: "Pink", color: "#ffbccf" },
+    { key: "teal", label: "Teal", color: "#a5ede4" },
+    { key: "orange", label: "Oranye", color: "#ffcc99" },
+    { key: "brown", label: "Coklat", color: "#d6c1ba" },
+    { key: "gray", label: "Abu-abu", color: "#cfcfcf" },
+    { key: "indigo", label: "Nila", color: "#c6d0ff" },
+    { key: "cyan", label: "Sian", color: "#b5f0f7" }
+  ];
+  const DOUBLE_TAP_MAX_DELAY = 300;
+  const DOUBLE_TAP_MAX_DISTANCE = 34;
+  const INDICATOR_DOUBLE_TAP_DELAY = 420;
+  const ZOOM_SCROLL_SMOOTH_DURATION_MS = 210;
+  const TRANSPOSE_DISSOLVE_OUT_MS = 180;
+  const TRANSPOSE_DISSOLVE_IN_MS = 230;
 
   // --- 1. DOM ---
   const mainContent = document.getElementById("main-content");
@@ -135,7 +186,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const pageCountElLandscape = document.getElementById("page-count-landscape");
   const zoomLevelIndicatorLandscape = document.getElementById("zoom-level-indicator-landscape");
 
-  const viewerLoader = pdfViewerOverlay.querySelector(".loader");
+  const viewerLoader = document.getElementById("viewer-loader");
+  const viewerLoaderProgress = document.getElementById("viewer-loader-progress");
   const orientationWarning = document.getElementById("orientation-warning");
   const zoomToast = document.getElementById("zoom-toast");
   const zoomToastIcon = zoomToast.querySelector(".material-symbols-outlined");
@@ -149,6 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const transposeUpBtns = Array.from(document.querySelectorAll(".transpose-up-btn"));
   const transposeIndicators = Array.from(document.querySelectorAll(".transpose-indicator"));
   const accidentalSwitchBtns = Array.from(document.querySelectorAll(".transpose-accidental-btn"));
+  const hideChordBtns = Array.from(document.querySelectorAll(".hide-chord-btn"));
 
   // --- 2. State ---
   let pujianItems = [];
@@ -167,12 +220,15 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   let chordUiPrefs = {
-    theme: "default",
+    theme: "blue",
     fill: "soft",
-    fillColor: "sky",
+    fillColor: "blue",
     baseFontRem: 0.72,
-    fontOverridePercent: 100
+    fontOverridePercent: 100,
+    syncThemeWithAccent: false,
+    syncFillWithAccent: false
   };
+  let customAccentColor = DEFAULT_CUSTOM_ACCENT;
 
   let initialPinchDistance = 0;
   let toastTimeout = null;
@@ -191,6 +247,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let zoomDeferInsert = false;
   let chordEditorCollapsed = localStorage.getItem(CHORD_COLLAPSE_STORAGE_KEY) === "1";
   let chordsHidden = false;
+  let lastViewerTapAt = 0;
+  let lastViewerTapPoint = null;
+  let lastIndicatorTapAt = 0;
+  let lastIndicatorTapEl = null;
+  const chordDissolveTimers = new WeakMap();
 
   // --- 3. Init ---
   function init() {
@@ -226,6 +287,12 @@ document.addEventListener("DOMContentLoaded", () => {
     [nextPageBtnPortrait, nextPageBtnLandscape].forEach((btn) => btn.addEventListener("click", onNextPage));
     [zoomInBtnPortrait, zoomInBtnLandscape].forEach((btn) => btn.addEventListener("click", () => onZoom("in")));
     [zoomOutBtnPortrait, zoomOutBtnLandscape].forEach((btn) => btn.addEventListener("click", () => onZoom("out")));
+    [zoomLevelIndicatorPortrait, zoomLevelIndicatorLandscape]
+      .filter(Boolean)
+      .forEach((indicator) => {
+        indicator.addEventListener("touchend", onZoomIndicatorTouchEnd, { passive: false });
+        indicator.addEventListener("dblclick", onZoomIndicatorDoubleClick);
+      });
 
     chordSaveBtn.addEventListener("click", saveChordConfigurationFile);
     if (chordEditorToggleBtn) {
@@ -240,10 +307,7 @@ document.addEventListener("DOMContentLoaded", () => {
     canvasWrapper.addEventListener("click", onChordLayerClick);
     document.addEventListener("click", onGlobalDocumentClick);
 
-    const hideChordBtn = document.getElementById("hide-chord-btn");
-    if (hideChordBtn) {
-      hideChordBtn.addEventListener("click", onToggleChordsHidden);
-    }
+    hideChordBtns.forEach((btn) => btn.addEventListener("click", onToggleChordsHidden));
 
     pdfViewerTitle.addEventListener("click", handleTitleActivatorTap);
 
@@ -282,6 +346,10 @@ document.addEventListener("DOMContentLoaded", () => {
       pengaturanBtn.classList.add("selected");
       searchContainer.style.display = "none";
       renderSettings();
+    } else if (page === "report-bug") {
+      pengaturanBtn.classList.add("selected");
+      searchContainer.style.display = "none";
+      renderReportBugPage();
     }
   }
 
@@ -333,134 +401,261 @@ document.addEventListener("DOMContentLoaded", () => {
     fitListTitles();
   }
 
+  function renderSettingLabel(icon, text) {
+    return `
+      <span class="setting-label">
+        <span class="material-symbols-outlined">${icon}</span>
+        <span>${text}</span>
+      </span>
+    `;
+  }
+
   function renderSettings() {
+    const activeAccent = document.body.getAttribute("data-accent") || "blue";
+    const accentPalette = ACCENT_PRESETS
+      .map((preset) => {
+        const color = preset.key === "custom" ? customAccentColor : preset.color;
+        const customClass = preset.key === "custom" ? "accent-color-custom" : "";
+        return `
+          <button
+            class="accent-color ${customClass} ${activeAccent === preset.key ? "selected" : ""}"
+            data-color="${preset.key}"
+            title="${preset.label}"
+            aria-label="Warna aksen ${preset.label}"
+            type="button"
+            style="--swatch-color: ${color};"
+          ></button>
+        `;
+      })
+      .join("");
+
+    const chordThemePalette = CHORD_THEME_PRESETS
+      .map(
+        (theme) => `
+          <button
+            class="chord-theme-color ${chordUiPrefs.theme === theme.key ? "selected" : ""}"
+            data-chord-theme="${theme.key}"
+            title="${theme.label}"
+            aria-label="Tema chord ${theme.label}"
+            type="button"
+            style="--swatch-color: ${theme.color};"
+          ></button>
+        `
+      )
+      .join("");
+
+    const chordFillPalette = CHORD_FILL_PRESETS
+      .map(
+        (fill) => `
+          <button
+            class="chord-fill-color ${chordUiPrefs.fillColor === fill.key ? "selected" : ""}"
+            data-chord-fill-color="${fill.key}"
+            title="${fill.label}"
+            aria-label="Warna fill chord ${fill.label}"
+            type="button"
+            style="--swatch-color: ${fill.color};"
+          ></button>
+        `
+      )
+      .join("");
+
     mainContent.innerHTML = `
       <div class="settings-panel">
-        <h2>Tampilan</h2>
-        <div class="setting-item">
-          <span>Tema Gelap</span>
-          <label class="md-switch">
-            <input type="checkbox" id="dark-theme-toggle" ${document.body.classList.contains("dark-theme") ? "checked" : ""}>
-            <span class="md-slider"></span>
-          </label>
-        </div>
-        <div class="setting-item">
-          <span>Warna Aksen</span>
-          <div class="accent-palette">
-            ${[
-              "biru",
-              "merah",
-              "hijau",
-              "kuning",
-              "ungu",
-              "pink",
-              "birutua",
-              "teal",
-              "oranye",
-              "coklat",
-              "abu",
-              "indigo",
-              "cyan",
-              "lime",
-              "deep-orange"
-            ]
-              .map(
-                (color) => `
-              <button class="accent-color ${document.body.getAttribute("data-accent") === color ? "selected" : ""}" data-color="${color}" title="${
-                  color.charAt(0).toUpperCase() + color.slice(1)
-                }"></button>
-            `
-              )
-              .join("")}
+        <div class="settings-section">
+          <h2 class="settings-section-title"><span class="material-symbols-outlined">palette</span> Tampilan</h2>
+          <div class="settings-card">
+            <div class="setting-item">
+              ${renderSettingLabel("dark_mode", "Tema Gelap")}
+              <label class="md-switch">
+                <input type="checkbox" id="dark-theme-toggle" ${document.body.classList.contains("dark-theme") ? "checked" : ""}>
+                <span class="md-slider"></span>
+              </label>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item">
+              ${renderSettingLabel("format_paint", "Warna Aksen")}
+              <div class="accent-palette">
+                ${accentPalette}
+              </div>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item">
+              ${renderSettingLabel("colors", "Custom Accent")}
+              <input type="color" id="custom-accent-input" class="setting-color-input" value="${customAccentColor}" aria-label="Pilih warna custom accent">
+            </div>
           </div>
         </div>
-        <h2>Viewer Default</h2>
-        <div class="setting-item">
-          <span>Mode Dua Halaman</span>
-          <label class="md-switch">
-            <input type="checkbox" id="default-two-page-toggle" ${prefs.defaultTwoPage ? "checked" : ""}>
-            <span class="md-slider"></span>
-          </label>
-        </div>
-        <div class="setting-item">
-          <span>Scroll Vertikal</span>
-          <label class="md-switch">
-            <input type="checkbox" id="default-vertical-scroll-toggle" ${prefs.defaultVerticalScroll ? "checked" : ""}>
-            <span class="md-slider"></span>
-          </label>
-        </div>
-        <h2>Tampilan Chord</h2>
-        <div class="setting-item">
-          <span>Tema Huruf Chord</span>
-          <div class="chord-theme-palette">
-            ${[
-              { key: "default", label: "Biru" },
-              { key: "warm", label: "Warm" },
-              { key: "ocean", label: "Ocean" },
-              { key: "mono", label: "Mono" },
-              { key: "emerald", label: "Emerald" },
-              { key: "plum", label: "Plum" }
-            ]
-              .map(
-                (theme) => `
-              <button
-                class="chord-theme-color ${chordUiPrefs.theme === theme.key ? "selected" : ""}"
-                data-chord-theme="${theme.key}"
-                title="${theme.label}"
-                aria-label="Tema chord ${theme.label}"
-                type="button"
-              ></button>
-            `
-              )
-              .join("")}
+
+        <div class="settings-section">
+          <h2 class="settings-section-title"><span class="material-symbols-outlined">menu_book</span> Viewer Default</h2>
+          <div class="settings-card">
+            <div class="setting-item">
+              ${renderSettingLabel("auto_stories", "Mode Dua Halaman")}
+              <label class="md-switch">
+                <input type="checkbox" id="default-two-page-toggle" ${prefs.defaultTwoPage ? "checked" : ""}>
+                <span class="md-slider"></span>
+              </label>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item">
+              ${renderSettingLabel("swap_vert", "Scroll Vertikal")}
+              <label class="md-switch">
+                <input type="checkbox" id="default-vertical-scroll-toggle" ${prefs.defaultVerticalScroll ? "checked" : ""}>
+                <span class="md-slider"></span>
+              </label>
+            </div>
           </div>
         </div>
-        <div class="setting-item">
-          <span>Fill Chord</span>
-          <select id="chord-fill-select" class="setting-select">
-            <option value="none" ${chordUiPrefs.fill === "none" ? "selected" : ""}>Tanpa Fill</option>
-            <option value="soft" ${chordUiPrefs.fill === "soft" ? "selected" : ""}>Soft Rounded</option>
-            <option value="solid" ${chordUiPrefs.fill === "solid" ? "selected" : ""}>Solid Rounded</option>
-          </select>
-        </div>
-        <div class="setting-item">
-          <span>Warna Fill Chord</span>
-          <div class="chord-fill-palette">
-            ${[
-              { key: "sky", label: "Sky" },
-              { key: "mint", label: "Mint" },
-              { key: "rose", label: "Rose" },
-              { key: "amber", label: "Amber" },
-              { key: "lavender", label: "Lavender" },
-              { key: "slate", label: "Slate" }
-            ]
-              .map(
-                (fill) => `
-              <button
-                class="chord-fill-color ${chordUiPrefs.fillColor === fill.key ? "selected" : ""}"
-                data-chord-fill-color="${fill.key}"
-                title="${fill.label}"
-                aria-label="Warna fill chord ${fill.label}"
-                type="button"
-              ></button>
-            `
-              )
-              .join("")}
+
+        <div class="settings-section">
+          <h2 class="settings-section-title"><span class="material-symbols-outlined">music_note</span> Tampilan Chord</h2>
+          <div class="settings-card">
+            <div class="setting-item">
+              ${renderSettingLabel("text_format", "Tema Huruf Chord")}
+              <div class="chord-theme-palette ${chordUiPrefs.syncThemeWithAccent ? "is-disabled" : ""}">
+                ${chordThemePalette}
+              </div>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item">
+              ${renderSettingLabel("sync", "Samakan Huruf Chord ke Tema Utama")}
+              <label class="md-switch">
+                <input type="checkbox" id="chord-sync-theme-toggle" ${chordUiPrefs.syncThemeWithAccent ? "checked" : ""}>
+                <span class="md-slider"></span>
+              </label>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item">
+              ${renderSettingLabel("format_color_fill", "Fill Chord")}
+              <select id="chord-fill-select" class="setting-select">
+                <option value="none" ${chordUiPrefs.fill === "none" ? "selected" : ""}>Tanpa Fill</option>
+                <option value="soft" ${chordUiPrefs.fill === "soft" ? "selected" : ""}>Soft Rounded</option>
+                <option value="solid" ${chordUiPrefs.fill === "solid" ? "selected" : ""}>Solid Rounded</option>
+              </select>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item">
+              ${renderSettingLabel("colorize", "Warna Fill Chord")}
+              <div class="chord-fill-palette ${chordUiPrefs.syncFillWithAccent ? "is-disabled" : ""}">
+                ${chordFillPalette}
+              </div>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item">
+              ${renderSettingLabel("tune", "Samakan Fill Chord ke Tema Utama")}
+              <label class="md-switch">
+                <input type="checkbox" id="chord-sync-fill-toggle" ${chordUiPrefs.syncFillWithAccent ? "checked" : ""}>
+                <span class="md-slider"></span>
+              </label>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item setting-item-slider">
+              <span id="chord-font-override-label" class="setting-label">
+                <span class="material-symbols-outlined">format_size</span>
+                <span>Ukuran Font Chord (${chordUiPrefs.fontOverridePercent}%)</span>
+              </span>
+              <input
+                id="chord-font-override"
+                class="setting-range"
+                type="range"
+                min="80"
+                max="180"
+                step="5"
+                value="${chordUiPrefs.fontOverridePercent}"
+              >
+            </div>
           </div>
         </div>
-        <div class="setting-item setting-item-slider">
-          <span id="chord-font-override-label">Ukuran Font Chord (${chordUiPrefs.fontOverridePercent}%)</span>
-          <input
-            id="chord-font-override"
-            class="setting-range"
-            type="range"
-            min="80"
-            max="180"
-            step="5"
-            value="${chordUiPrefs.fontOverridePercent}"
-          >
+
+        <div class="settings-section">
+          <h2 class="settings-section-title"><span class="material-symbols-outlined">help</span> Bantuan</h2>
+          <div class="settings-card help-banner-card" id="report-bug-btn" role="button" aria-label="Buka halaman report bug" tabindex="0">
+            <div class="help-banner-content">
+              <span class="material-symbols-outlined help-banner-icon">support_agent</span>
+              <div class="help-banner-text">
+                <h3>Hubungi Developer</h3>
+                <p>Laporkan bug, error, atau beri saran</p>
+              </div>
+            </div>
+            <span class="material-symbols-outlined help-banner-arrow">chevron_right</span>
+          </div>
         </div>
       </div>`;
+  }
+
+  function renderReportBugPage() {
+    mainContent.innerHTML = `
+      <div class="report-page">
+        <div class="report-header-nav">
+          <button id="report-bug-back-btn" class="report-back-btn" type="button" aria-label="Kembali ke pengaturan">
+            <span class="material-symbols-outlined">arrow_back</span>
+            <span>Kembali</span>
+          </button>
+          <h2>Hubungi Developer</h2>
+          <div style="width: 48px;"></div> <!-- Spacer for flex centering -->
+        </div>
+
+        <div class="report-hero">
+          <div class="report-hero-icon-bg">
+            <span class="material-symbols-outlined report-hero-icon">bug_report</span>
+          </div>
+          <h3>Pusat Bantuan & Saran</h3>
+          <p>Jika menemukan bug, error, atau sekadar ingin memberikan masukan pengembangan, jangan ragu untuk menghubungi kontak di bawah ini.</p>
+        </div>
+
+        <div class="report-identity-card">
+          <div class="dev-profile-pic">
+            <span class="material-symbols-outlined">code</span>
+          </div>
+          <div class="dev-info">
+            <p class="dev-name">Gilbert Then</p>
+            <p class="dev-org">Gereja Yesus Sejati Pontianak</p>
+          </div>
+        </div>
+
+        <div class="report-section">
+          <h3 class="section-badge"><span class="material-symbols-outlined">forum</span> Kontak Langsung</h3>
+          <div class="report-action-grid">
+            <a class="report-contact-link primary-link" href="https://wa.me/6289676328279" target="_blank" rel="noopener noreferrer">
+              <div class="link-icon-wrapper">
+                <span class="material-symbols-outlined link-icon">chat</span>
+              </div>
+              <div class="link-content">
+                <span class="link-title">WhatsApp</span>
+                <span class="link-subtitle">089676328279</span>
+              </div>
+            </a>
+            <a class="report-contact-link secondary-link" href="https://mail.google.com/mail/?view=cm&fs=1&to=thengilbert@gmail.com" target="_blank" rel="noopener noreferrer">
+              <div class="link-icon-wrapper">
+                <span class="material-symbols-outlined link-icon">mail</span>
+              </div>
+              <div class="link-content">
+                <span class="link-title">Email</span>
+                <span class="link-subtitle">thengilbert@gmail.com</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <div class="report-section">
+          <h3 class="section-badge"><span class="material-symbols-outlined">photo_camera</span> Media Sosial</h3>
+          <div class="report-social-grid">
+            <a class="social-chip" href="https://www.instagram.com/gilbert_then01/" target="_blank" rel="noopener noreferrer">
+              <span class="material-symbols-outlined">link</span>
+              <span>@gilbert_then01</span>
+            </a>
+            <a class="social-chip" href="https://www.instagram.com/gys.pontianak/" target="_blank" rel="noopener noreferrer">
+              <span class="material-symbols-outlined">link</span>
+              <span>@gys.pontianak</span>
+            </a>
+            <a class="social-chip" href="https://www.instagram.com/youthptk_gys/" target="_blank" rel="noopener noreferrer">
+              <span class="material-symbols-outlined">link</span>
+              <span>@youthptk_gys</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   // --- 6. PDF Viewer ---
@@ -469,11 +664,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const song = pujianItems[currentSongIndex];
     if (!song) return;
 
-    viewerLoader.style.display = "block";
-
     songTitleWrapper.classList.add("is-navigating");
     canvasWrapper.classList.add("is-navigating");
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     pdfViewerTitle.textContent = song.judul;
     pdfViewerNumber.textContent = `No. ${song.nomor}`;
@@ -491,8 +684,7 @@ document.addEventListener("DOMContentLoaded", () => {
     transposeStep = 0;
     updateTransposeUI();
 
-    // Default: chord editor nonaktif setiap buka lagu
-    chordEditorEnabled = false;
+    // Pertahankan state chord editor (jangan reset chordEditorEnabled = false)
     updateChordEditorUI();
 
     const options = {
@@ -501,7 +693,9 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      pdfDoc = await pdfjsLib.getDocument(options).promise;
+      const loadingTask = pdfjsLib.getDocument(options);
+      pdfDoc = await loadingTask.promise;
+      
       [pageCountElPortrait, pageCountElLandscape].forEach((el) => {
         el.textContent = pdfDoc.numPages;
       });
@@ -517,9 +711,15 @@ document.addEventListener("DOMContentLoaded", () => {
       await renderPage(currentPageNum);
       updateSongNavButtons();
       fitViewerTitle();
+      
+      // Force a reflow before removing the class to ensure proper transition
+      void canvasWrapper.offsetWidth;
+      
       canvasWrapper.classList.remove("is-navigating");
     } catch (reason) {
-      viewerLoader.style.display = "none";
+      viewerLoader.classList.remove("visible");
+      songTitleWrapper.classList.remove("is-navigating");
+      canvasWrapper.classList.remove("is-navigating");
       console.error(`Gagal memuat PDF: ${reason}`);
       alert("Gagal memuat PDF.");
       closePdfViewer();
@@ -530,6 +730,10 @@ document.addEventListener("DOMContentLoaded", () => {
     canvasWrapper.classList.add("is-navigating");
     await new Promise((resolve) => setTimeout(resolve, duration));
     if (renderFunction) await renderFunction();
+    
+    // Force a reflow to ensure the initial 'is-navigating' state is registered by the browser
+    void canvasWrapper.offsetWidth;
+    
     canvasWrapper.classList.remove("is-navigating");
   }
 
@@ -553,7 +757,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const oldWrapper = canvasWrapper;
     const nextWrapper = document.createElement("div");
     nextWrapper.className = oldWrapper.className
-      .replace(/\s*is-navigating/g, "")
       .replace(/\s*pinch-preview/g, "")
       .replace(/\s*zoom-animating/g, "")
       .replace(/\s*zoom-staging/g, "")
@@ -641,7 +844,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Gagal merender halaman:", error);
     } finally {
-      viewerLoader.style.display = "none";
+      viewerLoader.classList.remove("visible");
       updatePageIndicator(num);
       updatePageNavButtons();
       updateZoomIndicator();
@@ -710,6 +913,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function resetZoomToDefault(anchorClientX, anchorClientY) {
+    if (!pdfDoc || zoomInProgress) return;
+
+    const oldScale = typeof currentScale === "number" ? currentScale : initialScale;
+    const newScale = initialScale;
+    if (!Number.isFinite(oldScale) || !Number.isFinite(newScale) || newScale <= 0) return;
+    if (Math.abs(oldScale - newScale) < 0.005) {
+      currentScale = newScale;
+      updateZoomIndicator();
+      return;
+    }
+
+    try {
+      zoomInProgress = true;
+      await applyScaleAndRerender({
+        oldScale,
+        newScale,
+        anchorClientX,
+        anchorClientY,
+        animatePreview: true
+      });
+      showToast("Zoom direset ke 100%", "center_focus_strong");
+    } finally {
+      zoomInProgress = false;
+    }
+  }
+
   async function applyScaleAndRerender({ oldScale, newScale, anchorClientX, anchorClientY, animatePreview = false }) {
     const container = pdfViewerContent;
     const containerWidth = container.clientWidth;
@@ -764,6 +994,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // All DOM mutations below are synchronous. The browser will NOT paint until
     // this synchronous block finishes, so the user sees a single-frame swap.
 
+    // Save old visual state WITH preview transform still applied!
+    // This perfectly captures the visual box the user sees on screen.
+    const oldVisualRect = activeWrapper.getBoundingClientRect();
+
     // Remove CSS preview classes/styles from old wrapper (it's about to be replaced).
     activeWrapper.classList.remove("zoom-animating");
     activeWrapper.style.transform = "";
@@ -777,21 +1011,89 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Force layout so we can measure the new wrapper's position.
     const freshRect = container.getBoundingClientRect();
-    const newWrapperRect = newWrapper.getBoundingClientRect();
-    const newBaseX = container.scrollLeft + (newWrapperRect.left - freshRect.left);
-    const newBaseY = container.scrollTop + (newWrapperRect.top - freshRect.top);
+    const newWrapperRectBeforeScroll = newWrapper.getBoundingClientRect();
+    const newBaseX = container.scrollLeft + (newWrapperRectBeforeScroll.left - freshRect.left);
+    const newBaseY = container.scrollTop + (newWrapperRectBeforeScroll.top - freshRect.top);
 
     // Compute target scroll to keep the anchor point stable.
     const targetScrollX = newBaseX + anchorWrapperX * zoomRatio - localX;
     const targetScrollY = newBaseY + anchorWrapperY * zoomRatio - localY;
 
-    const maxScrollX = Math.max(0, container.scrollWidth - containerWidth);
-    const maxScrollY = Math.max(0, container.scrollHeight - containerHeight);
-    container.scrollLeft = Math.min(Math.max(0, targetScrollX), maxScrollX);
-    container.scrollTop = Math.min(Math.max(0, targetScrollY), maxScrollY);
+    const maxScrollX = Math.max(0, newWrapper.scrollWidth - containerWidth);
+    const maxScrollY = Math.max(0, newWrapper.scrollHeight - containerHeight);
+    const clampedTargetX = Math.min(Math.max(0, targetScrollX), maxScrollX);
+    const clampedTargetY = Math.min(Math.max(0, targetScrollY), maxScrollY);
+
+    container.scrollLeft = clampedTargetX;
+    container.scrollTop = clampedTargetY;
+
+    // The new scroll is set. Calculate where the new wrapper actually landed on screen.
+    const newRect = newWrapper.getBoundingClientRect();
+
+    // How much it shifted on screen compared to the visual preview
+    const tx = oldVisualRect.left - newRect.left;
+    const ty = oldVisualRect.top - newRect.top;
+    
+    // In theory the scale should be exactly 1, but we calculate it to ensure perfect overlap
+    const scaleX = oldVisualRect.width / (newRect.width || 1);
+    const scaleY = oldVisualRect.height / (newRect.height || 1);
+
+    // If there is ANY layout shift (e.g. snapping to center, clamping), glide it!
+    // We animate on both zoom-in and zoom-out to ensure layout shifts are smooth.
+    if (Math.abs(tx) > 1 || Math.abs(ty) > 1 || Math.abs(scaleX - 1) > 0.01) {
+      // "Invert": stretch and move the new wrapper back to exactly cover the visual preview
+      newWrapper.style.transition = "none";
+      newWrapper.style.transformOrigin = "0 0";
+      newWrapper.style.transform = `translate(${tx}px, ${ty}px) scale(${scaleX}, ${scaleY})`;
+
+      // Force browser to recalculate styles before starting transition
+      newWrapper.getBoundingClientRect();
+
+      // "Play": smoothly glide to its natural layout position (snapped/centered)
+      newWrapper.style.transition = `transform ${ZOOM_SCROLL_SMOOTH_DURATION_MS}ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
+      newWrapper.style.transform = `translate(0px, 0px) scale(1)`;
+
+      setTimeout(() => {
+        newWrapper.style.transition = "";
+        newWrapper.style.transform = "";
+        newWrapper.style.transformOrigin = "";
+      }, ZOOM_SCROLL_SMOOTH_DURATION_MS);
+    }
 
     // All synchronous — browser paints this as one frame. Done.
     updateCenteringAndOverflow();
+  }
+
+  function onZoomIndicatorTouchEnd(event) {
+    if (!document.body.classList.contains("viewer-active") || !pdfDoc) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const now = Date.now();
+    const currentEl = event.currentTarget;
+    const isSecondTap = currentEl === lastIndicatorTapEl && (now - lastIndicatorTapAt) <= INDICATOR_DOUBLE_TAP_DELAY;
+    lastIndicatorTapAt = now;
+    lastIndicatorTapEl = currentEl;
+
+    if (!isSecondTap) return;
+
+    const rect = pdfViewerContent.getBoundingClientRect();
+    const anchorClientX = rect.left + pdfViewerContent.clientWidth / 2;
+    const anchorClientY = rect.top + pdfViewerContent.clientHeight / 2;
+    lastIndicatorTapAt = 0;
+    lastIndicatorTapEl = null;
+    resetZoomToDefault(anchorClientX, anchorClientY);
+  }
+
+  function onZoomIndicatorDoubleClick(event) {
+    if (!document.body.classList.contains("viewer-active") || !pdfDoc) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const rect = pdfViewerContent.getBoundingClientRect();
+    const anchorClientX = rect.left + pdfViewerContent.clientWidth / 2;
+    const anchorClientY = rect.top + pdfViewerContent.clientHeight / 2;
+    resetZoomToDefault(anchorClientX, anchorClientY);
   }
 
 
@@ -944,6 +1246,12 @@ document.addEventListener("DOMContentLoaded", () => {
     marker.classList.add(`chord-theme-${chordUiPrefs.theme}`);
     marker.classList.add(`chord-fill-${chordUiPrefs.fill}`);
     marker.classList.add(`chord-fill-color-${chordUiPrefs.fillColor}`);
+    if (chordUiPrefs.syncThemeWithAccent) {
+      marker.classList.add("chord-theme-accent");
+    }
+    if (chordUiPrefs.syncFillWithAccent) {
+      marker.classList.add("chord-fill-color-accent");
+    }
     marker.dataset.row = String(entry.row);
     marker.dataset.col = String(entry.col);
     marker.dataset.raw = entry.text;
@@ -961,7 +1269,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function getChordFontSizeRem() {
     const ratio = getZoomRatio();
     const size = chordUiPrefs.baseFontRem * ratio * (chordUiPrefs.fontOverridePercent / 100);
-    return Math.min(2.1, Math.max(0.6, size));
+    return Math.min(6.5, Math.max(0.55, size));
   }
 
   function getZoomRatio() {
@@ -1097,7 +1405,8 @@ document.addEventListener("DOMContentLoaded", () => {
     refreshVisibleChordMarkers();
   }
 
-  function updateTransposeUI() {
+  function updateTransposeUI(options = {}) {
+    const { animateAccidental = false } = options;
     const sign = transposeStep > 0 ? "+" : "";
     transposeIndicators.forEach((indicator) => {
       indicator.textContent = `Transpose ${sign}${transposeStep}`;
@@ -1107,7 +1416,18 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.classList.toggle("active", accidentalMode === "flat");
       const label = btn.querySelector(".accidental-label");
       if (label) {
-        label.textContent = accidentalMode === "flat" ? "♭" : "#";
+        const newText = accidentalMode === "flat" ? "♭" : "#";
+        if (animateAccidental && label.textContent !== newText) {
+          label.style.animation = "none";
+          void label.offsetWidth; // Trigger reflow
+          label.style.animation = "flipAccidental 0.3s ease-in-out forwards";
+          if (label.dataset.flipTimer) clearTimeout(Number(label.dataset.flipTimer));
+          label.dataset.flipTimer = setTimeout(() => {
+            label.textContent = newText;
+          }, 150);
+        } else {
+          label.textContent = newText;
+        }
       }
       btn.setAttribute("aria-label", `Switcher accidental (${accidentalMode === "flat" ? "flat" : "sharp"})`);
     });
@@ -1116,20 +1436,35 @@ document.addEventListener("DOMContentLoaded", () => {
   function onToggleAccidentalMode() {
     accidentalMode = accidentalMode === "sharp" ? "flat" : "sharp";
     localStorage.setItem(CHORD_ACCIDENTAL_STORAGE_KEY, accidentalMode);
-    updateTransposeUI();
+    updateTransposeUI({ animateAccidental: true });
     refreshVisibleChordMarkers();
   }
 
   function refreshVisibleChordMarkers() {
     document.querySelectorAll(".chord-marker").forEach((marker) => {
-      marker.classList.remove("is-dissolving");
-      void marker.offsetWidth;
-      marker.classList.add("is-dissolving");
-      marker.textContent = formatChordForDisplay(marker.dataset.raw || "");
+      const existingTimer = chordDissolveTimers.get(marker);
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+      }
 
-      setTimeout(() => {
-        marker.classList.remove("is-dissolving");
-      }, 130);
+      marker.classList.remove("is-dissolving", "is-dissolving-out", "is-dissolving-in");
+      void marker.offsetWidth;
+      marker.classList.add("is-dissolving-out");
+
+      const timeoutId = setTimeout(() => {
+        marker.textContent = formatChordForDisplay(marker.dataset.raw || "");
+        marker.classList.remove("is-dissolving-out");
+        marker.classList.add("is-dissolving-in");
+
+        const cleanupId = setTimeout(() => {
+          marker.classList.remove("is-dissolving-in");
+          chordDissolveTimers.delete(marker);
+        }, TRANSPOSE_DISSOLVE_IN_MS);
+
+        chordDissolveTimers.set(marker, cleanupId);
+      }, TRANSPOSE_DISSOLVE_OUT_MS);
+
+      chordDissolveTimers.set(marker, timeoutId);
     });
   }
 
@@ -1398,6 +1733,10 @@ document.addEventListener("DOMContentLoaded", () => {
     pdfDoc = null;
     currentSongIndex = -1;
     titleTapCount = 0;
+    lastViewerTapAt = 0;
+    lastViewerTapPoint = null;
+    lastIndicatorTapAt = 0;
+    lastIndicatorTapEl = null;
     chordsHidden = false;
     closeTransposeCollapse();
     updateHideChordButton();
@@ -1675,9 +2014,41 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const isControlInteraction = event.target.closest("button, input, select, label, .chord-layer.editor-mode, .chord-marker");
     const elapsed = Date.now() - swipeStartPoint.time;
     const dx = touch.clientX - swipeStartPoint.x;
     const dy = touch.clientY - swipeStartPoint.y;
+
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    const isTap = absX < 14 && absY < 14 && elapsed < 260;
+
+    if (!isControlInteraction && isTap) {
+      const now = Date.now();
+      const isFastEnough = now - lastViewerTapAt <= DOUBLE_TAP_MAX_DELAY;
+      const isNearEnough =
+        lastViewerTapPoint
+        && Math.hypot(touch.clientX - lastViewerTapPoint.x, touch.clientY - lastViewerTapPoint.y) <= DOUBLE_TAP_MAX_DISTANCE;
+
+      if (isFastEnough && isNearEnough) {
+        lastViewerTapAt = 0;
+        lastViewerTapPoint = null;
+        swipeStartPoint = null;
+        resetZoomToDefault(touch.clientX, touch.clientY);
+        return;
+      }
+
+      lastViewerTapAt = now;
+      lastViewerTapPoint = { x: touch.clientX, y: touch.clientY };
+      swipeStartPoint = null;
+      return;
+    }
+
+    if (!isTap) {
+      lastViewerTapAt = 0;
+      lastViewerTapPoint = null;
+    }
+
     swipeStartPoint = null;
 
     processSwipeGesture(dx, dy, elapsed);
@@ -1765,6 +2136,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- 10. Handlers lainnya ---
   function handleMainContentClick(e) {
+    const reportBugBtn = e.target.closest("#report-bug-btn");
+    if (reportBugBtn) {
+      navigateTo("report-bug");
+      return;
+    }
+
+    const reportBugBackBtn = e.target.closest("#report-bug-back-btn");
+    if (reportBugBackBtn) {
+      navigateTo("pengaturan");
+      return;
+    }
+
     const pujianItem = e.target.closest(".pujian-list li");
     if (pujianItem) {
       e.preventDefault();
@@ -1775,10 +2158,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const accentButton = e.target.closest(".accent-color");
     if (accentButton) {
       const color = accentButton.dataset.color;
-      document.body.setAttribute("data-accent", color);
-      localStorage.setItem("accent", color);
+      applyAccentSelection(color);
+
+      const customInput = document.getElementById("custom-accent-input");
+      if (customInput && color === "custom") {
+        customInput.value = customAccentColor;
+      }
+
       accentButton.parentElement.querySelector(".selected")?.classList.remove("selected");
       accentButton.classList.add("selected");
+
+      if (chordUiPrefs.syncThemeWithAccent || chordUiPrefs.syncFillWithAccent) {
+        rerenderViewerIfActive();
+      }
       return;
     }
 
@@ -1803,6 +2195,17 @@ document.addEventListener("DOMContentLoaded", () => {
       chordFillColorButton.parentElement.querySelector(".selected")?.classList.remove("selected");
       chordFillColorButton.classList.add("selected");
       rerenderViewerIfActive();
+    }
+  }
+
+  function applyAccentSelection(color) {
+    const nextColor = color || "blue";
+    document.body.setAttribute("data-accent", nextColor);
+    localStorage.setItem("accent", nextColor);
+
+    if (nextColor === "custom") {
+      document.documentElement.style.setProperty("--source-custom", customAccentColor);
+      localStorage.setItem(ACCENT_CUSTOM_COLOR_KEY, customAccentColor);
     }
   }
 
@@ -1855,6 +2258,42 @@ document.addEventListener("DOMContentLoaded", () => {
       chordUiPrefs.fill = e.target.value;
       persistChordUiPrefs();
       rerenderViewerIfActive();
+    } else if (targetId === "chord-sync-theme-toggle") {
+      chordUiPrefs.syncThemeWithAccent = e.target.checked;
+      persistChordUiPrefs();
+      const palette = document.querySelector(".chord-theme-palette");
+      if (palette) {
+        if (chordUiPrefs.syncThemeWithAccent) palette.classList.add("is-disabled");
+        else palette.classList.remove("is-disabled");
+      }
+      rerenderViewerIfActive();
+    } else if (targetId === "chord-sync-fill-toggle") {
+      chordUiPrefs.syncFillWithAccent = e.target.checked;
+      persistChordUiPrefs();
+      const palette = document.querySelector(".chord-fill-palette");
+      if (palette) {
+        if (chordUiPrefs.syncFillWithAccent) palette.classList.add("is-disabled");
+        else palette.classList.remove("is-disabled");
+      }
+      rerenderViewerIfActive();
+    } else if (targetId === "custom-accent-input") {
+      customAccentColor = e.target.value || DEFAULT_CUSTOM_ACCENT;
+      document.documentElement.style.setProperty("--source-custom", customAccentColor);
+      localStorage.setItem(ACCENT_CUSTOM_COLOR_KEY, customAccentColor);
+
+      const currentAccent = document.body.getAttribute("data-accent");
+      if (currentAccent !== "custom") {
+        applyAccentSelection("custom");
+      }
+
+      const customAccentBtn = document.querySelector('.accent-color[data-color="custom"]');
+      const accentPalette = customAccentBtn?.parentElement;
+      accentPalette?.querySelector(".selected")?.classList.remove("selected");
+      customAccentBtn?.classList.add("selected");
+
+      if (chordUiPrefs.syncThemeWithAccent || chordUiPrefs.syncFillWithAccent) {
+        rerenderViewerIfActive();
+      }
     } else if (targetId === "chord-font-override") {
       chordUiPrefs.fontOverridePercent = Number.parseInt(e.target.value, 10);
       persistChordUiPrefs();
@@ -1875,7 +2314,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateChordSettingsLabels() {
     const overrideLabel = document.getElementById("chord-font-override-label");
     if (overrideLabel) {
-      overrideLabel.textContent = `Ukuran Font Chord (${chordUiPrefs.fontOverridePercent}%)`;
+      const labelText = overrideLabel.querySelector("span:last-child");
+      if (labelText) {
+        labelText.textContent = `Ukuran Font Chord (${chordUiPrefs.fontOverridePercent}%)`;
+      }
     }
   }
 
@@ -1889,18 +2331,18 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateHideChordButton() {
-    const btn = document.getElementById("hide-chord-btn");
-    if (!btn) return;
-
     // Show button only when viewer is active and there are chord pages
     const hasChords = chordConfig && Object.keys(chordConfig.pages).length > 0;
-    btn.style.display = (document.body.classList.contains("viewer-active") && hasChords) ? "flex" : "none";
+    const shouldShow = document.body.classList.contains("viewer-active") && hasChords;
 
-    const icon = btn.querySelector(".material-symbols-outlined");
-    if (icon) {
-      icon.textContent = chordsHidden ? "music_off" : "music_note";
-    }
-    btn.setAttribute("aria-label", chordsHidden ? "Tampilkan chord" : "Sembunyikan chord");
+    hideChordBtns.forEach((btn) => {
+      btn.style.display = shouldShow ? "" : "none";
+      const icon = btn.querySelector(".material-symbols-outlined");
+      if (icon) {
+        icon.textContent = chordsHidden ? "music_off" : "music_note";
+      }
+      btn.setAttribute("aria-label", chordsHidden ? "Tampilkan chord" : "Sembunyikan chord");
+    });
   }
 
   function applyStoredPreferences() {
@@ -1908,8 +2350,10 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.classList.add("dark-theme");
     }
 
-    const storedAccent = localStorage.getItem("accent") || "biru";
-    document.body.setAttribute("data-accent", storedAccent);
+    const storedAccent = localStorage.getItem("accent") || "blue";
+    customAccentColor = localStorage.getItem(ACCENT_CUSTOM_COLOR_KEY) || DEFAULT_CUSTOM_ACCENT;
+    document.documentElement.style.setProperty("--source-custom", customAccentColor);
+    applyAccentSelection(storedAccent);
 
     try {
       const storedPrefs = localStorage.getItem("prefs");
@@ -1925,13 +2369,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const storedChordUi = localStorage.getItem(CHORD_UI_STORAGE_KEY);
       if (storedChordUi) {
         const parsed = JSON.parse(storedChordUi);
+        const validThemeKeys = new Set(CHORD_THEME_PRESETS.map((item) => item.key));
+        const validFillKeys = new Set(CHORD_FILL_PRESETS.map((item) => item.key));
         chordUiPrefs = {
           ...chordUiPrefs,
           ...parsed,
+          theme: validThemeKeys.has(parsed.theme) ? parsed.theme : chordUiPrefs.theme,
+          fillColor: validFillKeys.has(parsed.fillColor) ? parsed.fillColor : chordUiPrefs.fillColor,
           baseFontRem: Number.isFinite(Number(parsed.baseFontRem)) ? Number(parsed.baseFontRem) : chordUiPrefs.baseFontRem,
           fontOverridePercent: Number.isFinite(Number(parsed.fontOverridePercent))
             ? Number(parsed.fontOverridePercent)
-            : chordUiPrefs.fontOverridePercent
+            : chordUiPrefs.fontOverridePercent,
+          syncThemeWithAccent: parsed.syncThemeWithAccent === true,
+          syncFillWithAccent: parsed.syncFillWithAccent === true
         };
       }
     } catch (error) {
