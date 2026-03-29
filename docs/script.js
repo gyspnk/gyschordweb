@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const CHORD_FILES_INDEX_URL = "chord-assets-list.json";
   const EDITOR_ON_TAPS = 10;
   const EDITOR_OFF_TAPS = 5;
+  const CHORD_COLLAPSE_STORAGE_KEY = "chord-editor-collapsed";
   const NOTE_NAMES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   const NOTE_NAMES_FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
   const NATURAL_NOTE_INDEX = {
@@ -141,6 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const zoomToastIcon = zoomToast.querySelector(".material-symbols-outlined");
 
   const chordEditorToolbar = document.getElementById("chord-editor-toolbar");
+  const chordEditorToggleBtn = document.getElementById("chord-editor-toggle-btn");
   const chordSaveBtn = document.getElementById("chord-save-btn");
   const transposeCollapse = document.getElementById("transpose-collapse");
   const transposeToggleBtn = document.getElementById("transpose-toggle-btn");
@@ -188,9 +190,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let pinchState = null;
   let renderRequestId = 0;
   let zoomInProgress = false;
-  let zoomRenderStaging = false;
-  let zoomStageDocLeft = null;
-  let zoomStageDocTop = null;
+  let zoomDeferInsert = false;
+  let chordEditorCollapsed = localStorage.getItem(CHORD_COLLAPSE_STORAGE_KEY) === "1";
 
   // --- 3. Init ---
   function init() {
@@ -227,6 +228,9 @@ document.addEventListener("DOMContentLoaded", () => {
     [zoomOutBtnPortrait, zoomOutBtnLandscape].forEach((btn) => btn.addEventListener("click", () => onZoom("out")));
 
     chordSaveBtn.addEventListener("click", saveChordConfigurationFile);
+    if (chordEditorToggleBtn) {
+      chordEditorToggleBtn.addEventListener("click", onToggleChordEditorCollapse);
+    }
     transposeDownBtns.forEach((btn) => btn.addEventListener("click", () => onTranspose(-1)));
     transposeUpBtns.forEach((btn) => btn.addEventListener("click", () => onTranspose(1)));
     accidentalSwitchBtns.forEach((btn) => btn.addEventListener("click", onToggleAccidentalMode));
@@ -553,7 +557,9 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/\s*zoom-staging/g, "")
       .replace(/\s*zoom-staging-overlay/g, "")
       .replace(/\s*zoom-fading-in-soft/g, "")
-      .replace(/\s*zoom-old-fading-out/g, "");
+      .replace(/\s*zoom-old-fading-out/g, "")
+      .replace(/\s*zoom-crossfade-in/g, "")
+      .replace(/\s*zoom-hold-fixed/g, "");
 
     const renderSinglePageTask = async (pageNumToRender, scaleToUse) => {
       const page = await pdfDoc.getPage(pageNumToRender);
@@ -621,15 +627,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (requestId !== renderRequestId) return;
 
-      if (zoomRenderStaging) {
-        const overlayLeft = Number.isFinite(zoomStageDocLeft) ? zoomStageDocLeft : oldWrapper.offsetLeft;
-        const overlayTop = Number.isFinite(zoomStageDocTop) ? zoomStageDocTop : oldWrapper.offsetTop;
-
-        nextWrapper.classList.add("zoom-staging", "zoom-staging-overlay");
-        nextWrapper.style.left = `${overlayLeft}px`;
-        nextWrapper.style.top = `${overlayTop}px`;
-        nextWrapper.style.pointerEvents = "none";
-        oldWrapper.after(nextWrapper);
+      if (zoomDeferInsert) {
+        // During zoom: DON'T insert into DOM. Keep wrapper detached.
+        // The caller (applyScaleAndRerender) will handle insertion.
       } else {
         oldWrapper.replaceWith(nextWrapper);
       }
@@ -643,7 +643,9 @@ document.addEventListener("DOMContentLoaded", () => {
       updatePageIndicator(num);
       updatePageNavButtons();
       updateZoomIndicator();
-      updateCenteringAndOverflow();
+      if (!zoomDeferInsert) {
+        updateCenteringAndOverflow();
+      }
     }
   }
 
@@ -708,177 +710,88 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function applyScaleAndRerender({ oldScale, newScale, anchorClientX, anchorClientY, animatePreview = false }) {
     const container = pdfViewerContent;
-    const rect = container.getBoundingClientRect();
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
+    const rect = container.getBoundingClientRect();
     const localX = anchorClientX - rect.left;
     const localY = anchorClientY - rect.top;
 
     const zoomRatio = newScale / oldScale;
     const activeWrapper = canvasWrapper;
 
-    // Convert viewport anchor into wrapper-document coordinates so anchoring remains
-    // stable even when layout mode changes (centered <-> overflowing).
+    // Compute anchor position relative to wrapper origin in document coordinates.
     const activeRect = activeWrapper.getBoundingClientRect();
-    const oldBaseX = container.scrollLeft + (activeRect.left - rect.left);
-    const oldBaseY = container.scrollTop + (activeRect.top - rect.top);
-    const anchorDocX = container.scrollLeft + localX - oldBaseX;
-    const anchorDocY = container.scrollTop + localY - oldBaseY;
+    const wrapperBaseX = container.scrollLeft + (activeRect.left - rect.left);
+    const wrapperBaseY = container.scrollTop + (activeRect.top - rect.top);
+    const anchorWrapperX = container.scrollLeft + localX - wrapperBaseX;
+    const anchorWrapperY = container.scrollTop + localY - wrapperBaseY;
 
-    // Pre-render estimate (will be corrected after render using actual new base).
-    let targetScrollX = oldBaseX + anchorDocX * zoomRatio - localX;
-    let targetScrollY = oldBaseY + anchorDocY * zoomRatio - localY;
-    targetScrollX = Math.max(0, targetScrollX);
-    targetScrollY = Math.max(0, targetScrollY);
-
-    // Pin staging overlay to old wrapper document coordinates for stable dissolve placement.
-    zoomStageDocLeft = oldBaseX;
-    zoomStageDocTop = oldBaseY;
-
+    // --- Phase 1: Smooth CSS scale preview ---
+    // This transform gives instant visual feedback while new content renders.
     if (animatePreview) {
-      // Transform origin must be wrapper-local to avoid drift across overflow transitions.
-      const originX = anchorDocX;
-      const originY = anchorDocY;
-
       activeWrapper.classList.add("zoom-animating");
-      activeWrapper.style.transformOrigin = `${originX}px ${originY}px`;
+      activeWrapper.style.transformOrigin = `${anchorWrapperX}px ${anchorWrapperY}px`;
       activeWrapper.style.transform = `scale(${zoomRatio})`;
-      await new Promise((resolve) => setTimeout(resolve, 140));
+      await new Promise((resolve) => setTimeout(resolve, 150));
     }
 
     currentScale = newScale;
     updateZoomIndicator();
 
-    // Stop preview transform before rerender so subsequent geometry reads are stable.
-    activeWrapper.classList.remove("zoom-animating");
-    activeWrapper.style.transform = "";
-    activeWrapper.style.transformOrigin = "";
-
-    // Freeze the old layer in viewport while rerender + scroll correction happens.
-    const holdRect = activeWrapper.getBoundingClientRect();
-    activeWrapper.classList.add("zoom-hold-fixed");
-    activeWrapper.style.left = `${holdRect.left}px`;
-    activeWrapper.style.top = `${holdRect.top}px`;
-    activeWrapper.style.width = `${holdRect.width}px`;
-    activeWrapper.style.height = `${holdRect.height}px`;
-    activeWrapper.style.pointerEvents = "none";
-    
-    // Do not apply pre-render scroll while old layer is still visible.
-    // Pre-scroll causes a visible first jump before final correction.
-
-    zoomRenderStaging = true;
+    // --- Phase 2: Render new content into a DETACHED element ---
+    // The old wrapper (with CSS scale transform) stays visible in the DOM.
+    // The new wrapper is rendered completely off-DOM, so no layout interference.
+    zoomDeferInsert = true;
     try {
       await renderPage(currentPageNum);
     } finally {
-      zoomRenderStaging = false;
+      zoomDeferInsert = false;
     }
+    const newWrapper = canvasWrapper; // renderPage sets this to the new detached wrapper
 
-    // Ensure overflow/centering classes are up-to-date before measuring new base.
-    updateCenteringAndOverflow();
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    
-    // After render, fine-tune scroll position to actual content bounds for mobile precision
-    if (canvasWrapper && canvasWrapper !== activeWrapper) {
-      const newRect = canvasWrapper.getBoundingClientRect();
-      const newBaseX = container.scrollLeft + (newRect.left - rect.left);
-      const newBaseY = container.scrollTop + (newRect.top - rect.top);
-
-      // Recompute with the real post-render base to remove drift when crossing overflow.
-      targetScrollX = newBaseX + anchorDocX * zoomRatio - localX;
-      targetScrollY = newBaseY + anchorDocY * zoomRatio - localY;
-
-      const actualMaxScrollX = Math.max(0, canvasWrapper.scrollWidth - containerWidth);
-      const actualMaxScrollY = Math.max(0, canvasWrapper.scrollHeight - containerHeight);
-      const clampedScrollX = Math.min(Math.max(0, targetScrollX), actualMaxScrollX);
-      const clampedScrollY = Math.min(Math.max(0, targetScrollY), actualMaxScrollY);
-      
-      if (Math.abs(container.scrollLeft - clampedScrollX) > 1 || Math.abs(container.scrollTop - clampedScrollY) > 1) {
-        container.scrollLeft = clampedScrollX;
-        container.scrollTop = clampedScrollY;
-      }
-
-      // Final correction pass: remove residual anchor drift caused by pixel rounding
-      // and scrollbar quantization when crossing overflow thresholds.
-      const settledRect = canvasWrapper.getBoundingClientRect();
-      const settledBaseX = container.scrollLeft + (settledRect.left - rect.left);
-      const settledBaseY = container.scrollTop + (settledRect.top - rect.top);
-      const desiredDocX = anchorDocX * zoomRatio;
-      const desiredDocY = anchorDocY * zoomRatio;
-      const currentDocX = container.scrollLeft + localX - settledBaseX;
-      const currentDocY = container.scrollTop + localY - settledBaseY;
-      const errorX = desiredDocX - currentDocX;
-      const errorY = desiredDocY - currentDocY;
-
-      if (Math.abs(errorX) > 0.5 || Math.abs(errorY) > 0.5) {
-        const correctedScrollX = Math.min(Math.max(0, container.scrollLeft + errorX), actualMaxScrollX);
-        const correctedScrollY = Math.min(Math.max(0, container.scrollTop + errorY), actualMaxScrollY);
-        container.scrollLeft = correctedScrollX;
-        container.scrollTop = correctedScrollY;
-      }
-      
-      // Reveal staged canvas only after final position is correct, with smooth blend.
-      canvasWrapper.classList.remove("zoom-staging");
-      canvasWrapper.classList.add("zoom-fading-in-soft");
-      await new Promise((resolve) => setTimeout(resolve, 110));
-
-      if (activeWrapper?.isConnected && canvasWrapper?.isConnected && canvasWrapper !== activeWrapper) {
-        activeWrapper.replaceWith(canvasWrapper);
-      }
-
-      // Critical: after swapping overlay -> normal flow, wrapper base can shift.
-      // Run one more anchor correction in final layout coordinates.
+    if (newWrapper === activeWrapper || !newWrapper) {
+      // Stale request — clean up preview
+      activeWrapper.classList.remove("zoom-animating");
+      activeWrapper.style.transform = "";
+      activeWrapper.style.transformOrigin = "";
       updateCenteringAndOverflow();
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-      const flowRect = canvasWrapper.getBoundingClientRect();
-      const flowBaseX = container.scrollLeft + (flowRect.left - rect.left);
-      const flowBaseY = container.scrollTop + (flowRect.top - rect.top);
-      const flowDesiredX = anchorDocX * zoomRatio;
-      const flowDesiredY = anchorDocY * zoomRatio;
-      const flowCurrentX = container.scrollLeft + localX - flowBaseX;
-      const flowCurrentY = container.scrollTop + localY - flowBaseY;
-      const flowErrX = flowDesiredX - flowCurrentX;
-      const flowErrY = flowDesiredY - flowCurrentY;
-      const flowMaxX = Math.max(0, canvasWrapper.scrollWidth - containerWidth);
-      const flowMaxY = Math.max(0, canvasWrapper.scrollHeight - containerHeight);
-
-      if (Math.abs(flowErrX) > 0.25 || Math.abs(flowErrY) > 0.25) {
-        container.scrollLeft = Math.min(Math.max(0, container.scrollLeft + flowErrX), flowMaxX);
-        container.scrollTop = Math.min(Math.max(0, container.scrollTop + flowErrY), flowMaxY);
-      }
-
-      canvasWrapper.classList.remove("zoom-fading-in-soft", "zoom-staging-overlay");
-      canvasWrapper.style.left = "";
-      canvasWrapper.style.top = "";
-      canvasWrapper.style.width = "";
-      canvasWrapper.style.height = "";
-      canvasWrapper.style.pointerEvents = "";
+      return;
     }
 
+    // --- Phase 3: Atomic swap ---
+    // All DOM mutations below are synchronous. The browser will NOT paint until
+    // this synchronous block finishes, so the user sees a single-frame swap.
+
+    // Remove CSS preview classes/styles from old wrapper (it's about to be replaced).
     activeWrapper.classList.remove("zoom-animating");
-    activeWrapper.classList.remove("zoom-hold-fixed");
     activeWrapper.style.transform = "";
     activeWrapper.style.transformOrigin = "";
-    activeWrapper.style.left = "";
-    activeWrapper.style.top = "";
-    activeWrapper.style.width = "";
-    activeWrapper.style.height = "";
-    activeWrapper.style.pointerEvents = "";
 
-    canvasWrapper.classList.remove("zoom-animating");
-    canvasWrapper.style.transform = "";
-    canvasWrapper.style.transformOrigin = "";
+    // Swap: remove old, insert new.
+    activeWrapper.replaceWith(newWrapper);
 
-    // Defensive cleanup for staged overlay properties.
-    canvasWrapper.classList.remove("zoom-staging-overlay");
-    canvasWrapper.style.left = "";
-    canvasWrapper.style.top = "";
-    canvasWrapper.style.width = "";
-    canvasWrapper.style.height = "";
-    canvasWrapper.style.pointerEvents = "";
-    zoomStageDocLeft = null;
-    zoomStageDocTop = null;
+    // Update centering/overflow classes BEFORE measuring (affects layout).
+    updateCenteringAndOverflow();
+
+    // Force layout so we can measure the new wrapper's position.
+    const freshRect = container.getBoundingClientRect();
+    const newWrapperRect = newWrapper.getBoundingClientRect();
+    const newBaseX = container.scrollLeft + (newWrapperRect.left - freshRect.left);
+    const newBaseY = container.scrollTop + (newWrapperRect.top - freshRect.top);
+
+    // Compute target scroll to keep the anchor point stable.
+    const targetScrollX = newBaseX + anchorWrapperX * zoomRatio - localX;
+    const targetScrollY = newBaseY + anchorWrapperY * zoomRatio - localY;
+
+    const maxScrollX = Math.max(0, container.scrollWidth - containerWidth);
+    const maxScrollY = Math.max(0, container.scrollHeight - containerHeight);
+    container.scrollLeft = Math.min(Math.max(0, targetScrollX), maxScrollX);
+    container.scrollTop = Math.min(Math.max(0, targetScrollY), maxScrollY);
+
+    // All synchronous — browser paints this as one frame. Done.
     updateCenteringAndOverflow();
   }
+
 
   function onToggleViewMode() {
     if (!pdfDoc || pdfDoc.numPages <= 1) return;
@@ -1333,6 +1246,16 @@ document.addEventListener("DOMContentLoaded", () => {
     chordEditorToolbar.hidden = !chordEditorEnabled;
     chordSaveBtn.hidden = !chordEditorEnabled;
     document.body.classList.toggle("chord-editor-enabled", chordEditorEnabled);
+    if (chordEditorToolbar) {
+      chordEditorToolbar.classList.toggle("is-collapsed", chordEditorCollapsed);
+    }
+  }
+
+  function onToggleChordEditorCollapse(event) {
+    if (event) event.stopPropagation();
+    chordEditorCollapsed = !chordEditorCollapsed;
+    localStorage.setItem(CHORD_COLLAPSE_STORAGE_KEY, chordEditorCollapsed ? "1" : "0");
+    updateChordEditorUI();
   }
 
   // --- 8. Tambahan UI ---

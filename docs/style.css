@@ -216,74 +216,19 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 .canvas-wrapper {
   display: flex; justify-content: center; align-items: center;
   gap: 1rem;
-  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
   margin: 1rem;
 }
+
 .canvas-wrapper.vertical-scroll { flex-direction: column; align-items: center; }
 .canvas-wrapper.is-navigating {
   opacity: 0;
   transform: scale(0.98);
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
 }
 
 .canvas-wrapper.zoom-animating {
-  transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
-}
-
-.canvas-wrapper.zoom-fading-out {
-  animation: zoomFadeOut 0.05s ease-out forwards;
-}
-
-.canvas-wrapper.zoom-fading-in {
-  animation: zoomFadeIn 0.05s ease-in forwards;
-}
-
-.canvas-wrapper.zoom-staging {
-  opacity: 0;
-}
-
-.canvas-wrapper.zoom-staging-overlay {
-  position: absolute;
-  margin: 0;
-  z-index: 3;
-}
-
-.canvas-wrapper.zoom-hold-fixed {
-  position: fixed;
-  margin: 0;
-  z-index: 4;
-}
-
-.canvas-wrapper.zoom-fading-in-soft {
-  animation: zoomStageIn 0.12s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  opacity: 1;
-}
-
-@keyframes zoomFadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0.98;
-  }
-}
-
-@keyframes zoomFadeIn {
-  from {
-    opacity: 0.98;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes zoomStageIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 
@@ -391,18 +336,38 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 
 .chord-editor-toolbar {
   position: absolute;
-  right: 1rem;
-  bottom: 1rem;
+  left: 1rem;
+  top: calc(var(--pdf-viewer-header-height) + 1rem);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
   background: color-mix(in srgb, var(--md-sys-color-surface) 92%, transparent);
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 999px;
   box-shadow: var(--shadow-2);
   backdrop-filter: blur(4px);
-  padding: 0.3rem 0.4rem 0.3rem 0.9rem;
-  z-index: 20;
+  padding: 0.25rem;
+  z-index: 250;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chord-editor-toolbar.is-collapsed {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 15%, var(--md-sys-color-surface));
+}
+
+.chord-editor-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  max-width: 300px;
+  opacity: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chord-editor-toolbar.is-collapsed .chord-editor-controls {
+  max-width: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 body:not(.chord-editor-enabled) .chord-editor-toolbar {
@@ -413,7 +378,19 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--md-sys-color-primary);
+  white-space: nowrap;
+  margin-left: 0.5rem;
 }
+
+#chord-editor-toggle-btn {
+  width: 40px;
+  height: 40px;
+}
+
+.chord-editor-toolbar.is-collapsed #chord-editor-toggle-btn {
+  color: var(--md-sys-color-primary);
+}
+
 
 /* Tata Letak Kontrol Berdasarkan Orientasi */
 @media (orientation: portrait) {

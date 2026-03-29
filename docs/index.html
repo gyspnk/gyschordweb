@@ -110,20 +110,27 @@
         </div>
       </header>
       
-      <div class="pdf-viewer-content">
-        <div class="canvas-wrapper"></div>
-        <div class="loader"></div>
-        <div id="orientation-warning" class="orientation-warning">
-            <span class="material-symbols-outlined">screen_rotation</span>
-            <p>Putar layar ke mode lanskap untuk tampilan dua halaman yang optimal.</p>
-        </div>
-        <div id="chord-editor-toolbar" class="chord-editor-toolbar" hidden>
+      <div id="chord-editor-toolbar" class="chord-editor-toolbar" hidden>
+        <button id="chord-editor-toggle-btn" class="icon-button" type="button" aria-label="Tampilkan/sembunyikan kontrol editor">
+          <span class="material-symbols-outlined">edit_note</span>
+        </button>
+        <div id="chord-editor-controls" class="chord-editor-controls">
           <div class="chord-editor-label">Chord Editor 42x60</div>
           <button id="chord-save-btn" class="icon-button" type="button" aria-label="Simpan konfigurasi chord">
             <span class="material-symbols-outlined">download</span>
           </button>
         </div>
       </div>
+
+      <div class="pdf-viewer-content">
+        <div class="canvas-wrapper"></div>
+        <div class="loader"></div>
+        <div id="orientation-warning" class="orientation-warning">
+            <span class="material-symbols-outlined" >screen_rotation</span>
+            <p>Putar layar ke mode lanskap untuk tampilan dua halaman yang optimal.</p>
+        </div>
+      </div>
+
 
       <footer class="pdf-viewer-footer">
         <div class="transpose-collapse" id="transpose-collapse">
