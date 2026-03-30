@@ -55,6 +55,7 @@ const transposeCollapses = Array.from(document.querySelectorAll(".transpose-coll
 const transposeToggleBtns = Array.from(document.querySelectorAll(".transpose-toggle-btn"));
 const transposeDownBtns = Array.from(document.querySelectorAll(".transpose-down-btn"));
 const transposeUpBtns = Array.from(document.querySelectorAll(".transpose-up-btn"));
+const transposeResetBtns = Array.from(document.querySelectorAll(".transpose-reset-btn"));
 const transposeIndicators = Array.from(document.querySelectorAll(".transpose-indicator"));
 const accidentalSwitchBtns = Array.from(document.querySelectorAll(".transpose-accidental-btn"));
 const hideChordBtns = Array.from(document.querySelectorAll(".hide-chord-btn"));

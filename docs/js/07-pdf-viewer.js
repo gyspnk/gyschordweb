@@ -36,6 +36,23 @@ async function openPdfViewer(songId) {
     const loadingTask = pdfjsLib.getDocument(options);
     pdfDoc = await loadingTask.promise;
     
+    // Extract PDF Key
+    try {
+      const page1 = await pdfDoc.getPage(1);
+      const textContent = await page1.getTextContent();
+      const pdfText = textContent.items.map(item => item.str).join(' ');
+      
+      const keyMatch = pdfText.match(/(?:(?:do|la)\s*={1,2}\s*|[23469]\s*[\/|]\s*[248]\s+)([A-G](?:es|is|s|#|b)?(?:m)?)\b/i);
+      if (keyMatch) {
+        originalPdfKey = keyMatch[1];
+      } else {
+        originalPdfKey = null;
+      }
+    } catch (err) {
+      console.warn("Gagal mengekstrak teks PDF untuk mendeteksi nada dasar:", err);
+      originalPdfKey = null;
+    }
+
     [pageCountElPortrait, pageCountElLandscape].forEach((el) => {
       el.textContent = pdfDoc.numPages;
     });

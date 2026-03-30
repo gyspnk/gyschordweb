@@ -33,7 +33,9 @@ function setupEventListeners() {
   }
   transposeDownBtns.forEach((btn) => btn.addEventListener("click", () => onTranspose(-1)));
   transposeUpBtns.forEach((btn) => btn.addEventListener("click", () => onTranspose(1)));
+  transposeResetBtns.forEach((btn) => btn.addEventListener("click", resetTranspose));
   accidentalSwitchBtns.forEach((btn) => btn.addEventListener("click", onToggleAccidentalMode));
+  document.querySelectorAll('.family-chord-btn').forEach(btn => btn.addEventListener("click", onToggleFamilyChordDropdown));
   if (transposeToggleBtns.length) {
     transposeToggleBtns.forEach(btn => btn.addEventListener("click", onToggleTransposeCollapse));
   }

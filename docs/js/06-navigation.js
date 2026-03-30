@@ -131,6 +131,19 @@ function renderSettings() {
   mainContent.innerHTML = `
     <div class="settings-panel">
       <div class="settings-section">
+        <h2 class="settings-section-title"><span class="material-symbols-outlined">settings</span> Umum</h2>
+        <div class="settings-card">
+          <div class="setting-item">
+            ${renderSettingLabel("music_off", "Hindari Chord Awal ♯ / ♭")}
+            <label class="md-switch">
+              <input type="checkbox" id="prefer-natural-chords-toggle" ${prefs.preferNaturalChords ? "checked" : ""}>
+              <span class="md-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
         <h2 class="settings-section-title"><span class="material-symbols-outlined">info</span> Info</h2>
         <div class="settings-card help-banner-card" id="about-project-btn" role="button" aria-label="Buka halaman tentang project" tabindex="0">
           <div class="help-banner-content">

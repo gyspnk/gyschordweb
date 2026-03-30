@@ -51,7 +51,22 @@ function isCollapsibleLayout() {
   return window.matchMedia("(max-width: 640px) and (orientation: portrait), (max-width: 1366px) and (orientation: landscape)").matches;
 }
 
+function onToggleFamilyChordDropdown(event) {
+  event.stopPropagation();
+  const dropdown = event.currentTarget.nextElementSibling;
+  const wasOpen = dropdown.classList.contains('is-open');
+  
+  document.querySelectorAll('.family-chord-dropdown').forEach(dd => dd.classList.remove('is-open'));
+  
+  if (!wasOpen) {
+    dropdown.classList.add('is-open');
+  }
+}
+
 function onGlobalDocumentClick(event) {
+  if (!event.target.closest(".family-chord-container")) {
+    document.querySelectorAll('.family-chord-dropdown').forEach(dd => dd.classList.remove('is-open'));
+  }
   if (event.target.closest(".transpose-collapse")) return;
   closeTransposeCollapse();
 }

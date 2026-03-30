@@ -39,18 +39,220 @@ function sanitizeChordConfig(rawConfig) {
 
 async function loadChordConfigurationForSong(song) {
   chordConfig = createDefaultChordConfig();
+  originalFamilyChord = null;
   const txtUrl = getChordTxtUrl(song);
 
   try {
     const response = await fetch(txtUrl, { cache: "no-store" });
-    if (!response.ok) return;
+    if (!response.ok) {
+      updateTransposeVisibility();
+      return;
+    }
 
     const payload = await response.text();
     const parsed = JSON.parse(payload);
     chordConfig = sanitizeChordConfig(parsed);
+    detectAndSetFamilyChord();
   } catch {
     chordConfig = createDefaultChordConfig();
+    originalFamilyChord = null;
   }
+  updateTransposeVisibility();
+}
+
+function detectAndSetFamilyChord() {
+  if (!chordConfig || !chordConfig.pages) return;
+  let allChords = [];
+  const pageKeys = Object.keys(chordConfig.pages).sort((a, b) => parseInt(a) - parseInt(b));
+  
+  pageKeys.forEach(key => {
+    const entries = chordConfig.pages[key] || [];
+    // Sort by row, then col
+    const sorted = [...entries].sort((a, b) => a.row === b.row ? a.col - b.col : a.row - b.row);
+    sorted.forEach(entry => {
+      if (entry.text && entry.text.trim()) {
+        allChords.push(entry.text.trim());
+      }
+    });
+  });
+
+  if (allChords.length === 0) return;
+
+  const getRoot = (chordText) => {
+    // Matches root note (A-G or 1-7), optional accidental, and optional 'm' or 'min' for minor (excluding 'maj')
+    const match = chordText.match(/^([A-Ga-g1-7])([#♯b♭]?)(min|m(?!aj))?/);
+    if (!match) return null;
+    let r = match[1].toUpperCase();
+    let acc = match[2];
+    let isMinor = !!match[3];
+    if (acc === '♭') acc = 'b';
+    if (acc === '♯') acc = '#';
+    // Translate number to note if needed
+    if (/[1-7]/.test(r)) {
+      r = NUMBER_TO_NOTE[r] || 'C';
+    }
+    return r + acc + (isMinor ? 'm' : '');
+  };
+
+  const roots = allChords.map(getRoot).filter(Boolean);
+  if (roots.length === 0) return;
+
+  const firstRoot = roots[0];
+  const lastRoot = roots[roots.length - 1];
+
+  let detectedRoot = firstRoot;
+  if (firstRoot === lastRoot) {
+    detectedRoot = firstRoot;
+  } else {
+    // Frequencies fallback
+    const counts = {};
+    let max = 0;
+    let mostFreq = firstRoot;
+    roots.forEach(r => {
+      counts[r] = (counts[r] || 0) + 1;
+      if (counts[r] > max) {
+        max = counts[r];
+        mostFreq = r;
+      }
+    });
+    // Bias towards last root if it appears reasonably often
+    if (counts[lastRoot] > 1) {
+      detectedRoot = lastRoot;
+    } else {
+      detectedRoot = mostFreq;
+    }
+  }
+
+  originalFamilyChord = detectedRoot;
+  baseTransposeOffset = 0;
+
+  if (originalPdfKey && originalFamilyChord) {
+    const pdfSemi = parsePdfKeyToSemitone(originalPdfKey);
+    const txtParsed = parseChordToken(originalFamilyChord);
+    if (pdfSemi !== null && txtParsed !== null) {
+      let diff = pdfSemi - txtParsed.semitone;
+      diff = diff % 12;
+      if (diff > 6) diff -= 12;
+      if (diff < -5) diff += 12;
+      baseTransposeOffset = diff;
+    }
+  }
+
+  if (prefs.preferNaturalChords && originalFamilyChord) {
+    const txtParsed = parseChordToken(originalFamilyChord);
+    if (txtParsed !== null) {
+      const finalBaseSemi = wrapSemitone(txtParsed.semitone + baseTransposeOffset);
+      const isBlackKey = [1, 3, 6, 8, 10].includes(finalBaseSemi);
+      if (isBlackKey) {
+        transposeStep = -1;
+      }
+    }
+  }
+}
+
+function parsePdfKeyToSemitone(keyStr) {
+  if (!keyStr) return null;
+  let k = keyStr.toLowerCase().replace(/m$/, '');
+  const map = {
+    'c': 0, 'cis': 1, 'des': 1,
+    'd': 2, 'dis': 3, 'es': 3, 'eb': 3,
+    'e': 4,
+    'f': 5, 'fis': 6, 'ges': 6,
+    'g': 7, 'gis': 8, 'as': 8, 'ab': 8,
+    'a': 9, 'ais': 10, 'bes': 10, 'bb': 10,
+    'b': 11, 'h': 11
+  };
+  
+  if (map[k] !== undefined) return map[k];
+  
+  if (k.includes('#')) {
+      const base = {'c':0,'d':2,'f':5,'g':7,'a':9}[k.charAt(0)];
+      if (base !== undefined) return wrapSemitone(base + 1);
+  }
+  if (k.includes('b')) {
+      const base = {'c':0,'d':2,'e':4,'g':7,'a':9,'b':11}[k.charAt(0)];
+      if (base !== undefined) return wrapSemitone(base - 1);
+  }
+  return null;
+}
+
+function updateTransposeVisibility() {
+  const hasChords = originalFamilyChord !== null || Object.values(chordConfig.pages).some(page => page && page.length > 0);
+  const showTranspose = hasChords || chordEditorEnabled;
+  
+  document.querySelectorAll('.transpose-collapse').forEach(el => {
+    el.style.display = showTranspose ? '' : 'none';
+  });
+  if (typeof hideChordBtns !== "undefined") {
+    hideChordBtns.forEach(btn => {
+      btn.style.display = showTranspose ? '' : 'none';
+    });
+  }
+
+  updateTransposeUI();
+}
+
+function updateFamilyChordUI() {
+  const btns = document.querySelectorAll('.family-chord-btn');
+  const dds = document.querySelectorAll('.family-chord-dropdown');
+  const isMinor = originalFamilyChord && originalFamilyChord.endsWith('m');
+  const baseLabel = originalFamilyChord ? formatChordForDisplay(originalFamilyChord) : '?';
+  
+  // Format the label, extracting root, accidentals and adding 'm' if minor
+  const label = baseLabel !== '?' ? (baseLabel.replace(/[^A-G#b♭♯]/g, '') + (isMinor ? 'm' : '')) : '?';
+  
+  btns.forEach(btn => {
+    btn.textContent = label;
+    // Highlight if selected chord is changed by transpose (we compute the current base chord)
+    if (originalFamilyChord) {
+       const parsed = parseChordToken(originalFamilyChord);
+       if (parsed) {
+         const currentSemi = wrapSemitone(parsed.semitone + transposeStep + baseTransposeOffset);
+         const noteSet = accidentalMode === "flat" ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP;
+         btn.textContent = noteSet[currentSemi] + (isMinor ? 'm' : '');
+       }
+    }
+  });
+
+  const allNotes = accidentalMode === "flat" ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP;
+  dds.forEach(dd => {
+    dd.innerHTML = '';
+    allNotes.forEach((note, index) => {
+      if (note === '') return; // Skip empty indices if any, but array is 12 notes
+      const optNote = note + (isMinor ? 'm' : '');
+      const opt = document.createElement('button');
+      opt.className = 'family-chord-option';
+      opt.textContent = optNote;
+      if (btnText(btns[0]) === optNote) {
+         opt.classList.add('selected');
+      }
+      opt.onclick = () => {
+         if (!originalFamilyChord) return;
+         const parsedObj = parseChordToken(originalFamilyChord);
+         if (!parsedObj) return;
+         const origSemi = parsedObj.semitone;
+         let targetSemi = index;
+         
+         // Calculate transpose step relative to base offset
+         let diff = targetSemi - origSemi - baseTransposeOffset;
+         
+         diff = diff % 12;
+         if (diff > 6) diff -= 12;
+         if (diff < -5) diff += 12;
+         
+         transposeStep = diff;
+         updateTransposeUI();
+         refreshVisibleChordMarkers();
+         
+         dd.classList.remove('is-open');
+      };
+      dd.appendChild(opt);
+    });
+  });
+}
+
+function btnText(btn) {
+  return btn ? btn.textContent : '';
 }
 
 function getChordTxtUrl(song) {
@@ -216,6 +418,9 @@ function encodeChordToken(input) {
   if (accidental === "#") semitone += 1;
   if (accidental === "b") semitone -= 1;
 
+  // REVERSE the offset so that saving to file keeps it relative to original file base instead of matching PDF visual
+  semitone = semitone - transposeStep - baseTransposeOffset;
+
   const normalizedRoot = NOTE_NAMES_SHARP[wrapSemitone(semitone)];
   return `${normalizedRoot}${suffix}`;
 }
@@ -226,7 +431,7 @@ function formatChordForDisplay(encodedToken) {
   if (!parsed) return token;
 
   const noteSet = accidentalMode === "flat" ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP;
-  const transposed = wrapSemitone(parsed.semitone + transposeStep);
+  const transposed = wrapSemitone(parsed.semitone + transposeStep + baseTransposeOffset);
   
   // Replace 'b' with '♭' and '#' with '♯' in suffix for common chord extensions and slash chords
   let displaySuffix = parsed.suffix;
@@ -289,12 +494,24 @@ function onTranspose(step) {
   refreshVisibleChordMarkers();
 }
 
+function resetTranspose() {
+  if (transposeStep !== 0) {
+    transposeStep = 0;
+    updateTransposeUI();
+    refreshVisibleChordMarkers();
+  }
+}
+
 function updateTransposeUI(options = {}) {
   const { animateAccidental = false } = options;
   const sign = transposeStep > 0 ? "+" : "";
   transposeIndicators.forEach((indicator) => {
     indicator.textContent = `Transpose ${sign}${transposeStep}`;
   });
+
+  if (typeof updateFamilyChordUI === 'function') {
+    updateFamilyChordUI();
+  }
 
   accidentalSwitchBtns.forEach((btn) => {
     btn.classList.toggle("active", accidentalMode === "flat");
@@ -435,6 +652,7 @@ function updateChordEditorUI() {
   if (chordEditorToolbar) {
     chordEditorToolbar.classList.toggle("is-collapsed", chordEditorCollapsed);
   }
+  updateTransposeVisibility();
 }
 
 function onToggleChordEditorCollapse(event) {

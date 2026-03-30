@@ -11,7 +11,8 @@ let currentScrollMode = "horizontal";
 
 let prefs = {
   defaultTwoPage: false,
-  defaultVerticalScroll: false
+  defaultVerticalScroll: false,
+  preferNaturalChords: true
 };
 
 let chordUiPrefs = {
@@ -30,6 +31,9 @@ let toastTimeout = null;
 
 let chordEditorEnabled = false;
 let chordConfig = null;
+let originalFamilyChord = null;
+let originalPdfKey = null;
+let baseTransposeOffset = 0;
 let titleTapCount = 0;
 let titleTapTimer = null;
 let transposeStep = 0;

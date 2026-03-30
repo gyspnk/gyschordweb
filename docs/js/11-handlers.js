@@ -130,6 +130,9 @@ function handleSettingsChange(e) {
       document.getElementById("default-two-page-toggle").checked = false;
     }
     localStorage.setItem("prefs", JSON.stringify(prefs));
+  } else if (targetId === "prefer-natural-chords-toggle") {
+    prefs.preferNaturalChords = e.target.checked;
+    localStorage.setItem("prefs", JSON.stringify(prefs));
   } else if (targetId === "chord-fill-select") {
     chordUiPrefs.fill = e.target.value;
     persistChordUiPrefs();
