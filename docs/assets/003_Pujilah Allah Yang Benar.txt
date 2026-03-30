@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "grid": {
+    "cols": 105,
+    "rows": 149
+  },
+  "pages": {
+    "1": [
+      {
+        "row": 22,
+        "col": 26,
+        "text": "E"
+      },
+      {
+        "row": 22,
+        "col": 49,
+        "text": "C♯m"
+      },
+      {
+        "row": 22,
+        "col": 72,
+        "text": "G♯m"
+      },
+      {
+        "row": 22,
+        "col": 89,
+        "text": "B"
+      },
+      {
+        "row": 55,
+        "col": 26,
+        "text": "E"
+      },
+      {
+        "row": 55,
+        "col": 49,
+        "text": "C♯m"
+      },
+      {
+        "row": 55,
+        "col": 65,
+        "text": "B"
+      },
+      {
+        "row": 55,
+        "col": 82,
+        "text": "E"
+      }
+    ]
+  }
+}

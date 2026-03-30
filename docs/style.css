@@ -246,6 +246,9 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   will-change: transform;
 }
 
+.canvas-wrapper.wheel-preview {
+  will-change: transform;
+}
 
 .canvas-wrapper.pinch-preview {
   transition: none !important;
@@ -363,12 +366,12 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 }
 
 .chord-marker.chord-fill-soft {
-  background-color: color-mix(in srgb, var(--chord-fill-color, #b9d8ff) 32%, #ffffff);
+  background-color: color-mix(in srgb, color-mix(in srgb, var(--chord-fill-color, #b9d8ff) 32%, #ffffff) var(--chord-fill-opacity, 70%), transparent);
   border-radius: 6px;
 }
 
 .chord-marker.chord-fill-solid {
-  background-color: color-mix(in srgb, var(--chord-fill-color, #b9d8ff) 65%, #ffffff);
+  background-color: color-mix(in srgb, color-mix(in srgb, var(--chord-fill-color, #b9d8ff) 65%, #ffffff) var(--chord-fill-opacity, 70%), transparent);
   border-radius: 6px;
 }
 

@@ -225,6 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fillColor: "blue",
     baseFontRem: 0.72,
     fontOverridePercent: 100,
+    fillOpacityPercent: 70,
     syncThemeWithAccent: false,
     syncFillWithAccent: false
   };
@@ -242,6 +243,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let swipeStartPoint = null;
   let lastSwipeHandledAt = 0;
   let pinchState = null;
+  let wheelState = null;
+  let wheelRenderTimeout = null;
+  let isFinalizingWheelZoom = false;
   let renderRequestId = 0;
   let zoomInProgress = false;
   let zoomDeferInsert = false;
@@ -550,6 +554,22 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
             <div class="setting-divider"></div>
             <div class="setting-item setting-item-slider">
+              <span id="chord-opacity-label" class="setting-label">
+                <span class="material-symbols-outlined">opacity</span>
+                <span>Opacity Latar Chord (${chordUiPrefs.fillOpacityPercent}%)</span>
+              </span>
+              <input
+                id="chord-fill-opacity"
+                class="setting-range"
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value="${chordUiPrefs.fillOpacityPercent}"
+              >
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item setting-item-slider">
               <span id="chord-font-override-label" class="setting-label">
                 <span class="material-symbols-outlined">format_size</span>
                 <span>Ukuran Font Chord (${chordUiPrefs.fontOverridePercent}%)</span>
@@ -837,10 +857,11 @@ document.addEventListener("DOMContentLoaded", () => {
         // The caller (applyScaleAndRerender) will handle insertion.
       } else {
         oldWrapper.replaceWith(nextWrapper);
+        canvasWrapper = nextWrapper;
       }
 
-      canvasWrapper = nextWrapper;
-      canvasWrapper.addEventListener("click", onChordLayerClick);
+      nextWrapper.addEventListener("click", onChordLayerClick);
+      return nextWrapper;
     } catch (error) {
       console.error("Gagal merender halaman:", error);
     } finally {
@@ -974,12 +995,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // The old wrapper (with CSS scale transform) stays visible in the DOM.
     // The new wrapper is rendered completely off-DOM, so no layout interference.
     zoomDeferInsert = true;
+    let newWrapper;
     try {
-      await renderPage(currentPageNum);
+      newWrapper = await renderPage(currentPageNum);
     } finally {
       zoomDeferInsert = false;
     }
-    const newWrapper = canvasWrapper; // renderPage sets this to the new detached wrapper
 
     if (newWrapper === activeWrapper || !newWrapper) {
       // Stale request — clean up preview
@@ -1005,6 +1026,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Swap: remove old, insert new.
     activeWrapper.replaceWith(newWrapper);
+    canvasWrapper = newWrapper; // Update global reference
 
     // Update centering/overflow classes BEFORE measuring (affects layout).
     updateCenteringAndOverflow();
@@ -1283,6 +1305,7 @@ document.addEventListener("DOMContentLoaded", () => {
     marker.dataset.raw = entry.text;
     marker.textContent = formatChordForDisplay(entry.text);
     marker.style.setProperty("--chord-font-size", `${getChordFontSizeRem()}rem`);
+    marker.style.setProperty("--chord-fill-opacity", `${chordUiPrefs.fillOpacityPercent}%`);
 
     const xPercent = ((entry.col - 0.5) / chordConfig.grid.cols) * 100;
     const yPercent = ((entry.row - 0.5) / chordConfig.grid.rows) * 100;
@@ -1815,9 +1838,230 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!event.ctrlKey) return;
 
     event.preventDefault();
-    if (document.body.classList.contains("viewer-active")) {
-      onZoom(event.deltaY < 0 ? "in" : "out");
+    if (!document.body.classList.contains("viewer-active")) return;
+    
+    // Smooth continuous scroll zoom instead of fixed steps
+    handleContinuousWheelZoom(event);
+  }
+
+  function handleContinuousWheelZoom(event) {
+    if (wheelRenderTimeout) {
+      clearTimeout(wheelRenderTimeout);
+      wheelRenderTimeout = null;
     }
+
+    if (!wheelState) {
+      const baseScale = typeof currentScale === "number" ? currentScale : initialScale;
+      const rect = pdfViewerContent.getBoundingClientRect();
+      const activeRect = canvasWrapper.getBoundingClientRect();
+      
+      const centerX = event.clientX;
+      const centerY = event.clientY;
+
+      const anchorInWrapperX = (centerX - activeRect.left);
+      const anchorInWrapperY = (centerY - activeRect.top);
+
+      wheelState = {
+        baseScale,
+        previewScale: baseScale,
+        centerClientX: centerX,
+        centerClientY: centerY,
+        anchorInWrapperX,
+        anchorInWrapperY,
+        initScrollLeft: pdfViewerContent.scrollLeft,
+        initScrollTop: pdfViewerContent.scrollTop,
+        anchorViewportX: centerX - rect.left,
+        anchorViewportY: centerY - rect.top,
+      };
+      
+      // We use wheel-preview styling machinery for smooth un-rendered CSS scaling
+      canvasWrapper.classList.add("wheel-preview");
+    }
+
+    // Normalize delta across browsers
+    let deltaYPixels = event.deltaY;
+    if (event.deltaMode === 1) deltaYPixels *= 33; // DOM_DELTA_LINE
+    else if (event.deltaMode === 2) deltaYPixels *= 100; // DOM_DELTA_PAGE
+
+    // Batasi kecepatan scroll yang berlebihan untuk mencegah glitch (clamp deltaY)
+    const maxDelta = 120; 
+    deltaYPixels = Math.max(-maxDelta, Math.min(maxDelta, deltaYPixels));
+
+    // Accumulate wheel delta (lower multiplier for smoother zooming)
+    const zoomFactorMultiplier = Math.exp(-deltaYPixels * 0.0015);
+    
+    // Add CSS transition only for jerky mouse wheels, keep instant for trackpads.
+    // Transition duration is lowered to 0.08s to reduce the bouncy elastic rubber-banding
+    // effect when spamming zoom-in and zoom-out rapidly.
+    if (Math.abs(deltaYPixels) >= 40) {
+      canvasWrapper.style.transition = 'transform 0.08s ease-out';
+    } else {
+      canvasWrapper.style.transition = 'none';
+    }
+
+    const minScale = initialScale;
+    const maxScale = initialScale * 8;
+    const nextScale = Math.min(maxScale, Math.max(minScale, wheelState.previewScale * zoomFactorMultiplier));
+    
+    wheelState.previewScale = nextScale;
+    wheelState.centerClientX = event.clientX;
+    wheelState.centerClientY = event.clientY;
+
+    const ratio = nextScale / wheelState.baseScale;
+
+    canvasWrapper.style.transformOrigin = `${wheelState.anchorInWrapperX}px ${wheelState.anchorInWrapperY}px`;
+    canvasWrapper.style.transform = `scale(${ratio})`;
+
+    const rect = pdfViewerContent.getBoundingClientRect();
+    const currentMouseViewportX = event.clientX - rect.left;
+    const currentMouseViewportY = event.clientY - rect.top;
+
+    const anchorContentX = wheelState.initScrollLeft + wheelState.anchorViewportX;
+    const anchorContentY = wheelState.initScrollTop + wheelState.anchorViewportY;
+
+    // Selama zoom preview berlangsung, kita menonaktifkan update scroll untuk menghasilkan animasi CSS transisi yang sangat mulus,
+    // karena `transform-origin` secara native sudah mengunci titik anchor. (Mencegah patah-patah antara scroll instant vs scale transisi)
+
+    // Update real indicator values directly
+    const tempPercent = Math.round((nextScale / initialScale) * 100);
+    [zoomLevelIndicatorPortrait, zoomLevelIndicatorLandscape].forEach((el) => {
+      if (el) el.textContent = `${tempPercent}%`;
+    });
+
+    wheelRenderTimeout = setTimeout(() => {
+      wheelRenderTimeout = null;
+      finalizeWheelZoom();
+    }, 150);
+  }
+
+  async function finalizeWheelZoom() {
+    if (!wheelState) return;
+    if (isFinalizingWheelZoom) return;
+
+    isFinalizingWheelZoom = true;
+
+    const finalScale = wheelState.previewScale;
+    const oldScale = wheelState.baseScale;
+    const savedWheelState = { ...wheelState };
+
+    if (!Number.isFinite(finalScale) || !Number.isFinite(oldScale)) {
+      canvasWrapper.style.transform = "";
+      canvasWrapper.style.transformOrigin = "";
+      canvasWrapper.classList.remove("wheel-preview");
+      wheelState = null;
+      isFinalizingWheelZoom = false;
+      return;
+    }
+
+    if (Math.abs(finalScale - oldScale) < 0.001) {
+      currentScale = oldScale;
+      canvasWrapper.style.transform = "";
+      canvasWrapper.style.transformOrigin = "";
+      canvasWrapper.classList.remove("wheel-preview");
+      updateZoomIndicator();
+      wheelState = null;
+      isFinalizingWheelZoom = false;
+      return;
+    }
+
+    const activeWrapper = canvasWrapper;
+    currentScale = finalScale;
+    updateZoomIndicator();
+
+    zoomDeferInsert = true;
+    let newWrapper;
+    try {
+      newWrapper = await renderPage(currentPageNum);
+    } finally {
+      zoomDeferInsert = false;
+    }
+
+    // Check if the user kept scrolling while we were rendering!
+    // If they scrolled during the render, either wheelRenderTimeout is active, 
+    // or the finalScale has fundamentally drifted away from the rendered scale.
+    if (wheelRenderTimeout || wheelState.previewScale !== finalScale) {
+      isFinalizingWheelZoom = false;
+      
+      // If the timeout already expired but we blocked it using isFinalizingWheelZoom,
+      // we need to re-trigger the finalize pipeline immediately to render the actual finalScale.
+      if (!wheelRenderTimeout) {
+        wheelRenderTimeout = setTimeout(() => {
+          wheelRenderTimeout = null;
+          finalizeWheelZoom();
+        }, 50);
+      }
+      return;
+    }
+
+    // Now safely swap, as continuous scrolling has paused.
+    wheelState = null;
+    activeWrapper.style.transition = "";
+
+    if (newWrapper === activeWrapper || !newWrapper) {
+      activeWrapper.classList.remove("wheel-preview");
+      activeWrapper.style.transform = "";
+      activeWrapper.style.transformOrigin = "";
+      updateCenteringAndOverflow();
+      isFinalizingWheelZoom = false;
+      return;
+    }
+
+    const oldVisualRect = activeWrapper.getBoundingClientRect();
+
+    activeWrapper.classList.remove("wheel-preview");
+    activeWrapper.style.transform = "";
+    activeWrapper.style.transformOrigin = "";
+    activeWrapper.replaceWith(newWrapper);
+    canvasWrapper = newWrapper; // Update global reference
+
+    updateCenteringAndOverflow();
+
+    const containerRect = pdfViewerContent.getBoundingClientRect();
+    const newWrapperRect = newWrapper.getBoundingClientRect();
+    const ratio = finalScale / oldScale;
+
+    const newWrapperDocX = pdfViewerContent.scrollLeft + (newWrapperRect.left - containerRect.left);
+    const newWrapperDocY = pdfViewerContent.scrollTop + (newWrapperRect.top - containerRect.top);
+
+    const newAnchorInWrapperX = savedWheelState.anchorInWrapperX * ratio;
+    const newAnchorInWrapperY = savedWheelState.anchorInWrapperY * ratio;
+
+    const targetViewportX = savedWheelState.centerClientX - containerRect.left;
+    const targetViewportY = savedWheelState.centerClientY - containerRect.top;
+
+    const targetScrollX = newWrapperDocX + newAnchorInWrapperX - targetViewportX;
+    const targetScrollY = newWrapperDocY + newAnchorInWrapperY - targetViewportY;
+
+    const maxScrollX = Math.max(0, pdfViewerContent.scrollWidth - pdfViewerContent.clientWidth);
+    const maxScrollY = Math.max(0, pdfViewerContent.scrollHeight - pdfViewerContent.clientHeight);
+    pdfViewerContent.scrollLeft = Math.min(Math.max(0, targetScrollX), maxScrollX);
+    pdfViewerContent.scrollTop = Math.min(Math.max(0, targetScrollY), maxScrollY);
+
+    const newRect = newWrapper.getBoundingClientRect();
+    const tx = oldVisualRect.left - newRect.left;
+    const ty = oldVisualRect.top - newRect.top;
+    const scaleX = oldVisualRect.width / (newRect.width || 1);
+    const scaleY = oldVisualRect.height / (newRect.height || 1);
+
+    if (Math.abs(tx) > 1 || Math.abs(ty) > 1 || Math.abs(scaleX - 1) > 0.01) {
+      newWrapper.style.transition = "none";
+      newWrapper.style.transformOrigin = "0 0";
+      newWrapper.style.transform = `translate(${tx}px, ${ty}px) scale(${scaleX}, ${scaleY})`;
+
+      newWrapper.getBoundingClientRect();
+
+      newWrapper.style.transition = `transform ${ZOOM_SCROLL_SMOOTH_DURATION_MS}ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
+      newWrapper.style.transform = `translate(0px, 0px) scale(1)`;
+
+      setTimeout(() => {
+        newWrapper.style.transition = "";
+        newWrapper.style.transform = "";
+        newWrapper.style.transformOrigin = "";
+      }, ZOOM_SCROLL_SMOOTH_DURATION_MS);
+    }
+
+    updateCenteringAndOverflow();
+    isFinalizingWheelZoom = false;
   }
 
   function handleGlobalKeydown(event) {
@@ -2384,6 +2628,11 @@ document.addEventListener("DOMContentLoaded", () => {
       persistChordUiPrefs();
       rerenderViewerIfActive();
       updateChordSettingsLabels();
+    } else if (targetId === "chord-fill-opacity") {
+      chordUiPrefs.fillOpacityPercent = Number.parseInt(e.target.value, 10);
+      persistChordUiPrefs();
+      rerenderViewerIfActive();
+      updateChordSettingsLabels();
     }
   }
 
@@ -2402,6 +2651,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const labelText = overrideLabel.querySelector("span:last-child");
       if (labelText) {
         labelText.textContent = `Ukuran Font Chord (${chordUiPrefs.fontOverridePercent}%)`;
+      }
+    }
+    const opacityLabel = document.getElementById("chord-opacity-label");
+    if (opacityLabel) {
+      const opacityText = opacityLabel.querySelector("span:last-child");
+      if (opacityText) {
+        opacityText.textContent = `Opacity Latar Chord (${chordUiPrefs.fillOpacityPercent}%)`;
       }
     }
   }
@@ -2465,6 +2721,9 @@ document.addEventListener("DOMContentLoaded", () => {
           fontOverridePercent: Number.isFinite(Number(parsed.fontOverridePercent))
             ? Number(parsed.fontOverridePercent)
             : chordUiPrefs.fontOverridePercent,
+          fillOpacityPercent: Number.isFinite(Number(parsed.fillOpacityPercent))
+            ? Number(parsed.fillOpacityPercent)
+            : chordUiPrefs.fillOpacityPercent,
           syncThemeWithAccent: parsed.syncThemeWithAccent === true,
           syncFillWithAccent: parsed.syncFillWithAccent === true
         };
