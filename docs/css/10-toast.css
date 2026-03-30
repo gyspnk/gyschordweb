@@ -1,0 +1,215 @@
+.zoom-toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translate(-50%, 20px);
+  background-color: #333;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: var(--border-radius-xl);
+  z-index: 300;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-3);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.zoom-toast.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  visibility: visible;
+}
+
+body.dark-theme .zoom-toast {
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+}
+
+.transpose-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  border-radius: 999px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background: color-mix(in srgb, var(--md-sys-color-surface) 90%, transparent);
+  padding: 0.1rem 0.25rem;
+}
+
+.transpose-controls .icon-button {
+  width: 38px;
+  height: 38px;
+}
+
+.transpose-controls .icon-button .material-symbols-outlined {
+  font-size: 19px;
+}
+
+.transpose-controls-footer {
+  display: flex;
+  margin-right: 0;
+}
+
+.transpose-collapse {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.transpose-toggle-btn {
+  display: none;
+}
+
+.transpose-controls-header {
+  display: none;
+}
+
+.transpose-indicator {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--md-sys-color-primary);
+  min-width: 5.8rem;
+  text-align: center;
+}
+
+.accidental-label {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  display: inline-block;
+}
+
+@keyframes flipAccidental {
+  0% { transform: scale(1) rotateY(0deg); opacity: 1; }
+  50% { transform: scale(0.8) rotateY(90deg); opacity: 0; }
+  100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+}
+
+@media (orientation: landscape) {
+  .transpose-controls-footer {
+    display: none;
+  }
+
+  .transpose-controls-header {
+    display: flex;
+  }
+}
+
+@media (max-width: 1366px) and (orientation: landscape) {
+  .landscape-controls {
+    gap: 0.5rem;
+  }
+
+  .transpose-toggle-btn {
+    display: flex;
+  }
+
+  /* Make header transpose collapsible */
+  .transpose-controls-header {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.4rem);
+    display: flex;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px) scale(0.96);
+    transform-origin: right top;
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+    box-shadow: var(--shadow-2);
+    backdrop-filter: blur(4px);
+    z-index: 25;
+  }
+
+  /* Because the landscape-controls are flex, the transpose-collapse wrapper must be position relative */
+  .transpose-collapse.is-open .transpose-controls-header {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .transpose-controls-header {
+    display: flex;
+  }
+
+  .transpose-controls-footer {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) and (orientation: portrait) {
+  .pdf-viewer-footer {
+    overflow: visible;
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .transpose-toggle-btn {
+    display: flex;
+  }
+
+  .transpose-controls-footer {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 0.4rem);
+    display: flex;
+    margin-right: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px) scale(0.96);
+    transform-origin: left bottom;
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+    box-shadow: var(--shadow-2);
+    backdrop-filter: blur(4px);
+    z-index: 25;
+  }
+
+  .transpose-collapse.is-open .transpose-controls-footer {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .pdf-viewer-footer.has-page-nav {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+  }
+
+  .pdf-viewer-footer.has-page-nav .zoom-controls .zoom-level-indicator {
+    display: none;
+  }
+
+  .pdf-viewer-footer.no-page-nav .zoom-controls {
+    justify-self: end;
+  }
+}
+
+@media (max-width: 430px) and (orientation: portrait) {
+  .pdf-viewer-footer {
+    padding: 0 0.3rem;
+    column-gap: 0.2rem;
+  }
+
+  .pdf-viewer-footer .icon-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .pdf-viewer-footer .icon-button .material-symbols-outlined {
+    font-size: 18px;
+  }
+
+  .page-indicator {
+    min-width: 42px;
+    font-size: 0.8rem;
+    padding: 0 0.2rem;
+  }
+}

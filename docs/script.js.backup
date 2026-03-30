@@ -223,7 +223,6 @@ document.addEventListener("DOMContentLoaded", () => {
     theme: "blue",
     fill: "soft",
     fillColor: "blue",
-    baseFontRem: 0.72,
     fontOverridePercent: 100,
     fillOpacityPercent: 70,
     syncThemeWithAccent: false,
@@ -241,6 +240,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let transposeStep = 0;
   let accidentalMode = localStorage.getItem(CHORD_ACCIDENTAL_STORAGE_KEY) === "flat" ? "flat" : "sharp";
   let swipeStartPoint = null;
+  let isMouseDragging = false;
+  let mouseDragStartX = 0;
+  let mouseDragStartY = 0;
+  let mouseDragScrollLeft = 0;
+  let mouseDragScrollTop = 0;
   let lastSwipeHandledAt = 0;
   let pinchState = null;
   let wheelState = null;
@@ -332,7 +336,9 @@ document.addEventListener("DOMContentLoaded", () => {
     pdfViewerContent.addEventListener("touchstart", handleViewerTouchStart, { passive: true });
     pdfViewerContent.addEventListener("touchend", handleViewerTouchEnd, { passive: true });
     pdfViewerContent.addEventListener("mousedown", handleViewerPointerStart);
+    pdfViewerContent.addEventListener("mousemove", handleViewerPointerMove);
     pdfViewerContent.addEventListener("mouseup", handleViewerPointerEnd);
+    pdfViewerContent.addEventListener("mouseleave", handleViewerPointerEnd);
 
     window.addEventListener("resize", onLayoutResize);
   }
@@ -354,6 +360,10 @@ document.addEventListener("DOMContentLoaded", () => {
       pengaturanBtn.classList.add("selected");
       searchContainer.style.display = "none";
       renderReportBugPage();
+    } else if (page === "about-project") {
+      pengaturanBtn.classList.add("selected");
+      searchContainer.style.display = "none";
+      renderAboutProjectPage();
     }
   }
 
@@ -465,6 +475,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     mainContent.innerHTML = `
       <div class="settings-panel">
+        <div class="settings-section">
+          <h2 class="settings-section-title"><span class="material-symbols-outlined">info</span> Info</h2>
+          <div class="settings-card help-banner-card" id="about-project-btn" role="button" aria-label="Buka halaman tentang project" tabindex="0">
+            <div class="help-banner-content">
+              <span class="material-symbols-outlined help-banner-icon">info</span>
+              <div class="help-banner-text">
+                <h3>Tentang Project Ini</h3>
+                <p>Latar belakang, informasi & tujuan</p>
+              </div>
+            </div>
+            <span class="material-symbols-outlined help-banner-arrow">chevron_right</span>
+          </div>
+        </div>
+
         <div class="settings-section">
           <h2 class="settings-section-title"><span class="material-symbols-outlined">palette</span> Tampilan</h2>
           <div class="settings-card">
@@ -588,6 +612,26 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
 
         <div class="settings-section">
+          <h2 class="settings-section-title"><span class="material-symbols-outlined">group</span> Kontributor</h2>
+          <div class="settings-card" style="padding: 0;">
+            <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+              <strong style="font-size:0.85rem; color:var(--md-sys-color-primary);">Yang Mengizinkan Semua ini Terlaksana</strong>
+              <span style="font-size:0.95rem;">Tuhan Yesus Kristus</span>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+              <strong style="font-size:0.85rem; color:var(--md-sys-color-primary);">Developer</strong>
+              <span style="font-size:0.95rem;">Gilbert Then (Gereja Yesus Sejati Pontianak)</span>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
+              <strong style="font-size:0.85rem; color:var(--md-sys-color-primary);">Contributor Input Chord</strong>
+              <span style="font-size:0.95rem;">Clement JJ (Gereja Yesus Sejati Pontianak)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
           <h2 class="settings-section-title"><span class="material-symbols-outlined">help</span> Bantuan</h2>
           <div class="settings-card help-banner-card" id="report-bug-btn" role="button" aria-label="Buka halaman report bug" tabindex="0">
             <div class="help-banner-content">
@@ -601,6 +645,40 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
       </div>`;
+  }
+
+  function renderAboutProjectPage() {
+    mainContent.innerHTML = `
+      <div class="report-page">
+        <div class="report-header-nav">
+          <button id="about-project-back-btn" class="report-back-btn" type="button" aria-label="Kembali ke pengaturan">
+            <span class="material-symbols-outlined">arrow_back</span>
+            <span>Kembali</span>
+          </button>
+          <h2>Tentang Project Ini</h2>
+          <div style="width: 48px;"></div>
+        </div>
+
+        <div class="report-hero">
+          <div class="report-hero-icon-bg">
+            <span class="material-symbols-outlined report-hero-icon">info</span>
+          </div>
+          <h3>Latar Belakang & Informasi</h3>
+          <p>Tujuan dan perjalanan pengembangan project Kidung Rohani</p>
+        </div>
+
+        <div class="settings-card about-project-card" style="padding: 1.5rem; display: flex; flex-direction: column; text-align: left;">
+          <p style="margin-bottom: 1rem; line-height: 1.6; font-size: 1rem;">Di dalam nama Tuhan Yesus.. semoga project ini dapat bermanfaat bagi para pemusik di Gereja Yesus Sejati Indonesia agar bisa menjadi referensi ataupun sebagai tool untuk membantu menunjang pelayanan dalam bidang musik.</p>
+          <p style="margin-bottom: 1rem; line-height: 1.6; font-size: 1rem;">Terima kasih kepada Tuhan Yesus yang sudah memberi saya kesempatan serta mengizinkan saya untuk menyelesaikan project ini... terima kasih juga kepada rekan - rekan yang sudah mendukung sehingga project ini dapat terlaksana dengan lancar.</p>
+          
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--md-sys-color-outline-variant); line-height: 1.6; font-size: 1rem;">
+            <p style="margin-bottom: 1rem;">Project ini dimulai dari tahun 2025, saya terpikir untuk membuat aplikasi ini dikarenakan saya merasa sebagai seorang pemusik pemula, saya masih sering kesulitan mencari chord, apalagi saat ada perpindahan nada dasarnya. Sehingga memotivasi saya untuk membuat suatu alat yang bisa memudahkan saya dan rekan - rekan sekalian dalam belajar musik di Kidung Rohani maupun dalam pelayanan...</p>
+            <p style="margin-bottom: 1rem;">Project ini sempat berhenti beberapa bulan karena ada kesibukan pribadi hingga baru dapat diselesaikan di bulan April 2026... Puji Tuhan saya dapat melanjutkan project ini hingga sampai saat tahap ini.</p>
+            <p style="margin-bottom: 1rem;">Akhir kata.. kiranya semua yang telah dilakukan di project ini hanya untuk kemuliaan nama Tuhan saja... terima kasih, Tuhan Yesus Memberkati kita semua.. Amin...</p>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   function renderReportBugPage() {
@@ -1316,15 +1394,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getChordFontSizeRem() {
-    const ratio = getZoomRatio();
-    const size = chordUiPrefs.baseFontRem * ratio * (chordUiPrefs.fontOverridePercent / 100);
-    return Math.min(6.5, Math.max(0.55, size));
-  }
-
-  function getZoomRatio() {
-    if (typeof currentScale !== "number" || !Number.isFinite(currentScale)) return 1;
-    if (!Number.isFinite(initialScale) || initialScale <= 0) return 1;
-    return currentScale / initialScale;
+    // Skala dasar yang sangat adaptif. Menghitung fisik scale PDF ke dimensi CSS layar saat ini.
+    // Memastikan chord ikut membesar/mengecil mengikuti teks PDF di ukuran layar berapapun (1080p, 4K, maupun HP).
+    const pdfScale = (typeof currentScale === "number" && Number.isFinite(currentScale)) ? currentScale : 1;
+    
+    // Angka 0.78 adalah konstanta aproksimasi komparasi tinggi font partitur PDF dengan CSS Rem (Diturunkan dari 0.95 agar lebih compact)
+    const adaptiveBase = 0.78 * pdfScale; 
+    
+    const size = adaptiveBase * (chordUiPrefs.fontOverridePercent / 100);
+    // Batasan diperlebar (max 20) agar tetap tampil benar di resolusi monitor yang sangat raksasa
+    return Math.min(20.0, Math.max(0.2, size));
   }
 
   function onChordLayerClick(event) {
@@ -2065,15 +2144,37 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function handleGlobalKeydown(event) {
-    if (!(event.ctrlKey && (event.key === "+" || event.key === "-" || event.key === "="))) return;
-
-    event.preventDefault();
+    if (event.target.tagName === "INPUT" || event.target.tagName === "TEXTAREA") return;
     if (!document.body.classList.contains("viewer-active")) return;
 
-    if (event.key === "+" || event.key === "=") {
-      onZoom("in");
-    } else if (event.key === "-") {
-      onZoom("out");
+    if (event.ctrlKey) {
+      if (event.key === "+" || event.key === "=") {
+        event.preventDefault();
+        onZoom("in");
+      } else if (event.key === "-") {
+        event.preventDefault();
+        onZoom("out");
+      }
+      return;
+    }
+
+    switch (event.key) {
+      case "ArrowLeft":
+        event.preventDefault();
+        onPrevSong();
+        break;
+      case "ArrowRight":
+        event.preventDefault();
+        onNextSong();
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        onPrevPage();
+        break;
+      case "ArrowDown":
+        event.preventDefault();
+        onNextPage();
+        break;
     }
   }
 
@@ -2390,6 +2491,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const isFromControl = event.target.closest("button, input, select, label, .chord-layer.editor-mode, .chord-marker");
     if (isFromControl) {
       swipeStartPoint = null;
+      isMouseDragging = false;
       return;
     }
 
@@ -2398,9 +2500,35 @@ document.addEventListener("DOMContentLoaded", () => {
       y: event.clientY,
       time: Date.now()
     };
+
+    if (event.type === "mousedown") {
+      isMouseDragging = true;
+      pdfViewerContent.style.cursor = "grabbing";
+      mouseDragStartX = event.clientX;
+      mouseDragStartY = event.clientY;
+      mouseDragScrollLeft = pdfViewerContent.scrollLeft;
+      mouseDragScrollTop = pdfViewerContent.scrollTop;
+    }
+  }
+
+  function handleViewerPointerMove(event) {
+    if (!isMouseDragging) return;
+    if (!document.body.classList.contains("viewer-active")) return;
+    
+    event.preventDefault(); // Prevent default text selection
+    const dx = event.clientX - mouseDragStartX;
+    const dy = event.clientY - mouseDragStartY;
+    
+    pdfViewerContent.scrollLeft = mouseDragScrollLeft - dx;
+    pdfViewerContent.scrollTop = mouseDragScrollTop - dy;
   }
 
   function handleViewerPointerEnd(event) {
+    if (isMouseDragging) {
+      isMouseDragging = false;
+      pdfViewerContent.style.cursor = "";
+    }
+
     if (!document.body.classList.contains("viewer-active")) {
       swipeStartPoint = null;
       return;
@@ -2465,6 +2593,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- 10. Handlers lainnya ---
   function handleMainContentClick(e) {
+    const aboutProjectBtn = e.target.closest("#about-project-btn");
+    if (aboutProjectBtn) {
+      navigateTo("about-project");
+      return;
+    }
+
+    const aboutProjectBackBtn = e.target.closest("#about-project-back-btn");
+    if (aboutProjectBackBtn) {
+      navigateTo("pengaturan");
+      return;
+    }
+
     const reportBugBtn = e.target.closest("#report-bug-btn");
     if (reportBugBtn) {
       navigateTo("report-bug");
@@ -2717,7 +2857,6 @@ document.addEventListener("DOMContentLoaded", () => {
           ...parsed,
           theme: validThemeKeys.has(parsed.theme) ? parsed.theme : chordUiPrefs.theme,
           fillColor: validFillKeys.has(parsed.fillColor) ? parsed.fillColor : chordUiPrefs.fillColor,
-          baseFontRem: Number.isFinite(Number(parsed.baseFontRem)) ? Number(parsed.baseFontRem) : chordUiPrefs.baseFontRem,
           fontOverridePercent: Number.isFinite(Number(parsed.fontOverridePercent))
             ? Number(parsed.fontOverridePercent)
             : chordUiPrefs.fontOverridePercent,

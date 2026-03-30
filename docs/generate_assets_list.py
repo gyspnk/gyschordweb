@@ -5,11 +5,11 @@ ASSETS_DIR = os.path.join(os.path.dirname(__file__), 'assets')
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), 'assets-list.json')
 CHORD_OUTPUT_FILE = os.path.join(os.path.dirname(__file__), 'chord-assets-list.json')
 
-# List only PDF files in the assets directory, Update 27/7/25 for folder restructure
+# List only non-txt files in the assets directory, Update 27/7/25 for folder restructure
 def list_pdfs():
     return sorted([
         f for f in os.listdir(ASSETS_DIR)
-        if f.lower().endswith('.pdf') and os.path.isfile(os.path.join(ASSETS_DIR, f))
+        if not f.lower().endswith('.txt') and os.path.isfile(os.path.join(ASSETS_DIR, f))
     ])
 
 def list_chord_txts():

@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+/* Embed Custom PDF Fonts to prevent PDF.js warnings */
+@font-face {
+  font-family: 'GoudyOldStyleBT-Roman';
+  src: url('../assets/fonts/GoudyOldStyleBT-Roman.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'AbadiMT-CondensedLight';
+  src: url('../assets/fonts/abadi-mt-condensed-light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
