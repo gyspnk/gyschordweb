@@ -10,10 +10,67 @@ function handleOrientationChange() {
 }
 
 function onLayoutResize() {
+  checkLayoutCollisions();
   syncTransposeCollapseState();
   fitViewerTitle();
   fitListTitles();
 }
+
+function checkLayoutCollisions() {
+  if (!document.body.classList.contains('viewer-active')) return;
+
+  // Add the measure class to temporarily force expanded state
+  document.body.classList.add('measure-layout');
+  document.body.classList.remove('is-expanded-layout');
+
+  let layoutFits = true;
+  const buffer = 48; // padding and gaps buffer
+
+  // Check Header
+  const header = document.querySelector('.pdf-viewer-header');
+  if (header && header.offsetParent !== null) {
+    const left = header.querySelector('.header-left');
+    const center = header.querySelector('.song-navigation');
+    const right = header.querySelector('.landscape-controls');
+
+    let headerRequiredWidth = 0;
+    if (left && left.offsetParent !== null) headerRequiredWidth += left.scrollWidth;
+    if (center && center.offsetParent !== null) headerRequiredWidth += center.scrollWidth;
+    if (right && right.offsetParent !== null) headerRequiredWidth += right.scrollWidth;
+
+    if (header.clientWidth < (headerRequiredWidth + buffer)) {
+      layoutFits = false;
+    }
+  }
+
+  // Check Footer (if visible)
+  const footer = document.querySelector('.pdf-viewer-footer');
+  if (layoutFits && footer && footer.offsetParent !== null) {
+    const left = footer.querySelector('.transpose-collapse');
+    const center = footer.querySelector('.zoom-controls');
+    const right = footer.querySelector('.page-navigation');
+
+    let footerRequiredWidth = 0;
+    if (left && left.offsetParent !== null) footerRequiredWidth += left.scrollWidth;
+    if (center && center.offsetParent !== null) footerRequiredWidth += center.scrollWidth;
+    if (right && right.offsetParent !== null) footerRequiredWidth += right.scrollWidth;
+
+    if (footer.clientWidth < (footerRequiredWidth + buffer)) {
+      layoutFits = false;
+    }
+  }
+
+  document.body.classList.remove('measure-layout');
+
+  // If we have enough room in BOTH header and footer, switch to expanded layout!
+  if (layoutFits) {
+    document.body.classList.add('is-expanded-layout');
+  } else {
+    document.body.classList.remove('is-expanded-layout');
+  }
+}
+
+
 
 function onToggleTransposeCollapse(event) {
   event.preventDefault();
@@ -48,7 +105,7 @@ function syncTransposeCollapseState() {
 }
 
 function isCollapsibleLayout() {
-  return window.matchMedia("(max-width: 640px) and (orientation: portrait), (max-width: 1366px) and (orientation: landscape)").matches;
+  return !document.body.classList.contains('is-expanded-layout');
 }
 
 function onToggleFamilyChordDropdown(event) {
@@ -67,6 +124,11 @@ function onGlobalDocumentClick(event) {
   if (!event.target.closest(".family-chord-container")) {
     document.querySelectorAll('.family-chord-dropdown').forEach(dd => dd.classList.remove('is-open'));
   }
+  
+  if (!event.target.closest(".midi-collapse") && typeof midiPanel !== 'undefined' && midiPanel) {
+    if (typeof midiToggleBtn !== 'undefined' && midiToggleBtn) midiToggleBtn.setAttribute('aria-expanded', 'false');
+  }
+
   if (event.target.closest(".transpose-collapse")) return;
   closeTransposeCollapse();
 }
@@ -198,4 +260,11 @@ function closePdfViewer() {
   chordsHidden = false;
   closeTransposeCollapse();
   updateHideChordButton();
+  
+  if (typeof mainMidiPlayer !== 'undefined' && mainMidiPlayer) {
+    try {
+      if (typeof mainMidiPlayer.stop === 'function') mainMidiPlayer.stop();
+      else mainMidiPlayer.playing = false;
+    } catch(e) {}
+  }
 }

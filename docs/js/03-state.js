@@ -12,7 +12,9 @@ let currentScrollMode = "horizontal";
 let prefs = {
   defaultTwoPage: false,
   defaultVerticalScroll: false,
-  preferNaturalChords: true
+  preferNaturalChords: true,
+  midiSoundfont: "https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus",
+  midiInstrument: "-1"
 };
 
 let chordUiPrefs = {

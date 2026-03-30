@@ -1,21 +1,24 @@
 import os
 import json
 
-ASSETS_DIR = os.path.join(os.path.dirname(__file__), 'assets')
-OUTPUT_FILE = os.path.join(os.path.dirname(__file__), 'assets-list.json')
+ASSETS_PDF_DIR = os.path.join(os.path.dirname(__file__), 'assets', 'pdf')
+ASSETS_CHORD_DIR = os.path.join(os.path.dirname(__file__), 'assets', 'chord')
+OUTPUT_FILE = os.path.join(os.path.dirname(__file__), 'assets-list.json')       
 CHORD_OUTPUT_FILE = os.path.join(os.path.dirname(__file__), 'chord-assets-list.json')
 
 # List only non-txt files in the assets directory, Update 27/7/25 for folder restructure
 def list_pdfs():
+    if not os.path.exists(ASSETS_PDF_DIR): return []
     return sorted([
-        f for f in os.listdir(ASSETS_DIR)
-        if not f.lower().endswith('.txt') and os.path.isfile(os.path.join(ASSETS_DIR, f))
+        f for f in os.listdir(ASSETS_PDF_DIR)
+        if f.lower().endswith('.pdf') and os.path.isfile(os.path.join(ASSETS_PDF_DIR, f))
     ])
 
 def list_chord_txts():
+    if not os.path.exists(ASSETS_CHORD_DIR): return []
     return sorted([
-        f for f in os.listdir(ASSETS_DIR)
-        if f.lower().endswith('.txt') and os.path.isfile(os.path.join(ASSETS_DIR, f))
+        f for f in os.listdir(ASSETS_CHORD_DIR)
+        if f.lower().endswith('.txt') and os.path.isfile(os.path.join(ASSETS_CHORD_DIR, f))
     ])
 
 def main():

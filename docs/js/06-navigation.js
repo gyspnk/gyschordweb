@@ -41,7 +41,7 @@ function renderPujianList() {
           id: index,
           nomor: match ? match[1] : "?",
           judul: match ? match[2].replace(/_/g, " ") : rawName.replace(/_/g, " "),
-          fileHref: `assets/${file}`
+          fileHref: `assets/pdf/${file}`
         };
       });
       displayPujian(pujianItems);

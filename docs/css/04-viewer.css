@@ -434,3 +434,506 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
     font-size: 4rem; margin-bottom: 1rem; animation: rotate-anim 2s infinite ease-in-out;
 }
 @keyframes rotate-anim { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
+
+/* MIDI Player Styles */
+.midi-collapse {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.midi-panel {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--md-sys-color-surface);
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  margin-top: 8px;
+  z-index: 100;
+}
+#midi-toggle-btn[aria-expanded="true"] + .midi-panel {
+  display: block;
+}
+
+body.is-expanded-layout .midi-collapse, body.measure-layout .midi-collapse { flex-direction: row; }
+body.is-expanded-layout #midi-toggle-btn, body.measure-layout #midi-toggle-btn { display: none !important; }
+body.is-expanded-layout .midi-panel, body.measure-layout .midi-panel { display: block !important; position: static; box-shadow: none; border: none; background: transparent; padding: 0; margin-top: 0; }
+
+
+.midi-controls-wrapper {
+  margin-bottom: 8px;
+}
+.instrument-select {
+  width: 100%;
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 4px;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+}
+midi-player {
+  --primary-color: var(--md-sys-color-primary, #1976d2);
+  --primary-color-hover: color-mix(in srgb, var(--md-sys-color-primary) 80%, black);
+  --primary-color-active: color-mix(in srgb, var(--md-sys-color-primary) 60%, black);
+  --secondary-color: var(--md-sys-color-outline-variant, #cacaca);
+  --secondary-color-hover: var(--md-sys-color-outline, #a0a0a0);
+  --secondary-color-active: var(--md-sys-color-outline, #a0a0a0);
+  --background-color: var(--md-sys-color-surface, #fdfcff);
+  --time-color: var(--md-sys-color-on-surface, #1a1c1e);
+  border-radius: 8px;
+  max-width: 250px;
+}
+
+body.is-expanded-layout .midi-panel, body.measure-layout .midi-panel { display: flex !important; align-items: center; gap: 0.5rem; }
+body.is-expanded-layout .midi-controls-wrapper, body.measure-layout .midi-controls-wrapper { margin-bottom: 0; }
+body.is-expanded-layout midi-player, body.measure-layout midi-player { max-width: 300px; }
+
+
+.instrument-select:hover {
+  border-color: var(--md-sys-color-primary);
+}
+.instrument-select:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
+}
+.instrument-select optgroup {
+  font-weight: bold;
+  font-style: italic;
+  color: var(--md-sys-color-primary);
+}
+.instrument-select option {
+  font-weight: normal;
+  font-style: normal;
+  color: var(--md-sys-color-on-surface);
+}
+
+
+
+
+
+
+
+
+.cis-icon, 
+
+.custom-instrument-dropdown.is-open 
+
+
+
+
+
+.player-btn {
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.player-btn .material-symbols-outlined {
+  font-size: 1.8rem;
+}
+.player-btn:hover { 
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+  color: var(--md-sys-color-on-surface);
+  /* removed box shadow */
+  transform: scale(1.05);
+}
+.player-btn:active { transform: scale(0.95); }
+/* .player-time styling moved below to .player-track-container section for coherence */
+
+
+body.is-expanded-layout 
+body.is-expanded-layout .custom-instrument-dropdown, body.measure-layout 
+body.is-expanded-layout .custom-player-controls, body.measure-layout 
+
+
+/* ANIMATIONS & OVERHAULS */
+
+/* Icon Grid */
+
+
+
+
+.cis-header.icon-button:active {
+    transform: scale(0.85);
+}
+
+
+
+
+
+.custom-instrument-dropdown.is-open 
+
+
+
+
+
+
+
+
+
+/* Play Button Animation */
+.player-btn {
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.player-btn:active {
+    transform: scale(0.8);
+}
+
+#custom-play-icon {
+    transition: opacity 0.2s ease-in-out;
+}
+
+#custom-play-icon.fade-out {
+    opacity: 0;
+}
+
+#custom-play-icon.fade-in {
+    opacity: 1;
+}
+
+/* Animated Seekbar */
+
+
+
+
+
+
+/* Removed duplicated or malformed player CSS definitions */
+/* ------------------------------- */
+/* Aesthetic Collapsible MIDI Player */
+/* ------------------------------- */
+.custom-midi-player {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  border-radius: 32px;
+  background: color-mix(in srgb, var(--md-sys-color-surface-container-high) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 50%, transparent);
+  padding: 8px 16px;
+  overflow: visible;
+  transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Horizontal Player Controls */
+
+.seekbar-wrapper {
+  position: relative;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  height: 24px;
+  cursor: pointer;
+}
+
+.player-slider {
+  width: 100%;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  z-index: 2;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Track styling */
+.player-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: 3px;
+  border: none;
+}
+.player-slider::-moz-range-track {
+  width: 100%;
+  height: 6px;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: 3px;
+  border: none;
+}
+
+/* Thumb styling */
+.player-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+  margin-top: -2px; /* Centers thumb on the track */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
+}
+.player-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
+}
+
+.player-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+.player-slider:hover::-moz-range-thumb {
+  transform: scale(1.2);
+}
+
+.seekbar-fill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 6px;
+  background: var(--md-sys-color-primary);
+  border-radius: 3px;
+  transform: translateY(-50%);
+  z-index: 1;
+  pointer-events: none;
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+/* Optional: animate fill when playing */
+.custom-midi-player.playing .seekbar-fill {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 1rem 1rem;
+  animation: seekbar-stripes 1s linear infinite;
+}
+
+@keyframes seekbar-stripes {
+  from { background-position: 1rem 0; }
+  to { background-position: 0 0; }
+}
+
+.custom-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+.player-track-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  min-width: 0;
+}
+
+.player-time {
+  font-size: 0.7rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  position: absolute;
+  top: -16px;
+  right: 0;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.instrument-capsule-btn {
+  background: color-mix(in srgb, var(--md-sys-color-surface-container-highest) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 40%, transparent);
+  border-radius: 999px;
+  height: 40px;
+  padding: 0 6px 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  color: var(--md-sys-color-on-surface);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.instrument-capsule-btn:hover {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border-color: color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px color-mix(in srgb, var(--md-sys-color-primary) 10%, transparent);
+}
+
+.instrument-capsule-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.instrument-capsule-btn.active {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  border-color: var(--md-sys-color-primary);
+}
+
+.cis-icon {
+  font-size: 1.15rem;
+}
+
+.cis-chevron {
+  font-size: 1.25rem !important;
+  opacity: 0.7;
+  margin-right: -2px;
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.custom-midi-player.is-open .cis-chevron {
+  transform: rotate(180deg);
+}
+
+
+
+
+
+
+
+
+
+/* Collapsible Menu Grid */
+
+.instrument-selector-wrapper {
+  /* position: relative; removed so dropdown covers full width */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cis-menu-popover {
+  position: absolute;
+  top: calc(100% + 12px);
+
+  left: 0;
+  right: 0;
+  width: auto;
+  min-width: 250px;
+  max-height: 400px;
+  background: color-mix(in srgb, var(--md-sys-color-surface-container-lowest) 70%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 40%, transparent);
+  z-index: 1000;
+  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px) scale(0.95);
+  transform-origin: top center;
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.2, 0, 0, 1), visibility 0.2s;
+}
+
+.custom-midi-player.is-open .cis-menu-popover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.cis-category {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+  margin: 16px 16px 8px 16px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.cis-grid {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 2px;
+}
+
+.cis-option {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  font-size: 0.95rem;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  width: 100%;
+}
+
+.cis-option:hover {
+  background: var(--md-sys-color-surface-variant);
+}
+
+.cis-option.selected {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  font-weight: 600;
+}
+
+.cis-menu-popover::-webkit-scrollbar {
+  width: 6px;
+}
+.cis-menu-popover::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cis-menu-popover::-webkit-scrollbar-thumb {
+  background: var(--md-sys-color-outline-variant);
+  border-radius: 3px;
+}
+
+/* Animation for seek bar while playing */
+@keyframes seekbar-glow {
+  0% { box-shadow: 0 0 4px var(--md-sys-color-primary); }
+  50% { box-shadow: 0 0 12px var(--md-sys-color-primary); }
+  100% { box-shadow: 0 0 4px var(--md-sys-color-primary); }
+}
+
+.custom-midi-player.playing .player-slider::-webkit-slider-thumb {
+  animation: seekbar-glow 2s infinite;
+}
+.custom-midi-player.playing .player-slider::-moz-range-thumb {
+  animation: seekbar-glow 2s infinite;
+}

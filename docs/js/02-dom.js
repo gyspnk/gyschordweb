@@ -14,6 +14,16 @@ const pdfViewerTitle = document.getElementById("pdf-viewer-title");
 const pdfViewerNumber = document.getElementById("pdf-viewer-number");
 let canvasWrapper = document.querySelector(".canvas-wrapper");
 const pdfViewerCloseBtn = document.getElementById("pdf-viewer-close");
+const midiToggleBtn = document.getElementById("midi-toggle-btn");
+const midiPanel = document.getElementById("midi-panel");
+const mainMidiPlayer = document.getElementById("main-midi-player");
+const customInstrumentSelect = document.getElementById("custom-instrument-select");
+const cisLabel = document.getElementById("cis-label");
+const cisMenu = document.getElementById("cis-menu");
+const customPlayBtn = document.getElementById("custom-play-btn");
+const customPlayIcon = document.getElementById("custom-play-icon");
+const customTimeDisplay = document.getElementById("custom-time-display");
+const customSeekbar = document.getElementById("custom-seekbar");
 
 const pageNavigationPortrait = document.querySelector(".pdf-viewer-footer .page-navigation");
 const pageNavigationLandscape = document.querySelector(".landscape-controls .page-navigation-landscape");

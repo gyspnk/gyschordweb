@@ -256,7 +256,13 @@ function btnText(btn) {
 }
 
 function getChordTxtUrl(song) {
-  return song.fileHref.replace(/\.pdf$/i, ".txt");
+  // song.fileHref is 'assets/pdf/filename.pdf'
+  // we want 'assets/chord/filename.txt'
+  let url = song.fileHref;
+  // safely replace 'assets/pdf/' with 'assets/chord/' and '.pdf' with '.txt'
+  url = url.replace(/\/pdf\//i, '/chord/');
+  url = url.replace(/\.pdf$/i, ".txt");
+  return url;
 }
 
 function getChordTxtFilename(song) {

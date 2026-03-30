@@ -17,12 +17,72 @@ async function openPdfViewer(songId) {
     document.body.classList.add("viewer-active");
   }
 
+  // Check header layout collisions once viewer is active
+  if (typeof checkLayoutCollisions === "function") {
+    checkLayoutCollisions();
+  }
+
   currentScale = "page-fit";
   chordConfig = createDefaultChordConfig();
 
   // Reset transpose saat ganti lagu
   transposeStep = 0;
   updateTransposeUI();
+
+  // Setup MIDI Player
+  if (typeof mainMidiPlayer !== "undefined" && mainMidiPlayer && midiToggleBtn) {
+    const rawUrl = song.fileHref.replace(/\/pdf\//i, '/midi/').replace(/\.pdf$/i, '.mid');
+    
+    // Gunakan fungsi urlToNoteSequence bawahan dari Magenta core
+    if (window.core && typeof window.core.urlToNoteSequence === 'function') {
+      // Hapus state lama agar bersih
+      mainMidiPlayer.src = null;
+      mainMidiPlayer.noteSequence = null;
+      
+      window.core.urlToNoteSequence(encodeURI(rawUrl)).then(seq => {
+        // Simpan noteSequence original ke propepi kustom player
+        mainMidiPlayer._originalSeq = seq;
+        applyMidiInstrument();
+      }).catch(err => console.warn('Gagal memuat MIDI:', err));
+    } else {
+      // Fallback reguler
+      mainMidiPlayer.src = encodeURI(rawUrl);
+    }
+    
+    // Set UI dropdown dengan preferensi yg ada
+          if (prefs.midiInstrument && typeof customInstrumentSelect !== "undefined" && customInstrumentSelect) {
+        customInstrumentSelect.dataset.value = prefs.midiInstrument;
+        const iconEl = document.getElementById("cis-icon");
+        if (iconEl) {
+          const option = document.querySelector(`.cis-option[data-val="${prefs.midiInstrument}"]`);
+          if (option) {
+            const valNum = parseInt(prefs.midiInstrument, 10);
+            let iconVal = "🎵";
+            if (valNum >= 0 && valNum <= 7) iconVal = "🎹";
+            else if (valNum >= 8 && valNum <= 15) iconVal = "🔔";
+            else if (valNum >= 16 && valNum <= 23) iconVal = "🕍";
+            else if (valNum >= 24 && valNum <= 31) iconVal = "🎸";
+            else if (valNum >= 32 && valNum <= 39) iconVal = "🎸";
+            else if (valNum >= 40 && valNum <= 47) iconVal = "🎻";
+            else if (valNum >= 48 && valNum <= 55) iconVal = "🎻";
+            else if (valNum >= 56 && valNum <= 63) iconVal = "🎺";
+            else if (valNum >= 64 && valNum <= 71) iconVal = "🎷";
+            else if (valNum >= 72 && valNum <= 79) iconVal = "🌬️";
+            if(prefs.midiInstrument === "-1") iconVal = "🎵";
+            iconEl.textContent = iconVal;
+            
+            // select active class
+            document.querySelectorAll('.cis-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+          }
+        }
+      }
+
+      midiToggleBtn.style.display = 'flex';
+    if (typeof midiPanel !== "undefined" && midiPanel) {
+      midiToggleBtn.setAttribute('aria-expanded', 'false');
+    }
+  }
 
   // Pertahankan state chord editor (jangan reset chordEditorEnabled = false)
   updateChordEditorUI();
@@ -519,3 +579,34 @@ function updateViewerUI() {
   updateChordEditorUI();
   updateTransposeUI();
 }
+
+function applyMidiInstrument() {
+  if (typeof mainMidiPlayer === "undefined" || !mainMidiPlayer || !mainMidiPlayer._originalSeq) return;
+  
+  const seq = mainMidiPlayer._originalSeq;
+  let instrumentValue = "-1";
+  if (prefs && prefs.midiInstrument !== undefined) {
+    instrumentValue = prefs.midiInstrument;
+  } else if (typeof customInstrumentSelect !== "undefined" && customInstrumentSelect && customInstrumentSelect.dataset.value) {
+    instrumentValue = customInstrumentSelect.dataset.value;
+  }
+  
+  const instrInt = parseInt(instrumentValue, 10);
+  
+  if (instrInt >= 0) {
+    // Kloning sequence memakai JSON deep copy agar aman
+    const clonedObj = JSON.parse(JSON.stringify(seq));
+    if (clonedObj && clonedObj.notes) {
+      clonedObj.notes.forEach(note => {
+        // Jangan timpa channel drum (biasanya isDrum bernilai true, atau channel 9 (0-indexed => channel 9 di config standar))
+        if (!note.isDrum) {
+          note.program = instrInt;
+        }
+      });
+    }
+    mainMidiPlayer.noteSequence = clonedObj;
+  } else {
+    mainMidiPlayer.noteSequence = seq;
+  }
+}
+
