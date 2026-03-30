@@ -1233,6 +1233,32 @@ document.addEventListener("DOMContentLoaded", () => {
     layer.style.setProperty("--grid-rows", String(chordConfig.grid.rows));
 
     const entries = Array.isArray(chordConfig.pages[String(pageNum)]) ? chordConfig.pages[String(pageNum)] : [];
+
+    if (chordEditorEnabled) {
+      const activeRows = new Set();
+      const activeCols = new Set();
+      entries.forEach((entry) => {
+        if (entry.text && entry.text.trim()) {
+          activeRows.add(entry.row);
+          activeCols.add(entry.col);
+        }
+      });
+
+      activeRows.forEach((row) => {
+        const rowHighlight = document.createElement("div");
+        rowHighlight.className = "chord-highlight-row";
+        rowHighlight.style.setProperty("--row", String(row));
+        layer.appendChild(rowHighlight);
+      });
+
+      activeCols.forEach((col) => {
+        const colHighlight = document.createElement("div");
+        colHighlight.className = "chord-highlight-col";
+        colHighlight.style.setProperty("--col", String(col));
+        layer.appendChild(colHighlight);
+      });
+    }
+
     entries.forEach((entry) => {
       layer.appendChild(createChordMarkerElement(entry));
     });

@@ -295,6 +295,34 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   background-size: calc(100% / var(--grid-cols)) calc(100% / var(--grid-rows));
 }
 
+.chord-highlight-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc((var(--row) - 1) * 100% / var(--grid-rows));
+  height: calc(100% / var(--grid-rows));
+  background-image: 
+    linear-gradient(to bottom, rgba(25, 118, 210, 0.75) 2px, transparent 2px),
+    linear-gradient(to top, rgba(25, 118, 210, 0.75) 2px, transparent 2px);
+  background-color: rgba(25, 118, 210, 0.05);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.chord-highlight-col {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc((var(--col) - 1) * 100% / var(--grid-cols));
+  width: calc(100% / var(--grid-cols));
+  background-image:
+    linear-gradient(to right, rgba(25, 118, 210, 0.75) 2px, transparent 2px),
+    linear-gradient(to left, rgba(25, 118, 210, 0.75) 2px, transparent 2px);
+  background-color: rgba(25, 118, 210, 0.05);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .chord-marker {
   position: absolute;
   transform: translate(-50%, -50%);
