@@ -145,15 +145,32 @@ function setupEventListeners() {
 
 
     // Play/Pause button
-    customPlayBtn.addEventListener("click", async () => {
+    customPlayBtn.addEventListener("click", async () => {      if (window.Tone && window.Tone.start) {
+        try { await window.Tone.start(); } catch (e) {} // Ensure AudioContext is resumed
+      }      let volNode = window.Tone && ((window.Tone.Destination || (window.Tone.getDestination ? window.Tone.getDestination() : null)) || window.Tone.Master);
       try {
         if (!mainMidiPlayer.playing) {
           customPlayIcon.textContent = "hourglass_empty"; // Loading state
+          
+          if (volNode && volNode.volume) {
+             volNode.volume.value = -60; // Start silent
+          }
           await mainMidiPlayer.start();
+          if (volNode && volNode.volume) {
+             volNode.volume.rampTo(0, 0.4); // Fade in
+          }
+          
           customPlayIcon.textContent = "pause";
           document.getElementById('custom-midi-player').classList.add("playing");
         } else {
+          if (volNode && volNode.volume) {
+             volNode.volume.rampTo(-60, 0.3); // Fade out
+             await new Promise(r => setTimeout(r, 300));
+          }
           mainMidiPlayer.stop();
+          if (volNode && volNode.volume) {
+             volNode.volume.value = 0; // Restore volume for next play
+          }
           customPlayIcon.textContent = "play_arrow";
           document.getElementById('custom-midi-player').classList.remove("playing");
         }
@@ -163,7 +180,6 @@ function setupEventListeners() {
         document.getElementById('custom-midi-player').classList.remove("playing");
       }
     });
-
     // Sync play state
     mainMidiPlayer.addEventListener('start', () => {
       customPlayIcon.textContent = "pause";
@@ -198,7 +214,7 @@ function setupEventListeners() {
 
     setInterval(() => {
 
-      if (isDraggingSeekbar) return;
+      if (isDraggingSeekbar || window.isMidiSwitching) return;
 
       const curr = mainMidiPlayer.currentTime || 0;
 

@@ -1,4 +1,4 @@
-// --- 7. Chord Overlay Logic ---
+﻿// --- 7. Chord Overlay Logic ---
 function createDefaultChordConfig() {
   return {
     version: 1,
@@ -80,12 +80,12 @@ function detectAndSetFamilyChord() {
 
   const getRoot = (chordText) => {
     // Matches root note (A-G or 1-7), optional accidental, and optional 'm' or 'min' for minor (excluding 'maj')
-    const match = chordText.match(/^([A-Ga-g1-7])([#♯b♭]?)(min|m(?!aj))?/);
+    const match = chordText.match(/^([A-Ga-g1-7])([#♯b♭­]?)(min|m(?!aj))?/);
     if (!match) return null;
     let r = match[1].toUpperCase();
     let acc = match[2];
     let isMinor = !!match[3];
-    if (acc === '♭') acc = 'b';
+    if (acc === '♭­') acc = 'b';
     if (acc === '♯') acc = '#';
     // Translate number to note if needed
     if (/[1-7]/.test(r)) {
@@ -178,8 +178,9 @@ function parsePdfKeyToSemitone(keyStr) {
 
 function updateTransposeVisibility() {
   const hasChords = originalFamilyChord !== null || Object.values(chordConfig.pages).some(page => page && page.length > 0);
-  const showTranspose = hasChords || chordEditorEnabled;
-  
+  const hasMidi = typeof midiToggleBtn !== "undefined" && midiToggleBtn && midiToggleBtn.style.display !== "none";
+  const showTranspose = hasChords || chordEditorEnabled || hasMidi;
+
   document.querySelectorAll('.transpose-collapse').forEach(el => {
     el.style.display = showTranspose ? '' : 'none';
   });
@@ -199,7 +200,7 @@ function updateFamilyChordUI() {
   const baseLabel = originalFamilyChord ? formatChordForDisplay(originalFamilyChord) : '?';
   
   // Format the label, extracting root, accidentals and adding 'm' if minor
-  const label = baseLabel !== '?' ? (baseLabel.replace(/[^A-G#b♭♯]/g, '') + (isMinor ? 'm' : '')) : '?';
+  const label = baseLabel !== '?' ? (baseLabel.replace(/[^A-G#b♭­♯]/g, '') + (isMinor ? 'm' : '')) : '?';
   
   btns.forEach(btn => {
     btn.textContent = label;
@@ -388,7 +389,7 @@ function onChordLayerClick(event) {
 function promptAndSetChord(pageNum, row, col, existingText = "") {
   const promptDefault = existingText ? formatChordForDisplay(existingText) : "";
   const userInput = window.prompt(
-    "Masukkan chord (contoh: C, C♯, B♭, Fdim, Aadd9).\nKosongkan untuk hapus chord di sel ini.",
+    "Masukkan chord (contoh: C, C♯, B♭­, Fdim, Aadd9).\nKosongkan untuk hapus chord di sel ini.",
     promptDefault
   );
 
@@ -408,7 +409,7 @@ function encodeChordToken(input) {
   const raw = String(input || "").trim();
   if (!raw) return "";
 
-  const match = raw.match(/^([A-Ga-g1-7])([#♯b♭]?)(.*)$/);
+  const match = raw.match(/^([A-Ga-g1-7])([#♯b♭­]?)(.*)$/);
   if (!match) return null;
 
   const rootRaw = match[1];
@@ -419,7 +420,7 @@ function encodeChordToken(input) {
   const naturalIndex = NATURAL_NOTE_INDEX[rootLetter];
   if (!Number.isInteger(naturalIndex)) return null;
 
-  const accidental = accidentalRaw === "♭" ? "b" : accidentalRaw === "♯" ? "#" : accidentalRaw;
+  const accidental = accidentalRaw === "♭­" ? "b" : accidentalRaw === "♯" ? "#" : accidentalRaw;
   let semitone = naturalIndex;
   if (accidental === "#") semitone += 1;
   if (accidental === "b") semitone -= 1;
@@ -439,12 +440,12 @@ function formatChordForDisplay(encodedToken) {
   const noteSet = accidentalMode === "flat" ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP;
   const transposed = wrapSemitone(parsed.semitone + transposeStep + baseTransposeOffset);
   
-  // Replace 'b' with '♭' and '#' with '♯' in suffix for common chord extensions and slash chords
+  // Replace 'b' with '♭­' and '#' with '♯' in suffix for common chord extensions and slash chords
   let displaySuffix = parsed.suffix;
   if (accidentalMode === "flat") {
     displaySuffix = displaySuffix
-      .replace(/b(\d+)/g, "♭$1") // Matches b5, b9, b13, etc.
-      .replace(/\/([A-G])b/gi, "/$1♭"); // Matches slash chords like /Bb or /db
+      .replace(/b(\d+)/g, "♭­$1") // Matches b5, b9, b13, etc.
+      .replace(/\/([A-G])b/gi, "/$1♭­"); // Matches slash chords like /Bb or /db
   } else {
     displaySuffix = displaySuffix
       .replace(/#(\d+)/g, "♯$1") // Matches #5, #9, #11, etc.
@@ -452,19 +453,19 @@ function formatChordForDisplay(encodedToken) {
   }
   
   // Globally replace any remaining standalone sharp/flat in suffix just in case it didn't match the specific patterns
-  displaySuffix = displaySuffix.replace(/#/g, "♯").replace(/♭/g, "♭"); // `♭` replacement already mostly handled, but we explicitly replace `#` with `♯`
+  displaySuffix = displaySuffix.replace(/#/g, "♯").replace(/♭­/g, "♭­"); // `♭­` replacement already mostly handled, but we explicitly replace `#` with `♯`
 
   return `${noteSet[transposed]}${displaySuffix}`;
 }
 
 function parseChordToken(token) {
-  const newFormat = token.match(/^([A-Ga-g])([#♯b♭]?)(.*)$/);
+  const newFormat = token.match(/^([A-Ga-g])([#♯b♭­]?)(.*)$/);
   if (newFormat) {
     const root = newFormat[1].toUpperCase();
     const accidentalRaw = newFormat[2] || "";
     const suffix = newFormat[3] || "";
     
-    const accidental = accidentalRaw === "♭" ? "b" : accidentalRaw === "♯" ? "#" : accidentalRaw;
+    const accidental = accidentalRaw === "♭­" ? "b" : accidentalRaw === "♯" ? "#" : accidentalRaw;
 
     let semitone = NATURAL_NOTE_INDEX[root];
     if (!Number.isInteger(semitone)) return null;
@@ -474,7 +475,7 @@ function parseChordToken(token) {
     return { semitone: wrapSemitone(semitone), suffix };
   }
 
-  const legacyFormat = token.match(/^([1-7])([#♯b♭]?)(.*)$/);
+  const legacyFormat = token.match(/^([1-7])([#♯b♭­]?)(.*)$/);
   if (!legacyFormat) return null;
 
   const legacyRoot = NUMBER_TO_NOTE[legacyFormat[1]];
@@ -482,7 +483,7 @@ function parseChordToken(token) {
   const accidentalRaw = legacyFormat[2] || "";
   const suffix = legacyFormat[3] || "";
   
-  const accidental = accidentalRaw === "♭" ? "b" : accidentalRaw === "♯" ? "#" : accidentalRaw;
+  const accidental = accidentalRaw === "♭­" ? "b" : accidentalRaw === "♯" ? "#" : accidentalRaw;
 
   if (accidental === "#") semitone += 1;
   if (accidental === "b") semitone -= 1;
@@ -512,18 +513,23 @@ function updateTransposeUI(options = {}) {
   const { animateAccidental = false } = options;
   const sign = transposeStep > 0 ? "+" : "";
   transposeIndicators.forEach((indicator) => {
-    indicator.textContent = `Transpose ${sign}${transposeStep}`;
+    indicator.textContent = 'Transpose ' + sign + transposeStep;
   });
 
   if (typeof updateFamilyChordUI === 'function') {
     updateFamilyChordUI();
   }
 
+  // Update MIDI playback pitch without interrupting
+  if (typeof applyMidiInstrument === 'function') {
+    applyMidiInstrument();
+  }
+
   accidentalSwitchBtns.forEach((btn) => {
     btn.classList.toggle("active", accidentalMode === "flat");
     const label = btn.querySelector(".accidental-label");
     if (label) {
-      const newText = accidentalMode === "flat" ? "♭" : "♯";
+      const newText = accidentalMode === "flat" ? "♭­" : "♯";
       if (animateAccidental && label.textContent !== newText) {
         label.style.animation = "none";
         void label.offsetWidth; // Trigger reflow
@@ -667,3 +673,4 @@ function onToggleChordEditorCollapse(event) {
   localStorage.setItem(CHORD_COLLAPSE_STORAGE_KEY, chordEditorCollapsed ? "1" : "0");
   updateChordEditorUI();
 }
+

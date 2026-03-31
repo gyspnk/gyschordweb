@@ -31,6 +31,14 @@ async function openPdfViewer(songId) {
 
   // Setup MIDI Player
   if (typeof mainMidiPlayer !== "undefined" && mainMidiPlayer && midiToggleBtn) {
+    let volNode = window.Tone && ((window.Tone.Destination || (window.Tone.getDestination ? window.Tone.getDestination() : null)) || window.Tone.Master);
+    if (mainMidiPlayer.playing && volNode && volNode.volume) {
+      volNode.volume.rampTo(-60, 0.2);
+      await new Promise(r => setTimeout(r, 200));
+      mainMidiPlayer.stop();
+      volNode.volume.value = 0; // Restore volume
+    }
+
     const rawUrl = song.fileHref.replace(/\/pdf\//i, '/midi/').replace(/\.pdf$/i, '.mid');
     
     // Gunakan fungsi urlToNoteSequence bawahan dari Magenta core
@@ -57,18 +65,18 @@ async function openPdfViewer(songId) {
           const option = document.querySelector(`.cis-option[data-val="${prefs.midiInstrument}"]`);
           if (option) {
             const valNum = parseInt(prefs.midiInstrument, 10);
-            let iconVal = "🎵";
-            if (valNum >= 0 && valNum <= 7) iconVal = "🎹";
-            else if (valNum >= 8 && valNum <= 15) iconVal = "🔔";
-            else if (valNum >= 16 && valNum <= 23) iconVal = "🕍";
-            else if (valNum >= 24 && valNum <= 31) iconVal = "🎸";
-            else if (valNum >= 32 && valNum <= 39) iconVal = "🎸";
-            else if (valNum >= 40 && valNum <= 47) iconVal = "🎻";
-            else if (valNum >= 48 && valNum <= 55) iconVal = "🎻";
-            else if (valNum >= 56 && valNum <= 63) iconVal = "🎺";
-            else if (valNum >= 64 && valNum <= 71) iconVal = "🎷";
-            else if (valNum >= 72 && valNum <= 79) iconVal = "🌬️";
-            if(prefs.midiInstrument === "-1") iconVal = "🎵";
+            let iconVal = "music_note";
+            if (valNum >= 0 && valNum <= 7) iconVal = "piano";
+            else if (valNum >= 8 && valNum <= 15) iconVal = "notifications_active";
+            else if (valNum >= 16 && valNum <= 23) iconVal = "piano";
+            else if (valNum >= 24 && valNum <= 31) iconVal = "library_music";
+            else if (valNum >= 32 && valNum <= 39) iconVal = "library_music";
+            else if (valNum >= 40 && valNum <= 47) iconVal = "graphic_eq";
+            else if (valNum >= 48 && valNum <= 55) iconVal = "graphic_eq";
+            else if (valNum >= 56 && valNum <= 63) iconVal = "campaign";
+            else if (valNum >= 64 && valNum <= 71) iconVal = "styler";
+            else if (valNum >= 72 && valNum <= 79) iconVal = "media_link";
+            if(prefs.midiInstrument === "-1") iconVal = "music_note";
             iconEl.textContent = iconVal;
             
             // select active class
@@ -580,9 +588,9 @@ function updateViewerUI() {
   updateTransposeUI();
 }
 
-function applyMidiInstrument() {
+async function applyMidiInstrument() {
   if (typeof mainMidiPlayer === "undefined" || !mainMidiPlayer || !mainMidiPlayer._originalSeq) return;
-  
+
   const seq = mainMidiPlayer._originalSeq;
   let instrumentValue = "-1";
   if (prefs && prefs.midiInstrument !== undefined) {
@@ -590,23 +598,94 @@ function applyMidiInstrument() {
   } else if (typeof customInstrumentSelect !== "undefined" && customInstrumentSelect && customInstrumentSelect.dataset.value) {
     instrumentValue = customInstrumentSelect.dataset.value;
   }
-  
+
   const instrInt = parseInt(instrumentValue, 10);
-  
-  if (instrInt >= 0) {
+  const currentTranspose = typeof transposeStep === 'number' ? transposeStep : 0;
+
+  const wasPlaying = mainMidiPlayer.playing;
+  const currTime = mainMidiPlayer.currentTime || 0;
+
+  window.isMidiSwitching = true; // prevent seekbar from jumping
+
+  let volNode = window.Tone && ((window.Tone.Destination || (window.Tone.getDestination ? window.Tone.getDestination() : null)) || window.Tone.Master);
+
+  if (wasPlaying && volNode && volNode.volume) {
+      volNode.volume.rampTo(-60, 0.1);
+      // Wait for the fade out to finish before ripping the sequence out, 
+      // preventing audio clipping/pops.
+      await new Promise(r => setTimeout(r, 100));  }
+  let newSequence = seq;
+  if (instrInt >= 0 || currentTranspose !== 0) {
     // Kloning sequence memakai JSON deep copy agar aman
     const clonedObj = JSON.parse(JSON.stringify(seq));
     if (clonedObj && clonedObj.notes) {
       clonedObj.notes.forEach(note => {
         // Jangan timpa channel drum (biasanya isDrum bernilai true, atau channel 9 (0-indexed => channel 9 di config standar))
         if (!note.isDrum) {
-          note.program = instrInt;
+          if (instrInt >= 0) note.program = instrInt;
+          if (currentTranspose !== 0) {
+            note.pitch += currentTranspose;
+            if (note.pitch < 0) note.pitch = 0;
+            if (note.pitch > 127) note.pitch = 127;
+          }
         }
       });
     }
-    mainMidiPlayer.noteSequence = clonedObj;
-  } else {
-    mainMidiPlayer.noteSequence = seq;
+    newSequence = clonedObj;
   }
-}
 
+  const loadPromise = new Promise(resolve => {
+      let isResolved = false;
+      const handler = () => {
+          if (!isResolved) {
+              isResolved = true;
+              mainMidiPlayer.removeEventListener('load', handler);
+              resolve();
+          }
+      };
+      mainMidiPlayer.addEventListener('load', handler);
+      // Fallback timeout
+      setTimeout(handler, 1500); // Shorter fallback
+  });
+
+  const loadStart = Date.now();
+  mainMidiPlayer.noteSequence = newSequence;
+
+  // Wait for the new sequence to be fully loaded and parsed by html-midi-player
+  // This guarantees gapless and seekbar doesn't reset to zero after we assign currTime
+  await loadPromise;
+
+  const loadDuration = (Date.now() - loadStart) / 1000;
+
+  // Restore playback state so it does not interrupt the song
+  if (wasPlaying && mainMidiPlayer.start) {
+      try {
+         // Advance transport by exactly how long the load took, preserving mental rhythm
+         mainMidiPlayer.currentTime = currTime + loadDuration;
+         // Set volume to silent before starting
+         if (volNode && volNode.volume) {
+             volNode.volume.value = -60;
+         }
+         await mainMidiPlayer.start();
+         if (volNode && volNode.volume) {
+             volNode.volume.rampTo(0, 0.2); // Quick fade in
+         }
+      } catch (e) {
+        console.error("Error restarting player:", e);
+      }
+  } else if (!wasPlaying && currTime > 0) {
+     try {
+         mainMidiPlayer.currentTime = currTime;
+     } catch(e) {}
+     if (volNode && volNode.volume) {
+         volNode.volume.value = 0; // Restore volume just in case
+     }
+  } else {
+     if (volNode && volNode.volume) {
+         volNode.volume.value = 0; // Restore volume just in case
+     }
+  }
+
+  // Restore UI updates
+  window.isMidiSwitching = false;
+}
