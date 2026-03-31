@@ -154,15 +154,15 @@ const CHORD_GRID = { cols: 105, rows: 149 };
   const TRANSPOSE_DISSOLVE_IN_MS = 230;
 
   // --- MIDI Audio Transition Constants ---
-  const MIDI_TARGET_VOLUME = -12;       // Standard safe volume in dB
+  const MIDI_TARGET_VOLUME = -3;        // Standard volume in dB (combined with Tone.Destination -6dB)
   const MIDI_SILENT_VOLUME = -60;       // "Silent" volume in dB
   const MIDI_FADE_IN_MS = 300;          // Fade-in duration for play
   const MIDI_FADE_OUT_MS = 300;         // Fade-out duration for pause
-  const MIDI_CROSSFADE_OUT_MS = 200;    // Crossfade out duration for transpose/instrument change
-  const MIDI_CROSSFADE_IN_MS = 250;     // Crossfade in duration for transpose/instrument change
-  const MIDI_LOAD_TIMEOUT_MS = 500;     // Fallback timeout for sequence load event
-  const MIDI_OVERLAP_MS = 30;           // Overlap window for near-gapless dual-player switch
-  const MIDI_TRANSPOSE_DEBOUNCE_MS = 150; // Debounce rapid transpose MIDI updates
+  const MIDI_CROSSFADE_OUT_MS = 280;    // Crossfade out duration for transpose/instrument/seek
+  const MIDI_CROSSFADE_IN_MS = 320;     // Crossfade in duration for transpose/instrument/seek
+  const MIDI_LOAD_TIMEOUT_MS = 300;     // Fallback timeout for sequence load event
+  const MIDI_END_THRESHOLD_S = 0.5;     // Threshold in seconds for detecting song end
+  const MIDI_TRANSPOSE_DEBOUNCE_MS = 100; // Debounce rapid transpose MIDI updates
 
   /**
    * MidiTimeAuthority — Single source of truth for playback position.
@@ -178,12 +178,14 @@ const CHORD_GRID = { cols: 105, rows: 149 };
     _seekCooldownUntil: 0, // Blocks drift correction after seeks
 
     /** Snapshot the current time (e.g. before a transition or seek) */
-    setTime(t, dur) {
+    setTime(t, dur, noCooldown) {
       this._time = Math.max(0, t || 0);
       this._timestamp = performance.now();
       if (dur !== undefined && dur > 0) this._duration = dur;
-      // Block drift correction for 600ms after any explicit time set
-      this._seekCooldownUntil = performance.now() + 600;
+      // Only set cooldown for explicit user seeks/transitions, not routine syncs
+      if (!noCooldown) {
+        this._seekCooldownUntil = performance.now() + 1200;
+      }
     },
 
     /** Get the current time, advancing by wall-clock if playing */
@@ -208,17 +210,24 @@ const CHORD_GRID = { cols: 105, rows: 149 };
       this._playing = playing;
     },
 
-    /** Correct drift by syncing to the player's reported time (only when stable) */
+    /** 
+     * Correct drift by syncing to the player's reported time (only when stable).
+     * Uses gradual blending to prevent visible jumps on the seekbar.
+     */
     sync(playerTime) {
       if (!this._playing) return;
       // Skip drift correction during seek cooldown
       if (performance.now() < this._seekCooldownUntil) return;
       const authorityTime = this.getTime();
-      // Only sync if the difference is significant enough (> 0.5s)
+      const diff = playerTime - authorityTime;
+      const absDiff = Math.abs(diff);
+      
+      // Only sync if the difference is noticeable (>0.8s)
       // but not absurdly large (which would indicate a stale player read)
-      const diff = Math.abs(playerTime - authorityTime);
-      if (diff > 0.5 && diff < 3) {
-        this._time = playerTime;
+      if (absDiff > 0.8 && absDiff < 5) {
+        // Gradual blend: move 40% toward player time to prevent visible jumps
+        const blended = authorityTime + diff * 0.4;
+        this._time = blended;
         this._timestamp = performance.now();
       }
     },
@@ -269,4 +278,46 @@ const CHORD_GRID = { cols: 105, rows: 149 };
     return (window.Tone.Destination ||
       (window.Tone.getDestination ? window.Tone.getDestination() : null) ||
       window.Tone.Master) || null;
+  }
+
+  /**
+   * Shared time formatter for MIDI display.
+   * @param {number} seconds
+   * @returns {string} e.g. "1:05"
+   */
+  function formatMidiTime(seconds) {
+    const isecs = Math.floor(seconds || 0);
+    const m = Math.floor(isecs / 60);
+    const s = isecs % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  /**
+   * Smoothly fade Tone.js master volume to a target value.
+   * @param {number} targetVol - Target volume in dB
+   * @param {number} durationMs - Fade duration in milliseconds
+   * @returns {Promise<void>} Resolves after fade completes
+   */
+  async function fadeMidiVolume(targetVol, durationMs) {
+    const volNode = getToneVolNode();
+    if (!volNode || !volNode.volume || !window.Tone) return;
+    const t = window.Tone.now();
+    volNode.volume.cancelScheduledValues(t);
+    volNode.volume.setValueAtTime(volNode.volume.value, t);
+    volNode.volume.linearRampToValueAtTime(targetVol, t + durationMs / 1000);
+    await new Promise(r => setTimeout(r, durationMs + 30));
+  }
+
+  /**
+   * Reset all MIDI state to defaults. Called when closing viewer or switching songs.
+   */
+  function resetMidiState() {
+    MidiTimeAuthority.reset();
+    window._midiSavedTime = null;
+    _midiOriginalSeq = null;
+    _midiPoolPreloaded = false;
+    _midiPoolPreloading = false;
+    window.isMidiSwitching = false;
+    window.isMidiFading = false;
+    activeMidiPlayer = MIDI_PLAYER_POOL[0] || null;
   }

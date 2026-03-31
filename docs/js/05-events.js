@@ -38,7 +38,7 @@ function setupEventListeners() {
 
   // Custom MIDI Controls Logic
 
-  if (customInstrumentSelect && cisMenu && customPlayBtn && mainMidiPlayer) {
+  if (customInstrumentSelect && cisMenu && customPlayBtn && MIDI_PLAYER_POOL[0]) {
 
     // Dropdown toggle
 
@@ -77,108 +77,107 @@ function setupEventListeners() {
     // Option select
     document.querySelectorAll('.cis-option').forEach(option => {
       option.addEventListener("click", (e) => {
+        // Block during transition
+        if (_midiPoolPreloading) return;
+
         // Find nearest button in case user clicked inner element
         const btn = e.target.closest('.cis-option');
         if(!btn) return;
         const val = btn.getAttribute('data-val');
-        btn.parentElement.querySelectorAll('.cis-option').forEach(o => o.classList.remove('selected'));
-        btn.classList.add('selected');
-        customInstrumentSelect.dataset.value = val;
-        customInstrumentSelect.title = btn.getAttribute('title') || 'Pilih Alat Musik';
-        
+
         // Auto-close menu after selection
         document.getElementById('custom-midi-player').classList.remove("is-open");
         customInstrumentSelect.setAttribute("aria-expanded", "false");
         customInstrumentSelect.classList.remove("active");
-        
 
-        
-        const iconVal = getMidiInstrumentIcon(val);
+        // Update UI
+        document.querySelectorAll('.cis-option').forEach(o => o.classList.remove('selected'));
+        btn.classList.add('selected');
+        customInstrumentSelect.dataset.value = val;
+        customInstrumentSelect.title = btn.getAttribute('title') || 'Pilih Alat Musik';
 
         const iconEl = document.getElementById("cis-icon");
-        if(iconEl) iconEl.textContent = iconVal;
-        
+        if(iconEl) iconEl.textContent = getMidiInstrumentIcon(val);
+
         const labelEl = document.getElementById("cis-label");
         if(labelEl) {
-          // Extract the english/primary title from the selected option
           let labelText = btn.getAttribute('title') || 'Pilihan';
-          // Truncate if too long to keep capsule sleek
           if (labelText.length > 20) labelText = labelText.substring(0, 20) + '...';
           labelEl.textContent = labelText;
         }
 
-        document.querySelectorAll('.cis-option').forEach(opt => opt.classList.remove('selected'));
-
-        btn.classList.add('selected');
-
-
-
         prefs.midiInstrument = val;
-
         localStorage.setItem("prefs", JSON.stringify(prefs));
 
-        if (typeof applyMidiInstrument === "function") {
-
-          applyMidiInstrument();
-
+        // Re-preload all 12 pool players with new instrument
+        if (typeof changeInstrument === "function") {
+          changeInstrument();
         }
-
       });
-
     });
 
 
 
     // Play/Pause button
     customPlayBtn.addEventListener("click", async () => {
-      if (window.isMidiSwitching || window.isMidiFading) return;
+      if (_midiPoolPreloading || window.isMidiFading) return;
 
       if (window.Tone && window.Tone.start) {
         try { await window.Tone.start(); } catch (e) {}
       }
-      
+
       const volNode = getToneVolNode();
       const player = activeMidiPlayer;
       if (!player) return;
-      
+
       try {
-        if (!player.playing) {
+        // Clear any stale seek guard
+        window.isMidiSwitching = false;
+
+        // Use authority state to decide play/pause (more reliable than player.playing
+        // which can be in a weird state after seek)
+        const shouldPlay = !MidiTimeAuthority._playing;
+
+        if (shouldPlay) {
           // --- PLAY (with fade-in) ---
           window.isMidiFading = true;
           customPlayIcon.textContent = "hourglass_empty";
-          
+
           // Set volume to silent BEFORE starting to prevent any pop
           if (volNode && volNode.volume) {
             volNode.volume.cancelScheduledValues(window.Tone.now());
             volNode.volume.value = MIDI_SILENT_VOLUME;
           }
+
+           // Restore position from authority
+          let restoreTime = MidiTimeAuthority.getTime();
+          const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
           
-          // Restore position from authority
-          const restoreTime = MidiTimeAuthority.getTime();
-          if (restoreTime > 0) {
-            try {
-              player.currentTime = restoreTime;
-            } catch (e) {}
+          // If we're at or near the end (e.g. after song finished), reset to beginning
+          if (dur > 0 && restoreTime >= dur - MIDI_END_THRESHOLD_S) {
+            restoreTime = 0;
+            MidiTimeAuthority.setTime(0, dur);
           }
           
+          if (restoreTime > 0) {
+            try { player.currentTime = restoreTime; } catch (e) {}
+          }
+
+          // Stop first if player is in a stale state (e.g. from seek restart)
+          if (player.playing) { try { player.stop(); } catch(e) {} }
           player.start();
-          
+
           // Set time again after start to combat reset
           if (restoreTime > 0) {
             try { player.currentTime = restoreTime; } catch(e) {}
           }
-          
+
           // Update authority
           MidiTimeAuthority.setPlaying(true);
-          
-          // Schedule smooth fade-in
-          if (volNode && volNode.volume && window.Tone) {
-            const t = window.Tone.now();
-            volNode.volume.cancelScheduledValues(t);
-            volNode.volume.setValueAtTime(MIDI_SILENT_VOLUME, t);
-            volNode.volume.linearRampToValueAtTime(MIDI_TARGET_VOLUME, t + MIDI_FADE_IN_MS / 1000);
-          }
-          
+
+          // Smooth fade-in using shared helper (non-blocking)
+          fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
+
           customPlayIcon.textContent = "pause";
           document.getElementById('custom-midi-player').classList.add("playing");
           window._midiSavedTime = null;
@@ -186,25 +185,20 @@ function setupEventListeners() {
         } else {
           // --- PAUSE (with fade-out) ---
           window.isMidiFading = true;
-          
+
           // Freeze authority time (snapshot current position)
           MidiTimeAuthority.setPlaying(false);
           window._midiSavedTime = MidiTimeAuthority.getTime();
-          
+
           // Optimistic UI update for responsive feel
           customPlayIcon.textContent = "play_arrow";
           document.getElementById('custom-midi-player').classList.remove("playing");
 
-          if (volNode && volNode.volume && window.Tone) {
-            const t = window.Tone.now();
-            volNode.volume.cancelScheduledValues(t);
-            volNode.volume.setValueAtTime(volNode.volume.value, t);
-            volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_FADE_OUT_MS / 1000);
-            await new Promise(r => setTimeout(r, MIDI_FADE_OUT_MS + 50));
-          }
-          
+          // Smooth fade-out using shared helper
+          await fadeMidiVolume(MIDI_SILENT_VOLUME, MIDI_FADE_OUT_MS);
+
           player.stop();
-          
+
           if (volNode && volNode.volume) {
             volNode.volume.value = MIDI_SILENT_VOLUME;
           }
@@ -220,67 +214,60 @@ function setupEventListeners() {
 
     // Sync play state from BOTH players (since active player can swap)
     const syncPlayState = (evt) => {
-      if (window.isMidiFading || window.isMidiSwitching) return;
+      if (window.isMidiFading || _midiPoolPreloading) return;
       // Only respond to events from the currently active player
       if (evt.target !== activeMidiPlayer) return;
       const isPlaying = activeMidiPlayer.playing;
       customPlayIcon.textContent = isPlaying ? "pause" : "play_arrow";
       document.getElementById('custom-midi-player').classList.toggle("playing", isPlaying);
     };
-    mainMidiPlayer.addEventListener('start', syncPlayState);
-    mainMidiPlayer.addEventListener('stop', syncPlayState);
-    if (standbyMidiPlayer) {
-      standbyMidiPlayer.addEventListener('start', syncPlayState);
-      standbyMidiPlayer.addEventListener('stop', syncPlayState);
-    }
-
-    // Seek bar formatting helper
-    const formatTime = (seconds) => {
-      const isecs = Math.floor(seconds || 0);
-      const m = Math.floor(isecs / 60);
-      const s = isecs % 60;
-      return `${m}:${s.toString().padStart(2, '0')}`;
-    };
+    // Attach sync listeners to ALL pool players
+    Object.values(MIDI_PLAYER_POOL).forEach(player => {
+      player.addEventListener('start', syncPlayState);
+      player.addEventListener('stop', syncPlayState);
+    });
 
     // Update UI on time update via an interval (html-midi-player doesn't fire timeupdate reliably)
     let isDraggingSeekbar = false;
-    // Expose lastSeekValue globally so applyMidiInstrument can reset it
+    // Expose lastSeekValue globally so pool swap can reset it
     window._midiLastSeekValue = -1;
 
     setInterval(() => {
-      if (isDraggingSeekbar || window.isMidiSwitching) return;
+      if (isDraggingSeekbar || _midiPoolPreloading) return;
       if (!document.body.classList.contains('viewer-active')) return;
-      
-      // --- Read from MidiTimeAuthority (single source of truth) ---
-      const curr = MidiTimeAuthority.getTime();
+
+      const player = activeMidiPlayer;
       const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
 
-      // Only update DOM if value changed significantly to save CPU
+      // --- Read from MidiTimeAuthority (pure wall-clock) ---
+      const curr = MidiTimeAuthority.getTime();
+
+      // --- Song end detection: authority reaches duration ---
+      // DON'T check player.playing — seeks briefly stop the player,
+      // triggering false positives. Authority wall-clock is reliable.
+      if (dur > 0 && curr >= dur - 0.1 && MidiTimeAuthority._playing && !window.isMidiSwitching) {
+        MidiTimeAuthority.setPlaying(false);
+        MidiTimeAuthority.setTime(0, dur);
+        if (player) { try { player.stop(); } catch(e) {} }
+        syncSeekbarUI(0, dur);
+        customPlayIcon.textContent = "play_arrow";
+        document.getElementById('custom-midi-player').classList.remove("playing");
+        window._midiLastSeekValue = 0;
+        window._midiSavedTime = null;
+        
+        // --- AUTO NEXT INTERCEPT ---
+        if (typeof window._playlistCheckAutoNext === 'function') {
+          window._playlistCheckAutoNext();
+        }
+        
+        return;
+      }
+
+      // Only update DOM if value changed
       if (Math.abs(curr - window._midiLastSeekValue) < 0.1 && customSeekbar.max == dur) return;
       window._midiLastSeekValue = curr;
 
-      // Periodically sync authority to actual player time (drift correction)
-      const player = activeMidiPlayer;
-      if (player && player.playing && !window.isMidiSwitching) {
-        const playerTime = player.currentTime || 0;
-        MidiTimeAuthority.sync(playerTime);
-      }
-
-      customTimeDisplay.textContent = `${formatTime(curr)} / ${dur > 0 ? formatTime(dur) : '0:00'}`;
-
-      if (dur > 0) {
-        customSeekbar.max = dur;
-        customSeekbar.value = curr;
-        
-        const fill = document.getElementById('custom-seekbar-fill');
-        if (fill) fill.style.width = ((curr / dur) * 100) + '%';
-      } else {
-        customSeekbar.value = 0;
-        customSeekbar.max = 100;
-        
-        const fill = document.getElementById('custom-seekbar-fill');
-        if (fill) fill.style.width = '0%';
-      }
+      syncSeekbarUI(curr, dur);
     }, 100);
 
     // Prevent timeupdate from fighting with user interaction
@@ -288,37 +275,53 @@ function setupEventListeners() {
       isDraggingSeekbar = true;
       const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
       const val = parseFloat(customSeekbar.value);
-      customTimeDisplay.textContent = `${formatTime(val)} / ${dur > 0 ? formatTime(dur) : '0:00'}`;
-      
+      customTimeDisplay.textContent = `${formatMidiTime(val)} / ${dur > 0 ? formatMidiTime(dur) : '0:00'}`;
+
       const fill = document.getElementById('custom-seekbar-fill');
       if (fill && dur > 0) fill.style.width = ((val / dur) * 100) + '%';
     });
 
     customSeekbar.addEventListener('change', () => {
       isDraggingSeekbar = false;
-      if (window.isMidiSwitching) return;
+      if (_midiPoolPreloading) return;
       const val = parseFloat(customSeekbar.value);
       const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
-      
-      // Update authority FIRST (single source of truth)
-      MidiTimeAuthority.setTime(val, dur);
-      
-      // Then update the active player with retry mechanism
+
       const player = activeMidiPlayer;
       if (player) {
-        player.currentTime = val;
-        
-        // Retry setting time shortly after (player might reject it if it thinks it's not ready)
-        setTimeout(() => {
-          if (player && !window.isMidiSwitching) {
-            const actual = player.currentTime || 0;
-            if (Math.abs(actual - val) > 1.0) {
-              try { player.currentTime = val; } catch(e) {}
-            }
+        const wasPlaying = player.playing;
+
+        // Guard: block song-end detection during seek
+        window.isMidiSwitching = true;
+
+        // Ensure volume is audible (transition may have left it silent)
+        const volNode = getToneVolNode();
+        if (volNode && volNode.volume) {
+          volNode.volume.cancelScheduledValues(window.Tone.now());
+          volNode.volume.value = MIDI_TARGET_VOLUME;
+        }
+
+        try { player.currentTime = val; } catch(e) {}
+
+        // html-midi-player may stop on currentTime set — restart if needed
+        if (wasPlaying) {
+          if (!player.playing) {
+            try { player.start(); } catch(e) {}
           }
-        }, 50);
+          // Re-seek after start (start() resets to 0), then unguard
+          setTimeout(() => {
+            try { player.currentTime = val; } catch(e) {}
+            window.isMidiSwitching = false;
+          }, 50);
+        } else {
+          window.isMidiSwitching = false;
+        }
       }
-      
+
+      // Update authority to match
+      MidiTimeAuthority.setTime(val, dur);
+      syncSeekbarUI(val, dur);
+
       window._midiLastSeekValue = val;
       window._midiSavedTime = null;
     });

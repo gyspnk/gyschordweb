@@ -261,34 +261,20 @@ async function closePdfViewer() {
   closeTransposeCollapse();
   updateHideChordButton();
   
-  if (typeof mainMidiPlayer !== 'undefined' && mainMidiPlayer) {
+  if (MIDI_PLAYER_POOL[0]) {
     try {
       // Fade out before stopping for smooth audio transition
-      const currentPlayer = activeMidiPlayer || mainMidiPlayer;
+      const currentPlayer = activeMidiPlayer || MIDI_PLAYER_POOL[0];
       if (currentPlayer.playing) {
-        const volNode = getToneVolNode();
-        if (volNode && volNode.volume && window.Tone) {
-          const t = window.Tone.now();
-          volNode.volume.cancelScheduledValues(t);
-          volNode.volume.setValueAtTime(volNode.volume.value, t);
-          volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_FADE_OUT_MS / 1000);
-          await new Promise(r => setTimeout(r, MIDI_FADE_OUT_MS + 50));
-        }
+        await fadeMidiVolume(MIDI_SILENT_VOLUME, MIDI_FADE_OUT_MS);
       }
-      // Stop BOTH players
-      try { mainMidiPlayer.stop(); } catch(e) {}
-      try { if (standbyMidiPlayer) standbyMidiPlayer.stop(); } catch(e) {}
+      // Stop ALL pool players
+      Object.values(MIDI_PLAYER_POOL).forEach(p => {
+        try { p.stop(); } catch(e) {}
+      });
     } catch(e) {}
     
-    // Reset all MIDI state
-    MidiTimeAuthority.reset();
-    window._midiSavedTime = null;
-    _midiOriginalSeq = null;
-    _midiTransitionLock = false;
-    _midiQueuedTransition = null;
-    if (_midiTransposeDebounceTimer) { clearTimeout(_midiTransposeDebounceTimer); _midiTransposeDebounceTimer = null; }
-    window.isMidiSwitching = false;
-    activeMidiPlayer = mainMidiPlayer;
-    standbyMidiRef = standbyMidiPlayer;
+    // Reset all MIDI state using shared helper
+    resetMidiState();
   }
 }

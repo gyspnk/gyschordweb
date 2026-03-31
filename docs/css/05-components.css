@@ -19,14 +19,24 @@
 .icon-button:disabled { opacity: 0.5; cursor: not-allowed; background-color: transparent; }
 .icon-button:disabled:hover::before { opacity: 0; }
 .icon-button.active { color: var(--md-sys-color-primary); }
+.icon-button.is-busy { opacity: 0.4; pointer-events: none; }
 
 #clear-search { color: var(--md-sys-color-on-surface-variant); }
 #clear-search:hover { background-color: var(--md-sys-state-layer-primary); }
 
+@keyframes simpleFade {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
 .pujian-list {
   list-style: none; padding: 0; margin: 0 auto;
   max-width: 700px;
-  animation: elegantFadeInUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: simpleFade 0.25s ease-out;
+  will-change: opacity, transform;
+}
+.playlist-view-container {
+  animation: simpleFade 0.25s ease-out;
+  will-change: opacity, transform;
 }
 .pujian-list li {
   position: relative; display: flex; align-items: center; gap: 1rem;
@@ -261,4 +271,134 @@
 
 .setting-item-action {
   gap: 1rem;
+}
+
+/* --- MIDI Preload Progress Bar --- */
+.midi-preload-bar {
+  width: 100%;
+  height: 3px;
+  background: var(--md-sys-color-surface-variant, #e0e0e0);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.midi-preload-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--md-sys-color-primary, #1976d2);
+  border-radius: 2px;
+  transition: width 0.15s ease-out;
+}
+
+/* --- Mini Player --- */
+.mini-player {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-height) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 600px;
+  background: var(--md-sys-color-surface-container-high);
+  border-radius: 16px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 900;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s;
+}
+.mini-player.is-hidden {
+  transform: translate(-50%, 150%);
+  opacity: 0;
+  pointer-events: none;
+}
+.mini-player-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-right: 12px;
+  cursor: pointer;
+}
+.mini-title {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--md-sys-color-on-surface);
+}
+.mini-subtitle {
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mini-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mini-player-controls .icon-button {
+  width: 40px; height: 40px;
+}
+.mini-player-controls .icon-button.play-pause {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+/* --- Playlist View --- */
+.playlist-header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.playlist-card {
+  background: var(--md-sys-color-surface-container);
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.playlist-card:hover {
+  background: var(--md-sys-color-surface-container-highest);
+}
+.playlist-card-info {
+  flex: 1;
+}
+.playlist-card-title {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+.playlist-card-meta {
+  font-size: 13px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.playlist-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Add to Playlist Button on Pujian Item */
+.add-to-playlist-btn {
+  opacity: 0.5;
+  transition: opacity 0.2s, color 0.2s;
+}
+.pujian-item:hover .add-to-playlist-btn {
+  opacity: 1;
+}
+.add-to-playlist-btn.in-playlist {
+  color: var(--md-sys-color-primary);
+  opacity: 1;
 }

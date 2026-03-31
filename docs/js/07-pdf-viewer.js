@@ -30,33 +30,21 @@ async function openPdfViewer(songId) {
   updateTransposeUI();
 
   // Setup MIDI Player
-  if (typeof mainMidiPlayer !== "undefined" && mainMidiPlayer && midiToggleBtn) {
-    const volNode = getToneVolNode();
+  if (MIDI_PLAYER_POOL[0] && midiToggleBtn) {
     const wasPlayingGlobal = (activeMidiPlayer && activeMidiPlayer.playing);
 
-    if (wasPlayingGlobal && volNode && volNode.volume && window.Tone) {
-      const t = window.Tone.now();
-      volNode.volume.cancelScheduledValues(t);
-      volNode.volume.setValueAtTime(volNode.volume.value, t);
-      volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_FADE_OUT_MS / 1000);
-      await new Promise(r => setTimeout(r, MIDI_FADE_OUT_MS + 50));
+    // Fade out if currently playing
+    if (wasPlayingGlobal) {
+      await fadeMidiVolume(MIDI_SILENT_VOLUME, MIDI_FADE_OUT_MS);
     }
 
-    // Stop BOTH players and reset state
-    try { mainMidiPlayer.stop(); } catch(e) {}
-    try { if (standbyMidiPlayer) standbyMidiPlayer.stop(); } catch(e) {}
-    MidiTimeAuthority.reset();
-    window._midiSavedTime = null;
-    _midiOriginalSeq = null;
-    _midiTransitionLock = false;
-    _midiQueuedTransition = null;
-    if (_midiTransposeDebounceTimer) { clearTimeout(_midiTransposeDebounceTimer); _midiTransposeDebounceTimer = null; }
-    window.isMidiSwitching = false;
+    // Stop ALL pool players and reset MIDI state
+    Object.values(MIDI_PLAYER_POOL).forEach(p => {
+      try { p.stop(); } catch(e) {}
+    });
+    resetMidiState();
 
-    // Reset active/standby to defaults
-    activeMidiPlayer = mainMidiPlayer;
-    standbyMidiRef = standbyMidiPlayer;
-
+    const volNode = getToneVolNode();
     if (volNode && volNode.volume) {
       volNode.volume.value = MIDI_SILENT_VOLUME;
     }
@@ -67,13 +55,11 @@ async function openPdfViewer(songId) {
     }
 
     if (window.core && typeof window.core.urlToNoteSequence === 'function') {
-      // Clear current sequences on both players
-      mainMidiPlayer.src = null;
-      mainMidiPlayer.noteSequence = null;
-      if (standbyMidiPlayer) {
-        standbyMidiPlayer.src = null;
-        standbyMidiPlayer.noteSequence = null;
-      }
+      // Clear sequences on all pool players
+      Object.values(MIDI_PLAYER_POOL).forEach(p => {
+        p.src = null;
+        p.noteSequence = null;
+      });
 
       window.core.urlToNoteSequence(encodeURI(rawUrl)).then(seq => {
         // Store original sequence globally
@@ -84,15 +70,19 @@ async function openPdfViewer(songId) {
           MidiTimeAuthority.setDuration(seq.totalTime);
         }
 
-        // Use applyMidiInstrument with wasPlayingGlobal to ensure smooth transition
-        applyMidiInstrument(wasPlayingGlobal);
+        // Pre-load all 12 transposed variants into the pool
+        const currentTranspose = typeof transposeStep === 'number' ? transposeStep : 0;
+        preloadAllTransposes(seq, {
+          forceStart: wasPlayingGlobal,
+          startTranspose: currentTranspose
+        });
       }).catch(err => {
         console.warn('Gagal memuat MIDI:', err);
         window.isMidiSwitching = false;
       });
     } else {
       // Fallback reguler
-      mainMidiPlayer.src = encodeURI(rawUrl);
+      MIDI_PLAYER_POOL[0].src = encodeURI(rawUrl);
     }
 
     // Set UI dropdown dengan preferensi yg ada
@@ -612,199 +602,264 @@ function updateViewerUI() {
 }
 
 /**
- * Dual-player crossfade MIDI instrument/transpose applicator.
+ * Pre-load ALL 12 transposed NoteSequences into the player pool.
+ * Called when a song opens or when the instrument changes.
+ * Shows a progress bar during loading.
  *
- * Architecture:
- * - Two <midi-player> elements alternate roles (active / standby)
- * - The active player keeps playing while the standby pre-loads the transposed sequence
- * - Once loaded, a fast overlap switch (~30ms) provides near-gapless transition
- * - MidiTimeAuthority is the single source of truth for playback time
- * - A mutex prevents overlapping transitions
+ * @param {object} seq - The original NoteSequence
+ * @param {object} [opts]
+ * @param {boolean} [opts.forceStart=false] - Start playback after loading
+ * @param {number}  [opts.startTranspose=0] - Which transpose to activate first
  */
-async function applyMidiInstrument(forceStart = false) {
-  if (!_midiOriginalSeq) return;
-
-  // --- MUTEX: If a transition is already in progress, queue this request ---
-  if (_midiTransitionLock) {
-    _midiQueuedTransition = { forceStart };
-    return;
-  }
-  _midiTransitionLock = true;
-
-  try {
-    await _doApplyMidiInstrument(forceStart);
-  } catch (err) {
-    console.error('applyMidiInstrument error:', err);
-  } finally {
-    _midiTransitionLock = false;
-
-    // Process queued transition if any
-    if (_midiQueuedTransition) {
-      const queued = _midiQueuedTransition;
-      _midiQueuedTransition = null;
-      // Use setTimeout(0) to avoid stack overflow from recursive calls
-      setTimeout(() => applyMidiInstrument(queued.forceStart), 0);
-    }
-  }
-}
-
-async function _doApplyMidiInstrument(forceStart) {
-  const seq = _midiOriginalSeq;
+async function preloadAllTransposes(seq, opts = {}) {
   if (!seq) return;
+  const { forceStart = false, startTranspose = 0 } = opts;
 
+  _midiPoolPreloading = true;
+  _midiPoolPreloaded = false;
+
+  // Resolve instrument
   let instrumentValue = "-1";
   if (prefs && prefs.midiInstrument !== undefined) {
     instrumentValue = prefs.midiInstrument;
   } else if (typeof customInstrumentSelect !== "undefined" && customInstrumentSelect && customInstrumentSelect.dataset.value) {
     instrumentValue = customInstrumentSelect.dataset.value;
   }
-
   const instrInt = parseInt(instrumentValue, 10);
-  const currentTranspose = typeof transposeStep === 'number' ? transposeStep : 0;
 
-  const oldPlayer = activeMidiPlayer;
-  const newPlayer = standbyMidiRef;
-  if (!oldPlayer || !newPlayer) return;
+  // Show progress bar
+  if (midiPreloadBar) {
+    midiPreloadBar.style.display = 'block';
+    midiPreloadFill.style.width = '0%';
+  }
 
-  const wasPlaying = (oldPlayer.playing) || forceStart;
+  const steps = Object.keys(MIDI_PLAYER_POOL).map(Number).sort((a, b) => {
+    // Load the startTranspose first, then fan outward
+    return Math.abs(a - startTranspose) - Math.abs(b - startTranspose);
+  });
 
-  // --- Snapshot time from MidiTimeAuthority (NOT the player) ---
-  const authorityTime = MidiTimeAuthority.getTime();
-  const authorityDuration = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
+  const totalSteps = steps.length;
+  let loaded = 0;
 
-  // Signal seekbar interval to stop updating
-  window.isMidiSwitching = true;
+  for (const step of steps) {
+    const player = MIDI_PLAYER_POOL[step];
+    if (!player) continue;
 
-  // --- Clone and apply transpose/instrument (synchronous, fast) ---
-  let newSequence;
-  try {
-    newSequence = JSON.parse(JSON.stringify(seq));
-    if (newSequence.notes) {
-      for (let i = 0; i < newSequence.notes.length; i++) {
-        const note = newSequence.notes[i];
+    // Clone and modify
+    const clone = JSON.parse(JSON.stringify(seq));
+    if (seq.totalTime) clone.totalTime = seq.totalTime;
+    if (clone.notes) {
+      for (let i = 0; i < clone.notes.length; i++) {
+        const note = clone.notes[i];
         if (!note.isDrum) {
           if (instrInt >= 0) note.program = instrInt;
-          if (currentTranspose !== 0) {
-            note.pitch = Math.max(0, Math.min(127, note.pitch + currentTranspose));
+          if (step !== 0) {
+            note.pitch = Math.max(0, Math.min(127, note.pitch + step));
           }
         }
       }
     }
-  } catch (e) {
-    console.error("Failed to clone sequence:", e);
-    window.isMidiSwitching = false;
-    return;
+
+    // Load into player with timeout
+    await new Promise(resolve => {
+      let isDone = false;
+      const complete = () => {
+        if (isDone) return;
+        isDone = true;
+        player.removeEventListener('load', complete);
+        resolve();
+      };
+      player.addEventListener('load', complete);
+      setTimeout(complete, MIDI_LOAD_TIMEOUT_MS);
+      player.noteSequence = clone;
+    });
+
+    loaded++;
+    if (midiPreloadFill) {
+      midiPreloadFill.style.width = ((loaded / totalSteps) * 100) + '%';
+    }
   }
 
-  // --- Pre-load sequenceinto STANDBY player (old player keeps playing!) ---
-  const loadPromise = new Promise(resolve => {
-    let isDone = false;
-    const complete = () => {
-      if (isDone) return;
-      isDone = true;
-      newPlayer.removeEventListener('load', complete);
-      resolve();
-    };
-    newPlayer.addEventListener('load', complete);
-    setTimeout(complete, 300); // Fallback timeout
-  });
-
-  newPlayer.noteSequence = newSequence;
-  await loadPromise;
-
-  // --- Calculate target time ---
-  // Use authority time + elapsed time since snapshot
-  const knownDuration = newPlayer.duration || authorityDuration;
+  // Store duration
+  const knownDuration = seq.totalTime || MIDI_PLAYER_POOL[0]?.duration || 0;
   window._midiKnownDuration = knownDuration;
   MidiTimeAuthority.setDuration(knownDuration);
 
-  // Get fresh time from authority (accounts for time that passed during load)
-  let targetTime = MidiTimeAuthority.getTime();
-  if (knownDuration > 0) {
-    targetTime = Math.max(0, Math.min(targetTime, knownDuration - 0.05));
+  // Hide progress bar
+  if (midiPreloadBar) {
+    setTimeout(() => { midiPreloadBar.style.display = 'none'; }, 300);
   }
 
-  // --- Force-sync seekbar BEFORE the switch ---
-  syncSeekbarUI(targetTime, knownDuration);
+  _midiPoolPreloading = false;
+  _midiPoolPreloaded = true;
 
-  const volNode = getToneVolNode();
+  // Activate the requested transpose player.
+  // We check the global transposeStep because chord rendering might have updated
+  // the transpose (e.g., auto-detecting flat keys) during the async preload.
+  const finalTranspose = typeof transposeStep === 'number' ? transposeStep : startTranspose;
+  const targetPlayer = MIDI_PLAYER_POOL[finalTranspose];
+  if (targetPlayer) {
+    activeMidiPlayer = targetPlayer;
 
-  // --- GAPLESS OVERLAP SWITCH ---
-  if (wasPlaying) {
-    try {
-      // 1. Set new player position BEFORE starting
-      newPlayer.currentTime = targetTime;
-
-      // 2. Start new player while old player is STILL PLAYING
-      const startPromise = newPlayer.start();
-      if (startPromise && typeof startPromise.then === 'function') {
-        // Wait for the start promise to resolve if it returns one
-        await startPromise.catch(() => {});
+    if (forceStart) {
+      const volNode = getToneVolNode();
+      if (volNode && volNode.volume) {
+        volNode.volume.cancelScheduledValues(window.Tone.now());
+        volNode.volume.value = MIDI_SILENT_VOLUME;
       }
 
-      // Set time AGAIN after start because some players reset it to 0 internally on start
-      try { newPlayer.currentTime = targetTime; } catch(e) {}
-
-      // 3. Give the new player a tiny window to populate its audio buffers 
-      // before stopping the old one to prevent a dry gap
-      await new Promise(r => setTimeout(r, 50));
-
-      // 4. Stop old player
-      oldPlayer.stop();
-
-      // 5. Update authority
-      MidiTimeAuthority.setTime(targetTime, knownDuration);
+      targetPlayer.start();
+      MidiTimeAuthority.setTime(0, knownDuration);
       MidiTimeAuthority.setPlaying(true);
 
-      // 6. Verify time stuck after a short delay
-      setTimeout(() => {
-        if (newPlayer.playing && knownDuration > 0) {
-          const actual = newPlayer.currentTime || 0;
-          if (Math.abs(actual - targetTime) > 2.0 && targetTime > 2.0) {
-            try { newPlayer.currentTime = targetTime; } catch(e) {}
-          }
-          // Sync authority to actual player time once stable
-          MidiTimeAuthority.sync(newPlayer.currentTime || targetTime);
-          syncSeekbarUI(MidiTimeAuthority.getTime(), knownDuration);
-        }
-      }, 150);
-    } catch (e) {
-      console.error("Error during player switch:", e);
+      // Smooth fade-in
+      fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
+
+      customPlayIcon.textContent = "pause";
+      document.getElementById('custom-midi-player').classList.add("playing");
     }
-  } else {
-    // Not playing: just load the sequence into standby, stop old, swap
-    oldPlayer.stop();
-    try {
-      newPlayer.currentTime = targetTime;
-    } catch(e) {}
-    MidiTimeAuthority.setTime(targetTime, knownDuration);
-    MidiTimeAuthority.setPlaying(false);
-    if (volNode && volNode.volume) {
-      volNode.volume.value = MIDI_TARGET_VOLUME;
-    }
+
+    syncSeekbarUI(0, knownDuration);
   }
 
-  // --- SWAP active/standby references ---
-  activeMidiPlayer = newPlayer;
-  standbyMidiRef = oldPlayer;
-
-  // Reset seekbar tracking
-  window._midiLastSeekValue = -1;
   window.isMidiSwitching = false;
 }
 
 /**
- * Debounced version of applyMidiInstrument for transpose operations.
- * Batches rapid transpose presses so only the final value triggers a transition.
+ * INSTANT (0ms) transpose swap using the pre-loaded player pool.
+ *
+ * Protocol:
+ * 1. Get current time from authority (wall-clock, matches seekbar)
+ * 2. Pre-set new player position
+ * 3. Start new player
+ * 4. Re-seek after start (html-midi-player resets to 0)
+ * 5. Stop old player after brief overlap
+ * 6. Swap activeMidiPlayer
+ *
+ * @param {number} step - Transpose step (-5 to +6)
  */
-function applyMidiInstrumentDebounced() {
-  if (_midiTransposeDebounceTimer) {
-    clearTimeout(_midiTransposeDebounceTimer);
+function swapToPoolPlayer(step) {
+  if (!_midiPoolPreloaded || _midiPoolPreloading) return;
+
+  const newPlayer = MIDI_PLAYER_POOL[step];
+  const oldPlayer = activeMidiPlayer;
+  if (!newPlayer || newPlayer === oldPlayer) return;
+
+  const wasPlaying = oldPlayer && oldPlayer.playing;
+  const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
+
+  // IMPORTANT: Set activeMidiPlayer BEFORE start so syncPlayState listeners
+  // recognize events from the new player (not the old one)
+  activeMidiPlayer = newPlayer;
+
+  if (wasPlaying) {
+    // Get seekbar time
+    const syncTime = Math.max(0, Math.min(MidiTimeAuthority.getTime(), dur - 0.05));
+
+    // Ensure volume is audible
+    const volNode = getToneVolNode();
+    if (volNode && volNode.volume) {
+      volNode.volume.cancelScheduledValues(window.Tone.now());
+      volNode.volume.value = MIDI_TARGET_VOLUME;
+    }
+
+    // Pre-set position, start, re-seek
+    newPlayer.currentTime = syncTime;
+
+    const startPromise = newPlayer.start();
+    if (startPromise && typeof startPromise.then === 'function') {
+      startPromise.catch(() => {});
+    }
+
+    // Re-seek after start (start() may reset to 0)
+    try { newPlayer.currentTime = syncTime; } catch(e) {}
+    
+    // html-midi-player may have paused when currentTime was set. Restart if needed.
+    if (!newPlayer.playing) {
+      try { newPlayer.start(); } catch(e) {}
+    }
+
+    // Stop old after brief overlap
+    setTimeout(() => {
+      if (oldPlayer && oldPlayer !== activeMidiPlayer) {
+        oldPlayer.stop();
+      }
+    }, 40);
+
+    // Anchor authority
+    MidiTimeAuthority.setTime(syncTime, dur);
+    MidiTimeAuthority.setPlaying(true);
+    syncSeekbarUI(syncTime, dur);
+
+    // Explicitly set UI (don't rely on events)
+    customPlayIcon.textContent = "pause";
+    document.getElementById('custom-midi-player').classList.add("playing");
+  } else {
+    // Not playing — just swap reference
+    const currTime = MidiTimeAuthority.getTime();
+    try { newPlayer.currentTime = currTime; } catch(e) {}
   }
-  _midiTransposeDebounceTimer = setTimeout(() => {
-    _midiTransposeDebounceTimer = null;
-    applyMidiInstrument();
-  }, MIDI_TRANSPOSE_DEBOUNCE_MS);
+
+  window._midiLastSeekValue = -1;
+}
+
+/**
+ * Instrument change — re-preload all 12 pool players with new instrument.
+ * Uses a loading overlay since this requires full re-load.
+ */
+async function changeInstrument() {
+  if (!_midiOriginalSeq) return;
+
+  const wasPlaying = activeMidiPlayer && activeMidiPlayer.playing;
+  const currTime = MidiTimeAuthority.getTime();
+  const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
+
+  // Freeze authority
+  MidiTimeAuthority.setPlaying(false);
+  if (wasPlaying) MidiTimeAuthority.setTime(currTime, dur);
+
+  // Stop current player
+  if (activeMidiPlayer && activeMidiPlayer.playing) {
+    try { activeMidiPlayer.stop(); } catch(e) {}
+  }
+
+  window.isMidiSwitching = true;
+
+  // Re-preload all 12 with new instrument
+  const currentTranspose = typeof transposeStep === 'number' ? transposeStep : 0;
+  await preloadAllTransposes(_midiOriginalSeq, {
+    forceStart: false,
+    startTranspose: currentTranspose
+  });
+
+  // Restore position and playback
+  const targetPlayer = MIDI_PLAYER_POOL[currentTranspose];
+  if (targetPlayer) {
+    activeMidiPlayer = targetPlayer;
+    try { targetPlayer.currentTime = currTime; } catch(e) {}
+
+    if (wasPlaying) {
+      const volNode = getToneVolNode();
+      if (volNode && volNode.volume) {
+        volNode.volume.cancelScheduledValues(window.Tone.now());
+        volNode.volume.value = MIDI_SILENT_VOLUME;
+      }
+
+      targetPlayer.start();
+      try { targetPlayer.currentTime = currTime; } catch(e) {}
+
+      MidiTimeAuthority.setTime(currTime, dur);
+      MidiTimeAuthority.setPlaying(true);
+      fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
+
+      customPlayIcon.textContent = "pause";
+      document.getElementById('custom-midi-player').classList.add("playing");
+    }
+
+    syncSeekbarUI(currTime, dur);
+  }
+
+  window.isMidiSwitching = false;
 }
 
 /**
@@ -824,10 +879,7 @@ function syncSeekbarUI(time, duration) {
     }
   }
   if (typeof customTimeDisplay !== 'undefined' && customTimeDisplay) {
-    const fmt = (s) => {
-      const i = Math.floor(s || 0);
-      return `${Math.floor(i / 60)}:${(i % 60).toString().padStart(2, '0')}`;
-    };
-    customTimeDisplay.textContent = `${fmt(t)} / ${dur > 0 ? fmt(dur) : '0:00'}`;
+    customTimeDisplay.textContent = `${formatMidiTime(t)} / ${dur > 0 ? formatMidiTime(dur) : '0:00'}`;
   }
 }
+

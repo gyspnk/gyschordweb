@@ -36,10 +36,32 @@
 
   <main class="app-content" id="main-content"></main>
 
+  <div id="mini-player" class="mini-player" style="display: none;">
+    <div class="mini-player-info">
+      <div id="mini-title" class="mini-title">Judul Lagu</div>
+      <div id="mini-subtitle" class="mini-subtitle">Playlist name or "Dalam Antrean"</div>
+    </div>
+    <div class="mini-player-controls">
+      <button id="mini-prev-btn" class="icon-button" aria-label="Previous">
+        <span class="material-symbols-outlined">skip_previous</span>
+      </button>
+      <button id="mini-play-btn" class="icon-button" aria-label="Play/Pause">
+        <span class="material-symbols-outlined" id="mini-play-icon">play_arrow</span>
+      </button>
+      <button id="mini-next-btn" class="icon-button" aria-label="Next">
+        <span class="material-symbols-outlined">skip_next</span>
+      </button>
+    </div>
+  </div>
+
   <nav class="bottom-nav">
     <button class="nav-btn selected" id="pujian-btn" aria-label="Pujian">
       <span class="material-symbols-outlined">music_note</span>
       <span class="nav-label">Pujian</span>
+    </button>
+    <button class="nav-btn" id="playlist-btn" aria-label="Playlist">
+      <span class="material-symbols-outlined">queue_music</span>
+      <span class="nav-label">Playlist</span>
     </button>
     <button class="nav-btn" id="pengaturan-btn" aria-label="Pengaturan">
       <span class="material-symbols-outlined">settings</span>
@@ -164,12 +186,50 @@
                       </div>
                     </div>
                   </div>
+
+                  <!-- Auto Next Dropdown Trigger -->
+                  <div class="instrument-selector-wrapper flex-shrink-0" style="margin-left:8px;">
+                    <button class="instrument-capsule-btn" id="autonext-btn" type="button" aria-haspopup="dialog" aria-expanded="false" title="Pengaturan Auto Next" style="padding-left:12px; padding-right:12px;">
+                      <span class="material-symbols-outlined cis-icon" id="autonext-icon">repeat</span>
+                    </button>
+                    <!-- Popover menu -->
+                    <div class="cis-menu-popover" id="autonext-menu" role="dialog" style="padding:16px; width:220px; left:auto; right:0;">
+                      <div style="font-weight:600; margin-bottom:8px; font-size:14px;">Mode Auto Next</div>
+                      <select id="autonext-mode-select" style="width:100%; margin-bottom:16px; padding:8px; border-radius:6px; background:var(--md-sys-color-surface-container-highest); color:var(--md-sys-color-on-surface); border:1px solid var(--md-sys-color-outline-variant);">
+                        <option value="off">Mati</option>
+                        <option value="number">Sesuai Nomor</option>
+                        <option value="playlist">Sesuai Playlist</option>
+                      </select>
+                      
+                      <div id="autonext-playlist-select-wrapper" style="display:none;">
+                        <div style="font-weight:600; margin-bottom:8px; font-size:14px;">Playlist Aktif</div>
+                        <select id="autonext-playlist-select" style="width:100%; padding:8px; border-radius:6px; background:var(--md-sys-color-surface-container-highest); color:var(--md-sys-color-on-surface); border:1px solid var(--md-sys-color-outline-variant);">
+                          <!-- populated dynamically -->
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  
                 </div>
               </div>
-              <!-- Hidden Original Component -->
-               <div style="display:none;">
-                 <midi-player id="main-midi-player" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
-                 <midi-player id="standby-midi-player" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+              <!-- Hidden MIDI Player Pool (12 players, one per transpose step) -->
+               <div style="display:none;" id="midi-player-pool">
+                 <midi-player data-transpose="-5" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+                 <midi-player data-transpose="-4" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+                 <midi-player data-transpose="-3" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+                 <midi-player data-transpose="-2" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+                 <midi-player data-transpose="-1" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+                 <midi-player data-transpose="0" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+                 <midi-player data-transpose="1" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+                 <midi-player data-transpose="2" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+                 <midi-player data-transpose="3" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+                 <midi-player data-transpose="4" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+                 <midi-player data-transpose="5" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+                 <midi-player data-transpose="6" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"></midi-player>
+               </div>
+               <!-- MIDI Preload Progress -->
+               <div class="midi-preload-bar" id="midi-preload-bar" style="display:none;">
+                 <div class="midi-preload-fill" id="midi-preload-fill"></div>
                </div>
             </div>
           </div>
@@ -347,6 +407,7 @@
   <script defer src="js/09-ui-helpers.js"></script>
   <script defer src="js/10-zoom-gestures.js"></script>
   <script defer src="js/11-handlers.js"></script>
-
+  <script defer src="js/12-playlist.js"></script>
+  <script defer src="js/13-playlist-ui.js"></script>
 </body>
 </html>

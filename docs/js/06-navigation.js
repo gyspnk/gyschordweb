@@ -1,12 +1,20 @@
 // --- 5. Navigasi utama ---
 function navigateTo(page) {
-  [pujianBtn, pengaturanBtn].forEach((btn) => btn.classList.remove("selected"));
+  const playlistBtn = document.getElementById("playlist-btn");
+  [pujianBtn, pengaturanBtn, playlistBtn].forEach((btn) => {
+    if (btn) btn.classList.remove("selected");
+  });
   document.querySelector(".app-header").style.display = "flex";
 
   if (page === "pujian") {
     pujianBtn.classList.add("selected");
     searchContainer.style.display = "flex";
     renderPujianList();
+  } else if (page === "playlist") {
+    const playlistBtn = document.getElementById("playlist-btn");
+    if (playlistBtn) playlistBtn.classList.add("selected");
+    searchContainer.style.display = "none";
+    if (typeof renderPlaylistView === "function") renderPlaylistView();
   } else if (page === "pengaturan") {
     pengaturanBtn.classList.add("selected");
     searchContainer.style.display = "none";
@@ -58,9 +66,12 @@ function displayPujian(items) {
       ${items
         .map(
           (item) => `
-        <li data-id="${item.id}" data-nomor="${item.nomor.toLowerCase()}" data-judul="${item.judul.toLowerCase()}">
+        <li data-id="${item.id}" data-nomor="${item.nomor.toLowerCase()}" data-judul="${item.judul.toLowerCase()}" class="pujian-item">
           <span class="pujian-nomor">${item.nomor}</span>
           <a href="${item.fileHref}" class="pujian-title">${item.judul}</a>
+          <button class="icon-button add-to-playlist-btn" data-id="${item.id}" aria-label="Tambah ke Playlist" title="Tambah ke Playlist">
+            <span class="material-symbols-outlined">playlist_add</span>
+          </button>
         </li>
       `
         )
@@ -68,6 +79,11 @@ function displayPujian(items) {
     </ul>`;
   filterPujianList();
   fitListTitles();
+  
+  // Sync playlist + icons
+  if (typeof updatePlaylistIndicators === 'function') {
+    updatePlaylistIndicators();
+  }
 }
 
 function renderSettingLabel(icon, text) {

@@ -7,14 +7,13 @@ async function init() {
     // untuk mencegah clipping/distorsi pada instrumen MIDI berpolifoni tinggi
     if (window.Tone) {
       if (Tone.getDestination) {
-        Tone.getDestination().volume.value = -12; // Lower to -12 dB to prevent clipping
-        // Tambahkan dynamics compressor/limiter jika didukung untuk mencegah distorsi puncak
+        Tone.getDestination().volume.value = -6; // Master volume: -6 dB
         try {
-          const limiter = new Tone.Limiter(-6); // Limit pada -6 dB (yang mana dikalkulasi sebelum/sesudah master volume)
+          const limiter = new Tone.Limiter(-1); // Limiter at -1 dB to prevent clipping
           Tone.getDestination().chain(limiter);
         } catch(e) { } 
       } else if (Tone.Master) {
-        Tone.Master.volume.value = -12;
+        Tone.Master.volume.value = -6;
       }
     }
 

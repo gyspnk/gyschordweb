@@ -26,6 +26,8 @@ function handleMainContentClick(e) {
 
   const pujianItem = e.target.closest(".pujian-list li");
   if (pujianItem) {
+    if (e.target.closest('.add-to-playlist-btn') || e.target.closest('button')) return;
+    
     e.preventDefault();
     openPdfViewer(pujianItem.dataset.id);
     return;
