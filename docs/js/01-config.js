@@ -152,3 +152,121 @@ const CHORD_GRID = { cols: 105, rows: 149 };
   const ZOOM_SCROLL_SMOOTH_DURATION_MS = 210;
   const TRANSPOSE_DISSOLVE_OUT_MS = 180;
   const TRANSPOSE_DISSOLVE_IN_MS = 230;
+
+  // --- MIDI Audio Transition Constants ---
+  const MIDI_TARGET_VOLUME = -12;       // Standard safe volume in dB
+  const MIDI_SILENT_VOLUME = -60;       // "Silent" volume in dB
+  const MIDI_FADE_IN_MS = 300;          // Fade-in duration for play
+  const MIDI_FADE_OUT_MS = 300;         // Fade-out duration for pause
+  const MIDI_CROSSFADE_OUT_MS = 200;    // Crossfade out duration for transpose/instrument change
+  const MIDI_CROSSFADE_IN_MS = 250;     // Crossfade in duration for transpose/instrument change
+  const MIDI_LOAD_TIMEOUT_MS = 500;     // Fallback timeout for sequence load event
+  const MIDI_OVERLAP_MS = 30;           // Overlap window for near-gapless dual-player switch
+  const MIDI_TRANSPOSE_DEBOUNCE_MS = 150; // Debounce rapid transpose MIDI updates
+
+  /**
+   * MidiTimeAuthority — Single source of truth for playback position.
+   * Uses wall-clock (performance.now()) to advance time when playing,
+   * so we never depend on the unreliable html-midi-player currentTime
+   * during transitions.
+   */
+  const MidiTimeAuthority = {
+    _time: 0,
+    _timestamp: 0,        // performance.now() when _time was last set
+    _playing: false,
+    _duration: 0,
+    _seekCooldownUntil: 0, // Blocks drift correction after seeks
+
+    /** Snapshot the current time (e.g. before a transition or seek) */
+    setTime(t, dur) {
+      this._time = Math.max(0, t || 0);
+      this._timestamp = performance.now();
+      if (dur !== undefined && dur > 0) this._duration = dur;
+      // Block drift correction for 600ms after any explicit time set
+      this._seekCooldownUntil = performance.now() + 600;
+    },
+
+    /** Get the current time, advancing by wall-clock if playing */
+    getTime() {
+      if (!this._playing) return this._time;
+      const elapsed = (performance.now() - this._timestamp) / 1000;
+      const t = this._time + elapsed;
+      return this._duration > 0 ? Math.min(t, this._duration) : t;
+    },
+
+    /** Mark playback as playing/paused */
+    setPlaying(playing) {
+      if (playing === this._playing) return;
+      if (playing) {
+        // Resuming: anchor the current time to now
+        this._timestamp = performance.now();
+      } else {
+        // Pausing: freeze the time at the current computed value
+        this._time = this.getTime();
+        this._timestamp = performance.now();
+      }
+      this._playing = playing;
+    },
+
+    /** Correct drift by syncing to the player's reported time (only when stable) */
+    sync(playerTime) {
+      if (!this._playing) return;
+      // Skip drift correction during seek cooldown
+      if (performance.now() < this._seekCooldownUntil) return;
+      const authorityTime = this.getTime();
+      // Only sync if the difference is significant enough (> 0.5s)
+      // but not absurdly large (which would indicate a stale player read)
+      const diff = Math.abs(playerTime - authorityTime);
+      if (diff > 0.5 && diff < 3) {
+        this._time = playerTime;
+        this._timestamp = performance.now();
+      }
+    },
+
+    /** Get duration */
+    getDuration() { return this._duration; },
+
+    /** Set duration */
+    setDuration(d) { if (d > 0) this._duration = d; },
+
+    /** Full reset */
+    reset() {
+      this._time = 0;
+      this._timestamp = performance.now();
+      this._playing = false;
+      this._duration = 0;
+      this._seekCooldownUntil = 0;
+    }
+  };
+
+  /**
+   * Returns the Material Symbols icon name for a given MIDI program number.
+   * @param {number|string} programNumber - MIDI program number (0-127) or "-1" for default
+   * @returns {string} Material Symbols icon name
+   */
+  function getMidiInstrumentIcon(programNumber) {
+    const valNum = parseInt(programNumber, 10);
+    if (isNaN(valNum) || valNum < 0) return "music_note";
+    if (valNum <= 7) return "piano";
+    if (valNum <= 15) return "notifications_active";
+    if (valNum <= 23) return "piano";
+    if (valNum <= 31) return "library_music";
+    if (valNum <= 39) return "library_music";
+    if (valNum <= 47) return "graphic_eq";
+    if (valNum <= 55) return "graphic_eq";
+    if (valNum <= 63) return "campaign";
+    if (valNum <= 71) return "styler";
+    if (valNum <= 79) return "media_link";
+    return "music_note";
+  }
+
+  /**
+   * Get Tone.js volume destination node.
+   * @returns {object|null} The Tone.js volume node or null
+   */
+  function getToneVolNode() {
+    if (!window.Tone) return null;
+    return (window.Tone.Destination ||
+      (window.Tone.getDestination ? window.Tone.getDestination() : null) ||
+      window.Tone.Master) || null;
+  }

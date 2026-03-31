@@ -1,0 +1,27 @@
+{
+  "name": "gyschordweb",
+  "version": "1.0.0",
+  "description": "GysChordWeb adalah aplikasi web progresif yang didesain khusus sebagai alat interaktif penampil PDF partitur Kidung Rohani dan pengelolaan transpose chord. Aplikasi ini membantu menjembatani keterbatasan musisi (khususnya pemula) dalam hal penggantian nada dasar saat mengiringi ibadah/pelayanan.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KernelXtream/gyschordweb.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/KernelXtream/gyschordweb/issues"
+  },
+  "homepage": "https://github.com/KernelXtream/gyschordweb#readme",
+  "dependencies": {
+    "puppeteer": "^24.40.0"
+  }
+}

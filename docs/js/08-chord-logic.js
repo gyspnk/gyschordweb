@@ -1,4 +1,4 @@
-﻿// --- 7. Chord Overlay Logic ---
+// --- 7. Chord Overlay Logic ---
 function createDefaultChordConfig() {
   return {
     version: 1,
@@ -520,9 +520,9 @@ function updateTransposeUI(options = {}) {
     updateFamilyChordUI();
   }
 
-  // Update MIDI playback pitch without interrupting
-  if (typeof applyMidiInstrument === 'function') {
-    applyMidiInstrument();
+  // Update MIDI playback pitch (debounced to handle rapid presses)
+  if (typeof applyMidiInstrumentDebounced === 'function') {
+    applyMidiInstrumentDebounced();
   }
 
   accidentalSwitchBtns.forEach((btn) => {

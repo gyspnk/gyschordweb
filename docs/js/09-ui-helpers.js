@@ -248,7 +248,7 @@ function updateSongNavButtons() {
   nextSongBtn.disabled = currentSongIndex >= pujianItems.length - 1;
 }
 
-function closePdfViewer() {
+async function closePdfViewer() {
   document.body.classList.remove("viewer-active");
   pdfDoc = null;
   currentSongIndex = -1;
@@ -263,8 +263,32 @@ function closePdfViewer() {
   
   if (typeof mainMidiPlayer !== 'undefined' && mainMidiPlayer) {
     try {
-      if (typeof mainMidiPlayer.stop === 'function') mainMidiPlayer.stop();
-      else mainMidiPlayer.playing = false;
+      // Fade out before stopping for smooth audio transition
+      const currentPlayer = activeMidiPlayer || mainMidiPlayer;
+      if (currentPlayer.playing) {
+        const volNode = getToneVolNode();
+        if (volNode && volNode.volume && window.Tone) {
+          const t = window.Tone.now();
+          volNode.volume.cancelScheduledValues(t);
+          volNode.volume.setValueAtTime(volNode.volume.value, t);
+          volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_FADE_OUT_MS / 1000);
+          await new Promise(r => setTimeout(r, MIDI_FADE_OUT_MS + 50));
+        }
+      }
+      // Stop BOTH players
+      try { mainMidiPlayer.stop(); } catch(e) {}
+      try { if (standbyMidiPlayer) standbyMidiPlayer.stop(); } catch(e) {}
     } catch(e) {}
+    
+    // Reset all MIDI state
+    MidiTimeAuthority.reset();
+    window._midiSavedTime = null;
+    _midiOriginalSeq = null;
+    _midiTransitionLock = false;
+    _midiQueuedTransition = null;
+    if (_midiTransposeDebounceTimer) { clearTimeout(_midiTransposeDebounceTimer); _midiTransposeDebounceTimer = null; }
+    window.isMidiSwitching = false;
+    activeMidiPlayer = mainMidiPlayer;
+    standbyMidiRef = standbyMidiPlayer;
   }
 }

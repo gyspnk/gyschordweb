@@ -17,6 +17,19 @@ const pdfViewerCloseBtn = document.getElementById("pdf-viewer-close");
 const midiToggleBtn = document.getElementById("midi-toggle-btn");
 const midiPanel = document.getElementById("midi-panel");
 const mainMidiPlayer = document.getElementById("main-midi-player");
+const standbyMidiPlayer = document.getElementById("standby-midi-player");
+// Mutable references: activeMidiPlayer is the one currently playing/audible.
+// standbyMidiRef is the one used for pre-loading the next transposed sequence.
+let activeMidiPlayer = mainMidiPlayer;
+let standbyMidiRef = standbyMidiPlayer;
+// Global original sequence (not tied to a specific player element)
+let _midiOriginalSeq = null;
+// Transition mutex: prevents overlapping applyMidiInstrument calls
+let _midiTransitionLock = false;
+// Queued transition: if a request comes in while locked, store it here
+let _midiQueuedTransition = null;
+// Debounce timer for transpose MIDI updates
+let _midiTransposeDebounceTimer = null;
 const customInstrumentSelect = document.getElementById("custom-instrument-select");
 const cisLabel = document.getElementById("cis-label");
 const cisMenu = document.getElementById("cis-menu");

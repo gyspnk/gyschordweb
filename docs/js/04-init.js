@@ -25,6 +25,16 @@ async function init() {
     console.warn("Gagal pre-load font PDF:", err);
   }
 
+  // Handle AudioContext warning
+  const resumeAudioContext = () => {
+    if (window.Tone && Tone.context.state !== 'running') {
+      Tone.context.resume();
+    }
+  };
+  document.body.addEventListener('click', resumeAudioContext, { once: true, capture: true });
+  document.body.addEventListener('touchstart', resumeAudioContext, { once: true, capture: true });
+
+
   chordConfig = createDefaultChordConfig();
   applyStoredPreferences();
   setupEventListeners();

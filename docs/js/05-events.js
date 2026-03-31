@@ -93,22 +93,7 @@ function setupEventListeners() {
         
 
         
-
-        let iconVal = "music_note";
-        const valNum = parseInt(val, 10);
-
-        if (valNum >= 0 && valNum <= 7) iconVal = "piano";
-        else if (valNum >= 8 && valNum <= 15) iconVal = "notifications_active";
-        else if (valNum >= 16 && valNum <= 23) iconVal = "piano";
-        else if (valNum >= 24 && valNum <= 31) iconVal = "library_music";
-        else if (valNum >= 32 && valNum <= 39) iconVal = "library_music";
-        else if (valNum >= 40 && valNum <= 47) iconVal = "graphic_eq";
-        else if (valNum >= 48 && valNum <= 55) iconVal = "graphic_eq";
-        else if (valNum >= 56 && valNum <= 63) iconVal = "campaign";
-        else if (valNum >= 64 && valNum <= 71) iconVal = "styler";
-        else if (valNum >= 72 && valNum <= 79) iconVal = "media_link";
-        
-        if (val === "-1") iconVal = "music_note";
+        const iconVal = getMidiInstrumentIcon(val);
 
         const iconEl = document.getElementById("cis-icon");
         if(iconEl) iconEl.textContent = iconVal;
@@ -145,134 +130,197 @@ function setupEventListeners() {
 
 
     // Play/Pause button
-    customPlayBtn.addEventListener("click", async () => {      if (window.Tone && window.Tone.start) {
-        try { await window.Tone.start(); } catch (e) {} // Ensure AudioContext is resumed
-      }      let volNode = window.Tone && ((window.Tone.Destination || (window.Tone.getDestination ? window.Tone.getDestination() : null)) || window.Tone.Master);
+    customPlayBtn.addEventListener("click", async () => {
+      if (window.isMidiSwitching || window.isMidiFading) return;
+
+      if (window.Tone && window.Tone.start) {
+        try { await window.Tone.start(); } catch (e) {}
+      }
+      
+      const volNode = getToneVolNode();
+      const player = activeMidiPlayer;
+      if (!player) return;
+      
       try {
-        if (!mainMidiPlayer.playing) {
-          customPlayIcon.textContent = "hourglass_empty"; // Loading state
+        if (!player.playing) {
+          // --- PLAY (with fade-in) ---
+          window.isMidiFading = true;
+          customPlayIcon.textContent = "hourglass_empty";
           
+          // Set volume to silent BEFORE starting to prevent any pop
           if (volNode && volNode.volume) {
-             volNode.volume.value = -60; // Start silent
+            volNode.volume.cancelScheduledValues(window.Tone.now());
+            volNode.volume.value = MIDI_SILENT_VOLUME;
           }
-          await mainMidiPlayer.start();
-          if (volNode && volNode.volume) {
-             volNode.volume.rampTo(0, 0.4); // Fade in
+          
+          // Restore position from authority
+          const restoreTime = MidiTimeAuthority.getTime();
+          if (restoreTime > 0) {
+            try {
+              player.currentTime = restoreTime;
+            } catch (e) {}
+          }
+          
+          player.start();
+          
+          // Set time again after start to combat reset
+          if (restoreTime > 0) {
+            try { player.currentTime = restoreTime; } catch(e) {}
+          }
+          
+          // Update authority
+          MidiTimeAuthority.setPlaying(true);
+          
+          // Schedule smooth fade-in
+          if (volNode && volNode.volume && window.Tone) {
+            const t = window.Tone.now();
+            volNode.volume.cancelScheduledValues(t);
+            volNode.volume.setValueAtTime(MIDI_SILENT_VOLUME, t);
+            volNode.volume.linearRampToValueAtTime(MIDI_TARGET_VOLUME, t + MIDI_FADE_IN_MS / 1000);
           }
           
           customPlayIcon.textContent = "pause";
           document.getElementById('custom-midi-player').classList.add("playing");
+          window._midiSavedTime = null;
+          window.isMidiFading = false;
         } else {
-          if (volNode && volNode.volume) {
-             volNode.volume.rampTo(-60, 0.3); // Fade out
-             await new Promise(r => setTimeout(r, 300));
-          }
-          mainMidiPlayer.stop();
-          if (volNode && volNode.volume) {
-             volNode.volume.value = 0; // Restore volume for next play
-          }
+          // --- PAUSE (with fade-out) ---
+          window.isMidiFading = true;
+          
+          // Freeze authority time (snapshot current position)
+          MidiTimeAuthority.setPlaying(false);
+          window._midiSavedTime = MidiTimeAuthority.getTime();
+          
+          // Optimistic UI update for responsive feel
           customPlayIcon.textContent = "play_arrow";
           document.getElementById('custom-midi-player').classList.remove("playing");
+
+          if (volNode && volNode.volume && window.Tone) {
+            const t = window.Tone.now();
+            volNode.volume.cancelScheduledValues(t);
+            volNode.volume.setValueAtTime(volNode.volume.value, t);
+            volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_FADE_OUT_MS / 1000);
+            await new Promise(r => setTimeout(r, MIDI_FADE_OUT_MS + 50));
+          }
+          
+          player.stop();
+          
+          if (volNode && volNode.volume) {
+            volNode.volume.value = MIDI_SILENT_VOLUME;
+          }
+          window.isMidiFading = false;
         }
       } catch (err) {
-        console.error("Gagal start MIDI:", err);
+        console.error("Gagal start/stop MIDI:", err);
         customPlayIcon.textContent = "play_arrow";
         document.getElementById('custom-midi-player').classList.remove("playing");
+        window.isMidiFading = false;
       }
     });
-    // Sync play state
-    mainMidiPlayer.addEventListener('start', () => {
-      customPlayIcon.textContent = "pause";
-      document.getElementById('custom-midi-player').classList.add("playing");
-    });
-    mainMidiPlayer.addEventListener('stop', () => {
-      customPlayIcon.textContent = "play_arrow";
-      document.getElementById('custom-midi-player').classList.remove("playing");
-    });
 
-
+    // Sync play state from BOTH players (since active player can swap)
+    const syncPlayState = (evt) => {
+      if (window.isMidiFading || window.isMidiSwitching) return;
+      // Only respond to events from the currently active player
+      if (evt.target !== activeMidiPlayer) return;
+      const isPlaying = activeMidiPlayer.playing;
+      customPlayIcon.textContent = isPlaying ? "pause" : "play_arrow";
+      document.getElementById('custom-midi-player').classList.toggle("playing", isPlaying);
+    };
+    mainMidiPlayer.addEventListener('start', syncPlayState);
+    mainMidiPlayer.addEventListener('stop', syncPlayState);
+    if (standbyMidiPlayer) {
+      standbyMidiPlayer.addEventListener('start', syncPlayState);
+      standbyMidiPlayer.addEventListener('stop', syncPlayState);
+    }
 
     // Seek bar formatting helper
-
     const formatTime = (seconds) => {
-
       const isecs = Math.floor(seconds || 0);
-
       const m = Math.floor(isecs / 60);
-
       const s = isecs % 60;
-
       return `${m}:${s.toString().padStart(2, '0')}`;
-
     };
 
-
-
-// Update UI on time update via an interval (html-midi-player doesn't fire timeupdate reliably)
-
+    // Update UI on time update via an interval (html-midi-player doesn't fire timeupdate reliably)
     let isDraggingSeekbar = false;
+    // Expose lastSeekValue globally so applyMidiInstrument can reset it
+    window._midiLastSeekValue = -1;
 
     setInterval(() => {
-
       if (isDraggingSeekbar || window.isMidiSwitching) return;
+      if (!document.body.classList.contains('viewer-active')) return;
+      
+      // --- Read from MidiTimeAuthority (single source of truth) ---
+      const curr = MidiTimeAuthority.getTime();
+      const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
 
-      const curr = mainMidiPlayer.currentTime || 0;
+      // Only update DOM if value changed significantly to save CPU
+      if (Math.abs(curr - window._midiLastSeekValue) < 0.1 && customSeekbar.max == dur) return;
+      window._midiLastSeekValue = curr;
 
-      const dur = mainMidiPlayer.duration || 0;
-
-
+      // Periodically sync authority to actual player time (drift correction)
+      const player = activeMidiPlayer;
+      if (player && player.playing && !window.isMidiSwitching) {
+        const playerTime = player.currentTime || 0;
+        MidiTimeAuthority.sync(playerTime);
+      }
 
       customTimeDisplay.textContent = `${formatTime(curr)} / ${dur > 0 ? formatTime(dur) : '0:00'}`;
 
-
-
       if (dur > 0) {
-
         customSeekbar.max = dur;
-
         customSeekbar.value = curr;
         
         const fill = document.getElementById('custom-seekbar-fill');
         if (fill) fill.style.width = ((curr / dur) * 100) + '%';
-
       } else {
-
         customSeekbar.value = 0;
-
         customSeekbar.max = 100;
         
         const fill = document.getElementById('custom-seekbar-fill');
         if (fill) fill.style.width = '0%';
-
       }
-
-    }, 250);
-
-
+    }, 100);
 
     // Prevent timeupdate from fighting with user interaction
-
     customSeekbar.addEventListener('input', () => {
-
       isDraggingSeekbar = true;
-
-      const dur = mainMidiPlayer.duration || 0;
-
-      customTimeDisplay.textContent = `${formatTime(customSeekbar.value)} / ${dur > 0 ? formatTime(dur) : '0:00'}`;
+      const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
+      const val = parseFloat(customSeekbar.value);
+      customTimeDisplay.textContent = `${formatTime(val)} / ${dur > 0 ? formatTime(dur) : '0:00'}`;
       
       const fill = document.getElementById('custom-seekbar-fill');
-      if (fill && dur > 0) fill.style.width = ((parseFloat(customSeekbar.value) / dur) * 100) + '%';
-
+      if (fill && dur > 0) fill.style.width = ((val / dur) * 100) + '%';
     });
 
-
-
     customSeekbar.addEventListener('change', () => {
-
       isDraggingSeekbar = false;
-
-      mainMidiPlayer.currentTime = parseFloat(customSeekbar.value);
-
+      if (window.isMidiSwitching) return;
+      const val = parseFloat(customSeekbar.value);
+      const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
+      
+      // Update authority FIRST (single source of truth)
+      MidiTimeAuthority.setTime(val, dur);
+      
+      // Then update the active player with retry mechanism
+      const player = activeMidiPlayer;
+      if (player) {
+        player.currentTime = val;
+        
+        // Retry setting time shortly after (player might reject it if it thinks it's not ready)
+        setTimeout(() => {
+          if (player && !window.isMidiSwitching) {
+            const actual = player.currentTime || 0;
+            if (Math.abs(actual - val) > 1.0) {
+              try { player.currentTime = val; } catch(e) {}
+            }
+          }
+        }, 50);
+      }
+      
+      window._midiLastSeekValue = val;
+      window._midiSavedTime = null;
     });
 
   }

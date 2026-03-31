@@ -31,62 +31,85 @@ async function openPdfViewer(songId) {
 
   // Setup MIDI Player
   if (typeof mainMidiPlayer !== "undefined" && mainMidiPlayer && midiToggleBtn) {
-    let volNode = window.Tone && ((window.Tone.Destination || (window.Tone.getDestination ? window.Tone.getDestination() : null)) || window.Tone.Master);
-    if (mainMidiPlayer.playing && volNode && volNode.volume) {
-      volNode.volume.rampTo(-60, 0.2);
-      await new Promise(r => setTimeout(r, 200));
-      mainMidiPlayer.stop();
-      volNode.volume.value = 0; // Restore volume
+    const volNode = getToneVolNode();
+    const wasPlayingGlobal = (activeMidiPlayer && activeMidiPlayer.playing);
+
+    if (wasPlayingGlobal && volNode && volNode.volume && window.Tone) {
+      const t = window.Tone.now();
+      volNode.volume.cancelScheduledValues(t);
+      volNode.volume.setValueAtTime(volNode.volume.value, t);
+      volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_FADE_OUT_MS / 1000);
+      await new Promise(r => setTimeout(r, MIDI_FADE_OUT_MS + 50));
     }
 
-    const rawUrl = song.fileHref.replace(/\/pdf\//i, '/midi/').replace(/\.pdf$/i, '.mid');
-    
-    // Gunakan fungsi urlToNoteSequence bawahan dari Magenta core
+    // Stop BOTH players and reset state
+    try { mainMidiPlayer.stop(); } catch(e) {}
+    try { if (standbyMidiPlayer) standbyMidiPlayer.stop(); } catch(e) {}
+    MidiTimeAuthority.reset();
+    window._midiSavedTime = null;
+    _midiOriginalSeq = null;
+    _midiTransitionLock = false;
+    _midiQueuedTransition = null;
+    if (_midiTransposeDebounceTimer) { clearTimeout(_midiTransposeDebounceTimer); _midiTransposeDebounceTimer = null; }
+    window.isMidiSwitching = false;
+
+    // Reset active/standby to defaults
+    activeMidiPlayer = mainMidiPlayer;
+    standbyMidiRef = standbyMidiPlayer;
+
+    if (volNode && volNode.volume) {
+      volNode.volume.value = MIDI_SILENT_VOLUME;
+    }
+
+    let rawUrl = song.fileHref;
+    if (rawUrl) {
+      rawUrl = rawUrl.replace(/\/pdf\//i, '/midi/').replace(/\.pdf$/i, '.mid');
+    }
+
     if (window.core && typeof window.core.urlToNoteSequence === 'function') {
-      // Hapus state lama agar bersih
+      // Clear current sequences on both players
       mainMidiPlayer.src = null;
       mainMidiPlayer.noteSequence = null;
-      
+      if (standbyMidiPlayer) {
+        standbyMidiPlayer.src = null;
+        standbyMidiPlayer.noteSequence = null;
+      }
+
       window.core.urlToNoteSequence(encodeURI(rawUrl)).then(seq => {
-        // Simpan noteSequence original ke propepi kustom player
-        mainMidiPlayer._originalSeq = seq;
-        applyMidiInstrument();
-      }).catch(err => console.warn('Gagal memuat MIDI:', err));
+        // Store original sequence globally
+        _midiOriginalSeq = seq;
+        // Store known-good duration
+        if (seq && seq.totalTime) {
+          window._midiKnownDuration = seq.totalTime;
+          MidiTimeAuthority.setDuration(seq.totalTime);
+        }
+
+        // Use applyMidiInstrument with wasPlayingGlobal to ensure smooth transition
+        applyMidiInstrument(wasPlayingGlobal);
+      }).catch(err => {
+        console.warn('Gagal memuat MIDI:', err);
+        window.isMidiSwitching = false;
+      });
     } else {
       // Fallback reguler
       mainMidiPlayer.src = encodeURI(rawUrl);
     }
-    
+
     // Set UI dropdown dengan preferensi yg ada
-          if (prefs.midiInstrument && typeof customInstrumentSelect !== "undefined" && customInstrumentSelect) {
-        customInstrumentSelect.dataset.value = prefs.midiInstrument;
-        const iconEl = document.getElementById("cis-icon");
-        if (iconEl) {
-          const option = document.querySelector(`.cis-option[data-val="${prefs.midiInstrument}"]`);
-          if (option) {
-            const valNum = parseInt(prefs.midiInstrument, 10);
-            let iconVal = "music_note";
-            if (valNum >= 0 && valNum <= 7) iconVal = "piano";
-            else if (valNum >= 8 && valNum <= 15) iconVal = "notifications_active";
-            else if (valNum >= 16 && valNum <= 23) iconVal = "piano";
-            else if (valNum >= 24 && valNum <= 31) iconVal = "library_music";
-            else if (valNum >= 32 && valNum <= 39) iconVal = "library_music";
-            else if (valNum >= 40 && valNum <= 47) iconVal = "graphic_eq";
-            else if (valNum >= 48 && valNum <= 55) iconVal = "graphic_eq";
-            else if (valNum >= 56 && valNum <= 63) iconVal = "campaign";
-            else if (valNum >= 64 && valNum <= 71) iconVal = "styler";
-            else if (valNum >= 72 && valNum <= 79) iconVal = "media_link";
-            if(prefs.midiInstrument === "-1") iconVal = "music_note";
-            iconEl.textContent = iconVal;
-            
-            // select active class
-            document.querySelectorAll('.cis-option').forEach(opt => opt.classList.remove('selected'));
-            option.classList.add('selected');
-          }
+    if (prefs.midiInstrument && typeof customInstrumentSelect !== "undefined" && customInstrumentSelect) {
+      customInstrumentSelect.dataset.value = prefs.midiInstrument;
+      const iconEl = document.getElementById("cis-icon");
+      if (iconEl) {
+        const option = document.querySelector(`.cis-option[data-val="${prefs.midiInstrument}"]`);
+        if (option) {
+          iconEl.textContent = getMidiInstrumentIcon(prefs.midiInstrument);
+          document.querySelectorAll('.cis-option').forEach(opt => opt.classList.remove('selected'));
+          option.classList.add('selected');
         }
       }
+    }
 
-      midiToggleBtn.style.display = 'flex';
+    midiToggleBtn.style.display = 'flex';
     if (typeof midiPanel !== "undefined" && midiPanel) {
       midiToggleBtn.setAttribute('aria-expanded', 'false');
     }
@@ -588,10 +611,47 @@ function updateViewerUI() {
   updateTransposeUI();
 }
 
-async function applyMidiInstrument() {
-  if (typeof mainMidiPlayer === "undefined" || !mainMidiPlayer || !mainMidiPlayer._originalSeq) return;
+/**
+ * Dual-player crossfade MIDI instrument/transpose applicator.
+ *
+ * Architecture:
+ * - Two <midi-player> elements alternate roles (active / standby)
+ * - The active player keeps playing while the standby pre-loads the transposed sequence
+ * - Once loaded, a fast overlap switch (~30ms) provides near-gapless transition
+ * - MidiTimeAuthority is the single source of truth for playback time
+ * - A mutex prevents overlapping transitions
+ */
+async function applyMidiInstrument(forceStart = false) {
+  if (!_midiOriginalSeq) return;
 
-  const seq = mainMidiPlayer._originalSeq;
+  // --- MUTEX: If a transition is already in progress, queue this request ---
+  if (_midiTransitionLock) {
+    _midiQueuedTransition = { forceStart };
+    return;
+  }
+  _midiTransitionLock = true;
+
+  try {
+    await _doApplyMidiInstrument(forceStart);
+  } catch (err) {
+    console.error('applyMidiInstrument error:', err);
+  } finally {
+    _midiTransitionLock = false;
+
+    // Process queued transition if any
+    if (_midiQueuedTransition) {
+      const queued = _midiQueuedTransition;
+      _midiQueuedTransition = null;
+      // Use setTimeout(0) to avoid stack overflow from recursive calls
+      setTimeout(() => applyMidiInstrument(queued.forceStart), 0);
+    }
+  }
+}
+
+async function _doApplyMidiInstrument(forceStart) {
+  const seq = _midiOriginalSeq;
+  if (!seq) return;
+
   let instrumentValue = "-1";
   if (prefs && prefs.midiInstrument !== undefined) {
     instrumentValue = prefs.midiInstrument;
@@ -602,90 +662,172 @@ async function applyMidiInstrument() {
   const instrInt = parseInt(instrumentValue, 10);
   const currentTranspose = typeof transposeStep === 'number' ? transposeStep : 0;
 
-  const wasPlaying = mainMidiPlayer.playing;
-  const currTime = mainMidiPlayer.currentTime || 0;
+  const oldPlayer = activeMidiPlayer;
+  const newPlayer = standbyMidiRef;
+  if (!oldPlayer || !newPlayer) return;
 
-  window.isMidiSwitching = true; // prevent seekbar from jumping
+  const wasPlaying = (oldPlayer.playing) || forceStart;
 
-  let volNode = window.Tone && ((window.Tone.Destination || (window.Tone.getDestination ? window.Tone.getDestination() : null)) || window.Tone.Master);
+  // --- Snapshot time from MidiTimeAuthority (NOT the player) ---
+  const authorityTime = MidiTimeAuthority.getTime();
+  const authorityDuration = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
 
-  if (wasPlaying && volNode && volNode.volume) {
-      volNode.volume.rampTo(-60, 0.1);
-      // Wait for the fade out to finish before ripping the sequence out, 
-      // preventing audio clipping/pops.
-      await new Promise(r => setTimeout(r, 100));  }
-  let newSequence = seq;
-  if (instrInt >= 0 || currentTranspose !== 0) {
-    // Kloning sequence memakai JSON deep copy agar aman
-    const clonedObj = JSON.parse(JSON.stringify(seq));
-    if (clonedObj && clonedObj.notes) {
-      clonedObj.notes.forEach(note => {
-        // Jangan timpa channel drum (biasanya isDrum bernilai true, atau channel 9 (0-indexed => channel 9 di config standar))
+  // Signal seekbar interval to stop updating
+  window.isMidiSwitching = true;
+
+  // --- Clone and apply transpose/instrument (synchronous, fast) ---
+  let newSequence;
+  try {
+    newSequence = JSON.parse(JSON.stringify(seq));
+    if (newSequence.notes) {
+      for (let i = 0; i < newSequence.notes.length; i++) {
+        const note = newSequence.notes[i];
         if (!note.isDrum) {
           if (instrInt >= 0) note.program = instrInt;
           if (currentTranspose !== 0) {
-            note.pitch += currentTranspose;
-            if (note.pitch < 0) note.pitch = 0;
-            if (note.pitch > 127) note.pitch = 127;
+            note.pitch = Math.max(0, Math.min(127, note.pitch + currentTranspose));
           }
         }
-      });
+      }
     }
-    newSequence = clonedObj;
+  } catch (e) {
+    console.error("Failed to clone sequence:", e);
+    window.isMidiSwitching = false;
+    return;
   }
 
+  // --- Pre-load sequenceinto STANDBY player (old player keeps playing!) ---
   const loadPromise = new Promise(resolve => {
-      let isResolved = false;
-      const handler = () => {
-          if (!isResolved) {
-              isResolved = true;
-              mainMidiPlayer.removeEventListener('load', handler);
-              resolve();
-          }
-      };
-      mainMidiPlayer.addEventListener('load', handler);
-      // Fallback timeout
-      setTimeout(handler, 1500); // Shorter fallback
+    let isDone = false;
+    const complete = () => {
+      if (isDone) return;
+      isDone = true;
+      newPlayer.removeEventListener('load', complete);
+      resolve();
+    };
+    newPlayer.addEventListener('load', complete);
+    setTimeout(complete, 300); // Fallback timeout
   });
 
-  const loadStart = Date.now();
-  mainMidiPlayer.noteSequence = newSequence;
-
-  // Wait for the new sequence to be fully loaded and parsed by html-midi-player
-  // This guarantees gapless and seekbar doesn't reset to zero after we assign currTime
+  newPlayer.noteSequence = newSequence;
   await loadPromise;
 
-  const loadDuration = (Date.now() - loadStart) / 1000;
+  // --- Calculate target time ---
+  // Use authority time + elapsed time since snapshot
+  const knownDuration = newPlayer.duration || authorityDuration;
+  window._midiKnownDuration = knownDuration;
+  MidiTimeAuthority.setDuration(knownDuration);
 
-  // Restore playback state so it does not interrupt the song
-  if (wasPlaying && mainMidiPlayer.start) {
-      try {
-         // Advance transport by exactly how long the load took, preserving mental rhythm
-         mainMidiPlayer.currentTime = currTime + loadDuration;
-         // Set volume to silent before starting
-         if (volNode && volNode.volume) {
-             volNode.volume.value = -60;
-         }
-         await mainMidiPlayer.start();
-         if (volNode && volNode.volume) {
-             volNode.volume.rampTo(0, 0.2); // Quick fade in
-         }
-      } catch (e) {
-        console.error("Error restarting player:", e);
-      }
-  } else if (!wasPlaying && currTime > 0) {
-     try {
-         mainMidiPlayer.currentTime = currTime;
-     } catch(e) {}
-     if (volNode && volNode.volume) {
-         volNode.volume.value = 0; // Restore volume just in case
-     }
-  } else {
-     if (volNode && volNode.volume) {
-         volNode.volume.value = 0; // Restore volume just in case
-     }
+  // Get fresh time from authority (accounts for time that passed during load)
+  let targetTime = MidiTimeAuthority.getTime();
+  if (knownDuration > 0) {
+    targetTime = Math.max(0, Math.min(targetTime, knownDuration - 0.05));
   }
 
-  // Restore UI updates
+  // --- Force-sync seekbar BEFORE the switch ---
+  syncSeekbarUI(targetTime, knownDuration);
+
+  const volNode = getToneVolNode();
+
+  // --- GAPLESS OVERLAP SWITCH ---
+  if (wasPlaying) {
+    try {
+      // 1. Set new player position BEFORE starting
+      newPlayer.currentTime = targetTime;
+
+      // 2. Start new player while old player is STILL PLAYING
+      const startPromise = newPlayer.start();
+      if (startPromise && typeof startPromise.then === 'function') {
+        // Wait for the start promise to resolve if it returns one
+        await startPromise.catch(() => {});
+      }
+
+      // Set time AGAIN after start because some players reset it to 0 internally on start
+      try { newPlayer.currentTime = targetTime; } catch(e) {}
+
+      // 3. Give the new player a tiny window to populate its audio buffers 
+      // before stopping the old one to prevent a dry gap
+      await new Promise(r => setTimeout(r, 50));
+
+      // 4. Stop old player
+      oldPlayer.stop();
+
+      // 5. Update authority
+      MidiTimeAuthority.setTime(targetTime, knownDuration);
+      MidiTimeAuthority.setPlaying(true);
+
+      // 6. Verify time stuck after a short delay
+      setTimeout(() => {
+        if (newPlayer.playing && knownDuration > 0) {
+          const actual = newPlayer.currentTime || 0;
+          if (Math.abs(actual - targetTime) > 2.0 && targetTime > 2.0) {
+            try { newPlayer.currentTime = targetTime; } catch(e) {}
+          }
+          // Sync authority to actual player time once stable
+          MidiTimeAuthority.sync(newPlayer.currentTime || targetTime);
+          syncSeekbarUI(MidiTimeAuthority.getTime(), knownDuration);
+        }
+      }, 150);
+    } catch (e) {
+      console.error("Error during player switch:", e);
+    }
+  } else {
+    // Not playing: just load the sequence into standby, stop old, swap
+    oldPlayer.stop();
+    try {
+      newPlayer.currentTime = targetTime;
+    } catch(e) {}
+    MidiTimeAuthority.setTime(targetTime, knownDuration);
+    MidiTimeAuthority.setPlaying(false);
+    if (volNode && volNode.volume) {
+      volNode.volume.value = MIDI_TARGET_VOLUME;
+    }
+  }
+
+  // --- SWAP active/standby references ---
+  activeMidiPlayer = newPlayer;
+  standbyMidiRef = oldPlayer;
+
+  // Reset seekbar tracking
+  window._midiLastSeekValue = -1;
   window.isMidiSwitching = false;
+}
+
+/**
+ * Debounced version of applyMidiInstrument for transpose operations.
+ * Batches rapid transpose presses so only the final value triggers a transition.
+ */
+function applyMidiInstrumentDebounced() {
+  if (_midiTransposeDebounceTimer) {
+    clearTimeout(_midiTransposeDebounceTimer);
+  }
+  _midiTransposeDebounceTimer = setTimeout(() => {
+    _midiTransposeDebounceTimer = null;
+    applyMidiInstrument();
+  }, MIDI_TRANSPOSE_DEBOUNCE_MS);
+}
+
+/**
+ * Force-update all seekbar UI elements to known-good values.
+ * Called during transitions to prevent stale data from the interval.
+ */
+function syncSeekbarUI(time, duration) {
+  const dur = duration || 0;
+  const t = Math.max(0, time || 0);
+
+  if (typeof customSeekbar !== 'undefined' && customSeekbar) {
+    customSeekbar.max = dur;
+    customSeekbar.value = t;
+    const fill = document.getElementById('custom-seekbar-fill');
+    if (fill) {
+      fill.style.width = dur > 0 ? ((t / dur) * 100) + '%' : '0%';
+    }
+  }
+  if (typeof customTimeDisplay !== 'undefined' && customTimeDisplay) {
+    const fmt = (s) => {
+      const i = Math.floor(s || 0);
+      return `${Math.floor(i / 60)}:${(i % 60).toString().padStart(2, '0')}`;
+    };
+    customTimeDisplay.textContent = `${fmt(t)} / ${dur > 0 ? fmt(dur) : '0:00'}`;
+  }
 }
