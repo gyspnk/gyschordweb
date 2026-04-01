@@ -1,17 +1,29 @@
 // --- 3. Init ---
 async function init() {
-  // Memicu preload font agar PDF.js tidak mengeluarkan warning "Cannot load system font"
-  // karena font belum ditarik oleh rel=stylesheet ke dalam DOM.
   try {
-    // Kurangi volume global Tone.js dan tambahkan limiter/compressor 
-    // untuk mencegah clipping/distorsi pada instrumen MIDI berpolifoni tinggi
+    // Setup Tone.js audio chain: Volume -> Compressor -> Limiter -> Destination
+    // This prevents clicking/popping and manages dynamics for MIDI polyphony
     if (window.Tone) {
       if (Tone.getDestination) {
         Tone.getDestination().volume.value = -6; // Master volume: -6 dB
         try {
-          const limiter = new Tone.Limiter(-1); // Limiter at -1 dB to prevent clipping
-          Tone.getDestination().chain(limiter);
-        } catch(e) { } 
+          // Compressor to tame transients (reduces clicks from note onset)
+          const compressor = new Tone.Compressor({
+            threshold: -24,
+            ratio: 4,
+            attack: 0.003,
+            release: 0.1
+          });
+          // Limiter at -1 dB to prevent clipping on polyphonic passages
+          const limiter = new Tone.Limiter(-1);
+          Tone.getDestination().chain(compressor, limiter);
+        } catch(e) {
+          // Fallback: just limiter
+          try {
+            const limiter = new Tone.Limiter(-1);
+            Tone.getDestination().chain(limiter);
+          } catch(e2) {}
+        }
       } else if (Tone.Master) {
         Tone.Master.volume.value = -6;
       }
@@ -19,12 +31,11 @@ async function init() {
 
     await document.fonts.load('16px "GoudyOldStyleBT-Roman"');
     await document.fonts.load('16px "AbadiMT-CondensedLight"');
-    console.log("Font eksternal PDF siap.");
   } catch (err) {
     console.warn("Gagal pre-load font PDF:", err);
   }
 
-  // Handle AudioContext warning
+  // Resume AudioContext on first user interaction
   const resumeAudioContext = () => {
     if (window.Tone && Tone.context.state !== 'running') {
       Tone.context.resume();

@@ -135,18 +135,20 @@ const NUMBER_TO_NOTE = {
 const ACCENT_CUSTOM_COLOR_KEY = "accent-custom-color";
 const DEFAULT_CUSTOM_ACCENT = "#4f7cff";
 const ACCENT_PRESETS = [
+  { key: "gold", label: "Emas", color: "#8d6e3f" },
+  { key: "burgundy", label: "Anggur", color: "#6d2c41" },
   { key: "blue", label: "Biru", color: "#1976d2" },
-  { key: "red", label: "Merah", color: "#d32f2f" },
+  { key: "red", label: "Merah", color: "#c62828" },
   { key: "green", label: "Hijau", color: "#2e7d32" },
-  { key: "yellow", label: "Kuning", color: "#fbc02d" },
-  { key: "purple", label: "Ungu", color: "#7b1fa2" },
-  { key: "pink", label: "Pink", color: "#c2185b" },
+  { key: "yellow", label: "Kuning", color: "#f9a825" },
+  { key: "purple", label: "Ungu", color: "#6a1b9a" },
+  { key: "pink", label: "Pink", color: "#ad1457" },
   { key: "teal", label: "Teal", color: "#00796b" },
-  { key: "orange", label: "Oranye", color: "#f57c00" },
-  { key: "brown", label: "Coklat", color: "#5d4037" },
-  { key: "gray", label: "Abu-abu", color: "#616161" },
-  { key: "indigo", label: "Nila", color: "#303f9f" },
-  { key: "cyan", label: "Sian", color: "#0097a7" },
+  { key: "orange", label: "Oranye", color: "#e65100" },
+  { key: "brown", label: "Coklat", color: "#4e342e" },
+  { key: "gray", label: "Abu-abu", color: "#546e7a" },
+  { key: "indigo", label: "Nila", color: "#283593" },
+  { key: "cyan", label: "Sian", color: "#00838f" },
   { key: "custom", label: "Warna Kustom", color: null },
 ];
 const CHORD_THEME_PRESETS = [
@@ -187,13 +189,14 @@ const TRANSPOSE_DISSOLVE_IN_MS = 230;
 // --- MIDI Audio Transition Constants ---
 const MIDI_TARGET_VOLUME = -3; // Standard volume in dB (combined with Tone.Destination -6dB)
 const MIDI_SILENT_VOLUME = -60; // "Silent" volume in dB
-const MIDI_FADE_IN_MS = 30; // Fade-in duration for play
-const MIDI_FADE_OUT_MS = 2000; // Fade-out duration for pause
-const MIDI_CROSSFADE_OUT_MS = 280; // Crossfade out duration for transpose/instrument/seek
-const MIDI_CROSSFADE_IN_MS = 320; // Crossfade in duration for transpose/instrument/seek
+const MIDI_FADE_IN_MS = 80; // Fade-in duration for play (prevent clicks)
+const MIDI_FADE_OUT_MS = 1200; // Fade-out duration for pause
+const MIDI_CROSSFADE_OUT_MS = 200; // Crossfade out duration for transpose/instrument/seek
+const MIDI_CROSSFADE_IN_MS = 200; // Crossfade in duration (symmetric for seamless feel)
 const MIDI_LOAD_TIMEOUT_MS = 15000; // Fallback timeout for sequence load event
-const MIDI_END_THRESHOLD_S = 0.5; // Threshold in seconds for detecting song end
-const MIDI_TRANSPOSE_DEBOUNCE_MS = 100; // Debounce rapid transpose MIDI updates
+const MIDI_END_THRESHOLD_S = 0.8; // Threshold in seconds for detecting song end
+const MIDI_TRANSPOSE_DEBOUNCE_MS = 80; // Debounce rapid transpose MIDI updates
+const MIDI_PRELOAD_NEXT_S = 3; // Seconds before end to preload next song
 const MIDI_SOUNDFONT_URL = 'https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus';
 
 /**

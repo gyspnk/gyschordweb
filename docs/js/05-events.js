@@ -183,7 +183,7 @@ function setupEventListeners() {
       });
     });
 
-    // Play/Pause button
+    // Play/Pause button — fixed race condition, proper fade sequencing
     customPlayBtn.addEventListener("click", async () => {
       if (window.isMidiFading) return;
       if (_midiSfPlayerLoading) {
@@ -209,8 +209,8 @@ function setupEventListeners() {
           }
 
           window.isMidiFading = true;
-          customPlayIcon.textContent = "hourglass_empty";
 
+          // Set volume to silent BEFORE starting to prevent click
           if (volNode && volNode.volume) {
             volNode.volume.cancelScheduledValues(window.Tone.now());
             volNode.volume.value = MIDI_SILENT_VOLUME;
@@ -229,17 +229,19 @@ function setupEventListeners() {
             try { _midiSfPlayer.stop(); } catch (e) {}
           }
 
-          // Start from offset
+          // Start from offset (audio is silent, no click)
           _midiSfPlayer.start(_midiCurrentTransposedSeq, undefined, restoreTime);
 
           MidiTimeAuthority.setTime(restoreTime, dur);
           MidiTimeAuthority.setPlaying(true);
 
-          fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
-
+          // Update UI immediately
           customPlayIcon.textContent = "pause";
           document.getElementById("custom-midi-player").classList.add("playing");
           window._midiSavedTime = null;
+
+          // Fade in AFTER start — await to prevent race condition
+          await fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
           window.isMidiFading = false;
         } else {
           window.isMidiFading = true;
@@ -247,9 +249,11 @@ function setupEventListeners() {
           MidiTimeAuthority.setPlaying(false);
           window._midiSavedTime = MidiTimeAuthority.getTime();
 
+          // Update UI immediately for responsiveness
           customPlayIcon.textContent = "play_arrow";
           document.getElementById("custom-midi-player").classList.remove("playing");
 
+          // Fade out completely before stopping
           await fadeMidiVolume(MIDI_SILENT_VOLUME, MIDI_FADE_OUT_MS);
 
           if (_midiSfPlayer.isPlaying()) {
@@ -283,8 +287,8 @@ function setupEventListeners() {
       const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
       const curr = MidiTimeAuthority.getTime();
 
-      // Song end detection
-      if (dur > 0 && curr >= dur - 0.1 && MidiTimeAuthority._playing && !window.isMidiSwitching) {
+      // Song end detection — use proper threshold constant
+      if (dur > 0 && curr >= dur - MIDI_END_THRESHOLD_S && MidiTimeAuthority._playing && !window.isMidiSwitching) {
         MidiTimeAuthority.setPlaying(false);
         MidiTimeAuthority.setTime(0, dur);
         if (_midiSfPlayer && _midiSfPlayer.isPlaying()) {
@@ -296,7 +300,7 @@ function setupEventListeners() {
         window._midiLastSeekValue = 0;
         window._midiSavedTime = null;
 
-        // Loop intercept
+        // Loop intercept — repeat one
         if (PlaylistManager.getAutoNextMode() === "one") {
           try {
             const volNode = getToneVolNode();
@@ -310,11 +314,11 @@ function setupEventListeners() {
             fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
             customPlayIcon.textContent = "pause";
             document.getElementById("custom-midi-player").classList.add("playing");
-            return;
           } catch (e) {}
+          return;
         }
 
-        // Auto next intercept
+        // Auto next intercept — playlist/number/shuffle modes
         if (typeof window._playlistCheckAutoNext === "function") {
           window._playlistCheckAutoNext();
         }

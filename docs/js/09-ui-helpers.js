@@ -9,11 +9,15 @@ function handleOrientationChange() {
   }, 200);
 }
 
+let _layoutResizeTimer = null;
 function onLayoutResize() {
-  checkLayoutCollisions();
-  syncTransposeCollapseState();
-  fitViewerTitle();
-  fitListTitles();
+  if (_layoutResizeTimer) clearTimeout(_layoutResizeTimer);
+  _layoutResizeTimer = setTimeout(() => {
+    checkLayoutCollisions();
+    syncTransposeCollapseState();
+    fitViewerTitle();
+    fitListTitles();
+  }, 100);
 }
 
 function checkLayoutCollisions() {
@@ -152,13 +156,22 @@ function fitListTitles() {
 function autoFitTextSingleLine(element, { maxPx, minPx }) {
   if (!element) return;
 
-  let size = Math.min(maxPx, Number.parseFloat(window.getComputedStyle(element).fontSize) || maxPx);
-  element.style.fontSize = `${size}px`;
+  // Start at max and check if it fits
+  element.style.fontSize = `${maxPx}px`;
+  if (element.scrollWidth <= element.clientWidth + 1) return;
 
-  while (size > minPx && element.scrollWidth > element.clientWidth + 1) {
-    size -= 0.5;
-    element.style.fontSize = `${size}px`;
+  // Binary search for the largest font size that fits
+  let lo = minPx, hi = maxPx;
+  while (hi - lo > 0.5) {
+    const mid = (lo + hi) / 2;
+    element.style.fontSize = `${mid}px`;
+    if (element.scrollWidth > element.clientWidth + 1) {
+      hi = mid;
+    } else {
+      lo = mid;
+    }
   }
+  element.style.fontSize = `${lo}px`;
 }
 
 function setupRippleEffect() {

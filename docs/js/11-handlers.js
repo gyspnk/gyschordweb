@@ -77,7 +77,7 @@ function handleMainContentClick(e) {
 }
 
 function applyAccentSelection(color) {
-  const nextColor = color || "blue";
+  const nextColor = color || "gold";
   document.body.setAttribute("data-accent", nextColor);
   localStorage.setItem("accent", nextColor);
 
@@ -185,6 +185,10 @@ function handleSettingsChange(e) {
     persistChordUiPrefs();
     rerenderViewerIfActive();
     updateChordSettingsLabels();
+  } else if (targetId === "soundfont-select") {
+    prefs.midiSoundfont = e.target.value;
+    localStorage.setItem("prefs", JSON.stringify(prefs));
+    showToast("Soundfont akan diterapkan saat memutar lagu berikutnya");
   }
 }
 
@@ -243,7 +247,7 @@ function applyStoredPreferences() {
     document.body.classList.add("dark-theme");
   }
 
-  const storedAccent = localStorage.getItem("accent") || "blue";
+  const storedAccent = localStorage.getItem("accent") || "gold";
   customAccentColor = localStorage.getItem(ACCENT_CUSTOM_COLOR_KEY) || DEFAULT_CUSTOM_ACCENT;
   document.documentElement.style.setProperty("--source-custom", customAccentColor);
   applyAccentSelection(storedAccent);

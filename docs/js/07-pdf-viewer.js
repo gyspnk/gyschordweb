@@ -875,9 +875,10 @@ async function loadAndStartMidi(seq, opts = {}) {
   // Get SoundFont URL
   const sfUrl = (prefs && prefs.midiSoundfont) || MIDI_SOUNDFONT_URL;
 
-  // Create or reuse SoundFontPlayer
-  if (!_midiSfPlayer) {
+  // Create or reuse SoundFontPlayer (recreate if URL changed)
+  if (!_midiSfPlayer || _midiSfPlayer._soundFontURL !== sfUrl) {
     _midiSfPlayer = new core.SoundFontPlayer(sfUrl);
+    _midiSfPlayer._soundFontURL = sfUrl;
   }
 
   // Progress: 50% after creating sequence

@@ -115,7 +115,7 @@ function renderSettingLabel(icon, text) {
 }
 
 function renderSettings() {
-  const activeAccent = document.body.getAttribute("data-accent") || "blue";
+  const activeAccent = document.body.getAttribute("data-accent") || "gold";
   const accentPalette = ACCENT_PRESETS
     .map((preset) => {
       const color = preset.key === "custom" ? customAccentColor : preset.color;
@@ -310,6 +310,19 @@ function renderSettings() {
               step="5"
               value="${chordUiPrefs.fontOverridePercent}"
             >
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h2 class="settings-section-title"><span class="material-symbols-outlined">piano</span> MIDI & Audio</h2>
+        <div class="settings-card">
+          <div class="setting-item">
+            ${renderSettingLabel("graphic_eq", "Soundfont")}
+            <select id="soundfont-select" class="setting-select">
+              <option value="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus" ${prefs.midiSoundfont === "https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus" ? "selected" : ""}>SGM Plus (Default)</option>
+              <option value="https://storage.googleapis.com/magentadata/js/soundfonts/salamander" ${prefs.midiSoundfont === "https://storage.googleapis.com/magentadata/js/soundfonts/salamander" ? "selected" : ""}>Salamander Piano</option>
+            </select>
           </div>
         </div>
       </div>

@@ -1,20 +1,25 @@
 :root {
-  /* Palet Warna Sumber (Source Colors) */
-  --source-blue: #1976d2; --source-red: #d32f2f; --source-green: #2e7d32;
-  --source-yellow: #fbc02d; --source-purple: #7b1fa2; --source-pink: #c2185b;
-  --source-teal: #00796b; --source-orange: #f57c00; --source-brown: #5d4037;
-  --source-gray: #616161; --source-indigo: #303f9f; --source-cyan: #0097a7;
+  /* Palet Warna Sumber — "Hymn of Praise" Sacred Palette */
+  --source-blue: #1976d2; --source-red: #c62828; --source-green: #2e7d32;
+  --source-yellow: #f9a825; --source-purple: #6a1b9a; --source-pink: #ad1457;
+  --source-teal: #00796b; --source-orange: #e65100; --source-brown: #4e342e;
+  --source-gray: #546e7a; --source-indigo: #283593; --source-cyan: #00838f;
   --source-custom: #4f7cff;
+  /* Sacred Gold — default accent for Hymn of Praise */
+  --source-gold: #8d6e3f;
+  --source-burgundy: #6d2c41;
+  --source-ivory: #f5f0e8;
+  --source-deep-navy: #1a2332;
   
   /* Variabel UI Global */
-  --bottom-nav-height: 80px;
+  --bottom-nav-height: 72px;
   --border-radius-sm: 4px; --border-radius-md: 8px; --border-radius-lg: 16px; --border-radius-xl: 28px;
   --shadow-1: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-2: 0 4px 8px -2px rgba(0,0,0,0.08), 0 2px 6px -2px rgba(0,0,0,0.06);
   --shadow-3: 0 12px 24px -4px rgba(0,0,0,0.1), 0 4px 8px -4px rgba(0,0,0,0.06);
   --shadow-elevated: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
 
-  /* Typography */
+  /* Typography — Elegant serif for a sacred hymnal feel */
   --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-body: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
 
@@ -27,45 +32,55 @@
   --duration-medium: 300ms;
   --duration-long: 500ms;
 
-  /* Variabel Warna Default (Light Theme) */
-  --md-sys-color-primary: var(--accent, var(--source-blue));
+  /* Variabel Warna Default (Light Theme) — Warm Ivory/Gold */
+  --md-sys-color-primary: var(--accent, var(--source-gold));
   --md-sys-color-on-primary: #ffffff;
-  --md-sys-color-primary-container: color-mix(in srgb, var(--md-sys-color-primary) 12%, #ffffff);
-  --md-sys-color-on-primary-container: color-mix(in srgb, var(--md-sys-color-primary) 90%, #000000);
-  --md-sys-color-surface: #faf9f6;
-  --md-sys-color-surface-container: #f2f1ee;
-  --md-sys-color-surface-container-high: #eae9e6;
-  --md-sys-color-on-surface: #1b1b1b;
-  --md-sys-color-on-surface-variant: #49454f;
-  --md-sys-color-outline: #79747e;
-  --md-sys-color-outline-variant: #cac4d0;
+  --md-sys-color-primary-container: color-mix(in srgb, var(--md-sys-color-primary) 12%, #faf6ee);
+  --md-sys-color-on-primary-container: color-mix(in srgb, var(--md-sys-color-primary) 90%, #1a1000);
+  --md-sys-color-surface: #faf8f4;
+  --md-sys-color-surface-container: #f3f0ea;
+  --md-sys-color-surface-container-high: #ebe8e2;
+  --md-sys-color-on-surface: #1c1b18;
+  --md-sys-color-on-surface-variant: #4a4640;
+  --md-sys-color-outline: #7c7870;
+  --md-sys-color-outline-variant: #cdc6bc;
   --md-sys-color-scrim: #000000;
   --md-sys-color-shadow: #000000;
+  --md-sys-color-error: #ba1a1a;
   --md-sys-state-layer-primary: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
-  --pdf-viewer-header-height: 64px;
-  --pdf-viewer-footer-height: 80px;
+  --pdf-viewer-header-height: 56px;
+  --pdf-viewer-footer-height: 72px;
 }
 
 body.dark-theme {
-  --md-sys-color-primary: color-mix(in srgb, var(--accent, var(--source-blue)) 80%, #ffffff);
-  --md-sys-color-on-primary: color-mix(in srgb, var(--accent, var(--source-blue)) 20%, #000000);
-  --md-sys-color-primary-container: color-mix(in srgb, var(--accent, var(--source-blue)) 25%, #000000);
-  --md-sys-color-on-primary-container: color-mix(in srgb, var(--accent, var(--source-blue)) 90%, #ffffff);
-  --md-sys-color-surface: #131214;
-  --md-sys-color-surface-container: #1d1b1e;
-  --md-sys-color-surface-container-high: #272529;
-  --md-sys-color-on-surface: #e6e1e5;
-  --md-sys-color-on-surface-variant: #cac4d0;
-  --md-sys-color-outline: #948f99;
-  --md-sys-color-outline-variant: #49454f;
+  --md-sys-color-primary: color-mix(in srgb, var(--accent, var(--source-gold)) 80%, #ffffff);
+  --md-sys-color-on-primary: color-mix(in srgb, var(--accent, var(--source-gold)) 20%, #000000);
+  --md-sys-color-primary-container: color-mix(in srgb, var(--accent, var(--source-gold)) 25%, #0e0c08);
+  --md-sys-color-on-primary-container: color-mix(in srgb, var(--accent, var(--source-gold)) 90%, #ffffff);
+  --md-sys-color-surface: #12110e;
+  --md-sys-color-surface-container: #1d1b17;
+  --md-sys-color-surface-container-high: #282520;
+  --md-sys-color-on-surface: #e8e3db;
+  --md-sys-color-on-surface-variant: #cdc6bc;
+  --md-sys-color-outline: #979189;
+  --md-sys-color-outline-variant: #4a4640;
   --md-sys-state-layer-primary: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
 }
 
+@media (prefers-color-scheme: dark) {
+  body:not(.light-theme-forced) {
+    --md-sys-color-surface: #12110e;
+    --md-sys-color-surface-container: #1d1b17;
+  }
+}
+
 /* Penentuan Warna Aksen */
+body[data-accent="gold"] { --accent: var(--source-gold); }
 body[data-accent="blue"] { --accent: var(--source-blue); } body[data-accent="red"] { --accent: var(--source-red); }
 body[data-accent="green"] { --accent: var(--source-green); } body[data-accent="yellow"] { --accent: var(--source-yellow); }
 body[data-accent="purple"] { --accent: var(--source-purple); } body[data-accent="pink"] { --accent: var(--source-pink); }
 body[data-accent="teal"] { --accent: var(--source-teal); } body[data-accent="orange"] { --accent: var(--source-orange); }
 body[data-accent="brown"] { --accent: var(--source-brown); } body[data-accent="gray"] { --accent: var(--source-gray); }
 body[data-accent="indigo"] { --accent: var(--source-indigo); } body[data-accent="cyan"] { --accent: var(--source-cyan); }
+body[data-accent="burgundy"] { --accent: var(--source-burgundy); }
 body[data-accent="custom"] { --accent: var(--source-custom); }

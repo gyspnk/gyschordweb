@@ -83,6 +83,8 @@ const PlaylistManager = {
     const playlists = this.getAll();
     const pl = playlists.find((p) => p.id === playlistId);
     if (pl) {
+      // Prevent duplicates by song number
+      if (pl.songs.some((s) => s.nomor === song.nomor)) return false;
       pl.songs.push({
         nomor: song.nomor,
         judul: song.judul,
@@ -90,7 +92,9 @@ const PlaylistManager = {
         addedAt: Date.now(),
       });
       this._save(playlists);
+      return true;
     }
+    return false;
   },
 
   /**

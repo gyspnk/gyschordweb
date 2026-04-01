@@ -87,8 +87,12 @@ document.addEventListener('DOMContentLoaded', () => {
           targetId = PlaylistManager.getAll()[0].id;
         }
         
-        PlaylistManager.addSong(targetId, songData);
+        const added = PlaylistManager.addSong(targetId, songData);
+        if (added) {
           showToast("Ditambahkan ke playlist", "playlist_add_check");
+        } else {
+          showToast("Lagu sudah ada di playlist", "info");
+        }
         updatePlaylistIndicators();
       }
     });
@@ -384,7 +388,7 @@ function renderPlaylistList() {
   const mode = PlaylistManager.getAutoNextMode();
   
   let html = `
-    <div class="playlist-view-container" style="padding: 1rem; max-width: 600px; margin: 0 auto; padding-bottom: 120px;">
+    <div class="playlist-view-container">
       <div class="playlist-header-actions">
         <h2 style="margin: 0;">Playlist Anda</h2>
         <button class="icon-button" id="create-playlist-btn" aria-label="Buat Playlist">
@@ -392,25 +396,25 @@ function renderPlaylistList() {
         </button>
       </div>
       
-      <div style="margin-bottom: 2rem; background: var(--md-sys-color-surface-container); padding: 1rem; border-radius: 12px;">
-         <h3 style="margin-top:0; margin-bottom: 12px; font-size:14px; color: var(--md-sys-color-on-surface-variant)">Mode Lanjut Otomatis (Auto Next)</h3>
-         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="nav-btn ${mode==='off'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('off')">Mati</button>
-            <button class="nav-btn ${mode==='one'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('one')">1 Lagu Saja</button>
-            <button class="nav-btn ${mode==='number'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('number')">Sesuai Nomor</button>
-            <button class="nav-btn ${mode==='playlist'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('playlist')">Sesuai Playlist</button>
-            <button class="nav-btn ${mode==='shuffle-all'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('shuffle-all')">Shuffle Semua</button>
-            <button class="nav-btn ${mode==='shuffle-playlist'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('shuffle-playlist')">Shuffle Playlist</button>
+      <div class="playlist-autonext-panel">
+         <h3>Mode Lanjut Otomatis (Auto Next)</h3>
+         <div class="playlist-mode-grid">
+            <button class="playlist-mode-btn ${mode==='off'?'selected':''}" onclick="setNextMode('off')">Mati</button>
+            <button class="playlist-mode-btn ${mode==='one'?'selected':''}" onclick="setNextMode('one')">1 Lagu</button>
+            <button class="playlist-mode-btn ${mode==='number'?'selected':''}" onclick="setNextMode('number')">Nomor</button>
+            <button class="playlist-mode-btn ${mode==='playlist'?'selected':''}" onclick="setNextMode('playlist')">Playlist</button>
+            <button class="playlist-mode-btn ${mode==='shuffle-all'?'selected':''}" onclick="setNextMode('shuffle-all')">Shuffle</button>
+            <button class="playlist-mode-btn ${mode==='shuffle-playlist'?'selected':''}" onclick="setNextMode('shuffle-playlist')">Shuffle PL</button>
          </div>
       </div>
   `;
   
   if (playlists.length === 0) {
     html += `
-      <div style="text-align: center; padding: 3rem 1rem; color: var(--md-sys-color-on-surface-variant);">
-        <span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.5;">queue_music</span>
+      <div class="playlist-empty-state">
+        <span class="material-symbols-outlined">queue_music</span>
         <p>Anda belum memiliki playlist.</p>
-        <button id="create-first-playlist" class="nav-btn" style="margin: 1rem auto; background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); padding: 0.5rem 1rem; border-radius: 8px;">
+        <button id="create-first-playlist" class="playlist-create-btn">
           Buat Playlist Sekarang
         </button>
       </div>
@@ -441,11 +445,10 @@ function renderPlaylistList() {
     });
   }
 
-  // Import button at the bottom
   html += `
-     <div style="margin-top: 2rem; border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 1rem;">
-        <button class="nav-btn" id="import-playlist-btn" style="width: 100%; border-radius: 8px; justify-content: center;">
-          <span class="material-symbols-outlined" style="margin-right: 8px;">upload</span> Impor Playlist (.json)
+     <div class="playlist-import-section">
+        <button class="playlist-import-btn" id="import-playlist-btn">
+          <span class="material-symbols-outlined">upload</span> Impor Playlist (.json)
         </button>
         <input type="file" id="import-playlist-input" accept=".json" style="display:none;">
      </div>
@@ -505,7 +508,7 @@ function renderPlaylistDetail(id) {
   }
 
   let html = `
-    <div class="playlist-view-container" style="padding: 1rem; max-width: 600px; margin: 0 auto; padding-bottom: 120px;">
+    <div class="playlist-view-container">
       <div class="playlist-header-actions" style="margin-bottom: 1.5rem;">
         <button class="icon-button" onclick="currentPlaylistView='list'; renderPlaylistList();" aria-label="Kembali">
           <span class="material-symbols-outlined">arrow_back</span>
@@ -524,7 +527,7 @@ function renderPlaylistDetail(id) {
 
   if (pl.songs.length === 0) {
     html += `
-      <div style="text-align: center; padding: 3rem 1rem; color: var(--md-sys-color-on-surface-variant);">
+      <div class="playlist-empty-state">
         <p>Belum ada lagu di playlist ini.</p>
         <p style="font-size: 14px;">Tambahkan lagu dari tab Pujian.</p>
       </div>
@@ -534,14 +537,14 @@ function renderPlaylistDetail(id) {
     items.push(`<ul class="pujian-list" id="playlist-track-list">`);
     pl.songs.forEach((song, idx) => {
       items.push(`
-        <li style="display:flex; align-items:center; background: var(--md-sys-color-surface-container); border-radius: 12px; margin-bottom: 8px; padding: 12px;">
-          <div style="flex:1; cursor:pointer;" onclick="playSongFromPlaylist(${idx})">
-            <div style="font-size:12px; color: var(--md-sys-color-primary); font-weight:bold;">No. ${song.nomor}</div>
-            <div style="font-weight: 500;">${song.judul}</div>
+        <li class="playlist-track-item">
+          <div class="playlist-track-info" onclick="playSongFromPlaylist(${idx})">
+            <div class="playlist-track-nomor">No. ${song.nomor}</div>
+            <div class="playlist-track-judul">${song.judul}</div>
           </div>
-          <div style="display:flex; flex-direction:column; gap:8px;">
-             ${idx > 0 ? `<button class="icon-button" style="width:32px;height:32px;" onclick="PlaylistManager.moveSong('${id}', ${idx}, ${idx-1}); renderPlaylistDetail('${id}')"><span class="material-symbols-outlined" style="font-size:20px;">keyboard_arrow_up</span></button>` : ''}
-             ${idx < pl.songs.length - 1 ? `<button class="icon-button" style="width:32px;height:32px;" onclick="PlaylistManager.moveSong('${id}', ${idx}, ${idx+1}); renderPlaylistDetail('${id}')"><span class="material-symbols-outlined" style="font-size:20px;">keyboard_arrow_down</span></button>` : ''}
+          <div class="playlist-track-reorder">
+             ${idx > 0 ? `<button class="icon-button" onclick="PlaylistManager.moveSong('${id}', ${idx}, ${idx-1}); renderPlaylistDetail('${id}')"><span class="material-symbols-outlined">keyboard_arrow_up</span></button>` : ''}
+             ${idx < pl.songs.length - 1 ? `<button class="icon-button" onclick="PlaylistManager.moveSong('${id}', ${idx}, ${idx+1}); renderPlaylistDetail('${id}')"><span class="material-symbols-outlined">keyboard_arrow_down</span></button>` : ''}
           </div>
           <button class="icon-button" style="margin-left: 8px; color:var(--md-sys-color-error);" onclick="PlaylistManager.removeSong('${id}', ${idx}); renderPlaylistDetail('${id}'); updatePlaylistIndicators();" title="Hapus Lagu">
              <span class="material-symbols-outlined">close</span>
@@ -646,33 +649,64 @@ window.playSongFromPlaylist = async function(songIndex, isBackground = false, fo
 
 window._playlistCheckAutoNext = function() {
   const mode = PlaylistManager.getAutoNextMode();
-  if (mode === 'off') return false; // Let normal playback stop happen
+  if (mode === 'off') return false;
   
   if (mode === 'number') {
     // Next song by global index
     if (typeof onNextSong === 'function') {
        window._forceAutoPlayNext = true;
        onNextSong();
-       return true; // We handled it
+       return true;
     }
   }
 
-  if (mode === 'playlist') {
+  if (mode === 'shuffle-all') {
+    // Shuffle from all songs
+    if (typeof pujianItems !== 'undefined' && pujianItems.length > 1) {
+      let randomIdx;
+      do {
+        randomIdx = Math.floor(Math.random() * pujianItems.length);
+      } while (randomIdx === currentSongIndex && pujianItems.length > 1);
+      window._forceAutoPlayNext = true;
+      if (typeof openPdfViewer === 'function') openPdfViewer(randomIdx.toString());
+      return true;
+    }
+  }
+
+  if (mode === 'playlist' || mode === 'shuffle-playlist') {
     const activeId = PlaylistManager.getActiveId();
     if (!activeId) return false;
 
     const pl = PlaylistManager.getById(activeId);
     if (!pl || pl.songs.length === 0) return false;
 
-    // Find current playing song in playlist
     if (typeof pujianItems !== 'undefined' && typeof currentSongIndex !== 'undefined') {
       const currentGlobalSong = pujianItems[currentSongIndex];
       if (currentGlobalSong) {
         let currentIdxInPl = pl.songs.findIndex(s => s.nomor === currentGlobalSong.nomor);
+        
+        if (mode === 'shuffle-playlist') {
+          // Shuffle within playlist
+          let randomPlIdx;
+          do {
+            randomPlIdx = Math.floor(Math.random() * pl.songs.length);
+          } while (randomPlIdx === currentIdxInPl && pl.songs.length > 1);
+          window._forceAutoPlayNext = true;
+          playSongFromPlaylist(randomPlIdx, false, activeId);
+          return true;
+        }
+        
+        // Sequential playlist mode
         if (currentIdxInPl >= 0 && currentIdxInPl < pl.songs.length - 1) {
-           window._forceAutoPlayNext = true;
-           showToast("Playlist selesai", "done");
-           return false;
+          window._forceAutoPlayNext = true;
+          playSongFromPlaylist(currentIdxInPl + 1, false, activeId);
+          return true;
+        } else {
+          // End of playlist — loop back to start
+          window._forceAutoPlayNext = true;
+          playSongFromPlaylist(0, false, activeId);
+          showToast("Playlist diulang dari awal", "replay");
+          return true;
         }
       }
     }
