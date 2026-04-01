@@ -530,9 +530,10 @@ function renderPlaylistDetail(id) {
       </div>
     `;
   } else {
-    html += `<ul class="pujian-list" id="playlist-track-list">`;
+    const items = [];
+    items.push(`<ul class="pujian-list" id="playlist-track-list">`);
     pl.songs.forEach((song, idx) => {
-      html += `
+      items.push(`
         <li style="display:flex; align-items:center; background: var(--md-sys-color-surface-container); border-radius: 12px; margin-bottom: 8px; padding: 12px;">
           <div style="flex:1; cursor:pointer;" onclick="playSongFromPlaylist(${idx})">
             <div style="font-size:12px; color: var(--md-sys-color-primary); font-weight:bold;">No. ${song.nomor}</div>
@@ -546,9 +547,10 @@ function renderPlaylistDetail(id) {
              <span class="material-symbols-outlined">close</span>
           </button>
         </li>
-      `;
+      `);
     });
-    html += `</ul>`;
+    items.push(`</ul>`);
+    html += items.join('');
   }
 
   html += `</div>`;

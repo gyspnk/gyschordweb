@@ -1,3 +1,4 @@
+/* ===== Ripple Effect ===== */
 .ripple-effect {
   position: relative;
   overflow: hidden;
@@ -6,14 +7,14 @@
 .ripple {
   position: absolute;
   border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.12);
   transform: scale(0);
-  animation: ripple-effect-anim 0.6s linear;
+  animation: ripple-effect-anim 0.6s var(--ease-decelerate, cubic-bezier(0, 0, 0, 1));
   pointer-events: none;
 }
 
 body.dark-theme .ripple {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 @keyframes ripple-effect-anim {
@@ -21,4 +22,123 @@ body.dark-theme .ripple {
     transform: scale(4);
     opacity: 0;
   }
+}
+
+/* ===== Staggered List Items ===== */
+.pujian-list li {
+  animation: listItemEnter 0.4s var(--ease-decelerate) both;
+}
+.pujian-list li:nth-child(1) { animation-delay: 0s; }
+.pujian-list li:nth-child(2) { animation-delay: 0.03s; }
+.pujian-list li:nth-child(3) { animation-delay: 0.06s; }
+.pujian-list li:nth-child(4) { animation-delay: 0.09s; }
+.pujian-list li:nth-child(5) { animation-delay: 0.12s; }
+.pujian-list li:nth-child(6) { animation-delay: 0.15s; }
+.pujian-list li:nth-child(7) { animation-delay: 0.18s; }
+.pujian-list li:nth-child(8) { animation-delay: 0.21s; }
+.pujian-list li:nth-child(n+9) { animation-delay: 0.24s; }
+
+@keyframes listItemEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Mini Player Entrance ===== */
+.mini-player:not(.is-hidden) {
+  animation: miniPlayerSlideUp 0.5s var(--ease-decelerate) both;
+}
+
+@keyframes miniPlayerSlideUp {
+  from {
+    transform: translate(-50%, calc(100% + 24px));
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%);
+    opacity: 1;
+  }
+}
+
+/* ===== Page / View Transitions ===== */
+@keyframes elegantFadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-8px); }
+}
+
+/* ===== Seekbar Pulse (plays on thumb when playing) ===== */
+@keyframes seekbarGlow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent); }
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--md-sys-color-primary) 0%, transparent); }
+}
+
+/* ===== Subtle Shimmer for Loading States ===== */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.midi-preload-fill {
+  background: linear-gradient(
+    90deg,
+    var(--md-sys-color-primary) 25%,
+    color-mix(in srgb, var(--md-sys-color-primary) 60%, #ffffff) 50%,
+    var(--md-sys-color-primary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ===== Song Navigation Transition ===== */
+.song-title-wrapper {
+  transition: opacity 0.2s var(--ease-accelerate), transform 0.2s var(--ease-accelerate);
+}
+.song-title-wrapper.is-navigating {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* ===== Viewer Overlay Slide ===== */
+.pdf-viewer-overlay {
+  transition: transform 0.45s var(--ease-standard);
+}
+
+/* ===== Settings Panel Enter ===== */
+.settings-panel {
+  animation: elegantFadeInUp 0.45s var(--ease-decelerate);
+}
+
+/* ===== Button Press Feedback ===== */
+.nav-btn:active {
+  transform: scale(0.94);
+  transition: transform 80ms var(--ease-accelerate);
+}
+
+/* ===== Seekbar Thumb Hover ===== */
+.player-slider::-webkit-slider-thumb {
+  transition: transform 0.15s var(--ease-spring, cubic-bezier(0.175, 0.885, 0.32, 1.275));
+}
+.player-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.3);
+}
+
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .mini-player { transition: none; }
+  .pdf-viewer-overlay { transition: none; }
 }

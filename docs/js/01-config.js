@@ -194,32 +194,29 @@ const MIDI_CROSSFADE_IN_MS = 320; // Crossfade in duration for transpose/instrum
 const MIDI_LOAD_TIMEOUT_MS = 15000; // Fallback timeout for sequence load event
 const MIDI_END_THRESHOLD_S = 0.5; // Threshold in seconds for detecting song end
 const MIDI_TRANSPOSE_DEBOUNCE_MS = 100; // Debounce rapid transpose MIDI updates
+const MIDI_SOUNDFONT_URL = 'https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus';
 
 /**
  * MidiTimeAuthority — Single source of truth for playback position.
  * Uses wall-clock (performance.now()) to advance time when playing,
- * so we never depend on the unreliable html-midi-player currentTime
- * during transitions.
+ * so we never depend on unreliable player currentTime during transitions.
  */
 const MidiTimeAuthority = {
   _time: 0,
-  _timestamp: 0, // performance.now() when _time was last set
+  _timestamp: 0,
   _playing: false,
   _duration: 0,
-  _seekCooldownUntil: 0, // Blocks drift correction after seeks
+  _seekCooldownUntil: 0,
 
-  /** Snapshot the current time (e.g. before a transition or seek) */
   setTime(t, dur, noCooldown) {
     this._time = Math.max(0, t || 0);
     this._timestamp = performance.now();
     if (dur !== undefined && dur > 0) this._duration = dur;
-    // Only set cooldown for explicit user seeks/transitions, not routine syncs
     if (!noCooldown) {
-      this._seekCooldownUntil = performance.now() + 1200;
+      this._seekCooldownUntil = performance.now() + 300;
     }
   },
 
-  /** Get the current time, advancing by wall-clock if playing */
   getTime() {
     if (!this._playing) return this._time;
     const elapsed = (performance.now() - this._timestamp) / 1000;
@@ -227,14 +224,11 @@ const MidiTimeAuthority = {
     return this._duration > 0 ? Math.min(t, this._duration) : t;
   },
 
-  /** Mark playback as playing/paused */
   setPlaying(playing) {
     if (playing === this._playing) return;
     if (playing) {
-      // Resuming: anchor the current time to now
       this._timestamp = performance.now();
     } else {
-      // Pausing: freeze the time at the current computed value
       this._time = this.getTime();
       this._timestamp = performance.now();
     }
@@ -243,37 +237,26 @@ const MidiTimeAuthority = {
 
   /**
    * Correct drift by syncing to the player's reported time (only when stable).
-   * Uses gradual blending to prevent visible jumps on the seekbar.
+   * Uses tighter threshold for smoother seekbar.
    */
   sync(playerTime) {
     if (!this._playing) return;
-    // Skip drift correction during seek cooldown
     if (performance.now() < this._seekCooldownUntil) return;
     const authorityTime = this.getTime();
     const diff = playerTime - authorityTime;
     const absDiff = Math.abs(diff);
 
-    // Only sync if the difference is noticeable (>0.8s)
-    // but not absurdly large (which would indicate a stale player read)
-    if (absDiff > 0.8 && absDiff < 5) {
-      // Gradual blend: move 40% toward player time to prevent visible jumps
+    if (absDiff > 0.15 && absDiff < 5) {
+      // Blend 40% toward player time — gentle correction
       const blended = authorityTime + diff * 0.4;
       this._time = blended;
       this._timestamp = performance.now();
     }
   },
 
-  /** Get duration */
-  getDuration() {
-    return this._duration;
-  },
+  getDuration() { return this._duration; },
+  setDuration(d) { if (d > 0) this._duration = d; },
 
-  /** Set duration */
-  setDuration(d) {
-    if (d > 0) this._duration = d;
-  },
-
-  /** Full reset */
   reset() {
     this._time = 0;
     this._timestamp = performance.now();
@@ -359,9 +342,38 @@ function resetMidiState() {
   MidiTimeAuthority.reset();
   window._midiSavedTime = null;
   _midiOriginalSeq = null;
-  _midiPoolPreloaded = false;
-  _midiPoolPreloading = false;
+  _midiCurrentTransposedSeq = null;
   window.isMidiSwitching = false;
   window.isMidiFading = false;
-  activeMidiPlayer = MIDI_PLAYER_POOL[0] || null;
+}
+
+/**
+ * Create a transposed copy of a NoteSequence.
+ * Efficiently clones and shifts pitch values in-place.
+ * @param {object} seq - Original NoteSequence
+ * @param {number} step - Semitones to shift
+ * @param {number} instrument - MIDI program number (-1 = keep original)
+ * @returns {object} Transposed NoteSequence
+ */
+function transposeNoteSequence(seq, step, instrument) {
+  if (!seq || !seq.notes) return seq;
+  const instrInt = parseInt(instrument, 10);
+  const applyInstr = !isNaN(instrInt) && instrInt >= 0;
+
+  // Use structuredClone for efficient deep copy
+  const clone = typeof structuredClone === 'function'
+    ? structuredClone(seq)
+    : JSON.parse(JSON.stringify(seq));
+
+  const notes = clone.notes;
+  for (let i = 0; i < notes.length; i++) {
+    const note = notes[i];
+    if (!note.isDrum) {
+      if (applyInstr) note.program = instrInt;
+      if (step !== 0) {
+        note.pitch = Math.max(0, Math.min(127, note.pitch + step));
+      }
+    }
+  }
+  return clone;
 }

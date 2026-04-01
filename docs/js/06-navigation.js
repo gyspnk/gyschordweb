@@ -17,7 +17,6 @@ function navigateTo(page) {
     searchContainer.style.display = "flex";
     renderPujianList();
   } else if (page === "playlist") {
-    const playlistBtn = document.getElementById("playlist-btn");
     if (playlistBtn) playlistBtn.classList.add("selected");
     searchContainer.style.display = "none";
     if (typeof renderPlaylistView === "function") renderPlaylistView();

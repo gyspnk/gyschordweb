@@ -17,18 +17,15 @@ const pdfViewerCloseBtn = document.getElementById("pdf-viewer-close");
 const midiToggleBtn = document.getElementById("midi-toggle-btn");
 const midiPanel = document.getElementById("midi-panel");
 
-// --- MIDI Player Pool (12 players, one per transpose step) ---
-const MIDI_PLAYER_POOL = {};
-document.querySelectorAll('#midi-player-pool midi-player').forEach(p => {
-  MIDI_PLAYER_POOL[parseInt(p.dataset.transpose)] = p;
-});
-// Active player reference (the one currently producing audio)
-let activeMidiPlayer = MIDI_PLAYER_POOL[0] || null;
-// Global original sequence
+// --- Single MIDI SoundFontPlayer (replaces 12-element pool) ---
+let _midiSfPlayer = null; // core.SoundFontPlayer instance
+let _midiSfPlayerReady = false; // Whether samples are loaded
+let _midiSfPlayerLoading = false; // Loading in progress
+// Global original sequence (unmodified from MIDI file)
 let _midiOriginalSeq = null;
-// Pool preload state
-let _midiPoolPreloaded = false;
-let _midiPoolPreloading = false;
+// Current transposed/instrumented sequence being played
+let _midiCurrentTransposedSeq = null;
+
 // Preload progress bar refs
 const midiPreloadBar = document.getElementById('midi-preload-bar');
 const midiPreloadFill = document.getElementById('midi-preload-fill');

@@ -2,8 +2,7 @@
   position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column;
   background-color: var(--md-sys-color-surface);
   --viewer-footer-height: var(--pdf-viewer-footer-height);
-  /* removed overflow hidden for shadows */
-  transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(100%); transition: transform 0.45s var(--ease-standard, cubic-bezier(0.2, 0, 0, 1));
 }
 body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 
@@ -14,7 +13,7 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   gap: 0.5rem;
   padding: 0.5rem;
   flex-shrink: 0;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  border-bottom: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 50%, transparent);
   position: relative;
   height: var(--pdf-viewer-header-height);
   box-sizing: border-box;
@@ -35,9 +34,11 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 }
 
 .song-navigation h2 { 
-  margin: 0; font-size: 1.125rem; font-weight: 500; 
+  margin: 0; font-size: 1.125rem; font-weight: 600;
+  font-family: var(--font-display);
   white-space: nowrap; overflow: hidden; text-overflow: clip;
   max-width: 100%;
+  letter-spacing: -0.01em;
 }
 #pdf-viewer-number { font-size: 0.75rem; color: var(--md-sys-color-on-surface-variant); }
 .pdf-viewer-controls-main { display: flex; align-items: center; gap: 0.25rem; }

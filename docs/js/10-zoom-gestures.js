@@ -221,7 +221,6 @@ async function finalizeWheelZoom() {
   activeWrapper.style.transformOrigin = "";
   activeWrapper.replaceWith(newWrapper);
   canvasWrapper = newWrapper; // Update global reference so next pinch works
-  canvasWrapper = newWrapper; // Update global reference
 
   updateCenteringAndOverflow();
 

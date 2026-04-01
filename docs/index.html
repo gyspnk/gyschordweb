@@ -39,7 +39,7 @@
       src="https://mozilla.github.io/pdf.js/build/pdf.mjs"
       type="module"
     ></script>
-    <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.23.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.5.0"></script>
+    <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.23.1/es6/core.js,npm/focus-visible@5"></script>
   </head>
   <body>
     <header class="app-header">
@@ -70,20 +70,11 @@
     <div
       id="mini-player"
       class="mini-player is-hidden"
-      style="padding: 10px 14px"
     >
-      <div
-        class="mini-player-top"
-        style="
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          width: 100%;
-        "
-      >
+      <!-- Row 1: Song info + play controls -->
+      <div class="mini-player-top">
         <div
           class="mini-player-info"
-          style="margin-right: 8px; overflow: hidden"
         >
           <div id="mini-title" class="mini-title">Judul Lagu</div>
           <div id="mini-subtitle" class="mini-subtitle">
@@ -91,143 +82,100 @@
           </div>
         </div>
 
-        <div class="mini-player-controls">
-          <div
-            class="mini-transpose-controls"
-            style="
-              display: flex;
-              align-items: center;
-              gap: 0;
-              background: var(--md-sys-color-surface-variant);
-              border-radius: 4px;
-              margin-right: 8px;
-            "
+        <div class="mini-transport">
+          <button
+            id="mini-prev-btn"
+            class="icon-button mini-btn"
+            aria-label="Previous"
           >
-            <div
-              class="family-chord-container"
-              style="position: relative; margin-right: 0"
-            >
-              <button
-                id="mini-key-info"
-                class="family-chord-btn"
-                style="
-                  font-size: 12px;
-                  font-weight: 600;
-                  width: auto;
-                  height: 24px;
-                  padding: 2px 8px;
-                  border-radius: 4px;
-                  min-width: 24px;
-                  text-align: center;
-                  color: var(--md-sys-color-on-surface);
-                  background: transparent;
-                  cursor: pointer;
-                  transition:
-                    transform 0.2s,
-                    background-color 0.2s;
-                "
-                onmousedown="this.style.transform = 'scale(0.85)'"
-                onmouseup="this.style.transform = 'scale(1)'"
-                onmouseleave="this.style.transform = 'scale(1)'"
-                title="Nada Dasar (Key) Saat Ini"
-              >
-                -
-              </button>
-              <div
-                class="family-chord-dropdown"
-                style="
-                  bottom: 100%;
-                  top: auto;
-                  left: 50%;
-                  transform: translateX(-50%) translateY(-8px) scale(0.96);
-                "
-                hidden
-              ></div>
-            </div>
-
-            <button
-              class="icon-button mini-btn"
-              onclick="if (typeof onTranspose === 'function') onTranspose(-1);"
-              style="width: 24px; height: 24px; transition: transform 0.2s"
-              onmousedown="this.style.transform = 'scale(0.85)'"
-              onmouseup="this.style.transform = 'scale(1)'"
-              onmouseleave="this.style.transform = 'scale(1)'"
-            >
-              <span class="material-symbols-outlined" style="font-size: 14px"
-                >remove</span
-              >
-            </button>
+            <span class="material-symbols-outlined">skip_previous</span>
+          </button>
+          <button
+            id="mini-play-btn"
+            class="icon-button mini-btn play-pause"
+            aria-label="Play/Pause"
+          >
             <span
-              id="mini-transpose-value"
-              style="
-                font-size: 11px;
-                font-weight: bold;
-                width: 16px;
-                text-align: center;
-                transition: transform 0.2s;
-                display: inline-block;
-              "
-              >0</span
+              class="material-symbols-outlined"
+              id="mini-play-icon"
+              >play_arrow</span
             >
+          </button>
+          <button
+            id="mini-next-btn"
+            class="icon-button mini-btn"
+            aria-label="Next"
+          >
+            <span class="material-symbols-outlined">skip_next</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Row 2: Transpose, instrument, loop -->
+      <div class="mini-player-extras">
+        <div class="mini-transpose-controls">
+          <div class="family-chord-container">
             <button
-              class="icon-button mini-btn"
-              onclick="if (typeof onTranspose === 'function') onTranspose(1);"
-              style="width: 24px; height: 24px; transition: transform 0.2s"
-              onmousedown="this.style.transform = 'scale(0.85)'"
-              onmouseup="this.style.transform = 'scale(1)'"
-              onmouseleave="this.style.transform = 'scale(1)'"
+              id="mini-key-info"
+              class="family-chord-btn mini-key-btn"
+              title="Nada Dasar (Key) Saat Ini"
             >
-              <span class="material-symbols-outlined" style="font-size: 14px"
-                >add</span
-              >
+              -
             </button>
+            <div
+              class="family-chord-dropdown"
+              style="
+                bottom: 100%;
+                top: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(-8px) scale(0.96);
+              "
+              hidden
+            ></div>
           </div>
 
-          <!-- Mini Instrument Selector -->
-          <div
-            class="instrument-selector-wrapper"
-            style="position: relative; margin-right: 4px"
+          <button
+            class="icon-button mini-btn mini-transpose-btn"
+            onclick="if (typeof onTranspose === 'function') onTranspose(-1);"
           >
-            <button
-              class="instrument-capsule-btn"
-              id="mini-instrument-select"
-              type="button"
-              aria-haspopup="listbox"
-              aria-expanded="false"
-              title="Pilih Alat Musik"
-              style="
-                padding: 4px 8px;
-                height: 24px;
-                font-size: 11px;
-                display: flex;
-                align-items: center;
-                background: var(--md-sys-color-surface-variant);
-              "
+            <span class="material-symbols-outlined">remove</span>
+          </button>
+          <span id="mini-transpose-value" class="mini-transpose-value">0</span>
+          <button
+            class="icon-button mini-btn mini-transpose-btn"
+            onclick="if (typeof onTranspose === 'function') onTranspose(1);"
+          >
+            <span class="material-symbols-outlined">add</span>
+          </button>
+        </div>
+
+        <!-- Mini Instrument Selector -->
+        <div class="instrument-selector-wrapper">
+          <button
+            class="instrument-capsule-btn mini-instrument-capsule"
+            id="mini-instrument-select"
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            title="Pilih Alat Musik"
+          >
+            <span
+              class="material-symbols-outlined cis-icon"
+              id="mini-cis-icon"
+              >piano</span
             >
-              <span
-                class="material-symbols-outlined cis-icon"
-                id="mini-cis-icon"
-                style="font-size: 14px; margin-right: 4px"
-                >piano</span
-              >
-              <span
-                id="mini-cis-label"
-                class="cis-label"
-                style="
-                  max-width: 50px;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                  white-space: nowrap;
-                "
-                >Piano</span
-              >
-            </button>
-            <div
-              class="cis-menu-popover"
-              style="bottom: 100%; top: auto; margin-bottom: 8px"
-              id="mini-cis-menu"
-              role="listbox"
+            <span
+              id="mini-cis-label"
+              class="cis-label mini-cis-label"
+              >Piano</span
             >
+          </button>
+          <div
+            class="cis-menu-popover"
+            style="bottom: 100%; top: auto; margin-bottom: 8px"
+            id="mini-cis-menu"
+            role="listbox"
+          >
               <div class="cis-grid">
                 <!-- PIANO -->
                 <div class="cis-category">Piano & Keyboard</div>
@@ -822,95 +770,26 @@
 
           <button
             id="mini-loop-btn"
-            class="icon-button mini-btn"
+            class="icon-button mini-btn mini-loop"
             aria-label="Loop"
-            style="
-              width: 32px;
-              height: 32px;
-              margin-right: 2px;
-              transition: transform 0.2s;
-            "
-            onmousedown="this.style.transform = 'scale(0.85)'"
-            onmouseup="this.style.transform = 'scale(1)'"
-            onmouseleave="this.style.transform = 'scale(1)'"
           >
             <span
               class="material-symbols-outlined"
               id="mini-loop-icon"
-              style="font-size: 18px"
               >repeat</span
             >
           </button>
-
-          <button
-            id="mini-prev-btn"
-            class="icon-button mini-btn"
-            aria-label="Previous"
-            style="transition: transform 0.2s"
-            onmousedown="this.style.transform = 'scale(0.85)'"
-            onmouseup="this.style.transform = 'scale(1)'"
-            onmouseleave="this.style.transform = 'scale(1)'"
-          >
-            <span class="material-symbols-outlined">skip_previous</span>
-          </button>
-          <button
-            id="mini-play-btn"
-            class="icon-button mini-btn"
-            aria-label="Play/Pause"
-            style="transition: transform 0.2s"
-            onmousedown="this.style.transform = 'scale(0.85)'"
-            onmouseup="this.style.transform = 'scale(1)'"
-            onmouseleave="this.style.transform = 'scale(1)'"
-          >
-            <span
-              class="material-symbols-outlined"
-              id="mini-play-icon"
-              style="
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                display: inline-block;
-              "
-              >play_arrow</span
-            >
-          </button>
-          <button
-            id="mini-next-btn"
-            class="icon-button mini-btn"
-            aria-label="Next"
-            style="transition: transform 0.2s"
-            onmousedown="this.style.transform = 'scale(0.85)'"
-            onmouseup="this.style.transform = 'scale(1)'"
-            onmouseleave="this.style.transform = 'scale(1)'"
-          >
-            <span class="material-symbols-outlined">skip_next</span>
-          </button>
         </div>
-      </div>
 
-      <div
-        class="mini-player-middle"
-        style="
-          width: 100%;
-          margin-top: 6px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        "
-      >
+      <!-- Row 3: Seekbar -->
+      <div class="mini-player-middle">
         <div
           class="player-time"
           id="mini-time-display"
-          style="
-            font-size: 10px;
-            color: var(--md-sys-color-on-surface-variant);
-            white-space: nowrap;
-          "
         >
           0:00 / 0:00
         </div>
-        <div
-          class="seekbar-wrapper"
-          style="height: 16px; margin: 0; padding: 0; flex-grow: 1"
-        >
+        <div class="seekbar-wrapper mini-seekbar-wrapper">
           <input
             type="range"
             class="player-slider"
@@ -919,12 +798,10 @@
             max="100"
             value="0"
             step="0.1"
-            style="height: 4px"
           />
           <div
             class="seekbar-fill"
             id="mini-seekbar-fill"
-            style="height: 4px; top: 6px"
           ></div>
         </div>
       </div>
@@ -1734,57 +1611,6 @@
                     </div>
                   </div>
                 </div>
-              </div>
-              <!-- Hidden MIDI Player Pool (12 players, one per transpose step) -->
-              <div style="display: none" id="midi-player-pool">
-                <midi-player
-                  data-transpose="-5"
-                  sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
-                ></midi-player>
-                <midi-player
-                  data-transpose="-4"
-                  sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
-                ></midi-player>
-                <midi-player
-                  data-transpose="-3"
-                  sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
-                ></midi-player>
-                <midi-player
-                  data-transpose="-2"
-                  sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
-                ></midi-player>
-                <midi-player
-                  data-transpose="-1"
-                  sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
-                ></midi-player>
-                <midi-player
-                  data-transpose="0"
-                  sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
-                ></midi-player>
-                <midi-player
-                  data-transpose="1"
-                  sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
-                ></midi-player>
-                <midi-player
-                  data-transpose="2"
-                  sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
-                ></midi-player>
-                <midi-player
-                  data-transpose="3"
-                  sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
-                ></midi-player>
-                <midi-player
-                  data-transpose="4"
-                  sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
-                ></midi-player>
-                <midi-player
-                  data-transpose="5"
-                  sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
-                ></midi-player>
-                <midi-player
-                  data-transpose="6"
-                  sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
-                ></midi-player>
               </div>
               <!-- MIDI Preload Progress -->
               <div

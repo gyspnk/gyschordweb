@@ -248,7 +248,7 @@ function updateFamilyChordUI() {
          opt.classList.add('selected');
       }
       opt.onclick = () => {
-         if (_midiPoolPreloading) return;
+         if (_midiSfPlayerLoading) return;
          if (!originalFamilyChord) return;
          const parsedObj = parseChordToken(originalFamilyChord);
          if (!parsedObj) return;
@@ -517,7 +517,7 @@ function wrapSemitone(value) {
 
 function onTranspose(step) {
   // Block if a MIDI transition is in progress
-  if (_midiPoolPreloading) return;
+  if (_midiSfPlayerLoading) return;
   const next = transposeStep + step;
   transposeStep = next > 11 || next < -11 ? 0 : next;
   updateTransposeUI();
@@ -525,7 +525,7 @@ function onTranspose(step) {
 }
 
 function resetTranspose() {
-  if (_midiPoolPreloading) return;
+  if (_midiSfPlayerLoading) return;
   if (transposeStep !== 0) {
     transposeStep = 0;
     updateTransposeUI();
@@ -549,9 +549,9 @@ function updateTransposeUI(options = {}) {
     updateFamilyChordUI();
   }
 
-  // INSTANT transpose swap (0ms) — pool players are pre-loaded
-  if (typeof swapToPoolPlayer === 'function') {
-    swapToPoolPlayer(transposeStep);
+  // Gapless transpose swap — single SoundFontPlayer reloads only new pitches
+  if (typeof swapTranspose === 'function') {
+    swapTranspose(transposeStep);
   }
 
   accidentalSwitchBtns.forEach((btn) => {
