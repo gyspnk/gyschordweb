@@ -144,7 +144,7 @@ const PlaylistManager = {
    * Get/set auto-next mode: 'off', 'playlist', 'number'
    */
   getAutoNextMode() {
-    return localStorage.getItem(PLAYLIST_AUTONEXT_KEY) || 'off';
+    return localStorage.getItem(PLAYLIST_AUTONEXT_KEY) || 'number';
   },
   setAutoNextMode(mode) {
     localStorage.setItem(PLAYLIST_AUTONEXT_KEY, mode);

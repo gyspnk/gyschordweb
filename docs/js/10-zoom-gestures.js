@@ -1,9 +1,30 @@
 // --- 9. Zoom & gesture guards ---
 function showToast(message, icon = "info") {
   if (toastTimeout) clearTimeout(toastTimeout);
+  if (generalToastIcon) generalToastIcon.textContent = icon;
+
+  const existingTextNode = Array.from(generalToast.childNodes).find(
+    (n) => n.nodeType === Node.TEXT_NODE,
+  );
+  if (existingTextNode) {
+    existingTextNode.textContent = ` ${message}`;
+  } else {
+    generalToast.appendChild(document.createTextNode(` ${message}`));
+  }
+
+  generalToast.classList.add("show");
+  toastTimeout = setTimeout(() => {
+    generalToast.classList.remove("show");
+  }, 2500);
+}
+
+function showZoomToast(message, icon = "zoom_in") {
+  if (zoomToastTimeout) clearTimeout(zoomToastTimeout);
   if (zoomToastIcon) zoomToastIcon.textContent = icon;
 
-  const existingTextNode = Array.from(zoomToast.childNodes).find((n) => n.nodeType === Node.TEXT_NODE);
+  const existingTextNode = Array.from(zoomToast.childNodes).find(
+    (n) => n.nodeType === Node.TEXT_NODE,
+  );
   if (existingTextNode) {
     existingTextNode.textContent = ` ${message}`;
   } else {
@@ -11,7 +32,7 @@ function showToast(message, icon = "info") {
   }
 
   zoomToast.classList.add("show");
-  toastTimeout = setTimeout(() => {
+  zoomToastTimeout = setTimeout(() => {
     zoomToast.classList.remove("show");
   }, 2500);
 }
@@ -21,7 +42,7 @@ function handleGlobalScroll(event) {
 
   event.preventDefault();
   if (!document.body.classList.contains("viewer-active")) return;
-  
+
   // Smooth continuous scroll zoom instead of fixed steps
   handleContinuousWheelZoom(event);
 }
@@ -33,15 +54,16 @@ function handleContinuousWheelZoom(event) {
   }
 
   if (!wheelState) {
-    const baseScale = typeof currentScale === "number" ? currentScale : initialScale;
+    const baseScale =
+      typeof currentScale === "number" ? currentScale : initialScale;
     const rect = pdfViewerContent.getBoundingClientRect();
     const activeRect = canvasWrapper.getBoundingClientRect();
-    
+
     const centerX = event.clientX;
     const centerY = event.clientY;
 
-    const anchorInWrapperX = (centerX - activeRect.left);
-    const anchorInWrapperY = (centerY - activeRect.top);
+    const anchorInWrapperX = centerX - activeRect.left;
+    const anchorInWrapperY = centerY - activeRect.top;
 
     wheelState = {
       baseScale,
@@ -55,36 +77,40 @@ function handleContinuousWheelZoom(event) {
       anchorViewportX: centerX - rect.left,
       anchorViewportY: centerY - rect.top,
     };
-    
+
     // We use wheel-preview styling machinery for smooth un-rendered CSS scaling
     canvasWrapper.classList.add("wheel-preview");
   }
 
   // Normalize delta across browsers
   let deltaYPixels = event.deltaY;
-  if (event.deltaMode === 1) deltaYPixels *= 33; // DOM_DELTA_LINE
+  if (event.deltaMode === 1)
+    deltaYPixels *= 33; // DOM_DELTA_LINE
   else if (event.deltaMode === 2) deltaYPixels *= 100; // DOM_DELTA_PAGE
 
   // Batasi kecepatan scroll yang berlebihan untuk mencegah glitch (clamp deltaY)
-  const maxDelta = 120; 
+  const maxDelta = 120;
   deltaYPixels = Math.max(-maxDelta, Math.min(maxDelta, deltaYPixels));
 
   // Accumulate wheel delta (lower multiplier for smoother zooming)
   const zoomFactorMultiplier = Math.exp(-deltaYPixels * 0.0015);
-  
+
   // Add CSS transition only for jerky mouse wheels, keep instant for trackpads.
   // Transition duration is lowered to 0.08s to reduce the bouncy elastic rubber-banding
   // effect when spamming zoom-in and zoom-out rapidly.
   if (Math.abs(deltaYPixels) >= 40) {
-    canvasWrapper.style.transition = 'transform 0.08s ease-out';
+    canvasWrapper.style.transition = "transform 0.08s ease-out";
   } else {
-    canvasWrapper.style.transition = 'none';
+    canvasWrapper.style.transition = "none";
   }
 
   const minScale = initialScale;
   const maxScale = initialScale * 8;
-  const nextScale = Math.min(maxScale, Math.max(minScale, wheelState.previewScale * zoomFactorMultiplier));
-  
+  const nextScale = Math.min(
+    maxScale,
+    Math.max(minScale, wheelState.previewScale * zoomFactorMultiplier),
+  );
+
   wheelState.previewScale = nextScale;
   wheelState.centerClientX = event.clientX;
   wheelState.centerClientY = event.clientY;
@@ -159,11 +185,11 @@ async function finalizeWheelZoom() {
   }
 
   // Check if the user kept scrolling while we were rendering!
-  // If they scrolled during the render, either wheelRenderTimeout is active, 
+  // If they scrolled during the render, either wheelRenderTimeout is active,
   // or the finalScale has fundamentally drifted away from the rendered scale.
   if (wheelRenderTimeout || wheelState.previewScale !== finalScale) {
     isFinalizingWheelZoom = false;
-    
+
     // If the timeout already expired but we blocked it using isFinalizingWheelZoom,
     // we need to re-trigger the finalize pipeline immediately to render the actual finalScale.
     if (!wheelRenderTimeout) {
@@ -202,8 +228,10 @@ async function finalizeWheelZoom() {
   const newWrapperRect = newWrapper.getBoundingClientRect();
   const ratio = finalScale / oldScale;
 
-  const newWrapperDocX = pdfViewerContent.scrollLeft + (newWrapperRect.left - containerRect.left);
-  const newWrapperDocY = pdfViewerContent.scrollTop + (newWrapperRect.top - containerRect.top);
+  const newWrapperDocX =
+    pdfViewerContent.scrollLeft + (newWrapperRect.left - containerRect.left);
+  const newWrapperDocY =
+    pdfViewerContent.scrollTop + (newWrapperRect.top - containerRect.top);
 
   const newAnchorInWrapperX = savedWheelState.anchorInWrapperX * ratio;
   const newAnchorInWrapperY = savedWheelState.anchorInWrapperY * ratio;
@@ -214,9 +242,18 @@ async function finalizeWheelZoom() {
   const targetScrollX = newWrapperDocX + newAnchorInWrapperX - targetViewportX;
   const targetScrollY = newWrapperDocY + newAnchorInWrapperY - targetViewportY;
 
-  const maxScrollX = Math.max(0, pdfViewerContent.scrollWidth - pdfViewerContent.clientWidth);
-  const maxScrollY = Math.max(0, pdfViewerContent.scrollHeight - pdfViewerContent.clientHeight);
-  pdfViewerContent.scrollLeft = Math.min(Math.max(0, targetScrollX), maxScrollX);
+  const maxScrollX = Math.max(
+    0,
+    pdfViewerContent.scrollWidth - pdfViewerContent.clientWidth,
+  );
+  const maxScrollY = Math.max(
+    0,
+    pdfViewerContent.scrollHeight - pdfViewerContent.clientHeight,
+  );
+  pdfViewerContent.scrollLeft = Math.min(
+    Math.max(0, targetScrollX),
+    maxScrollX,
+  );
   pdfViewerContent.scrollTop = Math.min(Math.max(0, targetScrollY), maxScrollY);
 
   const newRect = newWrapper.getBoundingClientRect();
@@ -247,7 +284,8 @@ async function finalizeWheelZoom() {
 }
 
 function handleGlobalKeydown(event) {
-  if (event.target.tagName === "INPUT" || event.target.tagName === "TEXTAREA") return;
+  if (event.target.tagName === "INPUT" || event.target.tagName === "TEXTAREA")
+    return;
   if (!document.body.classList.contains("viewer-active")) return;
 
   if (event.ctrlKey) {
@@ -292,7 +330,8 @@ function handleTouchStart(event) {
   if (!document.body.classList.contains("viewer-active")) return;
   if (!event.target.closest(".pdf-viewer-content")) return;
 
-  const baseScale = typeof currentScale === "number" ? currentScale : initialScale;
+  const baseScale =
+    typeof currentScale === "number" ? currentScale : initialScale;
   currentScale = baseScale;
   initialPinchDistance = getPinchDistance(event);
   swipeStartPoint = null;
@@ -305,8 +344,8 @@ function handleTouchStart(event) {
   const activeRect = canvasWrapper.getBoundingClientRect();
 
   // Anchor position in wrapper-local coordinates (unscaled)
-  const anchorInWrapperX = (centerX - activeRect.left);
-  const anchorInWrapperY = (centerY - activeRect.top);
+  const anchorInWrapperX = centerX - activeRect.left;
+  const anchorInWrapperY = centerY - activeRect.top;
 
   pinchState = {
     baseScale,
@@ -321,7 +360,7 @@ function handleTouchStart(event) {
     initScrollTop: pdfViewerContent.scrollTop,
     // Anchor position relative to viewport (container-local)
     anchorViewportX: centerX - rect.left,
-    anchorViewportY: centerY - rect.top
+    anchorViewportY: centerY - rect.top,
   };
 
   canvasWrapper.classList.add("pinch-preview");
@@ -329,7 +368,8 @@ function handleTouchStart(event) {
 }
 
 function handleTouchMove(event) {
-  if (event.touches.length !== 2 || !pinchState || initialPinchDistance <= 0) return;
+  if (event.touches.length !== 2 || !pinchState || initialPinchDistance <= 0)
+    return;
   event.preventDefault();
 
   const distance = getPinchDistance(event);
@@ -337,7 +377,10 @@ function handleTouchMove(event) {
   // Minimum 100%, maximum 800%
   const minScale = initialScale;
   const maxScale = initialScale * 8;
-  const nextScale = Math.min(maxScale, Math.max(minScale, pinchState.baseScale * factor));
+  const nextScale = Math.min(
+    maxScale,
+    Math.max(minScale, pinchState.baseScale * factor),
+  );
 
   const t1 = event.touches[0];
   const t2 = event.touches[1];
@@ -362,7 +405,11 @@ function handleTouchMove(event) {
   const currentFingerViewportY = centerY - rect.top;
 
   // The anchor's document position after scaling (wrapper origin + scaled anchor offset)
-  const wrapperBaseX = pinchState.initScrollLeft + (canvasWrapper.getBoundingClientRect().left - rect.left) - pdfViewerContent.scrollLeft + pdfViewerContent.scrollLeft;
+  const wrapperBaseX =
+    pinchState.initScrollLeft +
+    (canvasWrapper.getBoundingClientRect().left - rect.left) -
+    pdfViewerContent.scrollLeft +
+    pdfViewerContent.scrollLeft;
   // Simpler: anchor position in content-space = initScroll + anchorViewport initially.
   // After scale with transform-origin at anchor, the anchor stays at same content position.
   // So we just need scroll such that anchor appears at finger position.
@@ -377,9 +424,18 @@ function handleTouchMove(event) {
   let targetScrollY = anchorContentY - currentFingerViewportY;
 
   // Clamp scroll to viewport bounds
-  const maxScrollX = Math.max(0, pdfViewerContent.scrollWidth - pdfViewerContent.clientWidth);
-  const maxScrollY = Math.max(0, pdfViewerContent.scrollHeight - pdfViewerContent.clientHeight);
-  pdfViewerContent.scrollLeft = Math.min(Math.max(0, targetScrollX), maxScrollX);
+  const maxScrollX = Math.max(
+    0,
+    pdfViewerContent.scrollWidth - pdfViewerContent.clientWidth,
+  );
+  const maxScrollY = Math.max(
+    0,
+    pdfViewerContent.scrollHeight - pdfViewerContent.clientHeight,
+  );
+  pdfViewerContent.scrollLeft = Math.min(
+    Math.max(0, targetScrollX),
+    maxScrollX,
+  );
   pdfViewerContent.scrollTop = Math.min(Math.max(0, targetScrollY), maxScrollY);
 
   currentScale = nextScale;
@@ -459,8 +515,10 @@ async function handleTouchEnd(event) {
   // We want the anchor to appear at the same viewport position as during preview.
   const containerRect = pdfViewerContent.getBoundingClientRect();
   const newWrapperRect = newWrapper.getBoundingClientRect();
-  const newWrapperDocX = pdfViewerContent.scrollLeft + (newWrapperRect.left - containerRect.left);
-  const newWrapperDocY = pdfViewerContent.scrollTop + (newWrapperRect.top - containerRect.top);
+  const newWrapperDocX =
+    pdfViewerContent.scrollLeft + (newWrapperRect.left - containerRect.left);
+  const newWrapperDocY =
+    pdfViewerContent.scrollTop + (newWrapperRect.top - containerRect.top);
 
   // Anchor position in new wrapper = old anchor * ratio
   const newAnchorInWrapperX = savedPinchState.anchorInWrapperX * ratio;
@@ -473,9 +531,18 @@ async function handleTouchEnd(event) {
   const targetScrollX = newWrapperDocX + newAnchorInWrapperX - targetViewportX;
   const targetScrollY = newWrapperDocY + newAnchorInWrapperY - targetViewportY;
 
-  const maxScrollX = Math.max(0, pdfViewerContent.scrollWidth - pdfViewerContent.clientWidth);
-  const maxScrollY = Math.max(0, pdfViewerContent.scrollHeight - pdfViewerContent.clientHeight);
-  pdfViewerContent.scrollLeft = Math.min(Math.max(0, targetScrollX), maxScrollX);
+  const maxScrollX = Math.max(
+    0,
+    pdfViewerContent.scrollWidth - pdfViewerContent.clientWidth,
+  );
+  const maxScrollY = Math.max(
+    0,
+    pdfViewerContent.scrollHeight - pdfViewerContent.clientHeight,
+  );
+  pdfViewerContent.scrollLeft = Math.min(
+    Math.max(0, targetScrollX),
+    maxScrollX,
+  );
   pdfViewerContent.scrollTop = Math.min(Math.max(0, targetScrollY), maxScrollY);
 
   // The new scroll is set. Calculate where the new wrapper actually landed on screen.
@@ -484,7 +551,7 @@ async function handleTouchEnd(event) {
   // How much it shifted on screen compared to the visual preview
   const tx = oldVisualRect.left - newRect.left;
   const ty = oldVisualRect.top - newRect.top;
-  
+
   // In theory the scale should be exactly 1, but we calculate it to ensure perfect overlap
   const scaleX = oldVisualRect.width / (newRect.width || 1);
   const scaleY = oldVisualRect.height / (newRect.height || 1);
@@ -513,10 +580,16 @@ async function handleTouchEnd(event) {
 }
 
 function handleViewerTouchStart(event) {
-  if (!document.body.classList.contains("viewer-active") || event.touches.length !== 1) return;
+  if (
+    !document.body.classList.contains("viewer-active") ||
+    event.touches.length !== 1
+  )
+    return;
 
   const touch = event.touches[0];
-  const isFromControl = event.target.closest("button, input, select, label, .chord-layer.editor-mode, .chord-marker");
+  const isFromControl = event.target.closest(
+    "button, input, select, label, .chord-layer.editor-mode, .chord-marker",
+  );
 
   if (isFromControl) {
     swipeStartPoint = null;
@@ -526,7 +599,7 @@ function handleViewerTouchStart(event) {
   swipeStartPoint = {
     x: touch.clientX,
     y: touch.clientY,
-    time: Date.now()
+    time: Date.now(),
   };
 }
 
@@ -547,7 +620,9 @@ function handleViewerTouchEnd(event) {
     return;
   }
 
-  const isControlInteraction = event.target.closest("button, input, select, label, .chord-layer.editor-mode, .chord-marker");
+  const isControlInteraction = event.target.closest(
+    "button, input, select, label, .chord-layer.editor-mode, .chord-marker",
+  );
   const elapsed = Date.now() - swipeStartPoint.time;
   const dx = touch.clientX - swipeStartPoint.x;
   const dy = touch.clientY - swipeStartPoint.y;
@@ -560,8 +635,11 @@ function handleViewerTouchEnd(event) {
     const now = Date.now();
     const isFastEnough = now - lastViewerTapAt <= DOUBLE_TAP_MAX_DELAY;
     const isNearEnough =
-      lastViewerTapPoint
-      && Math.hypot(touch.clientX - lastViewerTapPoint.x, touch.clientY - lastViewerTapPoint.y) <= DOUBLE_TAP_MAX_DISTANCE;
+      lastViewerTapPoint &&
+      Math.hypot(
+        touch.clientX - lastViewerTapPoint.x,
+        touch.clientY - lastViewerTapPoint.y,
+      ) <= DOUBLE_TAP_MAX_DISTANCE;
 
     if (isFastEnough && isNearEnough) {
       lastViewerTapAt = 0;
@@ -591,7 +669,9 @@ function handleViewerPointerStart(event) {
   if (!document.body.classList.contains("viewer-active")) return;
   if (event.button !== 0) return;
 
-  const isFromControl = event.target.closest("button, input, select, label, .chord-layer.editor-mode, .chord-marker");
+  const isFromControl = event.target.closest(
+    "button, input, select, label, .chord-layer.editor-mode, .chord-marker",
+  );
   if (isFromControl) {
     swipeStartPoint = null;
     isMouseDragging = false;
@@ -601,7 +681,7 @@ function handleViewerPointerStart(event) {
   swipeStartPoint = {
     x: event.clientX,
     y: event.clientY,
-    time: Date.now()
+    time: Date.now(),
   };
 
   if (event.type === "mousedown") {
@@ -617,11 +697,11 @@ function handleViewerPointerStart(event) {
 function handleViewerPointerMove(event) {
   if (!isMouseDragging) return;
   if (!document.body.classList.contains("viewer-active")) return;
-  
+
   event.preventDefault(); // Prevent default text selection
   const dx = event.clientX - mouseDragStartX;
   const dy = event.clientY - mouseDragStartY;
-  
+
   pdfViewerContent.scrollLeft = mouseDragScrollLeft - dx;
   pdfViewerContent.scrollTop = mouseDragScrollTop - dy;
 }
@@ -685,11 +765,17 @@ function processSwipeGesture(dx, dy, elapsed) {
 }
 
 function canSwipePdfPage() {
-  return Boolean(pdfDoc) && pdfDoc.numPages > 1 && currentViewMode === "single" && currentScrollMode === "horizontal";
+  return (
+    Boolean(pdfDoc) &&
+    pdfDoc.numPages > 1 &&
+    currentViewMode === "single" &&
+    currentScrollMode === "horizontal"
+  );
 }
 
 function isViewerZoomedIn() {
   if (!Number.isFinite(initialScale) || initialScale <= 0) return false;
-  if (typeof currentScale !== "number" || !Number.isFinite(currentScale)) return false;
+  if (typeof currentScale !== "number" || !Number.isFinite(currentScale))
+    return false;
   return currentScale > initialScale * 1.001;
 }

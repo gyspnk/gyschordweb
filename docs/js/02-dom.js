@@ -73,6 +73,9 @@ const orientationWarning = document.getElementById("orientation-warning");
 const zoomToast = document.getElementById("zoom-toast");
 const zoomToastIcon = zoomToast.querySelector(".material-symbols-outlined");
 
+const generalToast = document.getElementById("general-toast");
+const generalToastIcon = generalToast.querySelector(".material-symbols-outlined");
+
 const chordEditorToolbar = document.getElementById("chord-editor-toolbar");
 const chordEditorToggleBtn = document.getElementById("chord-editor-toggle-btn");
 const chordSaveBtn = document.getElementById("chord-save-btn");

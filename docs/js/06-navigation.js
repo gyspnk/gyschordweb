@@ -6,6 +6,12 @@ function navigateTo(page) {
   });
   document.querySelector(".app-header").style.display = "flex";
 
+  const miniPlayerContainer = document.getElementById('mini-player');
+  if (page === "pengaturan" || page === "report-bug" || page === "about-project") {
+    if (miniPlayerContainer) miniPlayerContainer.classList.add('is-hidden');
+  }
+
+
   if (page === "pujian") {
     pujianBtn.classList.add("selected");
     searchContainer.style.display = "flex";
@@ -51,9 +57,23 @@ function renderPujianList() {
           judul: match ? match[2].replace(/_/g, " ") : rawName.replace(/_/g, " "),
           fileHref: `assets/pdf/${file}`
         };
-      });
-      displayPujian(pujianItems);
-    })
+      });        displayPujian(pujianItems);
+        
+        // Auto-load last played song or first song (001) into miniplayer on first boot
+        if (typeof currentSongIndex !== 'undefined' && currentSongIndex === -1 && pujianItems.length > 0) {
+            let lastSongStr = localStorage.getItem('GysLastPlayedSongIndex');
+            let initialSongIndex = 0; // Default to 001
+            if (lastSongStr !== null) {
+                let parsed = parseInt(lastSongStr, 10);
+                if (!isNaN(parsed) && parsed >= 0 && parsed < pujianItems.length) {
+                    initialSongIndex = parsed;
+                }
+            }
+            if (typeof openPdfViewer === 'function') {
+                openPdfViewer(initialSongIndex, true);
+            }
+        }
+      })
     .catch((error) => {
       console.error("Error memuat daftar pujian:", error);
       mainContent.innerHTML = '<p class="welcome-text">Gagal memuat daftar pujian.</p>';

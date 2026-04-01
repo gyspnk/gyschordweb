@@ -21,6 +21,14 @@
 .icon-button.active { color: var(--md-sys-color-primary); }
 .icon-button.is-busy { opacity: 0.4; pointer-events: none; }
 
+.list-action-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background-color: var(--md-sys-color-primary);
+    opacity: 0; border-radius: inherit; transition: opacity 0.2s;
+    pointer-events: none;
+}
+.list-action-btn:hover::before { opacity: 0.08; }
+
 #clear-search { color: var(--md-sys-color-on-surface-variant); }
 #clear-search:hover { background-color: var(--md-sys-state-layer-primary); }
 
@@ -278,9 +286,11 @@
   width: 100%;
   height: 3px;
   background: var(--md-sys-color-surface-variant, #e0e0e0);
-  border-radius: 2px;
+  border-radius: 0 0 20px 20px;
   overflow: hidden;
-  margin-top: 4px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
 }
 .midi-preload-fill {
   height: 100%;
@@ -302,8 +312,7 @@
   border-radius: 16px;
   padding: 8px 16px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   z-index: 900;
   border: 1px solid var(--md-sys-color-outline-variant);
@@ -350,6 +359,17 @@
 .mini-player-controls .icon-button.play-pause {
   background: var(--md-sys-color-primary-container);
   color: var(--md-sys-color-on-primary-container);
+}
+
+/* --- Mini Play Icon Animation --- */
+#mini-play-icon {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#mini-play-icon.is-playing {
+  transform: rotate(90deg) scale(1.1);
+}
+#mini-play-icon:not(.is-playing) {
+  transform: rotate(0deg) scale(1);
 }
 
 /* --- Playlist View --- */

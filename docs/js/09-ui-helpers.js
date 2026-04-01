@@ -1,4 +1,4 @@
-// --- 8. Tambahan UI ---
+﻿// --- 8. Tambahan UI ---
 function handleOrientationChange() {
   checkOrientation();
   closeTransposeCollapse();
@@ -187,7 +187,7 @@ function setupRippleEffect() {
   };
 
   document.body.addEventListener("click", (e) => {
-    const rippleTarget = e.target.closest(".nav-btn, .icon-button, .pujian-list li, .accent-color");
+    const rippleTarget = e.target.closest(".nav-btn, .icon-button, .pujian-list li, .accent-color, .list-action-btn, .mini-player-info");
     if (rippleTarget) {
       createRipple({ currentTarget: rippleTarget, clientX: e.clientX, clientY: e.clientY });
     }
@@ -199,7 +199,7 @@ function setupRippleEffect() {
       const touch = e.touches && e.touches[0];
       if (!touch) return;
 
-      const rippleTarget = e.target.closest(".nav-btn, .icon-button, .pujian-list li, .accent-color");
+      const rippleTarget = e.target.closest(".nav-btn, .icon-button, .pujian-list li, .accent-color, .list-action-btn, .mini-player-info");
       if (rippleTarget) {
         createRipple({ currentTarget: rippleTarget, clientX: touch.clientX, clientY: touch.clientY });
       }
@@ -251,7 +251,7 @@ function updateSongNavButtons() {
 async function closePdfViewer() {
   document.body.classList.remove("viewer-active");
   pdfDoc = null;
-  currentSongIndex = -1;
+  // Do NOT reset currentSongIndex so the Mini Player remains globally synced.
   titleTapCount = 0;
   lastViewerTapAt = 0;
   lastViewerTapPoint = null;
@@ -260,21 +260,9 @@ async function closePdfViewer() {
   chordsHidden = false;
   closeTransposeCollapse();
   updateHideChordButton();
-  
-  if (MIDI_PLAYER_POOL[0]) {
-    try {
-      // Fade out before stopping for smooth audio transition
-      const currentPlayer = activeMidiPlayer || MIDI_PLAYER_POOL[0];
-      if (currentPlayer.playing) {
-        await fadeMidiVolume(MIDI_SILENT_VOLUME, MIDI_FADE_OUT_MS);
-      }
-      // Stop ALL pool players
-      Object.values(MIDI_PLAYER_POOL).forEach(p => {
-        try { p.stop(); } catch(e) {}
-      });
-    } catch(e) {}
-    
-    // Reset all MIDI state using shared helper
-    resetMidiState();
-  }
+
+  // We no longer stop the MIDI player when closing the PDF viewer so the Mini Player keeps it alive.
 }
+
+
+

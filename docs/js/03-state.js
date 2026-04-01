@@ -30,6 +30,7 @@ let customAccentColor = DEFAULT_CUSTOM_ACCENT;
 
 let initialPinchDistance = 0;
 let toastTimeout = null;
+let zoomToastTimeout = null;
 
 let chordEditorEnabled = false;
 let chordConfig = null;

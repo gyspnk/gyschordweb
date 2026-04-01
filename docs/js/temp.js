@@ -1,7 +1,6 @@
 ﻿// --- 6. PDF Viewer ---
 async function openPdfViewer(songId, backgroundLoad = false) {
   currentSongIndex = parseInt(songId, 10);
-  localStorage.setItem('GysLastPlayedSongIndex', currentSongIndex);
   const song = pujianItems[currentSongIndex];
   if (!song) return;
 
@@ -103,7 +102,7 @@ async function openPdfViewer(songId, backgroundLoad = false) {
 
         // Pre-load all 12 transposed variants into the pool
         const currentTranspose = typeof transposeStep === 'number' ? transposeStep : 0;
-        window.window.preloadAllTransposes(seq, {
+        preloadAllTransposes(seq, {
           forceStart: wasPlayingGlobal,
           startTranspose: currentTranspose
         });
@@ -407,7 +406,7 @@ async function resetZoomToDefault(anchorClientX, anchorClientY) {
       anchorClientY,
       animatePreview: true
     });
-    showZoomToast("Zoom direset ke 100%", "center_focus_strong");
+    showToast("Zoom direset ke 100%", "center_focus_strong");
   } finally {
     zoomInProgress = false;
   }
@@ -591,108 +590,15 @@ function onToggleScrollMode() {
   animateViewChange(() => renderPage(currentPageNum));
 }
 
-async function onPrevSong(forceAutoplay = false) {
-  if (forceAutoplay === true) {
-    window._forceAutoPlayNext = true;
-  }
-
-  // Seek to 0 logic
-  if (typeof MidiTimeAuthority !== 'undefined' && typeof activeMidiPlayer !== 'undefined') {
-    const currTime = MidiTimeAuthority.getTime();
-    if (currTime > 2) {
-      try {
-        activeMidiPlayer.currentTime = 0;
-        MidiTimeAuthority.setTime(0, MidiTimeAuthority.getDuration());
-        if (forceAutoplay && !activeMidiPlayer.playing) {
-           activeMidiPlayer.start();
-           MidiTimeAuthority.setPlaying(true);
-           const playIcon = document.getElementById('custom-play-icon');
-           if (playIcon) playIcon.textContent = "pause";
-           const midiPlayerEl = document.getElementById('custom-midi-player');
-           if (midiPlayerEl) midiPlayerEl.classList.add("playing");
-        }
-      } catch(e) {}
-      return; 
-    }
-  }
-
-  let mode = typeof PlaylistManager !== 'undefined' ? PlaylistManager.getAutoNextMode() : 'number';
-  
-  if (mode === 'playlist') {
-    const activeId = PlaylistManager.getActiveId();
-    if (activeId) {
-      const pl = PlaylistManager.getById(activeId);
-      if (pl && typeof pujianItems !== 'undefined' && currentSongIndex >= 0) {
-        const currentGlobalSong = pujianItems[currentSongIndex];
-        let currentIdxInPl = pl.songs.findIndex(s => s.nomor === currentGlobalSong.nomor);
-        
-        if (currentIdxInPl < 0) {
-           if (typeof showToast === 'function') showToast("Lagu aktif tidak di playlist, beralih ke Sesuai Nomor", "info");
-           if (typeof setNextMode === 'function') setNextMode('number');
-           mode = 'number';
-        } else if (currentIdxInPl > 0) {
-          if (typeof playSongFromPlaylist === 'function') {
-            await playSongFromPlaylist(currentIdxInPl - 1, !document.body.classList.contains('viewer-active'), activeId);
-            return;
-          }
-        } else if (currentIdxInPl === 0) {
-          // Wrapped to end of playlist
-          if (typeof playSongFromPlaylist === 'function' && pl.songs.length > 0) {
-            await playSongFromPlaylist(pl.songs.length - 1, !document.body.classList.contains('viewer-active'), activeId);
-            return;
-          }
-        }
-      }
-    }
-  }
-
-  if (mode === 'number' || mode === 'off' || mode === 'one') {
-    if (currentSongIndex > 0) {
-      await openPdfViewer(currentSongIndex - 1, !document.body.classList.contains('viewer-active'));
-    } else if (currentSongIndex === 0) {
-      if (typeof pujianItems !== 'undefined' && pujianItems.length > 0) {
-        await openPdfViewer(pujianItems.length - 1, !document.body.classList.contains('viewer-active'));
-      }
-    }
+async function onPrevSong() {
+  if (currentSongIndex > 0) {
+    await openPdfViewer(currentSongIndex - 1, !document.body.classList.contains('viewer-active'));
   }
 }
 
-async function onNextSong(forceAutoplay = false) {
-  if (forceAutoplay === true) {
-    window._forceAutoPlayNext = true;
-  }
-
-  let mode = typeof PlaylistManager !== 'undefined' ? PlaylistManager.getAutoNextMode() : 'number';
-
-  if (mode === 'playlist') {
-    const activeId = PlaylistManager.getActiveId();
-    if (activeId) {
-      const pl = PlaylistManager.getById(activeId);
-      if (pl && typeof pujianItems !== 'undefined' && currentSongIndex >= 0) {
-        const currentGlobalSong = pujianItems[currentSongIndex];
-        let currentIdxInPl = pl.songs.findIndex(s => s.nomor === currentGlobalSong.nomor);
-        
-        if (currentIdxInPl < 0) {
-           if (typeof showToast === 'function') showToast("Lagu aktif tidak di playlist, beralih ke Sesuai Nomor", "info");
-           if (typeof setNextMode === 'function') setNextMode('number');
-           mode = 'number';
-        } else if (currentIdxInPl >= 0 && currentIdxInPl < pl.songs.length - 1) {
-          if (typeof playSongFromPlaylist === 'function') {
-            await playSongFromPlaylist(currentIdxInPl + 1, !document.body.classList.contains('viewer-active'), activeId);
-            return;
-          }
-        } else if (currentIdxInPl === pl.songs.length - 1) {
-           showToast("Playlist selesai", "done");
-           return; 
-        }
-      }
-    }
-  }
-
-  if (mode === 'number' || mode === 'off' || mode === 'one') {
-    if (currentSongIndex < pujianItems.length - 1) {
-      await openPdfViewer(currentSongIndex + 1, !document.body.classList.contains('viewer-active'));
-    }
+async function onNextSong() {
+  if (currentSongIndex < pujianItems.length - 1) {
+    await openPdfViewer(currentSongIndex + 1, !document.body.classList.contains('viewer-active'));
   }
 }
 
@@ -738,7 +644,7 @@ function updateViewerUI() {
  * @param {boolean} [opts.forceStart=false] - Start playback after loading
  * @param {number}  [opts.startTranspose=0] - Which transpose to activate first
  */
-window.preloadAllTransposes = async function(seq, opts = {}) {
+async function preloadAllTransposes(seq, opts = {}) {
   if (!seq) return;
   const { forceStart = false, startTranspose = 0 } = opts;
 
@@ -768,43 +674,8 @@ window.preloadAllTransposes = async function(seq, opts = {}) {
   const totalSteps = steps.length;
   let loaded = 0;
 
-  const loadPromises = steps.map(step => {
-    return new Promise(resolve => {
-      const player = MIDI_PLAYER_POOL[step];
-      if (!player) return resolve();
-
-      const clone = JSON.parse(JSON.stringify(seq));
-      if (seq.totalTime) clone.totalTime = seq.totalTime;
-      if (clone.notes) {
-        for (let i = 0; i < clone.notes.length; i++) {
-          const note = clone.notes[i];
-          if (!note.isDrum) {
-            if (instrInt >= 0) note.program = instrInt;
-            if (step !== 0) {
-              note.pitch = Math.max(0, Math.min(127, note.pitch + step));
-            }
-          }
-        }
-      }
-
-      let isDone = false;
-      const complete = () => {
-        if (isDone) return;
-        isDone = true;
-        player.removeEventListener('load', complete);
-        loaded++;
-        if (midiPreloadFill) {
-          midiPreloadFill.style.width = ((loaded / totalSteps) * 100) + '%';
-        }
-        resolve();
-      };
-      player.addEventListener('load', complete);
-      setTimeout(complete, MIDI_LOAD_TIMEOUT_MS);
-      player.noteSequence = clone;
-    });
-  });
-
-  await Promise.all(loadPromises);
+  
+  }
 
   // Store duration
   const knownDuration = seq.totalTime || MIDI_PLAYER_POOL[0]?.duration || 0;
@@ -953,7 +824,7 @@ async function changeInstrument() {
 
   // Re-preload all 12 with new instrument
   const currentTranspose = typeof transposeStep === 'number' ? transposeStep : 0;
-  await window.window.preloadAllTransposes(_midiOriginalSeq, {
+  await preloadAllTransposes(_midiOriginalSeq, {
     forceStart: false,
     startTranspose: currentTranspose
   });
@@ -1007,20 +878,9 @@ function syncSeekbarUI(time, duration) {
   if (typeof customTimeDisplay !== 'undefined' && customTimeDisplay) {
     customTimeDisplay.textContent = `${formatMidiTime(t)} / ${dur > 0 ? formatMidiTime(dur) : '0:00'}`;
   }
-    
-    // Mini player UI sync
-    const miniSeekbar = document.getElementById('mini-seekbar');
-    if (miniSeekbar) {
-      miniSeekbar.max = dur;
-      miniSeekbar.value = t;
-      const miniFill = document.getElementById('mini-seekbar-fill');
-      if (miniFill) {
-        miniFill.style.width = dur > 0 ? ((t / dur) * 100) + '%' : '0%';
-      }
-    }
-    const miniTimeDisplay = document.getElementById('mini-time-display');
-    if (miniTimeDisplay) {
-      miniTimeDisplay.textContent = `${formatMidiTime(t)} / ${dur > 0 ? formatMidiTime(dur) : '0:00'}`;
-    }
-
 }
+
+
+
+
+

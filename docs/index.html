@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -36,37 +36,61 @@
 
   <main class="app-content" id="main-content"></main>
 
-  <div id="mini-player" class="mini-player" style="display: none;">
-    <div class="mini-player-info">
-      <div id="mini-title" class="mini-title">Judul Lagu</div>
-      <div id="mini-subtitle" class="mini-subtitle">Playlist name or "Dalam Antrean"</div>
-    </div>
-    <div class="mini-player-controls">
-      <button id="mini-prev-btn" class="icon-button" aria-label="Previous">
-        <span class="material-symbols-outlined">skip_previous</span>
-      </button>
-      <button id="mini-play-btn" class="icon-button" aria-label="Play/Pause">
-        <span class="material-symbols-outlined" id="mini-play-icon">play_arrow</span>
-      </button>
-      <button id="mini-next-btn" class="icon-button" aria-label="Next">
-        <span class="material-symbols-outlined">skip_next</span>
-      </button>
-    </div>
-  </div>
+          <div id="mini-player" class="mini-player is-hidden" style="padding: 10px 14px;">
+      <div class="mini-player-top" style="display:flex; align-items:center; justify-content:space-between; width: 100%;">
+        <div class="mini-player-info" style="margin-right:8px; overflow:hidden;">
+          <div id="mini-title" class="mini-title">Judul Lagu</div>
+          <div id="mini-subtitle" class="mini-subtitle">Auto Next: Nomor Berikutnya</div>
+        </div>
+        
+        <div class="mini-player-controls">
+          <div class="mini-transpose-controls" style="display: flex; align-items: center; gap: 0; background: var(--md-sys-color-surface-variant); border-radius: 4px; margin-right: 8px;">
+            <div class="family-chord-container" style="position: relative; margin-right: 0;">
+               <button id="mini-key-info" class="family-chord-btn" style="font-size:12px; font-weight:600; width:auto; height: 24px; padding:2px 8px; border-radius:4px; min-width: 24px; text-align: center; color: var(--md-sys-color-on-surface); background: transparent; cursor: pointer; transition: transform 0.2s, background-color 0.2s;" onmousedown="this.style.transform='scale(0.85)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'" title="Nada Dasar (Key) Saat Ini">-</button>
+               <div class="family-chord-dropdown" style="bottom: 100%; top: auto; left: 50%; transform: translateX(-50%) translateY(-8px) scale(0.96);" hidden></div>
+            </div>
+            
+            <button class="icon-button mini-btn" onclick="if(typeof onTranspose==='function') onTranspose(-1)" style="width: 24px; height: 24px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.85)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
+              <span class="material-symbols-outlined" style="font-size: 14px;">remove</span>
+            </button>
+            <span id="mini-transpose-value" style="font-size: 11px; font-weight: bold; width: 16px; text-align: center; transition: transform 0.2s; display: inline-block;">0</span>
+            <button class="icon-button mini-btn" onclick="if(typeof onTranspose==='function') onTranspose(1)" style="width: 24px; height: 24px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.85)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
+              <span class="material-symbols-outlined" style="font-size: 14px;">add</span>
+            </button>
+          </div>
 
-  <nav class="bottom-nav">
-    <button class="nav-btn selected" id="pujian-btn" aria-label="Pujian">
-      <span class="material-symbols-outlined">music_note</span>
-      <span class="nav-label">Pujian</span>
-    </button>
-    <button class="nav-btn" id="playlist-btn" aria-label="Playlist">
-      <span class="material-symbols-outlined">queue_music</span>
-      <span class="nav-label">Playlist</span>
-    </button>
-    <button class="nav-btn" id="pengaturan-btn" aria-label="Pengaturan">
-      <span class="material-symbols-outlined">settings</span>
-      <span class="nav-label">Pengaturan</span>
-    </button>
+          <button id="mini-loop-btn" class="icon-button mini-btn" aria-label="Loop" style="width: 32px; height: 32px; margin-right: 2px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.85)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">
+            <span class="material-symbols-outlined" id="mini-loop-icon" style="font-size: 18px;">repeat</span>
+          </button>
+
+          <button id="mini-prev-btn" class="icon-button mini-btn" aria-label="Previous" style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.85)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'"><span class="material-symbols-outlined">skip_previous</span></button>
+          <button id="mini-play-btn" class="icon-button mini-btn" aria-label="Play/Pause" style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.85)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'"><span class="material-symbols-outlined" id="mini-play-icon" style="transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: inline-block;">play_arrow</span></button>
+          <button id="mini-next-btn" class="icon-button mini-btn" aria-label="Next" style="transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.85)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'"><span class="material-symbols-outlined">skip_next</span></button>
+        </div>
+      </div>
+      
+      <div class="mini-player-middle" style="width: 100%; margin-top: 6px; display:flex; align-items:center; gap:8px;">
+        <div class="player-time" id="mini-time-display" style="font-size: 10px; color: var(--md-sys-color-on-surface-variant); white-space:nowrap;">0:00 / 0:00</div>
+        <div class="seekbar-wrapper" style="height: 16px; margin: 0; padding: 0; flex-grow: 1;">
+          <input type="range" class="player-slider" id="mini-seekbar" min="0" max="100" value="0" step="0.1" style="height: 4px;">
+          <div class="seekbar-fill" id="mini-seekbar-fill" style="height: 4px; top: 6px;"></div>
+        </div>
+      </div>
+    </div>
+
+      <nav class="bottom-nav">
+      <button class="nav-btn selected" id="pujian-btn" aria-label="Pujian">
+        <span class="nav-indicator"><span class="material-symbols-outlined">music_note</span></span>
+        <span class="nav-label">Pujian</span>
+      </button>
+      <button class="nav-btn" id="playlist-btn" aria-label="Playlist">
+        <span class="nav-indicator"><span class="material-symbols-outlined">queue_music</span></span>
+        <span class="nav-label">Playlist</span>
+      </button>
+      <button class="nav-btn" id="pengaturan-btn" aria-label="Pengaturan">
+        <span class="nav-indicator"><span class="material-symbols-outlined">settings</span></span>
+        <span class="nav-label">Pengaturan</span>
+      </button>
   </nav>
 
   <div id="pdf-viewer-overlay" class="pdf-viewer-overlay">
@@ -102,8 +126,7 @@
                       <span class="material-symbols-outlined cis-icon" id="cis-icon">piano</span>
                       <span class="cis-label" id="cis-label">Grand Piano</span>
                       <span class="material-symbols-outlined cis-chevron">expand_more</span>
-                    </button>
-                    <!-- Popover menu list -->
+                    </button>                    <!-- Popover menu list -->
                     <div class="cis-menu-popover" id="cis-menu" role="listbox">
                       <div class="cis-grid">
                         <!-- PIANO -->
@@ -187,28 +210,37 @@
                     </div>
                   </div>
 
-                  <!-- Auto Next Dropdown Trigger -->
+                  <!-- Loop Button -->
                   <div class="instrument-selector-wrapper flex-shrink-0" style="margin-left:8px;">
+                    <button class="instrument-capsule-btn" id="custom-loop-btn" type="button" aria-label="Loop Mode" style="padding-left:12px; padding-right:12px;">
+                      <span class="material-symbols-outlined cis-icon" id="custom-loop-icon">repeat</span>
+                    </button>
+                  </div>
+
+                  <!-- Auto Next Dropdown Trigger -->
+                  <div class="instrument-selector-wrapper flex-shrink-0" style="display:none; margin-left:8px;">
                     <button class="instrument-capsule-btn" id="autonext-btn" type="button" aria-haspopup="dialog" aria-expanded="false" title="Pengaturan Auto Next" style="padding-left:12px; padding-right:12px;">
-                      <span class="material-symbols-outlined cis-icon" id="autonext-icon">repeat</span>
+                      <span class="material-symbols-outlined cis-icon" id="autonext-icon">repeat_on</span>
                     </button>
                     <!-- Popover menu -->
                     <div class="cis-menu-popover" id="autonext-menu" role="dialog" style="padding:16px; width:220px; left:auto; right:0;">
                       <div style="font-weight:600; margin-bottom:8px; font-size:14px;">Mode Auto Next</div>
                       <select id="autonext-mode-select" style="width:100%; margin-bottom:16px; padding:8px; border-radius:6px; background:var(--md-sys-color-surface-container-highest); color:var(--md-sys-color-on-surface); border:1px solid var(--md-sys-color-outline-variant);">
                         <option value="off">Mati</option>
+                        <option value="one">Satu Lagu (Loop 1)</option>
                         <option value="number">Sesuai Nomor</option>
                         <option value="playlist">Sesuai Playlist</option>
                       </select>
-                      
+
                       <div id="autonext-playlist-select-wrapper" style="display:none;">
                         <div style="font-weight:600; margin-bottom:8px; font-size:14px;">Playlist Aktif</div>
                         <select id="autonext-playlist-select" style="width:100%; padding:8px; border-radius:6px; background:var(--md-sys-color-surface-container-highest); color:var(--md-sys-color-on-surface); border:1px solid var(--md-sys-color-outline-variant);">
-                          <!-- populated dynamically -->
                         </select>
                       </div>
                     </div>
                   </div>
+
+                  
                   
                 </div>
               </div>
@@ -269,7 +301,7 @@
                 <span class="material-symbols-outlined">add</span>
               </button>
               <button class="icon-button transpose-accidental-btn" type="button" aria-label="Switcher accidental">
-                <span class="accidental-label">#</span>
+                <span class="accidental-label">♯</span>
               </button>
             </div>
           </div>
@@ -390,7 +422,12 @@
       </footer>
   </div>
 
-  <div id="zoom-toast" class="zoom-toast">
+<div id="general-toast" class="zoom-toast" style="bottom: 140px; z-index: 301;">
+      <span class="material-symbols-outlined">info</span>
+      Message
+    </div>
+
+    <div id="zoom-toast" class="zoom-toast">
     <span class="material-symbols-outlined">zoom_in</span>
     Gunakan Tombol untuk Zoom
   </div>

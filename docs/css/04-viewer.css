@@ -813,8 +813,8 @@ body.is-expanded-layout .custom-player-controls, body.measure-layout
 }
 
 .instrument-capsule-btn.active {
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
   border-color: var(--md-sys-color-primary);
 }
 
@@ -829,7 +829,7 @@ body.is-expanded-layout .custom-player-controls, body.measure-layout
   transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
 
-.custom-midi-player.is-open .cis-chevron {
+.instrument-selector-wrapper.is-open .cis-chevron {
   transform: rotate(180deg);
 }
 
@@ -874,7 +874,7 @@ body.is-expanded-layout .custom-player-controls, body.measure-layout
   transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.2, 0, 0, 1), visibility 0.2s;
 }
 
-.custom-midi-player.is-open .cis-menu-popover {
+.instrument-selector-wrapper.is-open .cis-menu-popover {
   opacity: 1;
   visibility: visible;
   transform: translateY(0) scale(1);
@@ -963,7 +963,8 @@ body.is-expanded-layout .custom-player-controls, body.measure-layout
   transition: transform 0.1s;
 }
      /* REDESIGN OVERRIDES */
-.custom-midi-player .player-btn, .custom-midi-player #custom-play-btn {
+.custom-midi-player #custom-play-btn {
+
   background: var(--md-sys-color-primary) !important;
   color: var(--md-sys-color-on-primary) !important;
   border-radius: 50% !important;
@@ -983,18 +984,21 @@ body.is-expanded-layout .custom-player-controls, body.measure-layout
 }
 
 /* Hover and Active squish */
-.custom-midi-player .player-btn:hover {
+.custom-midi-player #custom-play-btn:hover {
+
   transform: scale(1.08) !important;
   background: color-mix(in srgb, var(--md-sys-color-primary) 85%, black) !important;
   box-shadow: 0 6px 16px color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent) !important;
 }
-.custom-midi-player .player-btn:active {
+.custom-midi-player #custom-play-btn:active {
+
   transform: scale(0.85) !important;
   box-shadow: 0 2px 6px color-mix(in srgb, var(--md-sys-color-primary) 50%, transparent) !important;
 }
 
 /* Playing state pulsing - subtle and smooth */
-.custom-midi-player.playing .player-btn {
+.custom-midi-player.playing #custom-play-btn {
+
   animation: smooth-pulse 2s infinite cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -1006,16 +1010,19 @@ body.is-expanded-layout .custom-player-controls, body.measure-layout
 
 /* The play/pause Icon */
 .custom-midi-player .player-btn .material-symbols-outlined {
+
   font-size: 24px !important;
   margin: 0 !important;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease !important;
 }
 
 /* Animate the icon when playing (e.g. from play -> pause) */
-.custom-midi-player.playing .player-btn .material-symbols-outlined {
+.custom-midi-player.playing #custom-play-btn .material-symbols-outlined {
+
   transform: rotate(180deg) scale(0.9) !important;
 }
-.custom-midi-player:not(.playing) .player-btn .material-symbols-outlined {
+.custom-midi-player:not(.playing) #custom-play-btn .material-symbols-outlined {
+
   transform: rotate(0deg) scale(1) !important;
 }
 
@@ -1127,11 +1134,12 @@ body.is-expanded-layout .custom-player-controls, body.measure-layout
   .custom-midi-player .player-time {
     font-size: 0.65rem !important;
   }
-  .custom-midi-player .player-btn {
+  .custom-midi-player #custom-play-btn {
     width: 36px !important;
     height: 36px !important;
   }
   .custom-midi-player .player-btn .material-symbols-outlined {
+
     font-size: 22px !important;
   }
 }
@@ -1166,3 +1174,4 @@ body.is-expanded-layout .custom-player-controls, body.measure-layout
     font-size: 1.25rem;
     margin-right: 4px;
 }
+#autonext-btn { width: auto !important; min-width: 48px; }

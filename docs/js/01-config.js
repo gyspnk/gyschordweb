@@ -81,8 +81,8 @@ const CHORD_GRID = { cols: 105, rows: 149 };
   const EDITOR_ON_TAPS = 10;
   const EDITOR_OFF_TAPS = 5;
   const CHORD_COLLAPSE_STORAGE_KEY = "chord-editor-collapsed";
-  const NOTE_NAMES_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-  const NOTE_NAMES_FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+  const NOTE_NAMES_SHARP = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+  const NOTE_NAMES_FLAT = ["C", "D♭", "D", "E♭", "E", "F", "G♭", "G", "A♭", "A", "B♭", "B"];
   const NATURAL_NOTE_INDEX = {
     C: 0,
     D: 2,
@@ -160,7 +160,7 @@ const CHORD_GRID = { cols: 105, rows: 149 };
   const MIDI_FADE_OUT_MS = 300;         // Fade-out duration for pause
   const MIDI_CROSSFADE_OUT_MS = 280;    // Crossfade out duration for transpose/instrument/seek
   const MIDI_CROSSFADE_IN_MS = 320;     // Crossfade in duration for transpose/instrument/seek
-  const MIDI_LOAD_TIMEOUT_MS = 300;     // Fallback timeout for sequence load event
+  const MIDI_LOAD_TIMEOUT_MS = 15000;     // Fallback timeout for sequence load event
   const MIDI_END_THRESHOLD_S = 0.5;     // Threshold in seconds for detecting song end
   const MIDI_TRANSPOSE_DEBOUNCE_MS = 100; // Debounce rapid transpose MIDI updates
 

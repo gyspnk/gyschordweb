@@ -33,12 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (miniPrevBtn) {
     miniPrevBtn.addEventListener('click', () => {
-      onPrevSong();
+      onPrevSong(true);
     });
   }
   if (miniNextBtn) {
     miniNextBtn.addEventListener('click', () => {
-      onNextSong(); // This will be intercepted if auto-next playlist is active
+      onNextSong(true); // This will be intercepted if auto-next playlist is active
     });
   }
 
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         PlaylistManager.addSong(targetId, songData);
-        showToast("Ditambahkan ke playlist", "playlist_add_check", 2000);
+          showToast("Ditambahkan ke playlist", "playlist_add_check");
         updatePlaylistIndicators();
       }
     });
@@ -101,6 +101,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const autoNextModeSelect = document.getElementById('autonext-mode-select');
   const autoNextPlaylistSelect = document.getElementById('autonext-playlist-select');
   const autoNextPlaylistWrapper = document.getElementById('autonext-playlist-select-wrapper');
+
+  const customLoopBtn = document.getElementById('custom-loop-btn');
+  const miniLoopBtn = document.getElementById('mini-loop-btn');
+  
+  function cycleLoopMode() {
+    const currentMode = PlaylistManager.getAutoNextMode();
+    let newMode = 'off';
+    if (currentMode === 'off') newMode = 'one';
+    else if (currentMode === 'one') newMode = 'number';
+    else if (currentMode === 'number') newMode = 'playlist';
+    else newMode = 'off';
+    
+    // Update the dropdown if it's there
+    if (autoNextModeSelect) {
+      autoNextModeSelect.value = newMode;
+      // trigger change event so the dropdown sync triggers
+      autoNextModeSelect.dispatchEvent(new Event('change'));
+    } else {
+      // Just manually update it
+      window.setNextMode(newMode);
+    }
+  }
+
+  if (customLoopBtn) customLoopBtn.addEventListener('click', cycleLoopMode);
+  if (miniLoopBtn) miniLoopBtn.addEventListener('click', cycleLoopMode);
+
   
   if (autoNextBtn && autoNextMenu) {
     autoNextBtn.addEventListener('click', (e) => {
@@ -154,6 +180,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Sync Mini Player on interval
   setInterval(syncMiniPlayerUI, 500);
+
+  // Add interactive javascript animations to all mini player buttons
+  const miniPlayerContainer = document.getElementById('mini-player');
+  if (miniPlayerContainer) {
+    const miniBtns = miniPlayerContainer.querySelectorAll('button');
+    miniBtns.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        // Javascript scale & pop animation
+        this.animate([
+          { transform: 'scale(1)', filter: 'brightness(1)' },
+          { transform: 'scale(0.8)', filter: 'brightness(1.5)' },
+          { transform: 'scale(1.15)', filter: 'brightness(1.2)' },
+          { transform: 'scale(1)', filter: 'brightness(1)' }
+        ], {
+          duration: 350,
+          easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)'
+        });
+        
+        // Optional ripple effect
+        const circle = document.createElement('div');
+        const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+        const radius = diameter / 2;
+        
+        // Handle coordinates whether clicked by mouse or triggered programmatically
+        let x, y;
+        if (e.clientX && e.clientY) {
+            const rect = btn.getBoundingClientRect();
+            x = e.clientX - rect.left - radius;
+            y = e.clientY - rect.top - radius;
+        } else {
+            x = 0; y = 0;
+        }
+
+        circle.style.width = circle.style.height = `${diameter}px`;
+        circle.style.left = `${x}px`;
+        circle.style.top = `${y}px`;
+        circle.style.position = 'absolute';
+        circle.style.borderRadius = '50%';
+        circle.style.background = 'rgba(255, 255, 255, 0.4)';
+        circle.style.transform = 'scale(0)';
+        circle.style.pointerEvents = 'none';
+        
+        btn.style.position = 'relative';
+        btn.style.overflow = 'hidden';
+        
+        const existingRipple = btn.querySelector('.btn-ripple');
+        if (existingRipple) existingRipple.remove(); // clear old
+        
+        circle.classList.add('btn-ripple');
+        btn.appendChild(circle);
+        
+        circle.animate([
+          { transform: 'scale(0)', opacity: 1 },
+          { transform: 'scale(2.5)', opacity: 0 }
+        ], {
+          duration: 400,
+          easing: 'ease-out'
+        }).onfinish = () => circle.remove();
+      });
+    });
+  }
 });
 
 function syncAutoNextMenu() {
@@ -218,28 +305,57 @@ function syncMiniPlayerUI() {
   if (!miniPlayer || !miniTitle) return;
 
   // Show only if a song is loaded (MidiTimeAuthority has a known duration)
-  const dur = window._midiKnownDuration || 0;
+  const dur = typeof MidiTimeAuthority !== 'undefined' ? (MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0) : (window._midiKnownDuration || 0);
   const inViewer = document.body.classList.contains('viewer-active');
   const hasSong = document.getElementById('pdf-viewer-title')?.textContent;
   
   // Also show if we are not in viewer but playing
-  const isPlaying = window.MidiTimeAuthority ? window.MidiTimeAuthority._playing : false;
+  const isPlaying = typeof MidiTimeAuthority !== 'undefined' ? MidiTimeAuthority._playing : false;
   
-  if (dur > 0 || isPlaying || (inViewer && hasSong)) {
+  const inSettings = (document.getElementById('pengaturan-btn')?.classList.contains('selected') || 
+    document.querySelector('.report-page') !== null ||
+    document.querySelector('.settings-panel') !== null);
+  if (inViewer || inSettings) {
+    miniPlayer.classList.add('is-hidden');
+  } else if (dur > 0 || isPlaying) {
     miniPlayer.classList.remove('is-hidden');
     miniTitle.textContent = document.getElementById('pdf-viewer-title')?.textContent || 'Lagu';
     
     // Subtitle logic
     const mode = PlaylistManager.getAutoNextMode();
-    if (mode === 'playlist') {
-      const pId = PlaylistManager.getActiveId();
-      const p = PlaylistManager.getById(pId);
-      miniSubtitle.textContent = p ? `Playlist: ${p.name}` : "Auto Next: Playlist";
-    } else if (mode === 'number') {
-      miniSubtitle.textContent = "Auto Next: Nomor Berikutnya";
-    } else {
-      miniSubtitle.textContent = "Tidak ada antrean";
+    let subtitleText = "Tidak ada antrean";
+
+    if (mode === 'one') {
+      subtitleText = "Single Loop Mode";
+    } else if (mode === 'off') {
+      subtitleText = "Mode Loop Mati";
+    } else if (typeof pujianItems !== 'undefined' && typeof currentSongIndex !== 'undefined' && currentSongIndex >= 0) {
+      if (mode === 'playlist') {
+        const pId = PlaylistManager.getActiveId();
+        const p = PlaylistManager.getById(pId);
+        if (p && p.songs && p.songs.length > 0) {
+          const currentGlobalSong = pujianItems[currentSongIndex];
+          let currentIdxInPl = p.songs.findIndex(s => s.nomor === currentGlobalSong.nomor);
+          if (currentIdxInPl >= 0 && currentIdxInPl < p.songs.length - 1) {
+            const nextSong = p.songs[currentIdxInPl + 1];
+            subtitleText = `${p.name}: ${nextSong.judul}`;
+          } else {
+            subtitleText = `${p.name}: Selesai`;
+          }
+        } else {
+          subtitleText = "Auto Next: Playlist";
+        }
+      } else if (mode === 'number') {
+        if (currentSongIndex < pujianItems.length - 1) {
+           const nextSong = pujianItems[currentSongIndex + 1];
+           subtitleText = `Berikutnya: ${nextSong.judul}`;
+        } else {
+           subtitleText = "Selesai (Akhir Daftar)";
+        }
+      }
     }
+    
+    miniSubtitle.textContent = subtitleText;
     
     if (miniPlayIcon) {
        miniPlayIcon.textContent = isPlaying ? "pause" : "play_arrow";
@@ -276,6 +392,7 @@ function renderPlaylistList() {
          <h3 style="margin-top:0; margin-bottom: 12px; font-size:14px; color: var(--md-sys-color-on-surface-variant)">Mode Lanjut Otomatis (Auto Next)</h3>
          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button class="nav-btn ${mode==='off'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('off')">Mati</button>
+            <button class="nav-btn ${mode==='one'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('one')">1 Lagu Saja</button>
             <button class="nav-btn ${mode==='number'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('number')">Sesuai Nomor</button>
             <button class="nav-btn ${mode==='playlist'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('playlist')">Sesuai Playlist</button>
          </div>
@@ -299,7 +416,7 @@ function renderPlaylistList() {
         <div class="playlist-card" onclick="openPlaylistDetail('${pl.id}')">
           <div class="playlist-card-info">
             <div class="playlist-card-title">${pl.name}</div>
-            <div class="playlist-card-meta">${pl.songs.length} lagu ${isActive ? ' • <b>Aktif</b>' : ''}</div>
+            <div class="playlist-card-meta">${pl.songs.length} lagu ${isActive ? ' &bull; <b>Aktif</b>' : ''}</div>
           </div>
           <div class="playlist-card-actions">
             ${isActive ? `
@@ -435,11 +552,28 @@ function renderPlaylistDetail(id) {
 // Helpers called from HTML strings
 window.setNextMode = function(mode) {
   PlaylistManager.setAutoNextMode(mode);
-  renderPlaylistList();
-  showToast(`Auto Next: ${mode === 'off' ? 'Mati' : mode === 'number' ? 'Sesuai Nomor' : 'Sesuai Playlist'}`, "info");
+  const playlistBtn = document.getElementById("playlist-btn");
+  if (playlistBtn && playlistBtn.classList.contains("selected")) {
+    renderPlaylistList();
+  }
+  showToast(`Auto Next: ${mode === 'off' ? 'Mati (No Loop)' : mode === 'one' ? '1 Lagu Saja' : mode === 'number' ? 'Sesuai Nomor' : 'Sesuai Playlist'}`, "info");
+
+  // Sync loop icons
+  const globalMode = mode;
+  const icons = document.querySelectorAll('#mini-loop-icon, #custom-loop-icon');
+  icons.forEach(icon => {
+    icon.textContent = globalMode === 'one' ? 'repeat_one' : globalMode === 'number' ? 'repeat_on' : globalMode === 'playlist' ? 'playlist_play' : 'repeat';  
+    if (globalMode !== 'off') {
+      icon.classList.add("loop-active");
+      icon.style.color = "var(--md-sys-color-primary)";
+    } else {
+      icon.classList.remove("loop-active");
+      icon.style.color = "";
+    }
+  });
 };
 
-window.downloadPlaylist = function(id) {
+window.exportPlaylist = function(id) {
   const data = PlaylistManager.exportPlaylist(id);
   if (!data) return;
   const json = JSON.stringify(data, null, 2);
@@ -447,7 +581,7 @@ window.downloadPlaylist = function(id) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`;
+  a.download = `${data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`;   
   a.click();
   URL.revokeObjectURL(url);
 };
@@ -472,13 +606,14 @@ window.deleteCurrentPlaylist = function() {
 };
 
 // Play a specific song from a playlist and set it as active
-window.playSongFromPlaylist = async function(songIndex) {
-  const pl = PlaylistManager.getById(currentViewingPlaylistId);
+window.playSongFromPlaylist = async function(songIndex, isBackground = false, forcePlaylistId = null) {
+  const plId = forcePlaylistId || currentViewingPlaylistId;
+  const pl = PlaylistManager.getById(plId);
   if (!pl) return;
-  
+
   // Set this playlist as active if it's not
-  if (PlaylistManager.getActiveId() !== currentViewingPlaylistId) {
-    PlaylistManager.setActiveId(currentViewingPlaylistId);
+  if (PlaylistManager.getActiveId() !== plId) {
+    PlaylistManager.setActiveId(plId);
   }
   
   const targetSong = pl.songs[songIndex];
@@ -489,7 +624,7 @@ window.playSongFromPlaylist = async function(songIndex) {
     const globalIdx = pujianItems.findIndex(p => p.nomor === targetSong.nomor);
     if (globalIdx >= 0) {
       if (typeof openPdfViewer === 'function') {
-        await openPdfViewer(globalIdx);
+        await openPdfViewer(globalIdx.toString(), isBackground);
       }
     } else {
       showToast("Lagu tidak ditemukan di direktori utama", "error");
@@ -508,27 +643,26 @@ window._playlistCheckAutoNext = function() {
   if (mode === 'number') {
     // Next song by global index
     if (typeof onNextSong === 'function') {
+       window._forceAutoPlayNext = true;
        onNextSong();
        return true; // We handled it
     }
   }
-  
+
   if (mode === 'playlist') {
     const activeId = PlaylistManager.getActiveId();
     if (!activeId) return false;
-    
+
     const pl = PlaylistManager.getById(activeId);
     if (!pl || pl.songs.length === 0) return false;
-    
+
     // Find current playing song in playlist
     if (typeof pujianItems !== 'undefined' && typeof currentSongIndex !== 'undefined') {
       const currentGlobalSong = pujianItems[currentSongIndex];
       if (currentGlobalSong) {
         let currentIdxInPl = pl.songs.findIndex(s => s.nomor === currentGlobalSong.nomor);
         if (currentIdxInPl >= 0 && currentIdxInPl < pl.songs.length - 1) {
-           playSongFromPlaylist(currentIdxInPl + 1);
-           return true;
-        } else if (currentIdxInPl === pl.songs.length - 1) {
+           window._forceAutoPlayNext = true;
            showToast("Playlist selesai", "done");
            return false;
         }

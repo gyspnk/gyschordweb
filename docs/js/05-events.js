@@ -1,4 +1,4 @@
-// --- 4. Event Listeners ---
+﻿// --- 4. Event Listeners ---
 
 function setupEventListeners() {
 
@@ -48,10 +48,17 @@ function setupEventListeners() {
 
       if (e.target.closest('.cis-menu') && !e.target.closest('.cis-option')) return;
 
-      const playerContainer = document.getElementById('custom-midi-player');
-      if (playerContainer) {
-          playerContainer.classList.toggle('is-open');
-          customInstrumentSelect.setAttribute('aria-expanded', playerContainer.classList.contains('is-open'));
+      const uiWrapper = customInstrumentSelect.closest('.instrument-selector-wrapper');
+      if (uiWrapper) {
+          // ensure autonext menu is closed if it's open
+          const autonextWrapper = document.getElementById('autonext-btn')?.closest('.instrument-selector-wrapper');
+          if (autonextWrapper && autonextWrapper !== uiWrapper) {
+             autonextWrapper.classList.remove('is-open');
+             document.getElementById('autonext-btn').setAttribute('aria-expanded', 'false');
+          }
+          
+          uiWrapper.classList.toggle('is-open');
+          customInstrumentSelect.setAttribute('aria-expanded', uiWrapper.classList.contains('is-open'));
       }
 
     });
@@ -62,10 +69,10 @@ function setupEventListeners() {
 
     document.addEventListener("click", (e) => {
 
-      const playerContainer = document.getElementById('custom-midi-player');
-      if (playerContainer && playerContainer.classList.contains("is-open")) {
-        if (!playerContainer.contains(e.target) && !customInstrumentSelect.contains(e.target)) {
-          playerContainer.classList.remove("is-open");
+      const uiWrapper = customInstrumentSelect.closest('.instrument-selector-wrapper');
+      if (uiWrapper && uiWrapper.classList.contains("is-open")) {
+        if (!uiWrapper.contains(e.target) && !customInstrumentSelect.contains(e.target)) {
+          uiWrapper.classList.remove("is-open");
           customInstrumentSelect.setAttribute('aria-expanded', 'false');
         }
       }
@@ -86,7 +93,8 @@ function setupEventListeners() {
         const val = btn.getAttribute('data-val');
 
         // Auto-close menu after selection
-        document.getElementById('custom-midi-player').classList.remove("is-open");
+        const uiWrapper = customInstrumentSelect.closest('.instrument-selector-wrapper');
+        if (uiWrapper) uiWrapper.classList.remove("is-open");
         customInstrumentSelect.setAttribute("aria-expanded", "false");
         customInstrumentSelect.classList.remove("active");
 
@@ -120,7 +128,11 @@ function setupEventListeners() {
 
     // Play/Pause button
     customPlayBtn.addEventListener("click", async () => {
-      if (_midiPoolPreloading || window.isMidiFading) return;
+      if (window.isMidiFading) return;
+      if (_midiPoolPreloading) {
+        if (typeof showToast === 'function') showToast("Sedang memuat audio MIDI, harap tunggu...", "hourglass_empty");
+        return;
+      }
 
       if (window.Tone && window.Tone.start) {
         try { await window.Tone.start(); } catch (e) {}
@@ -139,6 +151,11 @@ function setupEventListeners() {
         const shouldPlay = !MidiTimeAuthority._playing;
 
         if (shouldPlay) {
+          // Verify playlist auto-next context if applicable
+          if (typeof window._verifyPlaylistModeForCurrentSong === 'function') {
+            window._verifyPlaylistModeForCurrentSong();
+          }
+
           // --- PLAY (with fade-in) ---
           window.isMidiFading = true;
           customPlayIcon.textContent = "hourglass_empty";
@@ -234,7 +251,7 @@ function setupEventListeners() {
 
     setInterval(() => {
       if (isDraggingSeekbar || _midiPoolPreloading) return;
-      if (!document.body.classList.contains('viewer-active')) return;
+      if (!document.body.classList.contains('viewer-active') && !MidiTimeAuthority._playing) return;
 
       const player = activeMidiPlayer;
       const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
@@ -243,7 +260,7 @@ function setupEventListeners() {
       const curr = MidiTimeAuthority.getTime();
 
       // --- Song end detection: authority reaches duration ---
-      // DON'T check player.playing — seeks briefly stop the player,
+      // DON'T check player.playing â€” seeks briefly stop the player,
       // triggering false positives. Authority wall-clock is reliable.
       if (dur > 0 && curr >= dur - 0.1 && MidiTimeAuthority._playing && !window.isMidiSwitching) {
         MidiTimeAuthority.setPlaying(false);
@@ -254,7 +271,21 @@ function setupEventListeners() {
         document.getElementById('custom-midi-player').classList.remove("playing");
         window._midiLastSeekValue = 0;
         window._midiSavedTime = null;
-        
+
+        // --- LOOP INTERCEPT ---
+        if (PlaylistManager.getAutoNextMode() === 'one') {
+          try {
+            player.currentTime = 0;
+            player.start();
+            MidiTimeAuthority.setPlaying(true);
+            MidiTimeAuthority.setTime(0, dur);
+            customPlayIcon.textContent = "pause";
+            document.getElementById('custom-midi-player').classList.add("playing");
+            fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
+            return;
+          } catch(e) {}
+        }
+
         // --- AUTO NEXT INTERCEPT ---
         if (typeof window._playlistCheckAutoNext === 'function') {
           window._playlistCheckAutoNext();
@@ -270,60 +301,56 @@ function setupEventListeners() {
       syncSeekbarUI(curr, dur);
     }, 100);
 
-    // Prevent timeupdate from fighting with user interaction
-    customSeekbar.addEventListener('input', () => {
-      isDraggingSeekbar = true;
-      const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
-      const val = parseFloat(customSeekbar.value);
-      customTimeDisplay.textContent = `${formatMidiTime(val)} / ${dur > 0 ? formatMidiTime(dur) : '0:00'}`;
+        // Prevent timeupdate from fighting with user interaction
+    const seekbars = [customSeekbar, document.getElementById('mini-seekbar')].filter(Boolean);
+    seekbars.forEach(bar => {
+      bar.addEventListener('input', (e) => {
+        isDraggingSeekbar = true;
+        const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
+        const val = parseFloat(e.target.value);
+        if (customTimeDisplay) customTimeDisplay.textContent = `${formatMidiTime(val)} / ${dur > 0 ? formatMidiTime(dur) : '0:00'}`;
+        const miniTimeDisplay = document.getElementById('mini-time-display');
+        if (miniTimeDisplay) miniTimeDisplay.textContent = `${formatMidiTime(val)} / ${dur > 0 ? formatMidiTime(dur) : '0:00'}`;
 
-      const fill = document.getElementById('custom-seekbar-fill');
-      if (fill && dur > 0) fill.style.width = ((val / dur) * 100) + '%';
-    });
+        const fill = document.getElementById('custom-seekbar-fill');
+        if (fill && dur > 0) fill.style.width = ((val / dur) * 100) + '%';
+        const miniFill = document.getElementById('mini-seekbar-fill');
+        if (miniFill && dur > 0) miniFill.style.width = ((val / dur) * 100) + '%';
+      });
 
-    customSeekbar.addEventListener('change', () => {
-      isDraggingSeekbar = false;
-      if (_midiPoolPreloading) return;
-      const val = parseFloat(customSeekbar.value);
-      const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
+      bar.addEventListener('change', (e) => {
+        isDraggingSeekbar = false;
+        if (_midiPoolPreloading) return;
+        const val = parseFloat(e.target.value);
+        const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
 
-      const player = activeMidiPlayer;
-      if (player) {
-        const wasPlaying = player.playing;
-
-        // Guard: block song-end detection during seek
-        window.isMidiSwitching = true;
-
-        // Ensure volume is audible (transition may have left it silent)
-        const volNode = getToneVolNode();
-        if (volNode && volNode.volume) {
-          volNode.volume.cancelScheduledValues(window.Tone.now());
-          volNode.volume.value = MIDI_TARGET_VOLUME;
-        }
-
-        try { player.currentTime = val; } catch(e) {}
-
-        // html-midi-player may stop on currentTime set — restart if needed
-        if (wasPlaying) {
-          if (!player.playing) {
-            try { player.start(); } catch(e) {}
+        const player = activeMidiPlayer;
+        if (player) {
+          const wasPlaying = player.playing;
+          window.isMidiSwitching = true;
+          const volNode = getToneVolNode();
+          if (volNode && volNode.volume) {
+            volNode.volume.cancelScheduledValues(window.Tone.now());
+            volNode.volume.value = MIDI_TARGET_VOLUME;
           }
-          // Re-seek after start (start() resets to 0), then unguard
-          setTimeout(() => {
-            try { player.currentTime = val; } catch(e) {}
+          try { player.currentTime = val; } catch(err) {}
+          if (wasPlaying) {
+            if (!player.playing) {
+              try { player.start(); } catch(err) {}
+            }
+            setTimeout(() => {
+              try { player.currentTime = val; } catch(err) {}
+              window.isMidiSwitching = false;
+            }, 50);
+          } else {
             window.isMidiSwitching = false;
-          }, 50);
-        } else {
-          window.isMidiSwitching = false;
+          }
         }
-      }
-
-      // Update authority to match
-      MidiTimeAuthority.setTime(val, dur);
-      syncSeekbarUI(val, dur);
-
-      window._midiLastSeekValue = val;
-      window._midiSavedTime = null;
+        MidiTimeAuthority.setTime(val, dur);
+        syncSeekbarUI(val, dur);
+        window._midiLastSeekValue = val;
+        window._midiSavedTime = null;
+      });
     });
 
   }
@@ -447,4 +474,5 @@ function setupEventListeners() {
   window.addEventListener("resize", onLayoutResize);
 
 }
+
 
