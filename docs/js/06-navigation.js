@@ -316,26 +316,6 @@ function renderSettings() {
       </div>
 
       <div class="settings-section">
-        <h2 class="settings-section-title"><span class="material-symbols-outlined">group</span> Kontributor</h2>
-        <div class="settings-card" style="padding: 0;">
-          <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
-            <strong style="font-size:0.85rem; color:var(--md-sys-color-primary);">Yang Mengizinkan Semua ini Terlaksana</strong>
-            <span style="font-size:0.95rem;">Tuhan Yesus Kristus</span>
-          </div>
-          <div class="setting-divider"></div>
-          <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
-            <strong style="font-size:0.85rem; color:var(--md-sys-color-primary);">Developer</strong>
-            <span style="font-size:0.95rem;">Gilbert Then (Gereja Yesus Sejati Pontianak)</span>
-          </div>
-          <div class="setting-divider"></div>
-          <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 0.25rem;">
-            <strong style="font-size:0.85rem; color:var(--md-sys-color-primary);">Contributor Input Chord</strong>
-            <span style="font-size:0.95rem;">Clement JJ (Gereja Yesus Sejati Pontianak)</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-section">
         <h2 class="settings-section-title"><span class="material-symbols-outlined">help</span> Bantuan</h2>
         <div class="settings-card help-banner-card" id="report-bug-btn" role="button" aria-label="Buka halaman report bug" tabindex="0">
           <div class="help-banner-content">
@@ -413,6 +393,12 @@ function renderReportBugPage() {
           <p class="dev-name">Gilbert Then</p>
           <p class="dev-org">Gereja Yesus Sejati Pontianak</p>
         </div>
+      </div>
+
+      <div class="report-section" style="margin-top:-1rem; opacity:0.6;">
+        <h3 class="section-badge" style="font-size:0.8rem; margin-bottom:0.5rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">group</span> Kontributor (Nonprofit)</h3>
+        <p style="font-size:0.8rem; margin:0;">Input Chord: Clement JJ</p>
+        <p style="font-size:0.8rem; margin:0;">Hak Cipta: Tuhan Yesus Kristus</p>
       </div>
 
       <div class="report-section">

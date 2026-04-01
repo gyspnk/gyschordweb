@@ -121,10 +121,14 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       const iconEl = document.getElementById("cis-icon");
       if (iconEl) {
         const option = document.querySelector(`.cis-option[data-val="${prefs.midiInstrument}"]`);
-        if (option) {
-          iconEl.textContent = getMidiInstrumentIcon(prefs.midiInstrument);
+        if (options.length > 0) {
+          document.querySelectorAll('#cis-icon, #mini-cis-icon').forEach(el => el.textContent = getMidiInstrumentIcon(prefs.midiInstrument));
+          const firstOpt = options[0];
+          let lbl = firstOpt.getAttribute('title') || 'Piano';
+          if(lbl.length>20) lbl = lbl.substring(0,20)+'...';
+          document.querySelectorAll('#cis-label, #mini-cis-label').forEach(el => el.textContent = lbl);
           document.querySelectorAll('.cis-option').forEach(opt => opt.classList.remove('selected'));
-          option.classList.add('selected');
+          options.forEach(opt => opt.classList.add('selected'));
         }
       }
     }

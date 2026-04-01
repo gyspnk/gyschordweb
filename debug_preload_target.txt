@@ -1,0 +1,134 @@
+window.preloadAllTransposes = async function (seq, opts = {}) {
+  if (!seq) return;
+  const { forceStart = false, startTranspose = 0 } = opts;
+
+  _midiPoolPreloading = true;
+  _midiPoolPreloaded = false;
+
+  // Resolve instrument
+  let instrumentValue = "-1";
+  if (prefs && prefs.midiInstrument !== undefined) {
+    instrumentValue = prefs.midiInstrument;
+  } else if (
+    typeof customInstrumentSelect !== "undefined" &&
+    customInstrumentSelect &&
+    customInstrumentSelect.dataset.value
+  ) {
+    instrumentValue = customInstrumentSelect.dataset.value;
+  }
+  const instrInt = parseInt(instrumentValue, 10);
+
+  // Show progress bar
+  if (midiPreloadBar) {
+    midiPreloadBar.style.display = "block";
+    midiPreloadFill.style.width = "0%";
+  }
+
+  const steps = Object.keys(MIDI_PLAYER_POOL)
+    .map(Number)
+    .sort((a, b) => {
+      // Load the startTranspose first, then fan outward
+      return Math.abs(a - startTranspose) - Math.abs(b - startTranspose);
+    });
+
+  const totalSteps = steps.length;
+  let loaded = 0;
+
+  const loadPromises = steps.map((step) => {
+    return new Promise((resolve) => {
+      const player = MIDI_PLAYER_POOL[step];
+      if (!player) return resolve();
+
+      const clone = JSON.parse(JSON.stringify(seq));
+      if (seq.totalTime) clone.totalTime = seq.totalTime;
+      if (clone.notes) {
+        for (let i = 0; i < clone.notes.length; i++) {
+          const note = clone.notes[i];
+          if (!note.isDrum) {
+            if (instrInt >= 0) note.program = instrInt;
+            if (step !== 0) {
+              note.pitch = Math.max(0, Math.min(127, note.pitch + step));
+            }
+          }
+        }
+      }
+
+      let isDone = false;
+      const complete = () => {
+        if (isDone) return;
+        isDone = true;
+        player.removeEventListener("load", complete);
+        loaded++;
+        if (midiPreloadFill) {
+          midiPreloadFill.style.width = (loaded / totalSteps) * 100 + "%";
+        }
+        resolve();
+      };
+      player.addEventListener("load", complete);
+      setTimeout(complete, MIDI_LOAD_TIMEOUT_MS);
+      player.noteSequence = clone;
+      });
+    });
+
+    const activeIndex = steps.indexOf(startTranspose);
+    if (activeIndex >= 0) {
+        await loadPromises[activeIndex];
+    } else {
+        await loadPromises[0];
+    }
+
+    Promise.all(loadPromises).then(() => {
+        _midiPoolPreloaded = true;
+        _midiPoolPreloading = false;
+        if (typeof midiPreloadBar !== 'undefined' && midiPreloadBar) {
+            midiPreloadBar.style.display = 'none';
+        }
+    });
+
+    // Store duration
+    const knownDuration = seq.totalTime || MIDI_PLAYER_POOL[startTranspose]?.duration || 0;
+  window._midiKnownDuration = knownDuration;
+  MidiTimeAuthority.setDuration(knownDuration);
+
+  // Hide progress bar
+  if (midiPreloadBar) {
+    setTimeout(() => {
+      // midiPreloadBar.style.display = "none";
+    }, 300);
+  }
+
+  _midiPoolPreloading = false;
+  _midiPoolPreloaded = true;
+
+  // Activate the requested transpose player.
+  // We check the global transposeStep because chord rendering might have updated
+  // the transpose (e.g., auto-detecting flat keys) during the async preload.
+  const finalTranspose =
+    typeof transposeStep === "number" ? transposeStep : startTranspose;
+  const targetPlayer = MIDI_PLAYER_POOL[finalTranspose];
+  if (targetPlayer) {
+    activeMidiPlayer = targetPlayer;
+
+    if (forceStart) {
+      const volNode = getToneVolNode();
+      if (volNode && volNode.volume) {
+        volNode.volume.cancelScheduledValues(window.Tone.now());
+        volNode.volume.value = MIDI_SILENT_VOLUME;
+      }
+
+      targetPlayer.start();
+      MidiTimeAuthority.setTime(0, knownDuration);
+      MidiTimeAuthority.setPlaying(true);
+
+      // Smooth fade-in
+      fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
+
+      customPlayIcon.textContent = "pause";
+      document.getElementById("custom-midi-player").classList.add("playing");
+    }
+
+    syncSeekbarUI(0, knownDuration);
+  }
+
+  window.isMidiSwitching = false;
+};

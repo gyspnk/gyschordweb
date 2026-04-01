@@ -220,6 +220,7 @@ async function finalizeWheelZoom() {
   activeWrapper.style.transform = "";
   activeWrapper.style.transformOrigin = "";
   activeWrapper.replaceWith(newWrapper);
+  canvasWrapper = newWrapper; // Update global reference so next pinch works
   canvasWrapper = newWrapper; // Update global reference
 
   updateCenteringAndOverflow();
@@ -330,9 +331,7 @@ function handleTouchStart(event) {
   if (!document.body.classList.contains("viewer-active")) return;
   if (!event.target.closest(".pdf-viewer-content")) return;
 
-  const baseScale =
-    typeof currentScale === "number" ? currentScale : initialScale;
-  currentScale = baseScale;
+  const baseScale = (typeof currentScale === "number" && Number.isFinite(currentScale)) ? currentScale : initialScale;
   initialPinchDistance = getPinchDistance(event);
   swipeStartPoint = null;
 
@@ -483,12 +482,12 @@ async function handleTouchEnd(event) {
 
   // Render new content into a DETACHED element
   zoomDeferInsert = true;
+  let newWrapper = null;
   try {
-    await renderPage(currentPageNum);
+    newWrapper = await renderPage(currentPageNum);
   } finally {
     zoomDeferInsert = false;
   }
-  const newWrapper = canvasWrapper;
 
   if (newWrapper === activeWrapper || !newWrapper) {
     activeWrapper.classList.remove("pinch-preview");

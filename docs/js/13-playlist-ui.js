@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (miniPrevBtn) {
     miniPrevBtn.addEventListener('click', () => {
-      onPrevSong(true);
+      onPrevSong(true, true);
     });
   }
   if (miniNextBtn) {
@@ -111,6 +111,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentMode === 'off') newMode = 'one';
     else if (currentMode === 'one') newMode = 'number';
     else if (currentMode === 'number') newMode = 'playlist';
+    else if (currentMode === 'playlist') newMode = 'shuffle-all';
+    else if (currentMode === 'shuffle-all') newMode = 'shuffle-playlist';
     else newMode = 'off';
     
     // Update the dropdown if it's there
@@ -251,14 +253,14 @@ function syncAutoNextMenu() {
   const icon = document.getElementById('autonext-icon');
   
   if (icon) {
-    icon.textContent = mode === 'off' ? 'repeat' : mode === 'number' ? 'repeat_on' : 'playlist_play';
+    icon.textContent = mode === 'off' ? 'repeat' : mode === 'number' ? 'repeat_on' : (mode === 'shuffle-all' || mode === 'shuffle-playlist') ? 'shuffle' : 'playlist_play';
   }
   
   if (select) {
     select.value = mode;
   }
   
-  if (mode === 'playlist' && plWrapper && plSelect) {
+  if ((mode === 'playlist' || mode === 'shuffle-playlist') && plWrapper && plSelect) {
     plWrapper.style.display = 'block';
     
     const playlists = PlaylistManager.getAll();
@@ -327,6 +329,8 @@ function syncMiniPlayerUI() {
 
     if (mode === 'one') {
       subtitleText = "Single Loop Mode";
+    } else if (mode === 'shuffle-all') {
+      subtitleText = "Shuffle Semua Lagu";
     } else if (mode === 'off') {
       subtitleText = "Mode Loop Mati";
     } else if (typeof pujianItems !== 'undefined' && typeof currentSongIndex !== 'undefined' && currentSongIndex >= 0) {
@@ -395,6 +399,8 @@ function renderPlaylistList() {
             <button class="nav-btn ${mode==='one'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('one')">1 Lagu Saja</button>
             <button class="nav-btn ${mode==='number'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('number')">Sesuai Nomor</button>
             <button class="nav-btn ${mode==='playlist'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('playlist')">Sesuai Playlist</button>
+            <button class="nav-btn ${mode==='shuffle-all'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('shuffle-all')">Shuffle Semua</button>
+            <button class="nav-btn ${mode==='shuffle-playlist'?'selected':''}" style="flex:1; border-radius: 8px; background: var(--md-sys-color-surface-container-high)" onclick="setNextMode('shuffle-playlist')">Shuffle Playlist</button>
          </div>
       </div>
   `;
@@ -562,7 +568,7 @@ window.setNextMode = function(mode) {
   const globalMode = mode;
   const icons = document.querySelectorAll('#mini-loop-icon, #custom-loop-icon');
   icons.forEach(icon => {
-    icon.textContent = globalMode === 'one' ? 'repeat_one' : globalMode === 'number' ? 'repeat_on' : globalMode === 'playlist' ? 'playlist_play' : 'repeat';  
+    icon.textContent = globalMode === 'one' ? 'repeat_one' : globalMode === 'number' ? 'repeat_on' : globalMode === 'playlist' ? 'playlist_play' : (globalMode === 'shuffle-all' || globalMode === 'shuffle-playlist') ? 'shuffle' : 'repeat';  
     if (globalMode !== 'off') {
       icon.classList.add("loop-active");
       icon.style.color = "var(--md-sys-color-primary)";
@@ -672,3 +678,4 @@ window._playlistCheckAutoNext = function() {
   
   return false;
 }
+
