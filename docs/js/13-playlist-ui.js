@@ -120,15 +120,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const customLoopBtn = document.getElementById('custom-loop-btn');
   const miniLoopBtn = document.getElementById('mini-loop-btn');
+
+  function hasUsableShufflePlaylist() {
+    const activeId = PlaylistManager.getActiveId();
+    const pl = activeId ? PlaylistManager.getById(activeId) : null;
+    return !!(pl && pl.songs && pl.songs.length > 0);
+  }
   
   function cycleLoopMode() {
-    const currentMode = PlaylistManager.getAutoNextMode();
+    const currentMode = typeof _resolveEffectiveAutoNextMode === 'function'
+      ? _resolveEffectiveAutoNextMode({ autoFix: false, showToast: false })
+      : PlaylistManager.getAutoNextMode();
     let newMode = 'off';
     if (currentMode === 'off') newMode = 'one';
     else if (currentMode === 'one') newMode = 'number';
     else if (currentMode === 'number') newMode = 'playlist';
     else if (currentMode === 'playlist') newMode = 'shuffle-all';
-    else if (currentMode === 'shuffle-all') newMode = 'shuffle-playlist';
+    else if (currentMode === 'shuffle-all') newMode = hasUsableShufflePlaylist() ? 'shuffle-playlist' : 'off';
     else newMode = 'off';
     
     // Update the dropdown if it's there
@@ -203,7 +211,44 @@ document.addEventListener('DOMContentLoaded', () => {
   const miniPlayerContainer = document.getElementById('mini-player');
   const miniExtrasToggle = document.getElementById('mini-extras-toggle');
   if (miniPlayerContainer && miniExtrasToggle) {
+    const mobileMiniMedia = window.matchMedia ? window.matchMedia('(max-width: 640px)') : null;
+    const collapseWidth = 540;
+    const expandWidth = 600;
     let userExpandedExtras = false;
+    let resizeRaf = 0;
+
+    const applyMiniPlayerExtrasLayout = () => {
+      resizeRaf = 0;
+      const containerWidth = miniPlayerContainer.clientWidth;
+      const isMobileStable = !!(mobileMiniMedia && mobileMiniMedia.matches);
+
+      if (isMobileStable) {
+        miniPlayerContainer.classList.remove('is-extras-collapsed');
+        miniPlayerContainer.classList.remove('is-extras-expanded');
+        userExpandedExtras = false;
+        return;
+      }
+
+      if (containerWidth <= collapseWidth) {
+        miniPlayerContainer.classList.add('is-extras-collapsed');
+        if (!userExpandedExtras) {
+          miniPlayerContainer.classList.remove('is-extras-expanded');
+        }
+        return;
+      }
+
+      if (containerWidth >= expandWidth) {
+        miniPlayerContainer.classList.remove('is-extras-collapsed');
+        if (!userExpandedExtras) {
+          miniPlayerContainer.classList.remove('is-extras-expanded');
+        }
+      }
+    };
+
+    const scheduleMiniExtrasLayout = () => {
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(applyMiniPlayerExtrasLayout);
+    };
 
     miniExtrasToggle.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -216,102 +261,29 @@ document.addEventListener('DOMContentLoaded', () => {
         miniPlayerContainer.classList.add('is-extras-expanded');
         userExpandedExtras = true;
       }
+      scheduleMiniExtrasLayout();
     });
 
-    // Use ResizeObserver to detect when the mini-player extras don't fit
+    // Keep auto-collapse stable on tablet/desktop, but disable it on mobile
     if (typeof ResizeObserver !== 'undefined') {
-      const extrasRow = miniPlayerContainer.querySelector('.mini-player-extras');
-      const extrasObserver = new ResizeObserver(() => {
-        if (!extrasRow) return;
-        const containerWidth = miniPlayerContainer.clientWidth - 32; // account for padding
-        // Measure actual content width needed: sum of all children's natural widths + gaps
-        let requiredWidth = 0;
-        const gap = 6; // matches CSS gap
-        const children = extrasRow.children;
-        for (let i = 0; i < children.length; i++) {
-          requiredWidth += children[i].scrollWidth;
-          if (i > 0) requiredWidth += gap;
-        }
-
-        if (containerWidth > 0 && requiredWidth > containerWidth) {
-          if (!miniPlayerContainer.classList.contains('is-extras-collapsed')) {
-            miniPlayerContainer.classList.add('is-extras-collapsed');
-            userExpandedExtras = false;
-            miniPlayerContainer.classList.remove('is-extras-expanded');
-          }
-        } else {
-          miniPlayerContainer.classList.remove('is-extras-collapsed');
-          miniPlayerContainer.classList.remove('is-extras-expanded');
-          userExpandedExtras = false;
-        }
-      });
+      const extrasObserver = new ResizeObserver(scheduleMiniExtrasLayout);
       extrasObserver.observe(miniPlayerContainer);
     }
+
+    if (mobileMiniMedia && typeof mobileMiniMedia.addEventListener === 'function') {
+      mobileMiniMedia.addEventListener('change', scheduleMiniExtrasLayout);
+    }
+
+    window.addEventListener('resize', scheduleMiniExtrasLayout, { passive: true });
+    scheduleMiniExtrasLayout();
   }
 
-  // Add interactive javascript animations to all mini player buttons
-  if (miniPlayerContainer) {
-    const miniBtns = miniPlayerContainer.querySelectorAll('button');
-    miniBtns.forEach(btn => {
-      btn.addEventListener('click', function(e) {
-        // Javascript scale & pop animation
-        this.animate([
-          { transform: 'scale(1)', filter: 'brightness(1)' },
-          { transform: 'scale(0.8)', filter: 'brightness(1.5)' },
-          { transform: 'scale(1.15)', filter: 'brightness(1.2)' },
-          { transform: 'scale(1)', filter: 'brightness(1)' }
-        ], {
-          duration: 350,
-          easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)'
-        });
-        
-        // Optional ripple effect
-        const circle = document.createElement('div');
-        const diameter = Math.max(btn.clientWidth, btn.clientHeight);
-        const radius = diameter / 2;
-        
-        // Handle coordinates whether clicked by mouse or triggered programmatically
-        let x, y;
-        if (e.clientX && e.clientY) {
-            const rect = btn.getBoundingClientRect();
-            x = e.clientX - rect.left - radius;
-            y = e.clientY - rect.top - radius;
-        } else {
-            x = 0; y = 0;
-        }
-
-        circle.style.width = circle.style.height = `${diameter}px`;
-        circle.style.left = `${x}px`;
-        circle.style.top = `${y}px`;
-        circle.style.position = 'absolute';
-        circle.style.borderRadius = '50%';
-        circle.style.background = 'rgba(255, 255, 255, 0.4)';
-        circle.style.transform = 'scale(0)';
-        circle.style.pointerEvents = 'none';
-        
-        btn.style.position = 'relative';
-        btn.style.overflow = 'hidden';
-        
-        const existingRipple = btn.querySelector('.btn-ripple');
-        if (existingRipple) existingRipple.remove(); // clear old
-        
-        circle.classList.add('btn-ripple');
-        btn.appendChild(circle);
-        
-        circle.animate([
-          { transform: 'scale(0)', opacity: 1 },
-          { transform: 'scale(2.5)', opacity: 0 }
-        ], {
-          duration: 400,
-          easing: 'ease-out'
-        }).onfinish = () => circle.remove();
-      });
-    });
-  }
 });
 
 function syncAutoNextMenu() {
-  const mode = PlaylistManager.getAutoNextMode();
+  const mode = typeof _resolveEffectiveAutoNextMode === 'function'
+    ? _resolveEffectiveAutoNextMode({ autoFix: false, showToast: false })
+    : PlaylistManager.getAutoNextMode();
   const select = document.getElementById('autonext-mode-select');
   const plWrapper = document.getElementById('autonext-playlist-select-wrapper');
   const plSelect = document.getElementById('autonext-playlist-select');
@@ -374,34 +346,70 @@ function syncMiniPlayerUI() {
   // Show only if a song is loaded (MidiTimeAuthority has a known duration)
   const dur = typeof MidiTimeAuthority !== 'undefined' ? (MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0) : (window._midiKnownDuration || 0);
   const inViewer = document.body.classList.contains('viewer-active');
+  const page = document.body.getAttribute('data-page') || '';
   const hasSong = document.getElementById('pdf-viewer-title')?.textContent;
   
   // Also show if we are not in viewer but playing, loading, or a song was recently loaded
   const isPlaying = typeof MidiTimeAuthority !== 'undefined' ? MidiTimeAuthority._playing : false;
-  const isSongLoaded = !!hasSong && (typeof _midiSfPlayerLoading !== 'undefined' ? _midiSfPlayerLoading : false);
+  const isEngineLoading = typeof MidiEngine !== 'undefined' && MidiEngine.isLoading();
   
-  const inSettings = (document.getElementById('pengaturan-btn')?.classList.contains('selected') || 
+  const inSettings = (page === 'pengaturan' || page === 'report-bug' || page === 'about-project' ||
+    document.getElementById('pengaturan-btn')?.classList.contains('selected') || 
     document.querySelector('.report-page') !== null ||
     document.querySelector('.settings-panel') !== null);
   const appContent = document.getElementById('main-content');
   if (inViewer || inSettings) {
     miniPlayer.classList.add('is-hidden');
+    miniPlayer.classList.remove('mini-player-enter');
     if (appContent) appContent.classList.remove('has-mini-player');
-  } else if (dur > 0 || isPlaying || window.isMidiSwitching || isSongLoaded) {
+  } else if (dur > 0 || isPlaying || window.isMidiSwitching || isEngineLoading || !!hasSong) {
+    // Show mini player — add entrance animation only on first show
+    var wasHidden = miniPlayer.classList.contains('is-hidden');
     miniPlayer.classList.remove('is-hidden');
+    if (wasHidden) {
+      miniPlayer.classList.remove('mini-player-enter');
+      void miniPlayer.offsetWidth; // force reflow to restart animation
+      miniPlayer.classList.add('mini-player-enter');
+    }
     if (appContent) appContent.classList.add('has-mini-player');
     miniTitle.textContent = document.getElementById('pdf-viewer-title')?.textContent || 'Lagu';
+
+    // Loading bar is now synced by the RAF loop in 05-events.js
     
     // Subtitle logic
-    const mode = PlaylistManager.getAutoNextMode();
+    const mode = typeof _resolveEffectiveAutoNextMode === 'function'
+      ? _resolveEffectiveAutoNextMode({ autoFix: false, showToast: false })
+      : PlaylistManager.getAutoNextMode();
     let subtitleText = "Tidak ada antrean";
 
     if (mode === 'one') {
       subtitleText = "Single Loop Mode";
-    } else if (mode === 'shuffle-all') {
-      subtitleText = "Shuffle Semua Lagu";
     } else if (mode === 'off') {
       subtitleText = "Mode Loop Mati";
+    } else if (mode === 'shuffle-all') {
+      // Show the predetermined next shuffle song if known
+      const nextIdx = typeof shuffleNextGlobalIdx !== 'undefined' ? shuffleNextGlobalIdx : -1;
+      if (nextIdx >= 0 && typeof pujianItems !== 'undefined' && pujianItems[nextIdx]) {
+        subtitleText = `Pujian berikutnya: ${pujianItems[nextIdx].judul}`;
+      } else {
+        subtitleText = "Shuffle Semua Lagu";
+      }
+    } else if (mode === 'shuffle-playlist') {
+      // Show the predetermined next shuffle-playlist song if known
+      const nextPIdx = typeof shuffleNextPlaylistIdx !== 'undefined' ? shuffleNextPlaylistIdx : -1;
+      const pId = PlaylistManager.getActiveId();
+      const p = pId ? PlaylistManager.getById(pId) : null;
+      if (p && p.songs.length <= 0) {
+        subtitleText = "Playlist kosong — Shuffle Semua Lagu";
+      } else if (nextPIdx >= 0 && p && p.songs[nextPIdx]) {
+        const nextSongNomor = p.songs[nextPIdx].nomor;
+        const nextSongGlobal = typeof pujianItems !== 'undefined'
+          ? pujianItems.find(s => s.nomor === nextSongNomor)
+          : null;
+        subtitleText = `Pujian berikutnya: ${nextSongGlobal ? nextSongGlobal.judul : p.songs[nextPIdx].judul}`;
+      } else {
+        subtitleText = "Shuffle Playlist";
+      }
     } else if (typeof pujianItems !== 'undefined' && typeof currentSongIndex !== 'undefined' && currentSongIndex >= 0) {
       if (mode === 'playlist') {
         const pId = PlaylistManager.getActiveId();
@@ -432,9 +440,14 @@ function syncMiniPlayerUI() {
     
     if (miniPlayIcon) {
        miniPlayIcon.textContent = isPlaying ? "pause" : "play_arrow";
+       miniPlayIcon.classList.toggle('is-playing', isPlaying);
     }
+    miniPlayer.classList.toggle('is-playing', isPlaying);
   } else {
     miniPlayer.classList.add('is-hidden');
+    miniPlayer.classList.remove('mini-player-enter');
+    miniPlayer.classList.remove('is-playing');
+    if (miniPlayIcon) miniPlayIcon.classList.remove('is-playing');
     if (appContent) appContent.classList.remove('has-mini-player');
   }
 }
@@ -627,7 +640,8 @@ function renderPlaylistDetail(id) {
 }
 
 // Helpers called from HTML strings
-window.setNextMode = function(mode) {
+window.setNextMode = function(mode, options) {
+  options = options || {};
   PlaylistManager.setAutoNextMode(mode);
 
   // Update mode buttons in-place instead of re-rendering the whole playlist view
@@ -649,7 +663,9 @@ window.setNextMode = function(mode) {
     }
   });
 
-  showToast(`Auto Next: ${mode === 'off' ? 'Mati (No Loop)' : mode === 'one' ? '1 Lagu Saja' : mode === 'number' ? 'Sesuai Nomor' : mode === 'playlist' ? 'Sesuai Playlist' : mode === 'shuffle-all' ? 'Acak Semua' : 'Acak Playlist'}`, "info");
+  if (!options.silentToast) {
+    showToast(`Auto Next: ${mode === 'off' ? 'Mati (No Loop)' : mode === 'one' ? '1 Lagu Saja' : mode === 'number' ? 'Sesuai Nomor' : mode === 'playlist' ? 'Sesuai Playlist' : mode === 'shuffle-all' ? 'Acak Semua' : 'Acak Playlist'}`, "info");
+  }
 
   // Sync loop icons with animation
   const icons = document.querySelectorAll('#mini-loop-icon, #custom-loop-icon');
@@ -680,6 +696,17 @@ window.setNextMode = function(mode) {
       icon.style.color = "";
     }
   });
+
+  if (!options.skipShuffleRefresh) {
+    if (mode === 'shuffle-all' || mode === 'shuffle-playlist') {
+      if (typeof _determineNextShuffleSong === 'function') _determineNextShuffleSong();
+      if (typeof _preloadNextSong === 'function') _preloadNextSong();
+    } else {
+      if (typeof shuffleNextGlobalIdx !== 'undefined') shuffleNextGlobalIdx = -1;
+      if (typeof shuffleNextPlaylistIdx !== 'undefined') shuffleNextPlaylistIdx = -1;
+      if (typeof syncMiniPlayerUI === 'function') syncMiniPlayerUI();
+    }
+  }
 };
 
 window.exportPlaylist = function(id) {
@@ -746,7 +773,9 @@ window.playSongFromPlaylist = async function(songIndex, isBackground = false, fo
 // If we intercept it properly, we can trigger the next song automatically.
 
 window._playlistCheckAutoNext = function() {
-  const mode = PlaylistManager.getAutoNextMode();
+  const mode = typeof _resolveEffectiveAutoNextMode === 'function'
+    ? _resolveEffectiveAutoNextMode({ autoFix: true, showToast: true })
+    : PlaylistManager.getAutoNextMode();
   if (mode === 'off') {
     window._autoAdvanceFromEnd = false; // clear stale flag
     return false;
@@ -762,24 +791,43 @@ window._playlistCheckAutoNext = function() {
   }
 
   if (mode === 'shuffle-all') {
-    // Shuffle from all songs
+    // Shuffle from all songs — use predetermined next if available
     if (typeof pujianItems !== 'undefined' && pujianItems.length > 1) {
-      let randomIdx;
-      do {
-        randomIdx = Math.floor(Math.random() * pujianItems.length);
-      } while (randomIdx === currentSongIndex && pujianItems.length > 1);
+      let nextIdx = typeof shuffleNextGlobalIdx !== 'undefined' && shuffleNextGlobalIdx >= 0
+        ? shuffleNextGlobalIdx
+        : -1;
+      if (nextIdx < 0 || nextIdx >= pujianItems.length) {
+        do {
+          nextIdx = Math.floor(Math.random() * pujianItems.length);
+        } while (nextIdx === currentSongIndex && pujianItems.length > 1);
+      }
+      shuffleNextGlobalIdx = -1; // consumed
       window._forceAutoPlayNext = true;
-      if (typeof openPdfViewer === 'function') openPdfViewer(randomIdx.toString());
+      if (typeof _pushShuffleHistory === 'function') _pushShuffleHistory();
+      if (typeof openPdfViewer === 'function') openPdfViewer(nextIdx.toString());
       return true;
     }
   }
 
   if (mode === 'playlist' || mode === 'shuffle-playlist') {
     const activeId = PlaylistManager.getActiveId();
-    if (!activeId) return false;
+    if (!activeId) {
+      if (mode === 'shuffle-playlist' && typeof setNextMode === 'function') {
+        setNextMode('shuffle-all', { silentToast: true, skipShuffleRefresh: false });
+        return window._playlistCheckAutoNext();
+      }
+      return false;
+    }
 
     const pl = PlaylistManager.getById(activeId);
-    if (!pl || pl.songs.length === 0) return false;
+    if (!pl || pl.songs.length === 0) {
+      if (mode === 'shuffle-playlist' && typeof setNextMode === 'function') {
+        setNextMode('shuffle-all', { silentToast: true, skipShuffleRefresh: false });
+        if (typeof showToast === 'function') showToast('Playlist kosong, beralih ke Shuffle Semua', 'info');
+        return window._playlistCheckAutoNext();
+      }
+      return false;
+    }
 
     if (typeof pujianItems !== 'undefined' && typeof currentSongIndex !== 'undefined') {
       const currentGlobalSong = pujianItems[currentSongIndex];
@@ -787,13 +835,19 @@ window._playlistCheckAutoNext = function() {
         let currentIdxInPl = pl.songs.findIndex(s => s.nomor === currentGlobalSong.nomor);
         
         if (mode === 'shuffle-playlist') {
-          // Shuffle within playlist
-          let randomPlIdx;
-          do {
-            randomPlIdx = Math.floor(Math.random() * pl.songs.length);
-          } while (randomPlIdx === currentIdxInPl && pl.songs.length > 1);
+          // Shuffle within playlist — use predetermined next if available
+          let nextPlIdx = typeof shuffleNextPlaylistIdx !== 'undefined' && shuffleNextPlaylistIdx >= 0
+            ? shuffleNextPlaylistIdx
+            : -1;
+          if (nextPlIdx < 0 || nextPlIdx >= pl.songs.length) {
+            do {
+              nextPlIdx = Math.floor(Math.random() * pl.songs.length);
+            } while (nextPlIdx === currentIdxInPl && pl.songs.length > 1);
+          }
+          shuffleNextPlaylistIdx = -1; // consumed
           window._forceAutoPlayNext = true;
-          playSongFromPlaylist(randomPlIdx, false, activeId);
+          if (typeof _pushShuffleHistory === 'function') _pushShuffleHistory();
+          playSongFromPlaylist(nextPlIdx, false, activeId);
           return true;
         }
         

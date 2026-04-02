@@ -236,6 +236,19 @@ function updateFamilyChordUI() {
       btn.textContent = currentKeyString !== '-' && currentKeyString !== '?' ? currentKeyString : fallbackLabel;
     });
 
+  let baseKeySemitone = null;
+  if (originalFamilyChord) {
+    const parsedObj = parseChordToken(originalFamilyChord);
+    if (parsedObj) {
+      baseKeySemitone = wrapSemitone(parsedObj.semitone + baseTransposeOffset);
+    }
+  } else if (typeof originalPdfKey !== 'undefined' && originalPdfKey) {
+    const pdfSemi = parsePdfKeyToSemitone(originalPdfKey);
+    if (pdfSemi !== null) {
+      baseKeySemitone = pdfSemi;
+    }
+  }
+
   const allNotes = accidentalMode === "flat" ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP;
   dds.forEach(dd => {
     dd.innerHTML = '';
@@ -249,15 +262,9 @@ function updateFamilyChordUI() {
          opt.classList.add('selected');
       }
       opt.onclick = () => {
-         if (_midiSfPlayerLoading) return;
-         if (!originalFamilyChord) return;
-         const parsedObj = parseChordToken(originalFamilyChord);
-         if (!parsedObj) return;
-         const origSemi = parsedObj.semitone;
-         let targetSemi = index;
-         
-         // Calculate transpose step relative to base offset
-         let diff = targetSemi - origSemi - baseTransposeOffset;
+         if (typeof MidiEngine !== 'undefined' && MidiEngine.isLoading()) return;
+        if (baseKeySemitone === null) return;
+        let diff = index - baseKeySemitone;
          
          diff = diff % 12;
          if (diff > 6) diff -= 12;
@@ -455,7 +462,7 @@ function encodeChordToken(input) {
   // REVERSE the offset so that saving to file keeps it relative to original file base instead of matching PDF visual
   semitone = semitone - transposeStep - baseTransposeOffset;
 
-  const normalizedRoot = NOTE_NAMES_SHARP[wrapSemitone(semitone)];
+  const normalizedRoot = NOTE_NAMES_SHARP_ASCII[wrapSemitone(semitone)];
   return `${normalizedRoot}${suffix}`;
 }
 
@@ -522,8 +529,6 @@ function wrapSemitone(value) {
 }
 
 function onTranspose(step) {
-  // Block if a MIDI transition is in progress
-  if (_midiSfPlayerLoading) return;
   const next = transposeStep + step;
   transposeStep = next > 11 || next < -11 ? 0 : next;
   updateTransposeUI();
@@ -531,7 +536,7 @@ function onTranspose(step) {
 }
 
 function resetTranspose() {
-  if (_midiSfPlayerLoading) return;
+  if (typeof MidiEngine !== 'undefined' && MidiEngine.isLoading()) return;
   if (transposeStep !== 0) {
     transposeStep = 0;
     updateTransposeUI();
@@ -708,7 +713,7 @@ function updateChordEditorUI() {
   const label = chordEditorToolbar?.querySelector(".chord-editor-label");
   if (label) {
     const hasNotes = pageNotesCache && Object.values(pageNotesCache).some(c => c && c.notes && c.notes.length > 0);
-    label.textContent = hasNotes ? "Chord Editor (Note-Aligned)" : "Chord Editor 105x149";
+    label.textContent = hasNotes ? "Chord Editor (Note-Aligned)" : `Chord Editor ${chordConfig.grid.cols}x${chordConfig.grid.rows}`;
   }
   updateTransposeVisibility();
 }

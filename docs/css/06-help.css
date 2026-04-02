@@ -187,6 +187,73 @@
   flex-direction: column;
 }
 
+.report-section-caption {
+  margin: -0.35rem 0 1rem;
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.55;
+}
+
+.about-contributor-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.about-contributor-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1rem 1.1rem;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--panel-surface) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--panel-border) 82%, transparent);
+  box-shadow: var(--panel-shadow);
+}
+
+.about-contributor-card--primary {
+  border-color: color-mix(in srgb, var(--md-sys-color-primary) 26%, var(--panel-border));
+}
+
+.about-contributor-card--tribute {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--md-sys-color-primary-container) 68%, transparent), color-mix(in srgb, var(--panel-surface) 92%, transparent));
+}
+
+.about-contributor-icon {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 72%, transparent);
+  color: var(--md-sys-color-primary);
+}
+
+.about-contributor-copy {
+  min-width: 0;
+}
+
+.about-contributor-copy h4 {
+  margin: 0 0 0.2rem;
+  color: var(--md-sys-color-on-surface);
+  font-size: 1rem;
+}
+
+.about-contributor-copy p {
+  margin: 0;
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.55;
+}
+
+.about-contributor-name {
+  color: var(--md-sys-color-on-surface) !important;
+  font-weight: 700;
+}
+
+.about-dependency-summary {
+  margin-bottom: 1rem;
+}
+
 .report-action-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -195,6 +262,16 @@
 
 @media (min-width: 500px) {
   .report-action-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (min-width: 720px) {
+  .about-contributor-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .about-contributor-card--tribute {
+    grid-column: 1 / -1;
+  }
 }
 
 .report-contact-link {

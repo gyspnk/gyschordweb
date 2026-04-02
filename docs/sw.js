@@ -1,5 +1,5 @@
-const CACHE_NAME = 'gys-cache-v7';
-const APP_VERSION = '3.3.2';
+const CACHE_NAME = 'gys-cache-v27';
+const APP_VERSION = '3.4.15';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -50,38 +50,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Local app files (JS, CSS, HTML) use stale-while-revalidate:
-  // serve from cache immediately, but fetch update in background.
+  // Local app files (JS, CSS, HTML) use network-first so users get
+  // the latest code immediately after deployment.
   const isLocalAppFile = url.origin === self.location.origin &&
     (url.pathname.endsWith('.js') || url.pathname.endsWith('.css') ||
      url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname.endsWith('/'));
 
   if (isLocalAppFile) {
-    // Hard refresh (Ctrl+Shift+R): go network-first
-    const isHardRefresh = event.request.cache === 'no-cache' || event.request.cache === 'reload';
-    if (isHardRefresh) {
-      event.respondWith(
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
-          }
-          return networkResponse;
-        }).catch(() => caches.match(event.request))
-      );
-      return;
-    }
-    // Normal navigation: stale-while-revalidate
+    // Network-first with offline fallback to cache.
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) => {
-        return cache.match(event.request).then((cachedResponse) => {
-          const fetchPromise = fetch(event.request).then((networkResponse) => {
+        return fetch(event.request)
+          .then((networkResponse) => {
             if (networkResponse && networkResponse.status === 200) {
               cache.put(event.request, networkResponse.clone());
             }
             return networkResponse;
-          }).catch(() => cachedResponse); // fallback to cache if offline
-          return cachedResponse || fetchPromise;
-        });
+          })
+          .catch(() => caches.match(event.request));
       })
     );
     return;

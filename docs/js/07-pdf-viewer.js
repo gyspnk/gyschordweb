@@ -10,6 +10,15 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   const song = pujianItems[currentSongIndex];
   if (!song) return;
 
+  // Mark body as viewer-active IMMEDIATELY so the mini player hides before
+  // any async delays (avoids race with syncMiniPlayerUI's 500ms interval).
+  if (!backgroundLoad) {
+    document.body.classList.add('viewer-active');
+    document.body.removeAttribute('data-page');
+    const miniPlayer = document.getElementById('mini-player');
+    if (miniPlayer) miniPlayer.classList.add('is-hidden');
+  }
+
   // Determine early if this is the same song that is already loaded and rendered.
   let _earlyRawUrl = song.fileHref;
   if (_earlyRawUrl) {
@@ -28,16 +37,10 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   };
   const loadingTask = _canReuseDoc ? null : pdfjsLib.getDocument(pdfOptions);
 
-  // Begin fading MIDI audio on manual navigation — before the animation wait —
-  // so reverb tails decay naturally. The actual stop happens later in the main path.
-  if (!_earlyIsSameSong && window._manualNavigation && _midiSfPlayer) {
-    const volNode = getToneVolNode();
-    if (volNode && volNode.volume && window.Tone) {
-      const t = window.Tone.now();
-      volNode.volume.cancelScheduledValues(t);
-      volNode.volume.setValueAtTime(volNode.volume.value, t);
-      volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_CROSSFADE_OUT_MS / 1000);
-    }
+  // Begin stopping MIDI audio on manual navigation — before the animation wait —
+  // so audio stops cleanly. The actual load happens later in the main path.
+  if (!_earlyIsSameSong && window._manualNavigation && typeof MidiEngine !== 'undefined' && MidiEngine.isPlaying()) {
+    MidiEngine.stop();
   }
 
   if (!_canReuseDoc) {
@@ -81,7 +84,9 @@ async function openPdfViewer(songId, backgroundLoad = false) {
     noteChordConfig = createDefaultNoteChordConfig();
     pageNotesCache = {};
     // Reset transpose saat ganti lagu
-    transposeStep = 0;
+    // For new songs, use cached default transpose profile (mol/black-key -> -1)
+    // if natural-chords preference is enabled; otherwise keep neutral 0.
+    transposeStep = _getSongTargetTranspose(song);
     updateTransposeUI();
   } else {
     // Keep existing chordConfig and transposeStep, but make sure UI matches
@@ -92,7 +97,7 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   if (midiToggleBtn) {
     const wasForcedNext = window._forceAutoPlayNext === true;
     const wasPlayingGlobal =
-      (_midiSfPlayer && _midiSfPlayer.isPlaying()) ||
+      (typeof MidiEngine !== 'undefined' && MidiEngine.isPlaying()) ||
       window._forceAutoPlayNext === true;
     window._forceAutoPlayNext = false;
 
@@ -108,20 +113,22 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       document.getElementById('midi-collapse').classList.add('midi-available');
       if (typeof checkLayoutCollisions === 'function') checkLayoutCollisions();
       if (typeof midiPanel !== "undefined" && midiPanel) {
+        // Close panel instantly (no CSS transition) to prevent flicker
+        midiPanel.classList.add('no-transition');
         midiToggleBtn.setAttribute("aria-expanded", "false");
+        // Re-enable transitions after a frame
+        requestAnimationFrame(function () { midiPanel.classList.remove('no-transition'); });
       }
 
       const playIcon = document.getElementById("custom-play-icon");
       const midiPlayerEl = document.getElementById("custom-midi-player");
       if (playIcon) {
-        playIcon.textContent = (_midiSfPlayer && _midiSfPlayer.isPlaying()) ? "pause" : "play_arrow";
+        playIcon.textContent = (typeof MidiEngine !== 'undefined' && MidiEngine.isPlaying()) ? "pause" : "play_arrow";
       }
       if (midiPlayerEl) {
-        midiPlayerEl.classList.toggle("playing", _midiSfPlayer && _midiSfPlayer.isPlaying());
+        midiPlayerEl.classList.toggle("playing", typeof MidiEngine !== 'undefined' && MidiEngine.isPlaying());
       }
     } else {
-      window._midiCurrentlyLoadedRawUrl = rawUrl;
-
       if (
         wasPlayingGlobal &&
         typeof window._verifyPlaylistModeForCurrentSong === "function"
@@ -129,25 +136,9 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         window._verifyPlaylistModeForCurrentSong();
       }
 
-      // Stop playback: quick crossfade for manual prev/next, longer fade for auto-next.
-      // Using crossfade instead of instant silence allows reverb tails to decay.
-      if (_midiSfPlayer && _midiSfPlayer.isPlaying()) {
-        if (window._manualNavigation) {
-          // Quick crossfade — lets reverb tails decay naturally
-          const volNode = getToneVolNode();
-          if (volNode && volNode.volume && window.Tone) {
-            const t = window.Tone.now();
-            volNode.volume.cancelScheduledValues(t);
-            volNode.volume.setValueAtTime(volNode.volume.value, t);
-            volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_CROSSFADE_OUT_MS / 1000);
-          }
-          // Delay stop so the crossfade ramp can complete audibly
-          await new Promise(r => setTimeout(r, MIDI_CROSSFADE_OUT_MS));
-          try { if (_midiSfPlayer && _midiSfPlayer.isPlaying()) _midiSfPlayer.stop(); } catch (e) {}
-        } else {
-          await fadeMidiVolume(MIDI_SILENT_VOLUME, MIDI_FADE_OUT_MS);
-          try { _midiSfPlayer.stop(); } catch (e) {}
-        }
+      // Stop current playback
+      if (typeof MidiEngine !== 'undefined' && MidiEngine.isPlaying()) {
+        MidiEngine.stop();
       }
       window._manualNavigation = false;
 
@@ -155,8 +146,8 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       // sees a gap where both duration=0 and isMidiSwitching=false.
       window.isMidiSwitching = true;
 
-      // Reset MIDI state (but preserve isMidiSwitching)
-      resetMidiState();
+      // Reset MIDI state (but preserve isMidiSwitching and midi-available to prevent flicker)
+      resetMidiState({ keepAvailable: true, keepEngineState: true });
       window.isMidiSwitching = true;
       syncSeekbarUI(0, 0);
       window._midiLastSeekValue = 0;
@@ -164,44 +155,61 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       // Increment generation to cancel any in-flight MIDI loads from previous songs
       const thisGeneration = ++_midiLoadGeneration;
 
-      const volNode = getToneVolNode();
-      if (volNode && volNode.volume) {
-        volNode.volume.value = MIDI_SILENT_VOLUME;
-      }
+      if (typeof MidiEngine !== 'undefined') {
+        // Resolve current instrument and the best matching preload transpose.
+        let instrumentValue = -1;
+        if (prefs && prefs.midiInstrument !== undefined) {
+          instrumentValue = parseInt(prefs.midiInstrument, 10);
+        }
+        const currentTranspose = _resolveLoadTranspose(song, rawUrl, instrumentValue);
+        if (transposeStep !== currentTranspose) {
+          transposeStep = currentTranspose;
+          if (typeof updateTransposeUI === "function") updateTransposeUI();
+        }
 
-      if (window.core && typeof window.core.urlToNoteSequence === "function") {
-        window.core
-            .urlToNoteSequence(encodeURI(rawUrl))
-            .then((seq) => {
-              // Cancel if a newer song load has started
-              if (_midiLoadGeneration !== thisGeneration) return;
+        // Show progress bar only if this song is NOT already preloaded (exact match)
+        const instForCheck = instrumentValue >= 0 ? instrumentValue : -1;
+        const isPreloaded = MidiEngine.hasPreloaded(rawUrl, currentTranspose, instForCheck);
+        if (midiPreloadBar && !isPreloaded) {
+          midiPreloadBar.style.display = "block";
+          midiPreloadFill.style.width = "0%";
+        }
 
-              if (!seq || !seq.notes || !Array.isArray(seq.notes) || seq.notes.length === 0) {
-                console.warn('Empty or invalid sequence, aborting load.');
-                window.isMidiSwitching = false;
-                return;
-              }
-            // Store original sequence globally
-            _midiOriginalSeq = seq;
-            // Store known-good duration
-            if (seq && seq.totalTime) {
-              window._midiKnownDuration = seq.totalTime;
-              MidiTimeAuthority.setDuration(seq.totalTime);
-            }
+        MidiEngine.loadMidi(rawUrl, {
+          autoplay: wasForcedNext,
+          transpose: currentTranspose,
+          instrument: instrumentValue >= 0 ? instrumentValue : undefined,
+          sourceLabel: song.judul,
+          onProgress: function (pct) {
+            if (midiPreloadFill) midiPreloadFill.style.width = pct + '%';
+          }
+        }).then(function () {
+          // Cancel if a newer song load has started
+          if (_midiLoadGeneration !== thisGeneration) return;
 
-            // Load the single SoundFontPlayer with current transpose
-            const currentTranspose =
-              typeof transposeStep === "number" ? transposeStep : 0;
-            loadAndStartMidi(seq, {
-              forceStart: wasForcedNext,
-              transpose: currentTranspose,
-              generation: thisGeneration,
-            });
-          })
-          .catch((err) => {
-            console.warn("Gagal memuat MIDI:", err);
-            window.isMidiSwitching = false;
-          });
+          // Mark as loaded only after a successful decode/render.
+          window._midiCurrentlyLoadedRawUrl = rawUrl;
+
+          if (midiPreloadFill) midiPreloadFill.style.width = "100%";
+          if (midiPreloadBar) midiPreloadBar.style.display = "none";
+
+          window._midiKnownDuration = MidiEngine.getDuration();
+          syncSeekbarUI(0, MidiEngine.getDuration());
+          window.isMidiSwitching = false;
+
+          if (wasForcedNext) {
+            customPlayIcon.textContent = "pause";
+            document.getElementById("custom-midi-player").classList.add("playing");
+          }
+
+          // Predetermine next shuffle song and preload it in background
+          _determineNextShuffleSong();
+          _preloadNextSong();
+        }).catch(function (err) {
+          console.warn("Gagal memuat MIDI:", err);
+          window.isMidiSwitching = false;
+          if (midiPreloadBar) midiPreloadBar.style.display = "none";
+        });
       }
 
       // Set UI dropdown dengan preferensi yg ada
@@ -211,39 +219,36 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         customInstrumentSelect
       ) {
         customInstrumentSelect.dataset.value = prefs.midiInstrument;
-        const iconEl = document.getElementById("cis-icon");
-        if (iconEl) {
-          const options = document.querySelectorAll(
-            `.cis-option[data-val="${prefs.midiInstrument}"]`,
-          );
-          if (options.length > 0) {
-            document
-              .querySelectorAll("#cis-icon, #mini-cis-icon")
-              .forEach(
-                (el) =>
-                  (el.textContent = getMidiInstrumentIcon(
-                    prefs.midiInstrument,
-                  )),
-              );
-            const firstOpt = options[0];
-            let lbl = firstOpt.getAttribute("title") || "Piano";
-            if (lbl.length > 20) lbl = lbl.substring(0, 20) + "...";
-            document
-              .querySelectorAll("#cis-label, #mini-cis-label")
-              .forEach((el) => (el.textContent = lbl));
-            document
-              .querySelectorAll(".cis-option")
-              .forEach((opt) => opt.classList.remove("selected"));
-            options.forEach((opt) => opt.classList.add("selected"));
-          }
-        }
+        var activeSf = (prefs && prefs.midiSoundfont) || MIDI_SF2_URL;
+        var titleText = (typeof getSoundfontInstrumentLabel === 'function')
+          ? getSoundfontInstrumentLabel(prefs.midiInstrument, activeSf)
+          : 'Pilih Alat Musik';
+        var labelText = titleText.length > 20 ? titleText.substring(0, 20) + '...' : titleText;
+
+        document
+          .querySelectorAll("#cis-icon, #mini-cis-icon")
+          .forEach((el) => (el.textContent = getMidiInstrumentIcon(prefs.midiInstrument, titleText)));
+        document
+          .querySelectorAll("#cis-label, #mini-cis-label")
+          .forEach((el) => (el.textContent = labelText));
+
+        var options = document.querySelectorAll(
+          `.instrument-selector-wrapper .cis-option[data-val="${prefs.midiInstrument}"]`,
+        );
+        document
+          .querySelectorAll(".instrument-selector-wrapper .cis-option")
+          .forEach((opt) => opt.classList.remove("selected"));
+        options.forEach((opt) => opt.classList.add("selected"));
       }
 
       midiToggleBtn.style.display = "flex";
       document.getElementById('midi-collapse').classList.add('midi-available');
       if (typeof checkLayoutCollisions === 'function') checkLayoutCollisions();
       if (typeof midiPanel !== "undefined" && midiPanel) {
+        // Close panel instantly (no CSS transition) to prevent flicker
+        midiPanel.classList.add('no-transition');
         midiToggleBtn.setAttribute("aria-expanded", "false");
+        requestAnimationFrame(function () { midiPanel.classList.remove('no-transition'); });
       }
     } // End of track matched guard
   }
@@ -779,46 +784,14 @@ async function onPrevSong(forceAutoplay = false, allowRewind = false) {
   // Seek to 0 logic
   if (
     allowRewind &&
-    typeof MidiTimeAuthority !== 'undefined' &&
-    _midiSfPlayer
+    typeof MidiEngine !== 'undefined' &&
+    MidiEngine.getCurrentMidiUrl()
   ) {
-    const currTime = MidiTimeAuthority.getTime();
+    const currTime = MidiEngine.getTime();
     if (currTime > 2) {
       try {
-        const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
-        const volNode = getToneVolNode();
-        const wasPlaying = _midiSfPlayer.isPlaying();
-        // Micro-fade out, then retire old player to let tails ring
-        if (wasPlaying) {
-          if (volNode && volNode.volume && window.Tone) {
-            const t = window.Tone.now();
-            volNode.volume.cancelScheduledValues(t);
-            volNode.volume.setValueAtTime(volNode.volume.value, t);
-            volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_CROSSFADE_OUT_MS / 1000);
-          }
-          await new Promise(r => setTimeout(r, MIDI_CROSSFADE_OUT_MS));
-          retirePlayer(_midiSfPlayer, MIDI_TAIL_LINGER_MS);
-        } else {
-          retirePlayer(_midiSfPlayer, 0);
-        }
-        // Create fresh player and restart from 0
-        const sfUrl = (prefs && prefs.midiSoundfont) || MIDI_SOUNDFONT_URL;
-        _midiSfPlayer = new core.SoundFontPlayer(sfUrl);
-        _midiSfPlayer._soundFontURL = sfUrl;
-        if (_midiCurrentTransposedSeq) {
-          await _midiSfPlayer.loadSamples(_midiCurrentTransposedSeq);
-        }
-        // Ensure volume is silent before start
-        if (volNode && volNode.volume) {
-          volNode.volume.cancelScheduledValues(window.Tone.now());
-          volNode.volume.value = MIDI_SILENT_VOLUME;
-        }
-        if (_midiCurrentTransposedSeq) {
-          _midiSfPlayer.start(_midiCurrentTransposedSeq, undefined, 0);
-        }
-        MidiTimeAuthority.setTime(0, dur);
-        MidiTimeAuthority.setPlaying(true);
-        fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_CROSSFADE_IN_MS);
+        MidiEngine.seek(0);
+        MidiEngine.play();
         if (forceAutoplay) {
           const playIcon = document.getElementById('custom-play-icon');
           if (playIcon) playIcon.textContent = 'pause';
@@ -830,27 +803,48 @@ async function onPrevSong(forceAutoplay = false, allowRewind = false) {
     }
   }
 
-  let mode = typeof PlaylistManager !== 'undefined' ? PlaylistManager.getAutoNextMode() : 'number';
+  let mode = _resolveEffectiveAutoNextMode({ autoFix: true, showToast: true });
 
   if (mode === 'shuffle-playlist') {
     const activeId = PlaylistManager.getActiveId();
     if (activeId) {
       const pl = PlaylistManager.getById(activeId);
       if (pl && pl.songs.length > 0) {
-        const randomIdxInPl = Math.floor(Math.random() * pl.songs.length);
-        if (typeof playSongFromPlaylist === 'function') {
-          await playSongFromPlaylist(randomIdxInPl, !document.body.classList.contains('viewer-active'), activeId);
+        // Previous in shuffle: go back in history if available
+        if (shuffleHistory.length > 0) {
+          const prev = shuffleHistory.pop();
+          await openPdfViewer(prev.globalIdx, !document.body.classList.contains('viewer-active'));
           return;
         }
+        // No history: fallback to random
+        const nextIdx = Math.floor(Math.random() * pl.songs.length);
+        if (typeof playSongFromPlaylist === 'function') {
+          _pushShuffleHistory();
+          await playSongFromPlaylist(nextIdx, !document.body.classList.contains('viewer-active'), activeId);
+          return;
+        }
+      } else {
+        // Empty playlist: auto-switch to global shuffle
+        if (typeof setNextMode === 'function') setNextMode('shuffle-all');
+        if (typeof showToast === 'function') showToast('Playlist kosong, beralih ke Shuffle Semua', 'info');
+        mode = 'shuffle-all';
       }
     }
-    mode = 'shuffle-all';
+    if (mode !== 'shuffle-all') mode = 'shuffle-all';
   }
 
   if (mode === 'shuffle-all') {
     if (typeof pujianItems !== 'undefined' && pujianItems.length > 0) {
-      const randomIdx = Math.floor(Math.random() * pujianItems.length);
-      await openPdfViewer(randomIdx, !document.body.classList.contains('viewer-active'));
+      // Previous in shuffle: go back in history if available
+      if (shuffleHistory.length > 0) {
+        const prev = shuffleHistory.pop();
+        await openPdfViewer(prev.globalIdx, !document.body.classList.contains('viewer-active'));
+        return;
+      }
+      // No history: fallback to random
+      const nextIdx = Math.floor(Math.random() * pujianItems.length);
+      _pushShuffleHistory();
+      await openPdfViewer(nextIdx, !document.body.classList.contains('viewer-active'));
       return;
     }
   }
@@ -900,27 +894,42 @@ async function onNextSong(forceAutoplay = false) {
   // Mark as manual navigation so openPdfViewer skips fade-out
   window._manualNavigation = true;
 
-  let mode = typeof PlaylistManager !== 'undefined' ? PlaylistManager.getAutoNextMode() : 'number';
+  let mode = _resolveEffectiveAutoNextMode({ autoFix: true, showToast: true });
 
   if (mode === 'shuffle-playlist') {
     const activeId = PlaylistManager.getActiveId();
     if (activeId) {
       const pl = PlaylistManager.getById(activeId);
       if (pl && pl.songs.length > 0) {
-        const randomIdxInPl = Math.floor(Math.random() * pl.songs.length);
+        // Use predetermined index; fallback to random if not set
+        const nextIdx = shuffleNextPlaylistIdx >= 0 && shuffleNextPlaylistIdx < pl.songs.length
+          ? shuffleNextPlaylistIdx
+          : Math.floor(Math.random() * pl.songs.length);
+        shuffleNextPlaylistIdx = -1; // consumed
         if (typeof playSongFromPlaylist === 'function') {
-          await playSongFromPlaylist(randomIdxInPl, !document.body.classList.contains('viewer-active'), activeId);
+          _pushShuffleHistory();
+          await playSongFromPlaylist(nextIdx, !document.body.classList.contains('viewer-active'), activeId);
           return;
         }
+      } else {
+        // Empty playlist: auto-switch to global shuffle
+        if (typeof setNextMode === 'function') setNextMode('shuffle-all');
+        if (typeof showToast === 'function') showToast('Playlist kosong, beralih ke Shuffle Semua', 'info');
+        mode = 'shuffle-all';
       }
     }
-    mode = 'shuffle-all';
+    if (mode !== 'shuffle-all') mode = 'shuffle-all';
   }
 
   if (mode === 'shuffle-all') {
     if (typeof pujianItems !== 'undefined' && pujianItems.length > 0) {
-      const randomIdx = Math.floor(Math.random() * pujianItems.length);
-      await openPdfViewer(randomIdx, !document.body.classList.contains('viewer-active'));
+      // Use predetermined index; fallback to random if not set
+      const nextIdx = shuffleNextGlobalIdx >= 0 && shuffleNextGlobalIdx < pujianItems.length
+        ? shuffleNextGlobalIdx
+        : Math.floor(Math.random() * pujianItems.length);
+      shuffleNextGlobalIdx = -1; // consumed
+      _pushShuffleHistory();
+      await openPdfViewer(nextIdx, !document.body.classList.contains('viewer-active'));
       return;
     }
   }
@@ -999,291 +1008,399 @@ function updateViewerUI() {
 }
 
 /**
- * Load and optionally start MIDI with a single SoundFontPlayer.
- * Replaces the old 12-player pool preloading approach.
+ * Gapless transpose: instantly shifts pitch via Web Audio detune, then
+ * debounces the background re-render so rapid button taps don't each spawn
+ * a full FluidSynth render.
  *
- * @param {object} seq - The original NoteSequence
- * @param {object} [opts]
- * @param {boolean} [opts.forceStart=false] - Start playback after loading
- * @param {number}  [opts.transpose=0] - Transpose step to apply
+ * @param {number} step - Transpose step (-11 to +11)
  */
-async function loadAndStartMidi(seq, opts = {}) {
-  if (!seq) return;
-  const { forceStart = false, transpose = 0, generation } = opts;
+let _transposeDebounceTimer = null;
 
-  _midiSfPlayerLoading = true;
-  _midiSfPlayerReady = false;
+// ─── Shuffle Predetermination ─────────────────────────────────────────────────
+/**
+ * Pick the next song index for shuffle modes and store it in state so the UI
+ * can show "Pujian berikutnya: ..." and the audio engine can pre-render it.
+ * Called every time a new song finishes loading.
+ */
+function _resolveEffectiveAutoNextMode(options) {
+  options = options || {};
+  const mode = typeof PlaylistManager !== 'undefined' ? PlaylistManager.getAutoNextMode() : 'number';
+  if (mode !== 'shuffle-playlist') return mode;
 
-  // Resolve instrument
-  let instrumentValue = "-1";
-  if (prefs && prefs.midiInstrument !== undefined) {
-    instrumentValue = prefs.midiInstrument;
-  } else if (customInstrumentSelect && customInstrumentSelect.dataset.value) {
-    instrumentValue = customInstrumentSelect.dataset.value;
+  const activeId = typeof PlaylistManager !== 'undefined' ? PlaylistManager.getActiveId() : null;
+  const pl = activeId ? PlaylistManager.getById(activeId) : null;
+  if (pl && pl.songs.length > 0) return mode;
+
+  if (options.autoFix && typeof setNextMode === 'function') {
+    setNextMode('shuffle-all', {
+      silentToast: options.silentToast === true,
+      skipShuffleRefresh: options.skipShuffleRefresh === true
+    });
+  } else if (options.autoFix && typeof PlaylistManager !== 'undefined') {
+    PlaylistManager.setAutoNextMode('shuffle-all');
   }
 
-  // Show progress bar
-  if (midiPreloadBar) {
-    midiPreloadBar.style.display = "block";
-    midiPreloadFill.style.width = "0%";
+  if (options.showToast && typeof showToast === 'function') {
+    showToast('Playlist shuffle tidak punya antrean, beralih ke Shuffle Semua', 'info');
   }
 
-  // Create transposed sequence
-  const transposedSeq = transposeNoteSequence(seq, transpose, instrumentValue);
-  _midiCurrentTransposedSeq = transposedSeq;
+  return 'shuffle-all';
+}
 
-  // Get SoundFont URL
-  const sfUrl = (prefs && prefs.midiSoundfont) || MIDI_SOUNDFONT_URL;
+function _determineNextShuffleSong() {
+  const mode = _resolveEffectiveAutoNextMode({ autoFix: true, showToast: false, silentToast: true, skipShuffleRefresh: true });
 
-  // Create or reuse SoundFontPlayer (recreate if URL changed)
-  if (!_midiSfPlayer || _midiSfPlayer._soundFontURL !== sfUrl) {
-    _midiSfPlayer = new core.SoundFontPlayer(sfUrl);
-    _midiSfPlayer._soundFontURL = sfUrl;
+  if (mode === 'shuffle-all') {
+    if (typeof pujianItems !== 'undefined' && pujianItems.length > 1) {
+      let next;
+      do { next = Math.floor(Math.random() * pujianItems.length); }
+      while (next === currentSongIndex && pujianItems.length > 1);
+      shuffleNextGlobalIdx = next;
+      shuffleNextPlaylistIdx = -1;
+    }
+  } else if (mode === 'shuffle-playlist') {
+    const activeId = typeof PlaylistManager !== 'undefined' ? PlaylistManager.getActiveId() : null;
+    const pl = activeId ? PlaylistManager.getById(activeId) : null;
+    if (pl && pl.songs.length > 1) {
+      const currentGlobalSong = pujianItems[currentSongIndex];
+      let currentIdxInPl = pl.songs.findIndex(s => s.nomor === currentGlobalSong?.nomor);
+      let next;
+      do { next = Math.floor(Math.random() * pl.songs.length); }
+      while (next === currentIdxInPl && pl.songs.length > 1);
+      shuffleNextPlaylistIdx = next;
+      shuffleNextGlobalIdx = -1;
+    } else {
+      // No active playlist or empty/1-song playlist: auto-switch to global shuffle.
+      if (typeof setNextMode === 'function') setNextMode('shuffle-all', { silentToast: true, skipShuffleRefresh: true });
+      _determineNextShuffleSong();
+      return;
+    }
+  } else {
+    // Non-shuffle mode: clear shuffle state
+    shuffleNextGlobalIdx = -1;
+    shuffleNextPlaylistIdx = -1;
   }
 
-  // Progress: 50% after creating sequence
-  if (midiPreloadFill) midiPreloadFill.style.width = "50%";
+  // Sync UI to show the new "next song" label
+  if (typeof syncMiniPlayerUI === 'function') syncMiniPlayerUI();
+}
+
+/**
+ * Push current song onto shuffle history before navigating away.
+ */
+function _pushShuffleHistory() {
+  if (typeof currentSongIndex !== 'number' || currentSongIndex < 0) return;
+  shuffleHistory.push({ globalIdx: currentSongIndex });
+  if (shuffleHistory.length > SHUFFLE_HISTORY_MAX) {
+    shuffleHistory.shift();
+  }
+}
+
+/**
+ * Get the MIDI URL for a song by computing it from the fileHref.
+ */
+function _getMidiUrlForSong(song) {
+  if (!song || !song.fileHref) return null;
+  return song.fileHref.replace(/\/pdf\//i, "/midi/").replace(/\.pdf$/i, ".mid");
+}
+
+/**
+ * Get neighboring songs (before and after current) for a given navigation mode.
+ * Returns { before: Song[], after: Song[] }
+ */
+function _getNeighborSongs(count) {
+  const mode = _resolveEffectiveAutoNextMode({ autoFix: false, showToast: false });
+  const before = [];
+  const after = [];
+
+  function pushUnique(list, song) {
+    if (!song) return;
+    if (typeof currentSongIndex === 'number' && pujianItems[currentSongIndex] === song) return;
+    if (list.indexOf(song) !== -1) return;
+    list.push(song);
+  }
+
+  if (mode === 'shuffle-all' || mode === 'shuffle-playlist') {
+    // For shuffle modes, we can only preload the predetermined next song
+    // and the last song from shuffle history (if shuffle preload enabled)
+    if (!prefs.preloadShuffle) return { before: before, after: after };
+
+    if (mode === 'shuffle-all' && shuffleNextGlobalIdx >= 0) {
+      const ns = pujianItems[shuffleNextGlobalIdx];
+      pushUnique(after, ns);
+    } else if (mode === 'shuffle-playlist' && shuffleNextPlaylistIdx >= 0) {
+      const pl = typeof PlaylistManager !== 'undefined' ? PlaylistManager.getById(PlaylistManager.getActiveId()) : null;
+      if (pl) {
+        const ns = pujianItems.find(function(s) { return s.nomor === (pl.songs[shuffleNextPlaylistIdx] || {}).nomor; });
+        pushUnique(after, ns);
+      }
+    }
+    // Previous from shuffle history
+    for (var hi = shuffleHistory.length - 1; hi >= 0 && before.length < count; hi--) {
+      var ps = pujianItems[shuffleHistory[hi].globalIdx];
+      pushUnique(before, ps);
+    }
+    return { before: before, after: after };
+  }
+
+  if (mode === 'playlist') {
+    const activeId = typeof PlaylistManager !== 'undefined' ? PlaylistManager.getActiveId() : null;
+    const pl = activeId ? PlaylistManager.getById(activeId) : null;
+    if (pl && typeof currentSongIndex === 'number') {
+      const currentGlobalSong = pujianItems[currentSongIndex];
+      const idxInPl = pl.songs.findIndex(function(s) { return s.nomor === (currentGlobalSong || {}).nomor; });
+      if (idxInPl >= 0) {
+        for (var ai = 1; ai <= count; ai++) {
+          var ni = (idxInPl + ai) % pl.songs.length;
+          var ns = pujianItems.find(function(s) { return s.nomor === (pl.songs[ni] || {}).nomor; });
+          pushUnique(after, ns);
+        }
+        for (var bi = 1; bi <= count; bi++) {
+          var pi = (idxInPl - bi + pl.songs.length) % pl.songs.length;
+          var ps = pujianItems.find(function(s) { return s.nomor === (pl.songs[pi] || {}).nomor; });
+          pushUnique(before, ps);
+        }
+      }
+    }
+    return { before: before, after: after };
+  }
+
+  // mode === 'number' or 'off' or 'one' — circular sequential preload to match wrap-around navigation.
+  if (typeof currentSongIndex === 'number' && pujianItems.length > 1) {
+    for (var ai = 1; ai <= count; ai++) {
+      pushUnique(after, pujianItems[(currentSongIndex + ai) % pujianItems.length]);
+    }
+    for (var bi = 1; bi <= count; bi++) {
+      pushUnique(before, pujianItems[(currentSongIndex - bi + pujianItems.length) % pujianItems.length]);
+    }
+  }
+  return { before: before, after: after };
+}
+
+// Cache computed default preload transpose per PDF URL.
+// Value: -1 or 0, based on detected PDF key and current preference.
+const _preloadTransposeByPdfHref = new Map();
+
+function _extractPdfKeyFromText(pdfText) {
+  if (!pdfText) return null;
+  const keyMatch = pdfText.match(
+    /(?:(?:do|la)\s*={1,2}\s*|[23469]\s*[\/|]\s*[248]\s+)([A-G](?:es|is|s|#|b)?(?:m)?)\b/i,
+  );
+  return keyMatch ? keyMatch[1] : null;
+}
+
+function _isBlackKeySemitone(semi) {
+  return semi === 1 || semi === 3 || semi === 6 || semi === 8 || semi === 10;
+}
+
+async function _inferSongDefaultPreloadTranspose(song) {
+  if (!song || !song.fileHref) return 0;
+
+  // If natural-chord preference is disabled, always preload neutral transpose.
+  if (!prefs || prefs.preferNaturalChords !== true) return 0;
+
+  const pdfHref = song.fileHref;
+  if (_preloadTransposeByPdfHref.has(pdfHref)) {
+    return _preloadTransposeByPdfHref.get(pdfHref);
+  }
 
   try {
-    // Load the samples needed for this specific sequence
-    await _midiSfPlayer.loadSamples(transposedSeq);
-  } catch (err) {
-    console.warn("Failed to load SoundFont samples:", err);
-    _midiSfPlayerLoading = false;
-    if (midiPreloadBar) midiPreloadBar.style.display = "none";
-    return;
-  }
-
-  // Cancel if a newer song load has superseded this one
-  if (generation !== undefined && _midiLoadGeneration !== generation) {
-    _midiSfPlayerLoading = false;
-    if (midiPreloadBar) midiPreloadBar.style.display = "none";
-    return;
-  }
-
-  // Progress: 100%
-  if (midiPreloadFill) midiPreloadFill.style.width = "100%";
-
-  // Store duration
-  const knownDuration = seq.totalTime || transposedSeq.totalTime || 0;
-  window._midiKnownDuration = knownDuration;
-  MidiTimeAuthority.setDuration(knownDuration);
-
-  _midiSfPlayerReady = true;
-  _midiSfPlayerLoading = false;
-
-  // Hide progress bar
-  setTimeout(() => {
-    if (midiPreloadBar) midiPreloadBar.style.display = "none";
-  }, 300);
-
-  if (forceStart) {
-    const volNode = getToneVolNode();
-    if (volNode && volNode.volume) {
-      volNode.volume.cancelScheduledValues(window.Tone.now());
-      volNode.volume.value = MIDI_SILENT_VOLUME;
+    if (typeof pdfjsLib === 'undefined' || !pdfjsLib.getDocument) {
+      _preloadTransposeByPdfHref.set(pdfHref, 0);
+      return 0;
     }
 
-    if (window.Tone && window.Tone.start) {
-      try { await window.Tone.start(); } catch (e) {}
+    const loadingTask = pdfjsLib.getDocument({
+      url: pdfHref,
+      standardFontDataUrl: "https://mozilla.github.io/pdf.js/standard_fonts/",
+    });
+    const doc = await loadingTask.promise;
+    const page1 = await doc.getPage(1);
+    const textContent = await page1.getTextContent();
+    const pdfText = textContent.items.map(function (item) { return item.str; }).join(" ");
+
+    const pdfKey = _extractPdfKeyFromText(pdfText);
+    if (!pdfKey || typeof parsePdfKeyToSemitone !== 'function') {
+      _preloadTransposeByPdfHref.set(pdfHref, 0);
+      return 0;
     }
 
-    // Guard: stop any in-progress playback before starting
-    if (_midiSfPlayer.isPlaying()) {
-      try { _midiSfPlayer.stop(); } catch (e) {}
-    }
-
-    try {
-      _midiSfPlayer.start(transposedSeq);
-    } catch (e) {
-      console.warn("loadAndStartMidi start race:", e.message);
-    }
-    MidiTimeAuthority.setTime(0, knownDuration);
-    MidiTimeAuthority.setPlaying(true);
-
-    fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
-
-    customPlayIcon.textContent = "pause";
-    document.getElementById("custom-midi-player").classList.add("playing");
-  }
-
-  syncSeekbarUI(0, knownDuration);
-  window.isMidiSwitching = false;
-
-  // Background preload adjacent transpose samples for faster switching
-  preloadAdjacentTransposeSamples(typeof transposeStep === "number" ? transposeStep : 0);
-}
-
-/**
- * Preload SoundFont samples for transpose steps adjacent to the current one.
- * Runs in background (fire-and-forget) so the next transpose press is near-instant.
- * @param {number} currentStep - The current transpose step
- */
-function preloadAdjacentTransposeSamples(currentStep) {
-  if (!_midiOriginalSeq || !_midiSfPlayer) return;
-
-  // Resolve instrument
-  let instrumentValue = "-1";
-  if (prefs && prefs.midiInstrument !== undefined) {
-    instrumentValue = prefs.midiInstrument;
-  } else if (customInstrumentSelect && customInstrumentSelect.dataset.value) {
-    instrumentValue = customInstrumentSelect.dataset.value;
-  }
-
-  // Preload step-1 and step+1 (within valid range)
-  const stepsToPreload = [currentStep - 1, currentStep + 1]
-    .filter(s => s >= -11 && s <= 11);
-
-  for (const step of stepsToPreload) {
-    const seq = transposeNoteSequence(_midiOriginalSeq, step, instrumentValue);
-    // Fire-and-forget — don't await, just let it cache in the background
-    _midiSfPlayer.loadSamples(seq).catch(() => {});
+    const pdfSemi = parsePdfKeyToSemitone(pdfKey);
+    const preloadTranspose = (pdfSemi !== null && _isBlackKeySemitone(pdfSemi)) ? -1 : 0;
+    _preloadTransposeByPdfHref.set(pdfHref, preloadTranspose);
+    return preloadTranspose;
+  } catch (_err) {
+    _preloadTransposeByPdfHref.set(pdfHref, 0);
+    return 0;
   }
 }
 
+function _getSongTargetTranspose(song) {
+  if (!song || !song.fileHref) return 0;
+  if (!prefs || prefs.preferNaturalChords !== true) return 0;
+  return _preloadTransposeByPdfHref.get(song.fileHref) || 0;
+}
+
+function _resolveLoadTranspose(song, midiUrl, instrumentValue) {
+  var preferred = _getSongTargetTranspose(song);
+  if (!prefs || prefs.preferNaturalChords !== true) return 0;
+  if (typeof MidiEngine === 'undefined' || !midiUrl) return preferred;
+
+  var instForCheck = instrumentValue >= 0 ? instrumentValue : -1;
+  if (MidiEngine.hasPreloaded(midiUrl, preferred, instForCheck)) {
+    return preferred;
+  }
+
+  // Fall back to the cached alternate transpose so preload stays effective.
+  var alternate = preferred === 0 ? -1 : 0;
+  if (MidiEngine.hasPreloaded(midiUrl, alternate, instForCheck)) {
+    return alternate;
+  }
+
+  return preferred;
+}
+
 /**
- * Gapless transpose: stop, retranscribe, reload samples, restart from same position.
- * Much faster than the old 12-player pool swap since we only load
- * the samples needed for the NEW pitch range (delta only).
- *
- * @param {number} step - Transpose step (-5 to +6)
+ * Preload neighboring songs' MIDI + PDF in the background to make
+ * transitions instant. Called after a song finishes loading.
+ * Respects prefs.preloadEnabled, prefs.preloadCount, prefs.preloadShuffle.
  */
+function _preloadNextSong() {
+  if (typeof MidiEngine === 'undefined') return;
+  if (typeof prefs !== 'undefined' && !prefs.preloadEnabled) {
+    console.log('[Preload] Preload disabled in settings');
+    return;
+  }
+
+  const count = (typeof prefs !== 'undefined' && prefs.preloadCount) ? prefs.preloadCount : 1;
+  let instrumentValue = -1;
+  if (typeof prefs !== 'undefined' && prefs.midiInstrument !== undefined) {
+    instrumentValue = parseInt(prefs.midiInstrument, 10);
+  }
+
+  const neighbors = _getNeighborSongs(count);
+  const allSongs = neighbors.after.concat(neighbors.before);
+
+  if (allSongs.length === 0) {
+    console.log('[Preload] No neighbor songs to preload (mode=' +
+      (typeof PlaylistManager !== 'undefined' ? PlaylistManager.getAutoNextMode() : '?') + ')');
+    return;
+  }
+
+  console.log('[Preload] Inspecting', allSongs.length, 'neighbors for cache/queue:',
+    allSongs.map(function(s) { return s ? s.judul : '?'; }).join(', '));
+
+  // Preload all neighboring MIDIs and PDFs using each song's default transpose profile.
+  allSongs.forEach(function(song) {
+    if (!song) return;
+
+    if (song.fileHref) {
+      _prefetchPdf(song.fileHref);
+    }
+
+    const midiUrl = _getMidiUrlForSong(song);
+    if (!midiUrl) return;
+    if (MidiEngine.getCurrentMidiUrl() === midiUrl) {
+      console.log('[Preload] Skip current song neighbor:', song.judul);
+      return;
+    }
+
+    _inferSongDefaultPreloadTranspose(song).then(function(preloadTranspose) {
+      const instForCheck = instrumentValue >= 0 ? instrumentValue : -1;
+      if (MidiEngine.hasPreloaded(midiUrl, preloadTranspose, instForCheck)) {
+        console.log('[Preload] Neighbor already cached (exact):', song.judul,
+          'transpose=' + preloadTranspose,
+          'instrument=' + instForCheck);
+        return;
+      }
+      if (typeof MidiEngine.hasReusablePreload === 'function' && MidiEngine.hasReusablePreload(midiUrl, instForCheck)) {
+        console.log('[Preload] Neighbor already cached (reusable variant) for', song.judul,
+          'instead of rendering another transpose');
+        return;
+      }
+
+      console.log('[Preload] Queue neighbor', song.judul,
+        'transpose=' + preloadTranspose,
+        'instrument=' + instForCheck);
+
+      MidiEngine.preload(midiUrl, {
+        transpose: preloadTranspose,
+        instrument: instrumentValue >= 0 ? instrumentValue : undefined,
+        source: 'neighbor-preload',
+        sourceLabel: song.judul
+      });
+    }).catch(function() {
+      const instForCheck = instrumentValue >= 0 ? instrumentValue : -1;
+      if (MidiEngine.hasPreloaded(midiUrl, 0, instForCheck)) {
+        console.log('[Preload] Neighbor already cached (fallback exact):', song.judul,
+          'transpose=0',
+          'instrument=' + instForCheck);
+        return;
+      }
+      if (typeof MidiEngine.hasReusablePreload === 'function' && MidiEngine.hasReusablePreload(midiUrl, instForCheck)) {
+        console.log('[Preload] Neighbor already cached (fallback reusable variant):', song.judul);
+        return;
+      }
+      console.log('[Preload] Queue neighbor (fallback transpose=0)', song.judul,
+        'instrument=' + instForCheck);
+      MidiEngine.preload(midiUrl, {
+        transpose: 0,
+        instrument: instrumentValue >= 0 ? instrumentValue : undefined,
+        source: 'neighbor-preload',
+        sourceLabel: song.judul
+      });
+    });
+  });
+}
+
+/**
+ * Prefetch a PDF file into browser cache for instant loading.
+ */
+const _prefetchedPdfs = new Set();
+function _prefetchPdf(url) {
+  if (_prefetchedPdfs.has(url)) return;
+  _prefetchedPdfs.add(url);
+  // Use low-priority fetch to avoid blocking current loading
+  fetch(url, { priority: 'low' }).catch(function() {
+    _prefetchedPdfs.delete(url);
+  });
+}
+
 async function swapTranspose(step) {
-  if (!_midiOriginalSeq) return;
-  if (_midiSfPlayerLoading) return;
+  if (typeof MidiEngine === 'undefined' || !MidiEngine.getCurrentMidiUrl()) return;
 
-  const wasPlaying = _midiSfPlayer && _midiSfPlayer.isPlaying();
-  const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
-  const currTime = MidiTimeAuthority.getTime();
+  // Web Audio detune changes speed along with pitch, so we skip it entirely
+  // and rely on the full re-render which preserves original tempo.
 
-  // Resolve instrument
-  let instrumentValue = "-1";
-  if (prefs && prefs.midiInstrument !== undefined) {
-    instrumentValue = prefs.midiInstrument;
-  } else if (customInstrumentSelect && customInstrumentSelect.dataset.value) {
-    instrumentValue = customInstrumentSelect.dataset.value;
-  }
-
-  // Create new transposed sequence
-  const newSeq = transposeNoteSequence(_midiOriginalSeq, step, instrumentValue);
-  _midiCurrentTransposedSeq = newSeq;
-
-  _midiSfPlayerLoading = true;
-  window.isMidiSwitching = true;
-
-  // Freeze authority
-  MidiTimeAuthority.setPlaying(false);
-  if (wasPlaying) MidiTimeAuthority.setTime(currTime, dur);
-
-  // Retire old player so tails ring out, then create a fresh one
-  if (wasPlaying && _midiSfPlayer) {
-    const volNode = getToneVolNode();
-    if (volNode && volNode.volume && window.Tone) {
-      const t = window.Tone.now();
-      volNode.volume.cancelScheduledValues(t);
-      volNode.volume.setValueAtTime(volNode.volume.value, t);
-      volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_CROSSFADE_OUT_MS / 1000);
-    }
-    await new Promise(r => setTimeout(r, MIDI_CROSSFADE_OUT_MS));
-    retirePlayer(_midiSfPlayer, MIDI_TAIL_LINGER_MS);
-  } else if (_midiSfPlayer) {
-    retirePlayer(_midiSfPlayer, 0);
-  }
-
-  // Create fresh player for the new transposition
-  const sfUrl = (prefs && prefs.midiSoundfont) || MIDI_SOUNDFONT_URL;
-  _midiSfPlayer = new core.SoundFontPlayer(sfUrl);
-  _midiSfPlayer._soundFontURL = sfUrl;
-
-  // Load samples for the new transposed sequence
-  try {
-    await _midiSfPlayer.loadSamples(newSeq);
-  } catch (err) {
-    console.warn("Failed to load transposed samples:", err);
-  }
-
-  _midiSfPlayerLoading = false;
-  window.isMidiSwitching = false;
-
-  // Resume from same position with silent start + fade in to prevent click
-  if (wasPlaying) {
-    const volNode = getToneVolNode();
-    if (volNode && volNode.volume) {
-      volNode.volume.cancelScheduledValues(window.Tone.now());
-      volNode.volume.value = MIDI_SILENT_VOLUME;
-    }
-
+  // Debounce the full re-render: only re-render 300 ms after the last press
+  // so rapid +/+/+/+ taps produce a single render at the final pitch.
+  if (_transposeDebounceTimer) clearTimeout(_transposeDebounceTimer);
+  _transposeDebounceTimer = setTimeout(async function () {
+    _transposeDebounceTimer = null;
     try {
-      _midiSfPlayer.start(newSeq, undefined, currTime);
-    } catch (e) {}
-
-    MidiTimeAuthority.setTime(currTime, dur);
-    MidiTimeAuthority.setPlaying(true);
-    fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_CROSSFADE_IN_MS);
-
-    customPlayIcon.textContent = "pause";
-    document.getElementById("custom-midi-player").classList.add("playing");
-  }
-
-  syncSeekbarUI(wasPlaying ? currTime : MidiTimeAuthority.getTime(), dur);
-  window._midiLastSeekValue = -1;
-
-  // Background preload adjacent transpose samples for faster next switch
-  preloadAdjacentTransposeSamples(step);
+      await MidiEngine.setTranspose(step);
+    } catch (err) {
+      console.warn('Failed to swap transpose:', err);
+    }
+    syncSeekbarUI(MidiEngine.getTime(), MidiEngine.getDuration());
+    window._midiLastSeekValue = -1;
+  }, 300);
 }
 
 /**
- * Instrument change — reload samples with new instrument program.
+ * Instrument change — re-render with new instrument program.
+ * Uses MidiEngine's offline re-rendering + swap.
  */
 async function changeInstrument() {
-  if (!_midiOriginalSeq) return;
-
-  const wasPlaying = _midiSfPlayer && _midiSfPlayer.isPlaying();
-  const currTime = MidiTimeAuthority.getTime();
-  const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
-
-  // Freeze authority
-  MidiTimeAuthority.setPlaying(false);
-  if (wasPlaying) MidiTimeAuthority.setTime(currTime, dur);
-
-  // Retire old player so tails ring out naturally
-  if (_midiSfPlayer) {
-    if (wasPlaying) {
-      const volNode = getToneVolNode();
-      if (volNode && volNode.volume && window.Tone) {
-        const t = window.Tone.now();
-        volNode.volume.cancelScheduledValues(t);
-        volNode.volume.setValueAtTime(volNode.volume.value, t);
-        volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_CROSSFADE_OUT_MS / 1000);
-      }
-      await new Promise(r => setTimeout(r, MIDI_CROSSFADE_OUT_MS));
-      retirePlayer(_midiSfPlayer, MIDI_TAIL_LINGER_MS);
-    } else {
-      retirePlayer(_midiSfPlayer, 0);
-    }
-  }
-
-  window.isMidiSwitching = true;
-
-  // Create fresh player for new instrument
-  const sfUrl = (prefs && prefs.midiSoundfont) || MIDI_SOUNDFONT_URL;
-  _midiSfPlayer = new core.SoundFontPlayer(sfUrl);
-  _midiSfPlayer._soundFontURL = sfUrl;
-
-  const currentTranspose = typeof transposeStep === "number" ? transposeStep : 0;
+  if (typeof MidiEngine === 'undefined' || !MidiEngine.getCurrentMidiUrl()) return;
 
   // Resolve instrument
-  let instrumentValue = "-1";
+  let instrumentValue = -1;
   if (prefs && prefs.midiInstrument !== undefined) {
-    instrumentValue = prefs.midiInstrument;
+    instrumentValue = parseInt(prefs.midiInstrument, 10);
   } else if (customInstrumentSelect && customInstrumentSelect.dataset.value) {
-    instrumentValue = customInstrumentSelect.dataset.value;
+    instrumentValue = parseInt(customInstrumentSelect.dataset.value, 10);
   }
-
-  const newSeq = transposeNoteSequence(_midiOriginalSeq, currentTranspose, instrumentValue);
-  _midiCurrentTransposedSeq = newSeq;
-
-  _midiSfPlayerLoading = true;
 
   if (midiPreloadBar) {
     midiPreloadBar.style.display = "block";
@@ -1291,43 +1408,18 @@ async function changeInstrument() {
   }
 
   try {
-    await _midiSfPlayer.loadSamples(newSeq);
+    await MidiEngine.setInstrument(instrumentValue >= 0 ? instrumentValue : undefined);
   } catch (err) {
-    console.warn("Failed to load instrument samples:", err);
+    console.warn("Failed to change instrument:", err);
   }
 
   if (midiPreloadFill) midiPreloadFill.style.width = "100%";
-  setTimeout(() => {
+  setTimeout(function () {
     if (midiPreloadBar) midiPreloadBar.style.display = "none";
   }, 300);
 
-  _midiSfPlayerLoading = false;
-
-  // Restore position and playback
-  if (wasPlaying) {
-    const volNode = getToneVolNode();
-    if (volNode && volNode.volume) {
-      volNode.volume.cancelScheduledValues(window.Tone.now());
-      volNode.volume.value = MIDI_SILENT_VOLUME;
-    }
-
-    try {
-      _midiSfPlayer.start(newSeq, undefined, currTime);
-    } catch (e) {}
-
-    MidiTimeAuthority.setTime(currTime, dur);
-    MidiTimeAuthority.setPlaying(true);
-    fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
-
-    customPlayIcon.textContent = "pause";
-    document.getElementById("custom-midi-player").classList.add("playing");
-  }
-
-  syncSeekbarUI(currTime, dur);
+  syncSeekbarUI(MidiEngine.getTime(), MidiEngine.getDuration());
   window.isMidiSwitching = false;
-
-  // Background preload adjacent transpose samples for faster switching
-  preloadAdjacentTransposeSamples(currentTranspose);
 }
 
 /**

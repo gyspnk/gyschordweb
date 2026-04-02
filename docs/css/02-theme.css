@@ -14,6 +14,9 @@
   
   /* Variabel UI Global */
   --bottom-nav-height: 72px;
+  --app-header-height: 64px;
+  --search-container-top: 68px;
+  --app-content-top: 128px;
   --border-radius-sm: 4px; --border-radius-md: 8px; --border-radius-lg: 16px; --border-radius-xl: 28px;
   --shadow-1: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-2: 0 4px 8px -2px rgba(0,0,0,0.08), 0 2px 6px -2px rgba(0,0,0,0.06);
@@ -33,40 +36,140 @@
   --duration-medium: 300ms;
   --duration-long: 500ms;
 
+  --scheme-light-surface: #faf8f4;
+  --scheme-light-surface-container: #f3f0ea;
+  --scheme-light-surface-container-high: #ebe8e2;
+  --scheme-light-on-surface: #1c1b18;
+  --scheme-light-on-surface-variant: #4a4640;
+  --scheme-light-outline: #7c7870;
+  --scheme-light-outline-variant: #cdc6bc;
+  --scheme-dark-surface: #12110e;
+  --scheme-dark-surface-container: #1d1b17;
+  --scheme-dark-surface-container-high: #282520;
+  --scheme-dark-on-surface: #e8e3db;
+  --scheme-dark-on-surface-variant: #cdc6bc;
+  --scheme-dark-outline: #979189;
+  --scheme-dark-outline-variant: #4a4640;
+
   /* Variabel Warna Default (Light Theme) — Warm Ivory/Gold */
   --md-sys-color-primary: var(--accent, var(--source-gold));
   --md-sys-color-on-primary: #ffffff;
-  --md-sys-color-primary-container: color-mix(in srgb, var(--md-sys-color-primary) 12%, #faf6ee);
+  --md-sys-color-primary-container: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--scheme-light-surface));
   --md-sys-color-on-primary-container: color-mix(in srgb, var(--md-sys-color-primary) 90%, #1a1000);
-  --md-sys-color-surface: #faf8f4;
-  --md-sys-color-surface-container: #f3f0ea;
-  --md-sys-color-surface-container-high: #ebe8e2;
-  --md-sys-color-on-surface: #1c1b18;
-  --md-sys-color-on-surface-variant: #4a4640;
-  --md-sys-color-outline: #7c7870;
-  --md-sys-color-outline-variant: #cdc6bc;
+  --md-sys-color-surface: var(--scheme-light-surface);
+  --md-sys-color-surface-container: var(--scheme-light-surface-container);
+  --md-sys-color-surface-container-high: var(--scheme-light-surface-container-high);
+  --md-sys-color-on-surface: var(--scheme-light-on-surface);
+  --md-sys-color-on-surface-variant: var(--scheme-light-on-surface-variant);
+  --md-sys-color-outline: var(--scheme-light-outline);
+  --md-sys-color-outline-variant: var(--scheme-light-outline-variant);
   --md-sys-color-scrim: #000000;
   --md-sys-color-shadow: #000000;
   --md-sys-color-error: #ba1a1a;
   --md-sys-state-layer-primary: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
   --pdf-viewer-header-height: 56px;
   --pdf-viewer-footer-height: 72px;
+  --mini-player-reserved-height: 152px;
+  --viewer-shell-background:
+    radial-gradient(circle at top center, color-mix(in srgb, var(--md-sys-color-primary) 14%, transparent), transparent 32%),
+    linear-gradient(180deg, color-mix(in srgb, var(--md-sys-color-surface-container-high) 92%, var(--md-sys-color-primary-container)) 0%, var(--md-sys-color-surface) 62%, color-mix(in srgb, var(--md-sys-color-surface) 84%, var(--md-sys-color-primary-container)) 100%);
+  --viewer-chrome-surface:
+    linear-gradient(180deg, color-mix(in srgb, var(--md-sys-color-surface-container-high) 94%, transparent), color-mix(in srgb, var(--md-sys-color-primary-container) 30%, var(--md-sys-color-surface-container)));
+  --viewer-chrome-border: color-mix(in srgb, var(--md-sys-color-primary) 22%, var(--md-sys-color-outline-variant));
+  --viewer-panel-surface:
+    linear-gradient(160deg, color-mix(in srgb, var(--md-sys-color-surface) 90%, transparent), color-mix(in srgb, var(--md-sys-color-primary-container) 34%, var(--md-sys-color-surface-container-high)));
+  --viewer-panel-border: color-mix(in srgb, var(--md-sys-color-primary) 24%, var(--md-sys-color-outline-variant));
+  --viewer-panel-shadow: 0 24px 46px -30px rgba(0, 0, 0, 0.52), 0 10px 26px -20px color-mix(in srgb, var(--md-sys-color-primary) 24%, transparent);
+  --viewer-title-accent: color-mix(in srgb, var(--md-sys-color-primary) 72%, var(--md-sys-color-on-surface));
+
+  --app-shell-background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--md-sys-color-primary) 16%, transparent), transparent 32%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--md-sys-color-surface) 88%, var(--md-sys-color-primary-container)) 0%,
+      var(--md-sys-color-surface) 40%,
+      color-mix(in srgb, var(--md-sys-color-primary-container) 28%, var(--md-sys-color-surface)) 100%
+    );
+  --app-header-background: color-mix(in srgb, var(--md-sys-color-surface) 88%, transparent);
+  --app-header-border: color-mix(in srgb, var(--md-sys-color-outline-variant) 35%, transparent);
+  --search-surface: color-mix(in srgb, var(--md-sys-color-surface-container-high) 88%, transparent);
+  --search-surface-focus: var(--md-sys-color-surface);
+  --search-border: transparent;
+  --panel-surface: var(--md-sys-color-surface-container);
+  --panel-surface-strong: var(--md-sys-color-surface-container-high);
+  --panel-border: color-mix(in srgb, var(--md-sys-color-outline-variant) 42%, transparent);
+  --panel-shadow: var(--shadow-1);
+  --panel-shadow-hover: var(--shadow-2);
+  --number-tile-radius: 12px;
+  --number-tile-shadow: none;
+  --nav-surface: color-mix(in srgb, var(--md-sys-color-surface-container) 90%, transparent);
+  --nav-border: color-mix(in srgb, var(--md-sys-color-outline-variant) 35%, transparent);
+  --nav-button-radius: 14px;
+  --nav-state-opacity: 0.12;
+  --chrome-blur: 18px;
+  --hero-surface: linear-gradient(135deg, color-mix(in srgb, var(--md-sys-color-primary-container) 70%, var(--md-sys-color-surface)), color-mix(in srgb, var(--md-sys-color-surface) 92%, white));
+  --hero-border: color-mix(in srgb, var(--md-sys-color-primary) 22%, var(--md-sys-color-outline-variant));
+  --hero-shadow: 0 24px 48px -36px rgba(0, 0, 0, 0.42);
+  --settings-card-radius: 24px;
+  --layout-list-width: 700px;
+  --layout-settings-width: 960px;
+  --layout-settings-redesign-width: 1040px;
+  --layout-list-item-padding: 0.875rem 1rem;
+  --layout-list-item-gap: 1rem;
+  --layout-number-size: 3rem;
+  --layout-content-padding-mobile: 1rem;
+  --layout-content-padding-tablet: 1rem 1.5rem;
+  --layout-content-padding-desktop: 1.5rem 3rem;
+  --layout-search-width: 640px;
 }
 
 body.dark-theme {
   color-scheme: dark;
   --md-sys-color-primary: color-mix(in srgb, var(--accent, var(--source-gold)) 80%, #ffffff);
   --md-sys-color-on-primary: color-mix(in srgb, var(--accent, var(--source-gold)) 20%, #000000);
-  --md-sys-color-primary-container: color-mix(in srgb, var(--accent, var(--source-gold)) 25%, #0e0c08);
+  --md-sys-color-primary-container: color-mix(in srgb, var(--accent, var(--source-gold)) 25%, var(--scheme-dark-surface));
   --md-sys-color-on-primary-container: color-mix(in srgb, var(--accent, var(--source-gold)) 90%, #ffffff);
-  --md-sys-color-surface: #12110e;
-  --md-sys-color-surface-container: #1d1b17;
-  --md-sys-color-surface-container-high: #282520;
-  --md-sys-color-on-surface: #e8e3db;
-  --md-sys-color-on-surface-variant: #cdc6bc;
-  --md-sys-color-outline: #979189;
-  --md-sys-color-outline-variant: #4a4640;
+  --md-sys-color-surface: var(--scheme-dark-surface);
+  --md-sys-color-surface-container: var(--scheme-dark-surface-container);
+  --md-sys-color-surface-container-high: var(--scheme-dark-surface-container-high);
+  --md-sys-color-on-surface: var(--scheme-dark-on-surface);
+  --md-sys-color-on-surface-variant: var(--scheme-dark-on-surface-variant);
+  --md-sys-color-outline: var(--scheme-dark-outline);
+  --md-sys-color-outline-variant: var(--scheme-dark-outline-variant);
   --md-sys-state-layer-primary: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
+  --app-shell-background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent), transparent 36%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--md-sys-color-surface-container-high) 82%, #050505) 0%,
+      var(--md-sys-color-surface) 48%,
+      color-mix(in srgb, var(--md-sys-color-primary-container) 38%, #050505) 100%
+    );
+  --app-header-background: color-mix(in srgb, var(--md-sys-color-surface-container) 76%, transparent);
+  --app-header-border: color-mix(in srgb, var(--md-sys-color-outline) 24%, transparent);
+  --search-surface: color-mix(in srgb, var(--md-sys-color-surface-container-high) 84%, transparent);
+  --search-surface-focus: color-mix(in srgb, var(--md-sys-color-surface-container-high) 94%, transparent);
+  --panel-surface: color-mix(in srgb, var(--md-sys-color-surface-container) 92%, transparent);
+  --panel-surface-strong: color-mix(in srgb, var(--md-sys-color-surface-container-high) 98%, transparent);
+  --panel-border: color-mix(in srgb, var(--md-sys-color-outline) 32%, transparent);
+  --panel-shadow: 0 14px 34px -24px rgba(0, 0, 0, 0.76);
+  --panel-shadow-hover: 0 20px 42px -24px rgba(0, 0, 0, 0.84);
+  --nav-surface: color-mix(in srgb, var(--md-sys-color-surface-container-high) 78%, transparent);
+  --nav-border: color-mix(in srgb, var(--md-sys-color-outline) 30%, transparent);
+  --hero-surface: linear-gradient(135deg, color-mix(in srgb, var(--md-sys-color-primary-container) 50%, #0c0b09), color-mix(in srgb, var(--md-sys-color-surface-container-high) 86%, #050505));
+  --hero-border: color-mix(in srgb, var(--md-sys-color-primary) 30%, var(--md-sys-color-outline));
+  --hero-shadow: 0 26px 56px -36px rgba(0, 0, 0, 0.9);
+  --viewer-shell-background:
+    radial-gradient(circle at top center, color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent), transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--md-sys-color-surface-container-high) 88%, #040404) 0%, var(--md-sys-color-surface) 58%, color-mix(in srgb, var(--md-sys-color-primary-container) 34%, #040404) 100%);
+  --viewer-chrome-surface:
+    linear-gradient(180deg, color-mix(in srgb, var(--md-sys-color-surface-container-high) 94%, #080808), color-mix(in srgb, var(--md-sys-color-primary-container) 18%, var(--md-sys-color-surface-container)));
+  --viewer-chrome-border: color-mix(in srgb, var(--md-sys-color-primary) 16%, var(--md-sys-color-outline));
+  --viewer-panel-surface:
+    linear-gradient(160deg, color-mix(in srgb, var(--md-sys-color-surface-container-high) 92%, #070707), color-mix(in srgb, var(--md-sys-color-primary-container) 38%, #090909));
+  --viewer-panel-border: color-mix(in srgb, var(--md-sys-color-primary) 20%, var(--md-sys-color-outline));
+  --viewer-panel-shadow: 0 28px 54px -34px rgba(0, 0, 0, 0.82), 0 12px 28px -18px color-mix(in srgb, var(--md-sys-color-primary) 20%, transparent);
+  --viewer-title-accent: color-mix(in srgb, var(--md-sys-color-primary) 66%, var(--md-sys-color-on-surface));
 }
 
 @media (prefers-color-scheme: dark) {
@@ -74,16 +177,49 @@ body.dark-theme {
     color-scheme: dark;
     --md-sys-color-primary: color-mix(in srgb, var(--accent, var(--source-gold)) 80%, #ffffff);
     --md-sys-color-on-primary: color-mix(in srgb, var(--accent, var(--source-gold)) 20%, #000000);
-    --md-sys-color-primary-container: color-mix(in srgb, var(--accent, var(--source-gold)) 25%, #0e0c08);
+    --md-sys-color-primary-container: color-mix(in srgb, var(--accent, var(--source-gold)) 25%, var(--scheme-dark-surface));
     --md-sys-color-on-primary-container: color-mix(in srgb, var(--accent, var(--source-gold)) 90%, #ffffff);
-    --md-sys-color-surface: #12110e;
-    --md-sys-color-surface-container: #1d1b17;
-    --md-sys-color-surface-container-high: #282520;
-    --md-sys-color-on-surface: #e8e3db;
-    --md-sys-color-on-surface-variant: #cdc6bc;
-    --md-sys-color-outline: #979189;
-    --md-sys-color-outline-variant: #4a4640;
+    --md-sys-color-surface: var(--scheme-dark-surface);
+    --md-sys-color-surface-container: var(--scheme-dark-surface-container);
+    --md-sys-color-surface-container-high: var(--scheme-dark-surface-container-high);
+    --md-sys-color-on-surface: var(--scheme-dark-on-surface);
+    --md-sys-color-on-surface-variant: var(--scheme-dark-on-surface-variant);
+    --md-sys-color-outline: var(--scheme-dark-outline);
+    --md-sys-color-outline-variant: var(--scheme-dark-outline-variant);
     --md-sys-state-layer-primary: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
+    --app-shell-background:
+      radial-gradient(circle at top right, color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent), transparent 36%),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--md-sys-color-surface-container-high) 82%, #050505) 0%,
+        var(--md-sys-color-surface) 48%,
+        color-mix(in srgb, var(--md-sys-color-primary-container) 38%, #050505) 100%
+      );
+    --app-header-background: color-mix(in srgb, var(--md-sys-color-surface-container) 76%, transparent);
+    --app-header-border: color-mix(in srgb, var(--md-sys-color-outline) 24%, transparent);
+    --search-surface: color-mix(in srgb, var(--md-sys-color-surface-container-high) 84%, transparent);
+    --search-surface-focus: color-mix(in srgb, var(--md-sys-color-surface-container-high) 94%, transparent);
+    --panel-surface: color-mix(in srgb, var(--md-sys-color-surface-container) 92%, transparent);
+    --panel-surface-strong: color-mix(in srgb, var(--md-sys-color-surface-container-high) 98%, transparent);
+    --panel-border: color-mix(in srgb, var(--md-sys-color-outline) 32%, transparent);
+    --panel-shadow: 0 14px 34px -24px rgba(0, 0, 0, 0.76);
+    --panel-shadow-hover: 0 20px 42px -24px rgba(0, 0, 0, 0.84);
+    --nav-surface: color-mix(in srgb, var(--md-sys-color-surface-container-high) 78%, transparent);
+    --nav-border: color-mix(in srgb, var(--md-sys-color-outline) 30%, transparent);
+    --hero-surface: linear-gradient(135deg, color-mix(in srgb, var(--md-sys-color-primary-container) 50%, #0c0b09), color-mix(in srgb, var(--md-sys-color-surface-container-high) 86%, #050505));
+    --hero-border: color-mix(in srgb, var(--md-sys-color-primary) 30%, var(--md-sys-color-outline));
+    --hero-shadow: 0 26px 56px -36px rgba(0, 0, 0, 0.9);
+    --viewer-shell-background:
+      radial-gradient(circle at top center, color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent), transparent 34%),
+      linear-gradient(180deg, color-mix(in srgb, var(--md-sys-color-surface-container-high) 88%, #040404) 0%, var(--md-sys-color-surface) 58%, color-mix(in srgb, var(--md-sys-color-primary-container) 34%, #040404) 100%);
+    --viewer-chrome-surface:
+      linear-gradient(180deg, color-mix(in srgb, var(--md-sys-color-surface-container-high) 94%, #080808), color-mix(in srgb, var(--md-sys-color-primary-container) 18%, var(--md-sys-color-surface-container)));
+    --viewer-chrome-border: color-mix(in srgb, var(--md-sys-color-primary) 16%, var(--md-sys-color-outline));
+    --viewer-panel-surface:
+      linear-gradient(160deg, color-mix(in srgb, var(--md-sys-color-surface-container-high) 92%, #070707), color-mix(in srgb, var(--md-sys-color-primary-container) 38%, #090909));
+    --viewer-panel-border: color-mix(in srgb, var(--md-sys-color-primary) 20%, var(--md-sys-color-outline));
+    --viewer-panel-shadow: 0 28px 54px -34px rgba(0, 0, 0, 0.82), 0 12px 28px -18px color-mix(in srgb, var(--md-sys-color-primary) 20%, transparent);
+    --viewer-title-accent: color-mix(in srgb, var(--md-sys-color-primary) 66%, var(--md-sys-color-on-surface));
   }
 }
 
@@ -97,6 +233,245 @@ body[data-accent="brown"] { --accent: var(--source-brown); } body[data-accent="g
 body[data-accent="indigo"] { --accent: var(--source-indigo); } body[data-accent="cyan"] { --accent: var(--source-cyan); }
 body[data-accent="burgundy"] { --accent: var(--source-burgundy); }
 body[data-accent="custom"] { --accent: var(--source-custom); }
+
+html[data-color-scheme="warm"] {
+  --scheme-light-surface: #faf8f4;
+  --scheme-light-surface-container: #f3f0ea;
+  --scheme-light-surface-container-high: #ebe8e2;
+  --scheme-light-on-surface: #1c1b18;
+  --scheme-light-on-surface-variant: #4a4640;
+  --scheme-light-outline: #7c7870;
+  --scheme-light-outline-variant: #cdc6bc;
+  --scheme-dark-surface: #12110e;
+  --scheme-dark-surface-container: #1d1b17;
+  --scheme-dark-surface-container-high: #282520;
+  --scheme-dark-on-surface: #e8e3db;
+  --scheme-dark-on-surface-variant: #cdc6bc;
+  --scheme-dark-outline: #979189;
+  --scheme-dark-outline-variant: #4a4640;
+}
+
+html[data-color-scheme="slate"] {
+  --scheme-light-surface: #f4f7fb;
+  --scheme-light-surface-container: #eaf0f7;
+  --scheme-light-surface-container-high: #dde7f2;
+  --scheme-light-on-surface: #16202a;
+  --scheme-light-on-surface-variant: #4a5b6c;
+  --scheme-light-outline: #708193;
+  --scheme-light-outline-variant: #c7d2de;
+  --scheme-dark-surface: #0f141a;
+  --scheme-dark-surface-container: #19212b;
+  --scheme-dark-surface-container-high: #24303d;
+  --scheme-dark-on-surface: #e5edf5;
+  --scheme-dark-on-surface-variant: #c6d3df;
+  --scheme-dark-outline: #92a3b6;
+  --scheme-dark-outline-variant: #4d6073;
+}
+
+html[data-color-scheme="sage"] {
+  --scheme-light-surface: #f4f8f1;
+  --scheme-light-surface-container: #e8efe3;
+  --scheme-light-surface-container-high: #dde8d7;
+  --scheme-light-on-surface: #182017;
+  --scheme-light-on-surface-variant: #4a5848;
+  --scheme-light-outline: #70806d;
+  --scheme-light-outline-variant: #c8d3c3;
+  --scheme-dark-surface: #101511;
+  --scheme-dark-surface-container: #19201b;
+  --scheme-dark-surface-container-high: #243028;
+  --scheme-dark-on-surface: #e4ece2;
+  --scheme-dark-on-surface-variant: #c5d0c3;
+  --scheme-dark-outline: #94a391;
+  --scheme-dark-outline-variant: #4d5f4d;
+}
+
+html[data-color-scheme="rose"] {
+  --scheme-light-surface: #fcf4f3;
+  --scheme-light-surface-container: #f4e8e8;
+  --scheme-light-surface-container-high: #eedddd;
+  --scheme-light-on-surface: #23191a;
+  --scheme-light-on-surface-variant: #625052;
+  --scheme-light-outline: #8b7376;
+  --scheme-light-outline-variant: #dcc8ca;
+  --scheme-dark-surface: #171112;
+  --scheme-dark-surface-container: #22191b;
+  --scheme-dark-surface-container-high: #2e2325;
+  --scheme-dark-on-surface: #f1e5e6;
+  --scheme-dark-on-surface-variant: #d8c4c6;
+  --scheme-dark-outline: #ae9295;
+  --scheme-dark-outline-variant: #624d50;
+}
+
+html[data-color-scheme="ocean"] {
+  --scheme-light-surface: #f1f8fb;
+  --scheme-light-surface-container: #e3eff4;
+  --scheme-light-surface-container-high: #d7ebf2;
+  --scheme-light-on-surface: #102126;
+  --scheme-light-on-surface-variant: #45606a;
+  --scheme-light-outline: #6d8893;
+  --scheme-light-outline-variant: #c3d7df;
+  --scheme-dark-surface: #0d1619;
+  --scheme-dark-surface-container: #162226;
+  --scheme-dark-surface-container-high: #203036;
+  --scheme-dark-on-surface: #e1eef1;
+  --scheme-dark-on-surface-variant: #bfd2d8;
+  --scheme-dark-outline: #8ea8af;
+  --scheme-dark-outline-variant: #4b6269;
+}
+
+body[data-ui-style="folio"] {
+  --font-display: 'GoudyOldStyleBT-Roman', 'Playfair Display', Georgia, serif;
+  --font-body: 'AbadiMT-CondensedLight', 'Roboto', sans-serif;
+  --app-shell-background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--md-sys-color-primary-container) 30%, var(--md-sys-color-surface)) 0%,
+      var(--md-sys-color-surface) 34%,
+      color-mix(in srgb, var(--md-sys-color-primary-container) 38%, var(--md-sys-color-surface)) 100%
+    );
+  --app-header-background: color-mix(in srgb, var(--md-sys-color-surface) 94%, var(--md-sys-color-primary-container));
+  --search-surface: color-mix(in srgb, var(--md-sys-color-surface) 88%, var(--md-sys-color-primary-container));
+  --panel-surface: color-mix(in srgb, var(--md-sys-color-surface) 90%, var(--md-sys-color-primary-container));
+  --panel-surface-strong: color-mix(in srgb, var(--md-sys-color-surface) 78%, var(--md-sys-color-primary-container));
+  --panel-border: color-mix(in srgb, var(--md-sys-color-primary) 16%, var(--md-sys-color-outline-variant));
+  --panel-shadow: 0 12px 24px -20px rgba(0, 0, 0, 0.4);
+  --panel-shadow-hover: 0 18px 28px -20px rgba(0, 0, 0, 0.44);
+  --number-tile-radius: 8px;
+  --nav-button-radius: 10px;
+  --nav-state-opacity: 0.17;
+  --chrome-blur: 10px;
+  --hero-surface: linear-gradient(145deg, color-mix(in srgb, var(--md-sys-color-surface) 70%, var(--md-sys-color-primary-container)), color-mix(in srgb, var(--md-sys-color-surface) 92%, white));
+  --settings-card-radius: 20px;
+}
+
+body.dark-theme[data-ui-style="folio"] {
+  --app-shell-background: linear-gradient(180deg, #221915 0%, #15110f 36%, #261a15 100%);
+  --app-header-background: color-mix(in srgb, #201814 86%, transparent);
+  --search-surface: color-mix(in srgb, #261d17 88%, transparent);
+  --panel-surface: color-mix(in srgb, #211914 92%, transparent);
+  --panel-surface-strong: color-mix(in srgb, #2b211a 96%, transparent);
+  --panel-border: color-mix(in srgb, var(--md-sys-color-primary) 18%, var(--md-sys-color-outline));
+  --hero-surface: linear-gradient(145deg, #2a2019, #181311);
+}
+
+body[data-ui-style="radiant"] {
+  --app-shell-background:
+    radial-gradient(circle at 12% 12%, color-mix(in srgb, var(--md-sys-color-primary) 28%, transparent), transparent 26%),
+    radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--md-sys-color-on-primary-container) 14%, transparent), transparent 28%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--md-sys-color-primary-container) 40%, var(--md-sys-color-surface)) 0%,
+      var(--md-sys-color-surface) 42%,
+      color-mix(in srgb, var(--md-sys-color-primary-container) 46%, var(--md-sys-color-surface)) 100%
+    );
+  --app-header-background: color-mix(in srgb, var(--md-sys-color-surface) 72%, transparent);
+  --search-surface: color-mix(in srgb, var(--md-sys-color-surface-container-high) 72%, transparent);
+  --panel-surface: color-mix(in srgb, var(--md-sys-color-surface-container-high) 76%, transparent);
+  --panel-surface-strong: color-mix(in srgb, var(--md-sys-color-surface-container-high) 88%, transparent);
+  --panel-border: color-mix(in srgb, var(--md-sys-color-primary) 24%, var(--md-sys-color-outline-variant));
+  --panel-shadow: 0 22px 40px -28px rgba(0, 0, 0, 0.5);
+  --panel-shadow-hover: 0 30px 52px -30px rgba(0, 0, 0, 0.55);
+  --number-tile-radius: 18px;
+  --number-tile-shadow: 0 12px 22px -16px rgba(0, 0, 0, 0.45);
+  --nav-surface: color-mix(in srgb, var(--md-sys-color-surface-container-high) 74%, transparent);
+  --nav-button-radius: 999px;
+  --nav-state-opacity: 0.22;
+  --chrome-blur: 24px;
+  --hero-surface: linear-gradient(135deg, color-mix(in srgb, var(--md-sys-color-primary-container) 85%, transparent), color-mix(in srgb, var(--md-sys-color-surface) 82%, white));
+  --hero-shadow: 0 28px 56px -38px rgba(0, 0, 0, 0.55);
+  --settings-card-radius: 30px;
+}
+
+body.dark-theme[data-ui-style="radiant"] {
+  --app-shell-background:
+    radial-gradient(circle at 12% 12%, color-mix(in srgb, var(--md-sys-color-primary) 26%, transparent), transparent 28%),
+    radial-gradient(circle at 88% 0%, color-mix(in srgb, white 10%, transparent), transparent 30%),
+    linear-gradient(180deg, #13151c 0%, #0f1014 44%, #18131d 100%);
+  --app-header-background: color-mix(in srgb, #171922 74%, transparent);
+  --search-surface: color-mix(in srgb, #1b1f2a 78%, transparent);
+  --panel-surface: color-mix(in srgb, #171a24 82%, transparent);
+  --panel-surface-strong: color-mix(in srgb, #202533 90%, transparent);
+  --panel-border: color-mix(in srgb, var(--md-sys-color-primary) 26%, var(--md-sys-color-outline));
+  --nav-surface: color-mix(in srgb, #1a1d27 76%, transparent);
+  --hero-surface: linear-gradient(135deg, #202433, #13151d 72%, #27182c 100%);
+}
+
+html[data-layout-style="compact"] {
+  --app-header-height: 60px;
+  --search-container-top: 64px;
+  --app-content-top: 122px;
+  --bottom-nav-height: 68px;
+  --layout-list-width: 640px;
+  --layout-settings-width: 860px;
+  --layout-settings-redesign-width: 960px;
+  --layout-list-item-padding: 0.72rem 0.8rem;
+  --layout-list-item-gap: 0.75rem;
+  --layout-number-size: 2.7rem;
+  --layout-content-padding-mobile: 0.8rem;
+  --layout-content-padding-tablet: 0.9rem 1.2rem;
+  --layout-content-padding-desktop: 1.15rem 2rem;
+  --layout-search-width: 560px;
+}
+
+html[data-layout-style="focused"] {
+  --app-header-height: 66px;
+  --search-container-top: 70px;
+  --app-content-top: 130px;
+  --bottom-nav-height: 72px;
+  --layout-list-width: 680px;
+  --layout-settings-width: 820px;
+  --layout-settings-redesign-width: 920px;
+  --layout-list-item-padding: 0.92rem 1rem;
+  --layout-list-item-gap: 0.95rem;
+  --layout-number-size: 3.1rem;
+  --layout-content-padding-mobile: 1rem;
+  --layout-content-padding-tablet: 1rem 1.35rem;
+  --layout-content-padding-desktop: 1.35rem 2rem;
+  --layout-search-width: 520px;
+}
+
+html[data-layout-style="spacious"] {
+  --app-header-height: 68px;
+  --search-container-top: 72px;
+  --app-content-top: 136px;
+  --bottom-nav-height: 76px;
+  --layout-list-width: 820px;
+  --layout-settings-width: 1040px;
+  --layout-settings-redesign-width: 1160px;
+  --layout-list-item-padding: 1rem 1.2rem;
+  --layout-list-item-gap: 1.2rem;
+  --layout-number-size: 3.2rem;
+  --layout-content-padding-mobile: 1rem;
+  --layout-content-padding-tablet: 1.2rem 1.8rem;
+  --layout-content-padding-desktop: 1.7rem 3.4rem;
+  --layout-search-width: 700px;
+}
+
+@media (prefers-color-scheme: dark) {
+  body:not(.light-theme-forced):not(.dark-theme)[data-ui-style="folio"] {
+    --app-shell-background: linear-gradient(180deg, #221915 0%, #15110f 36%, #261a15 100%);
+    --app-header-background: color-mix(in srgb, #201814 86%, transparent);
+    --search-surface: color-mix(in srgb, #261d17 88%, transparent);
+    --panel-surface: color-mix(in srgb, #211914 92%, transparent);
+    --panel-surface-strong: color-mix(in srgb, #2b211a 96%, transparent);
+    --panel-border: color-mix(in srgb, var(--md-sys-color-primary) 18%, var(--md-sys-color-outline));
+    --hero-surface: linear-gradient(145deg, #2a2019, #181311);
+  }
+
+  body:not(.light-theme-forced):not(.dark-theme)[data-ui-style="radiant"] {
+    --app-shell-background:
+      radial-gradient(circle at 12% 12%, color-mix(in srgb, var(--md-sys-color-primary) 26%, transparent), transparent 28%),
+      radial-gradient(circle at 88% 0%, color-mix(in srgb, white 10%, transparent), transparent 30%),
+      linear-gradient(180deg, #13151c 0%, #0f1014 44%, #18131d 100%);
+    --app-header-background: color-mix(in srgb, #171922 74%, transparent);
+    --search-surface: color-mix(in srgb, #1b1f2a 78%, transparent);
+    --panel-surface: color-mix(in srgb, #171a24 82%, transparent);
+    --panel-surface-strong: color-mix(in srgb, #202533 90%, transparent);
+    --panel-border: color-mix(in srgb, var(--md-sys-color-primary) 26%, var(--md-sys-color-outline));
+    --nav-surface: color-mix(in srgb, #1a1d27 76%, transparent);
+    --hero-surface: linear-gradient(135deg, #202433, #13151d 72%, #27182c 100%);
+  }
+}
 
 /* --- Global Custom Scrollbar --- */
 /* Modern browsers: scrollbar-color + scrollbar-width */

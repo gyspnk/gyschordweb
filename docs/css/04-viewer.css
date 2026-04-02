@@ -1,7 +1,9 @@
 .pdf-viewer-overlay {
   position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column;
-  background-color: var(--md-sys-color-surface);
+  background: var(--viewer-shell-background);
+  color: var(--md-sys-color-on-surface);
   --viewer-footer-height: var(--pdf-viewer-footer-height);
+  --viewer-header-height-active: var(--pdf-viewer-header-height);
   transform: translateX(100%); transition: transform 0.45s var(--ease-standard, cubic-bezier(0.2, 0, 0, 1));
 }
 body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
@@ -11,11 +13,19 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.5rem;
+  padding: 0 0.5rem;
   flex-shrink: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 35%, transparent);
+  background: var(--viewer-chrome-surface);
+  border-bottom: 1px solid var(--viewer-chrome-border);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--md-sys-color-on-surface) 7%, transparent);
   position: relative;
-  height: var(--pdf-viewer-header-height);
+  height: var(--viewer-header-height-active);
+  box-sizing: border-box;
+}
+.header-left,
+.song-navigation,
+.landscape-controls {
+  min-height: 100%;
   box-sizing: border-box;
 }
 .song-navigation {
@@ -30,8 +40,9 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   body.is-expanded-layout .pdf-viewer-header,
   body.measure-layout .pdf-viewer-header {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
+    gap: 0.75rem;
   }
   body.is-expanded-layout .song-navigation,
   body.measure-layout .song-navigation {
@@ -41,11 +52,15 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
     transform: none;
     left: auto;
     right: auto;
+    width: 100%;
+    max-width: min(100%, 540px);
+    justify-self: center;
   }
   body.is-expanded-layout .header-left,
   body.measure-layout .header-left {
     min-width: 0;
-    overflow: hidden;
+    max-width: min(38vw, 360px);
+    overflow: visible;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -66,6 +81,10 @@ body.measure-layout .pdf-viewer-footer * {
 .song-title-wrapper {
     display: flex; flex-direction: column; align-items: center; text-align: center;
     min-width: 0; overflow: hidden;
+  padding: 0.1rem 0.6rem 0.15rem;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 26%, transparent);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
     transition: opacity 0.15s ease-out;
     cursor: pointer;
 }
@@ -74,13 +93,14 @@ body.measure-layout .pdf-viewer-footer * {
 }
 
 .song-navigation h2 { 
-  margin: 0; font-size: 1.125rem; font-weight: 600;
+  margin: 0; font-size: clamp(1rem, 2vw, 1.125rem); font-weight: 600;
   font-family: var(--font-display);
+  color: var(--viewer-title-accent);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   max-width: 100%;
   letter-spacing: -0.01em;
 }
-#pdf-viewer-number { font-size: 0.75rem; color: var(--md-sys-color-on-surface-variant); }
+#pdf-viewer-number { font-size: 0.75rem; color: color-mix(in srgb, var(--md-sys-color-primary) 58%, var(--md-sys-color-on-surface-variant)); }
 .pdf-viewer-controls-main { display: flex; align-items: center; gap: 0.25rem; }
 
 .hide-chord-btn-portrait,
@@ -91,8 +111,8 @@ body.measure-layout .pdf-viewer-footer * {
 .pdf-viewer-content {
   position: relative; flex-grow: 1;
   min-height: 0;
-  height: calc(100svh - var(--pdf-viewer-header-height) - var(--viewer-footer-height));
-  height: calc(100dvh - var(--pdf-viewer-header-height) - var(--viewer-footer-height));
+  height: calc(100svh - var(--viewer-header-height-active, var(--pdf-viewer-header-height)) - var(--viewer-footer-height));
+  height: calc(100dvh - var(--viewer-header-height-active, var(--pdf-viewer-header-height)) - var(--viewer-footer-height));
   overflow: scroll;
   scrollbar-gutter: stable both-edges;
   overscroll-behavior: contain;
@@ -302,7 +322,7 @@ body.measure-layout .pdf-viewer-footer * {
 .chord-editor-toolbar {
   position: absolute;
   left: 1rem;
-  top: calc(var(--pdf-viewer-header-height) + 1rem);
+  top: calc(var(--viewer-header-height-active, var(--pdf-viewer-header-height)) + 1rem);
   display: flex;
   align-items: center;
   background: var(--md-sys-color-surface-container);
@@ -443,30 +463,48 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   .pdf-viewer-header { justify-content: flex-start; }
   .pdf-viewer-overlay { --viewer-footer-height: var(--pdf-viewer-footer-height); }
 
-  /* Header grid: equal auto flanks ensure the 1fr center is page-centered */
   .pdf-viewer-header {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     justify-content: unset;
+    align-items: center;
+    column-gap: 0.35rem;
   }
   .header-left {
+    grid-row: 1;
+    grid-column: 1;
+    justify-self: start;
+    z-index: 2;
     flex-shrink: 0;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
   }
-  /* song-navigation: flex row; title flex-grows to fill space between buttons */
+  .hide-chord-btn-portrait {
+    grid-row: 1;
+    grid-column: 3;
+    justify-self: end;
+    z-index: 2;
+    margin-left: 0;
+  }
   .song-navigation {
+    grid-row: 1;
+    grid-column: 2;
+    justify-self: stretch;
     position: static;
     display: flex;
     align-items: center;
-    gap: 0;
+    justify-content: center;
+    gap: 0.1rem;
     overflow: visible;
     left: auto;
     right: auto;
     transform: none;
     min-width: 0;
     width: 100%;
+    max-width: none;
   }
-  /* Title takes all remaining space; fitViewerTitle() shrinks font to fit */
   .song-title-wrapper {
     position: static;
     flex: 1 1 0;
@@ -482,31 +520,39 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   }
   #song-prev { flex-shrink: 0; }
   #song-next { flex-shrink: 0; margin-left: 0; }
-  .song-navigation .midi-collapse { flex-shrink: 0; }
+  .header-left .midi-collapse { flex-shrink: 0; }
   
   .pdf-viewer-footer {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "transpose zoom controls";
     column-gap: 0.35rem;
+    row-gap: 0.25rem;
     flex-shrink: 0;
-    height: 80px;
-    background-color: var(--md-sys-color-surface-container);
-    border-top: 1px solid var(--md-sys-color-outline-variant);
+    min-height: 76px;
+    height: auto;
+    background: var(--viewer-chrome-surface);
+    border-top: 1px solid var(--viewer-chrome-border);
     align-items: center;
-    padding: 0 0.5rem;
+    padding: 0.45rem 0.5rem;
     box-sizing: border-box;
     overflow: visible;
   }
 
   .pdf-viewer-footer.has-page-nav {
-    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "transpose zoom controls"
+      "page page page";
   }
 
   .transpose-collapse {
+    grid-area: transpose;
     justify-self: start;
   }
 
   .zoom-controls {
+    grid-area: zoom;
     justify-self: center;
   }
 
@@ -515,6 +561,7 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   }
 
   .page-navigation {
+    grid-area: page;
     justify-self: center;
     min-width: 0;
   }
@@ -524,6 +571,7 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   }
 
   #controls-portrait {
+    grid-area: controls;
     justify-self: end;
   }
 
@@ -596,6 +644,197 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   }
   .pdf-viewer-footer:not(.no-view-controls) .transpose-collapse .transpose-toggle-btn {
     display: flex;
+  }
+}
+
+@media (max-width: 1024px) and (orientation: portrait) {
+  .pdf-viewer-overlay {
+    --viewer-header-height-active: 76px;
+  }
+
+  .pdf-viewer-header {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    min-height: 76px;
+    height: auto;
+    padding: 0.35rem 0.5rem 0.45rem;
+    row-gap: 0.26rem;
+  }
+
+  .header-left {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .hide-chord-btn-portrait {
+    grid-row: 1;
+    grid-column: 3;
+  }
+
+  .song-navigation {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: 0 0.25rem;
+  }
+
+  .song-title-wrapper {
+    padding-inline: 0.45rem;
+  }
+
+  .song-navigation h2 {
+    font-size: 1.04rem;
+  }
+
+  .pdf-viewer-footer {
+    min-height: 84px;
+    padding: 0.45rem 0.6rem 0.55rem;
+  }
+}
+
+@media (max-width: 767px) and (orientation: portrait) {
+  .pdf-viewer-overlay {
+    --viewer-header-height-active: 70px;
+  }
+
+  .pdf-viewer-header {
+    padding: 0.25rem 0.35rem 0.4rem;
+  }
+
+  .pdf-viewer-header .icon-button,
+  .pdf-viewer-footer .icon-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .pdf-viewer-header .icon-button .material-symbols-outlined,
+  .pdf-viewer-footer .icon-button .material-symbols-outlined {
+    font-size: 19px;
+  }
+
+  .song-navigation {
+    gap: 0;
+  }
+
+  .song-navigation h2 {
+    font-size: 0.94rem;
+  }
+
+  #pdf-viewer-number {
+    font-size: 0.68rem;
+  }
+
+  .pdf-viewer-footer {
+    min-height: 74px;
+    column-gap: 0.25rem;
+    padding: 0.35rem;
+  }
+
+  .page-indicator,
+  .zoom-level-indicator {
+    min-width: 38px;
+    padding: 0 0.2rem;
+    font-size: 0.78rem;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-collapse {
+    position: static;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel {
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: none;
+    margin-top: 0;
+    transform: translateY(-8px) scale(0.98);
+    transform-origin: top center;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) #midi-toggle-btn[aria-expanded="true"] + .midi-panel {
+    transform: translateY(0) scale(1);
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
+    border-radius: 0 0 20px 20px;
+    padding: 10px 10px 11px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
+    gap: 10px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-primary {
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 8px;
+    align-items: center;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.instrument-capsule-btn {
+    height: 38px;
+    border-radius: 14px;
+    padding: 0 12px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player .player-time {
+    font-size: 0.74rem !important;
+  }
+}
+
+@media (max-width: 420px) and (orientation: portrait) {
+  .header-left {
+    gap: 0.25rem;
+  }
+
+  .song-navigation {
+    gap: 0;
+  }
+
+  .song-navigation h2 {
+    font-size: 0.88rem;
+  }
+
+  .pdf-viewer-footer {
+    min-height: 68px;
+  }
+
+  .page-navigation,
+  .zoom-controls {
+    gap: 0;
+  }
+
+  .pdf-viewer-footer,
+  .pdf-viewer-footer.has-page-nav {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "transpose zoom controls"
+      "page page page";
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action {
+    grid-column: 1 / -1;
   }
 }
 
@@ -699,8 +938,60 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
                 visibility 0s;
   }
 
-/* MIDI is always a popup toggle regardless of layout mode */
-/* (inline player rules removed — midi-collapse now lives inside .song-navigation) */
+/* MIDI collapse now lives inside .header-left */
+
+/* Hide toggle button when midi panel is visible (expanded or toggled open) */
+body.is-expanded-layout #midi-toggle-btn,
+body.measure-layout #midi-toggle-btn {
+  display: none !important;
+}
+/* Only hide toggle in expanded/measure layout where the panel is always inline.
+   In portrait popup mode the toggle must stay visible. */
+body.is-expanded-layout .midi-collapse.midi-available #midi-toggle-btn[aria-expanded="true"],
+body.measure-layout .midi-collapse.midi-available #midi-toggle-btn[aria-expanded="true"] {
+  display: none !important;
+}
+
+body.is-expanded-layout .midi-collapse.midi-available .midi-panel,
+body.measure-layout .midi-collapse.midi-available .midi-panel {
+  position: static;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition: none;
+  margin-top: 0;
+}
+
+/* Compact inline player sizing — fits inside the header row */
+body.is-expanded-layout .midi-collapse .custom-midi-player,
+body.measure-layout .midi-collapse .custom-midi-player {
+  min-width: 220px;
+  max-width: 340px;
+  border-radius: var(--border-radius-md, 8px);
+  padding: 2px 8px;
+  box-sizing: border-box;
+  gap: 4px;
+}
+
+body.is-expanded-layout .midi-collapse .player-track-container,
+body.measure-layout .midi-collapse .player-track-container {
+  min-width: 80px;
+}
+
+body.is-expanded-layout .midi-collapse .cis-label,
+body.is-expanded-layout .midi-collapse .cis-chevron,
+body.measure-layout .midi-collapse .cis-label,
+body.measure-layout .midi-collapse .cis-chevron {
+  display: none;
+}
+
+body.is-expanded-layout .midi-collapse .instrument-capsule-btn,
+body.measure-layout .midi-collapse .instrument-capsule-btn {
+  width: auto;
+  min-width: 40px;
+  padding: 0 8px;
+}
 
 
 .midi-controls-wrapper {
@@ -875,8 +1166,8 @@ body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-con
 
 /* Shrink PDF content area to account for the open MIDI panel so it doesn't overlap */
 body:not(.is-expanded-layout):not(.measure-layout):has(#midi-toggle-btn[aria-expanded="true"]) .pdf-viewer-content {
-  height: calc(100svh - var(--pdf-viewer-header-height) - 58px - var(--viewer-footer-height));
-  height: calc(100dvh - var(--pdf-viewer-header-height) - 58px - var(--viewer-footer-height));
+  height: calc(100svh - var(--viewer-header-height-active, var(--pdf-viewer-header-height)) - 58px - var(--viewer-footer-height));
+  height: calc(100dvh - var(--viewer-header-height-active, var(--pdf-viewer-header-height)) - 58px - var(--viewer-footer-height));
 }
 
 
@@ -1126,6 +1417,11 @@ body:not(.is-expanded-layout):not(.measure-layout):has(#midi-toggle-btn[aria-exp
 
 .cis-icon {
   font-size: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  margin-right: 0;
 }
 
 .cis-chevron {
@@ -1184,64 +1480,6 @@ body:not(.is-expanded-layout):not(.measure-layout):has(#midi-toggle-btn[aria-exp
   opacity: 1;
   visibility: visible;
   transform: translateY(0) scale(1);
-}
-
-.cis-category {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 600;
-  color: var(--md-sys-color-primary);
-  margin: 16px 16px 8px 16px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  max-height: 50px;
-  overflow: hidden;
-  opacity: 1;
-  transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease, padding 0.3s ease;
-}
-.cis-category.cis-hidden {
-  max-height: 0;
-  opacity: 0;
-  margin: 0;
-  padding: 0;
-  border-bottom-width: 0;
-  pointer-events: none;
-}
-
-/* Soundfont toggle inside instrument popover */
-.cis-soundfont-toggle {
-  display: flex;
-  gap: 4px;
-  padding: 10px 10px 2px;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: inherit;
-}
-.cis-sf-btn {
-  flex: 1;
-  padding: 6px 8px;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 0.78rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.15s ease, box-shadow 0.25s ease;
-}
-.cis-sf-btn:active {
-  transform: scale(0.95);
-}
-.cis-sf-btn:hover {
-  background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent);
-}
-.cis-sf-btn.selected {
-  background: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
-  color: var(--md-sys-color-primary);
-  border-color: var(--md-sys-color-primary);
-  font-weight: 600;
 }
 
 .cis-grid {
@@ -1535,6 +1773,656 @@ body:not(.is-expanded-layout):not(.measure-layout):has(#midi-toggle-btn[aria-exp
 }
 .cis-icon {
     font-size: 1.25rem;
-    margin-right: 4px;
+  margin-right: 0;
 }
 #autonext-btn { width: auto !important; min-width: 48px; }
+
+/* 2026-04 MIDI player redesign */
+.midi-panel {
+  margin-top: 10px;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-collapse {
+  position: static;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel {
+  left: 50%;
+  right: auto;
+  width: min(620px, calc(100vw - 20px));
+  max-width: calc(100vw - 20px);
+  margin-top: 12px;
+  transform: translateX(-50%) translateY(-10px) scale(0.98);
+  transform-origin: top center;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) #midi-toggle-btn[aria-expanded="true"] + .midi-panel {
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 28px;
+  border: 1px solid var(--viewer-panel-border);
+  background: var(--viewer-panel-surface);
+  box-shadow: var(--viewer-panel-shadow);
+  padding: 14px;
+}
+
+body.is-expanded-layout .midi-collapse .custom-midi-player,
+body.measure-layout .midi-collapse .custom-midi-player {
+  min-width: 0;
+  max-width: 100%;
+  width: min(100%, 360px);
+  border-radius: 22px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 40%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--md-sys-color-surface) 92%, transparent), color-mix(in srgb, var(--md-sys-color-surface-container-high) 96%, transparent)),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent), transparent 38%);
+  box-shadow: 0 18px 34px -28px rgba(0, 0, 0, 0.45);
+}
+
+.custom-midi-player {
+  position: relative;
+  overflow: visible;
+}
+
+.custom-midi-player::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  border-radius: 28px 28px 0 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--md-sys-color-primary) 68%, white), color-mix(in srgb, var(--md-sys-color-primary) 28%, transparent));
+  pointer-events: none;
+}
+
+.custom-midi-player::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 38%);
+  pointer-events: none;
+}
+
+.custom-player-controls {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.custom-player-primary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.custom-player-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.custom-player-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0.2rem 0.58rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 70%, transparent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.custom-player-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-sys-color-outline) 75%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-sys-color-outline-variant) 32%, transparent);
+  transition: background-color var(--duration-medium) var(--ease-standard), box-shadow var(--duration-medium) var(--ease-standard);
+}
+
+.custom-midi-player.playing .custom-player-status-dot {
+  background: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--md-sys-color-primary) 22%, transparent);
+}
+
+.custom-player-play.player-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--md-sys-color-primary) 88%, white), color-mix(in srgb, var(--md-sys-color-primary) 76%, black));
+  color: var(--md-sys-color-on-primary);
+  box-shadow: 0 18px 26px -18px color-mix(in srgb, var(--md-sys-color-primary) 52%, transparent);
+  transition: transform var(--duration-short) var(--ease-standard), box-shadow var(--duration-medium) var(--ease-standard), filter var(--duration-medium) var(--ease-standard);
+}
+
+.custom-player-play.player-btn::before {
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.custom-player-play.player-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 28px -18px color-mix(in srgb, var(--md-sys-color-primary) 56%, transparent);
+  filter: saturate(1.05);
+}
+
+.custom-player-play.player-btn:active {
+  transform: translateY(0);
+}
+
+.custom-midi-player.playing .custom-player-play.player-btn {
+  animation: none !important;
+}
+
+.custom-player-play .material-symbols-outlined,
+.custom-midi-player .player-btn .material-symbols-outlined {
+  font-size: 1.7rem !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.custom-midi-player.playing #custom-play-btn .material-symbols-outlined,
+.custom-midi-player:not(.playing) #custom-play-btn .material-symbols-outlined {
+  transform: none !important;
+}
+
+.player-track-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  min-width: 0;
+  margin-top: 0;
+  padding: 12px 14px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--md-sys-color-surface) 72%, var(--md-sys-color-primary-container));
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 14%, transparent);
+}
+
+.custom-midi-player .player-time {
+  margin: 0;
+  padding: 0.24rem 0.7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 72%, transparent);
+  color: var(--md-sys-color-on-primary-container);
+  font-size: 0.74rem !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.custom-seekbar-wrapper,
+.custom-midi-player .seekbar-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 26px;
+}
+
+.custom-midi-player .player-slider {
+  width: 100%;
+  margin: 0;
+  background: transparent;
+}
+
+.custom-midi-player .player-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-sys-color-outline-variant) 68%, var(--md-sys-color-surface-container-high));
+}
+
+.custom-midi-player .player-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-sys-color-outline-variant) 68%, var(--md-sys-color-surface-container-high));
+}
+
+.custom-midi-player .player-slider::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;
+  border: 2px solid var(--md-sys-color-surface);
+  background: var(--md-sys-color-primary);
+  box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.5);
+}
+
+.custom-midi-player .player-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--md-sys-color-surface);
+  background: var(--md-sys-color-primary);
+  box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.5);
+}
+
+.custom-midi-player .seekbar-fill {
+  height: 6px !important;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--md-sys-color-primary) 88%, white), var(--md-sys-color-primary)) !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.custom-midi-player.playing .seekbar-fill {
+  animation: none !important;
+  background-size: 100% 100% !important;
+}
+
+.custom-midi-player.playing .player-slider::-webkit-slider-thumb,
+.custom-midi-player.playing .player-slider::-moz-range-thumb {
+  animation: none !important;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent) !important;
+}
+
+.custom-player-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.custom-player-actions .instrument-selector-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.custom-player-actions .instrument-selector-wrapper.is-open {
+  z-index: 1202;
+}
+
+.midi-instrument-action {
+  flex: 1 1 220px;
+}
+
+.midi-action-btn.instrument-capsule-btn {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 52%, transparent);
+  background: color-mix(in srgb, var(--md-sys-color-surface) 84%, var(--md-sys-color-surface-container-high));
+  color: var(--md-sys-color-on-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  gap: 8px;
+}
+
+.midi-action-btn.instrument-capsule-btn:hover {
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 34%, var(--md-sys-color-surface));
+  border-color: color-mix(in srgb, var(--md-sys-color-primary) 28%, var(--md-sys-color-outline-variant));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26);
+  transform: translateY(-1px);
+}
+
+.midi-action-btn .cis-label {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+  line-height: 1.1;
+}
+
+.midi-action-btn .cis-chevron {
+  display: inline-flex;
+}
+
+.midi-icon-action {
+  flex: 0 0 auto;
+}
+
+.midi-icon-btn.instrument-capsule-btn {
+  width: 42px;
+  min-width: 42px;
+  padding: 0;
+  justify-content: center;
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 66%, transparent);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.custom-midi-player .cis-icon {
+  font-size: 1.15rem;
+  margin-right: 0;
+}
+
+.custom-midi-player .cis-menu-popover {
+  top: calc(100% + 10px);
+  left: 0;
+  right: auto;
+  min-width: 260px;
+  max-width: min(360px, calc(100vw - 24px));
+  z-index: 1203;
+  border-radius: 18px !important;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 48%, transparent) !important;
+  background: color-mix(in srgb, var(--md-sys-color-surface) 96%, transparent) !important;
+  box-shadow: 0 24px 38px -26px rgba(0, 0, 0, 0.42) !important;
+  backdrop-filter: blur(20px) saturate(1.05) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.05) !important;
+}
+
+.custom-midi-player .cis-grid {
+  gap: 4px;
+  padding: 10px;
+}
+
+.custom-midi-player .cis-option {
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.92rem;
+}
+
+.custom-midi-player .cis-option.selected {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions .cis-label,
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions .cis-chevron {
+  display: inline-flex;
+}
+
+body.is-expanded-layout .custom-player-actions,
+body.measure-layout .custom-player-actions {
+  gap: 6px;
+  flex-wrap: nowrap;
+  flex: 0 0 auto;
+}
+
+body.is-expanded-layout .custom-player-play.player-btn,
+body.measure-layout .custom-player-play.player-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 15px;
+}
+
+body.is-expanded-layout .midi-action-btn .cis-label,
+body.is-expanded-layout .midi-action-btn .cis-chevron,
+body.measure-layout .midi-action-btn .cis-label,
+body.measure-layout .midi-action-btn .cis-chevron {
+  display: none;
+}
+
+body.is-expanded-layout .midi-instrument-action,
+body.measure-layout .midi-instrument-action {
+  flex: 0 0 auto;
+}
+
+body.is-expanded-layout .midi-action-btn.instrument-capsule-btn,
+body.measure-layout .midi-action-btn.instrument-capsule-btn {
+  width: 42px;
+  min-width: 42px;
+  height: 38px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 13px;
+}
+
+body.is-expanded-layout .pdf-viewer-overlay:has(.midi-collapse.midi-available),
+body.measure-layout .pdf-viewer-overlay:has(.midi-collapse.midi-available) {
+  --viewer-header-height-active: 72px;
+}
+
+body.is-expanded-layout .midi-collapse,
+body.measure-layout .midi-collapse {
+  width: min(38vw, 360px);
+  min-width: 0;
+}
+
+body.is-expanded-layout .midi-collapse.midi-available .midi-panel,
+body.measure-layout .midi-collapse.midi-available .midi-panel {
+  width: 100%;
+  min-width: 0;
+}
+
+body.is-expanded-layout .custom-player-controls,
+body.measure-layout .custom-player-controls {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+body.is-expanded-layout .custom-player-primary,
+body.measure-layout .custom-player-primary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+body.is-expanded-layout .player-track-container,
+body.measure-layout .player-track-container {
+  gap: 6px;
+  flex: 1 1 auto;
+}
+
+body.is-expanded-layout .custom-player-heading,
+body.measure-layout .custom-player-heading {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+body.is-expanded-layout .custom-player-kicker,
+body.measure-layout .custom-player-kicker {
+  display: none;
+}
+
+body.is-expanded-layout .custom-midi-player .player-time,
+body.measure-layout .custom-midi-player .player-time {
+  font-size: 0.68rem !important;
+  margin: 0;
+}
+
+body.is-expanded-layout .custom-seekbar-wrapper,
+body.is-expanded-layout .custom-midi-player .seekbar-wrapper,
+body.measure-layout .custom-seekbar-wrapper,
+body.measure-layout .custom-midi-player .seekbar-wrapper {
+  height: 20px;
+}
+
+body.is-expanded-layout .custom-midi-player .player-slider::-webkit-slider-runnable-track,
+body.is-expanded-layout .custom-midi-player .seekbar-fill,
+body.measure-layout .custom-midi-player .player-slider::-webkit-slider-runnable-track,
+body.measure-layout .custom-midi-player .seekbar-fill {
+  height: 5px !important;
+}
+
+body.is-expanded-layout .custom-midi-player .player-slider::-moz-range-track,
+body.measure-layout .custom-midi-player .player-slider::-moz-range-track {
+  height: 5px;
+}
+
+body.is-expanded-layout .custom-midi-player .player-slider::-webkit-slider-thumb,
+body.measure-layout .custom-midi-player .player-slider::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+}
+
+body.is-expanded-layout .custom-midi-player .player-slider::-moz-range-thumb,
+body.measure-layout .custom-midi-player .player-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+}
+
+@media (max-width: 1100px) and (orientation: landscape) {
+  body.is-expanded-layout .header-left,
+  body.measure-layout .header-left {
+    max-width: min(34vw, 320px);
+  }
+
+  body.is-expanded-layout .midi-collapse,
+  body.measure-layout .midi-collapse {
+    width: min(34vw, 320px);
+  }
+
+  body.is-expanded-layout .song-navigation,
+  body.measure-layout .song-navigation {
+    max-width: min(100%, 460px);
+  }
+}
+
+@media (min-width: 1280px) and (orientation: landscape) {
+  .pdf-viewer-header {
+    padding: 0 0.75rem;
+    gap: 0.75rem;
+  }
+
+  body.is-expanded-layout .header-left,
+  body.measure-layout .header-left {
+    max-width: min(32vw, 420px);
+  }
+
+  body.is-expanded-layout .midi-collapse,
+  body.measure-layout .midi-collapse {
+    width: min(32vw, 400px);
+  }
+
+  body.is-expanded-layout .song-navigation,
+  body.measure-layout .song-navigation {
+    max-width: min(100%, 620px);
+  }
+
+  body.is-expanded-layout .midi-collapse .custom-midi-player,
+  body.measure-layout .midi-collapse .custom-midi-player {
+    min-width: 260px;
+    max-width: 380px;
+    padding: 4px 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel {
+    width: calc(100vw - 12px);
+    max-width: calc(100vw - 12px);
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
+    padding: 11px;
+    border-radius: 18px;
+  }
+
+  .custom-player-primary {
+    gap: 12px;
+  }
+
+  .custom-player-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .custom-midi-player .player-time {
+    font-size: 0.72rem !important;
+  }
+
+  .midi-instrument-action {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .custom-player-primary {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .custom-player-play.player-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 18px;
+  }
+
+  .midi-action-btn.instrument-capsule-btn {
+    height: 40px;
+    border-radius: 14px;
+    padding: 0 12px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel {
+    width: calc(100vw - 8px);
+    max-width: calc(100vw - 8px);
+  }
+}
+
+@media (max-width: 1024px) and (orientation: portrait) {
+  .pdf-viewer-header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .hide-chord-btn-portrait {
+    justify-self: end;
+    align-self: center;
+  }
+
+  .song-navigation {
+    position: static;
+    left: auto;
+    right: auto;
+    transform: none;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.3rem;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    justify-self: stretch;
+  }
+
+  .song-title-wrapper {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .pdf-viewer-footer {
+    display: grid;
+  }
+}
+
+@media (max-width: 767px) and (orientation: portrait) {
+  .song-navigation {
+    gap: 0.18rem;
+  }
+
+  .song-title-wrapper {
+    padding: 0.1rem 0.38rem 0.14rem;
+  }
+}
+
+@media (max-width: 420px) and (orientation: portrait) {
+  .song-navigation {
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
+  }
+
+  .song-title-wrapper {
+    border-radius: 16px;
+  }
+}

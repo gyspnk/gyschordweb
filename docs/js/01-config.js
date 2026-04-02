@@ -32,8 +32,6 @@ if (!Map.prototype.getOrInsertComputed) {
       this.set(key, value);
       return value;
     },
-    writable: true,
-    configurable: true,
   });
 }
 
@@ -44,8 +42,6 @@ if (!Map.prototype.getOrInsert) {
       this.set(key, value);
       return value;
     },
-    writable: true,
-    configurable: true,
   });
 }
 
@@ -57,8 +53,6 @@ if (!WeakMap.prototype.getOrInsertComputed) {
       this.set(key, value);
       return value;
     },
-    writable: true,
-    configurable: true,
   });
 }
 
@@ -69,15 +63,15 @@ if (!WeakMap.prototype.getOrInsert) {
       this.set(key, value);
       return value;
     },
-    writable: true,
-    configurable: true,
   });
 }
 
 const { pdfjsLib } = globalThis;
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://mozilla.github.io/pdf.js/build/pdf.worker.mjs";
-pdfjsLib.verbosity = pdfjsLib.VerbosityLevel.ERRORS;
+if (pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://mozilla.github.io/pdf.js/build/pdf.worker.mjs";
+  pdfjsLib.verbosity = pdfjsLib.VerbosityLevel.ERRORS;
+}
 
 const CHORD_GRID = { cols: 105, rows: 149 };
 const EDITOR_STORAGE_KEY = "chord-editor-enabled";
@@ -86,34 +80,9 @@ const CHORD_ACCIDENTAL_STORAGE_KEY = "chord-accidental-mode";
 const EDITOR_ON_TAPS = 10;
 const EDITOR_OFF_TAPS = 5;
 const CHORD_COLLAPSE_STORAGE_KEY = "chord-editor-collapsed";
-const NOTE_NAMES_SHARP = [
-  "C",
-  "C♯",
-  "D",
-  "D♯",
-  "E",
-  "F",
-  "F♯",
-  "G",
-  "G♯",
-  "A",
-  "A♯",
-  "B",
-];
-const NOTE_NAMES_FLAT = [
-  "C",
-  "D♭",
-  "D",
-  "E♭",
-  "E",
-  "F",
-  "G♭",
-  "G",
-  "A♭",
-  "A",
-  "B♭",
-  "B",
-];
+const NOTE_NAMES_SHARP = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+const NOTE_NAMES_FLAT = ["C", "D♭", "D", "E♭", "E", "F", "G♭", "G", "A♭", "A", "B♭", "B"];
+const NOTE_NAMES_SHARP_ASCII = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const NATURAL_NOTE_INDEX = {
   C: 0,
   D: 2,
@@ -151,6 +120,177 @@ const ACCENT_PRESETS = [
   { key: "cyan", label: "Sian", color: "#00838f" },
   { key: "custom", label: "Warna Kustom", color: null },
 ];
+const COLOR_SCHEME_PRESETS = [
+  {
+    key: "warm",
+    label: "Warm Ivory",
+    description: "Parchment hangat dan lembut seperti buku kidung tradisional.",
+    swatches: ["#faf8f4", "#eee3d2", "#c9ae84"],
+  },
+  {
+    key: "slate",
+    label: "Slate Blue",
+    description: "Netral dingin abu-biru untuk tampilan lebih modern dan bersih.",
+    swatches: ["#f4f7fb", "#dde7f2", "#8ba0b7"],
+  },
+  {
+    key: "sage",
+    label: "Sage Mist",
+    description: "Hijau lembut dan teduh untuk suasana baca yang tenang.",
+    swatches: ["#f4f8f1", "#deead8", "#8aa083"],
+  },
+  {
+    key: "rose",
+    label: "Rose Paper",
+    description: "Lembar pastel rosé yang lebih hangat tanpa dominasi coklat.",
+    swatches: ["#fcf4f3", "#f0d9d8", "#bd8b90"],
+  },
+  {
+    key: "ocean",
+    label: "Ocean Mist",
+    description: "Kabut biru-hijau yang terang untuk nuansa shell lebih segar.",
+    swatches: ["#f1f8fb", "#d7ebf2", "#6aa2b4"],
+  },
+];
+const UI_STYLE_PRESETS = [
+  {
+    key: "sanctuary",
+    label: "Sanctuary",
+    description: "Hangat, lembut, dan klasik untuk nuansa hymnal tradisional.",
+    logoVariant: "color",
+  },
+  {
+    key: "folio",
+    label: "Folio",
+    description: "Lebih editorial seperti buku nyanyian cetak dengan bingkai tegas.",
+    logoVariant: "black",
+  },
+  {
+    key: "radiant",
+    label: "Radiant",
+    description: "Modern, berlapis, dan bercahaya untuk latihan atau presentasi.",
+    logoVariant: "color",
+  },
+];
+const HEADER_LOGO_VARIANTS = {
+  color: {
+    src: "assets/logo/tjc_logo_indonesia_color.png",
+    alt: "Hymns of Praise logo",
+  },
+  black: {
+    src: "assets/logo/tjc_logo_indonesia_black.png",
+    alt: "Hymns of Praise logo, black",
+  },
+  white: {
+    src: "assets/logo/tjc_logo_indonesia_white.png",
+    alt: "Hymns of Praise logo, white",
+  },
+};
+const LAYOUT_STYLE_PRESETS = [
+  {
+    key: "balanced",
+    label: "Balanced",
+    description: "Lebar dan jarak yang stabil untuk penggunaan harian di semua perangkat.",
+  },
+  {
+    key: "compact",
+    label: "Compact",
+    description: "Lebih padat dengan chrome yang rapat dan grid studio yang efisien.",
+  },
+  {
+    key: "focused",
+    label: "Focused",
+    description: "Lebih terpusat dan satu-kolom agar perhatian tertahan pada konten bacaan.",
+  },
+  {
+    key: "spacious",
+    label: "Spacious",
+    description: "Ruang lebih lega dengan chrome besar untuk tablet, desktop, dan proyeksi.",
+  },
+];
+const APP_DEPENDENCY_CREDITS = [
+  {
+    name: "PDF.js",
+    icon: "picture_as_pdf",
+    category: "Viewer",
+    provider: "Mozilla",
+    version: "Module + worker build",
+    purpose: "Mesin render partitur PDF, worker, dan standard font untuk viewer utama.",
+    source: "mozilla.github.io/pdf.js",
+  },
+  {
+    name: "js-synthesizer",
+    icon: "library_music",
+    category: "MIDI",
+    provider: "jsDelivr CDN",
+    version: "1.11.0",
+    purpose: "Bridge JavaScript untuk memproses render MIDI offline di Web Worker.",
+    source: "cdn.jsdelivr.net/npm/js-synthesizer@1.11.0",
+  },
+  {
+    name: "FluidSynth WASM",
+    icon: "memory",
+    category: "MIDI",
+    provider: "FluidSynth",
+    version: "2.4.6",
+    purpose: "Engine synthesizer GM yang dipakai worker untuk mengubah MIDI menjadi audio.",
+    source: "libfluidsynth-2.4.6.js via js-synthesizer externals",
+  },
+  {
+    name: "GeneralUser GS SoundFont",
+    icon: "piano",
+    category: "SoundFont",
+    provider: "Bundled asset",
+    version: "2.0.3",
+    purpose: "SoundFont utama berukuran besar untuk playback MIDI dengan detail instrumen lebih kaya.",
+    source: "docs/assets/soundfont/GeneralUser-GS.sf2",
+  },
+  {
+    name: "TimGM6mb SoundFont",
+    icon: "piano",
+    category: "SoundFont",
+    provider: "Bundled asset",
+    version: "Compact set",
+    purpose: "Alternatif SoundFont ringan untuk perangkat dengan memori dan bandwidth lebih terbatas.",
+    source: "docs/assets/soundfont/TimGM6mb.sf2",
+  },
+  {
+    name: "Google Fonts",
+    icon: "font_download",
+    category: "Typography",
+    provider: "Google Fonts",
+    version: "Roboto + Playfair Display",
+    purpose: "Tipografi utama untuk body text, heading, dan sistem tema shell aplikasi.",
+    source: "fonts.googleapis.com",
+  },
+  {
+    name: "Material Symbols Outlined",
+    icon: "format_shapes",
+    category: "Icons",
+    provider: "Google Fonts",
+    version: "Outlined variable font",
+    purpose: "Paket ikon yang dipakai di navigasi, kontrol viewer, dan panel pengaturan.",
+    source: "fonts.googleapis.com",
+  },
+  {
+    name: "Bundled Theme Fonts",
+    icon: "book_2",
+    category: "Typography",
+    provider: "Local assets",
+    version: "GoudyOldStyleBT-Roman + AbadiMT-CondensedLight",
+    purpose: "Font lokal untuk style Folio dan sinkronisasi render PDF tanpa warning font system.",
+    source: "docs/assets/fonts",
+  },
+  {
+    name: "Puppeteer",
+    icon: "science",
+    category: "Tooling",
+    provider: "Repository dependency",
+    version: "24.40.0",
+    purpose: "Dipakai untuk otomatisasi dan validasi pengembangan repository, bukan runtime pengguna akhir.",
+    source: "package.json",
+  },
+];
 const CHORD_THEME_PRESETS = [
   { key: "blue", label: "Biru", color: "#0b4c99" },
   { key: "red", label: "Merah", color: "#9c1616" },
@@ -172,14 +312,14 @@ const CHORD_FILL_PRESETS = [
   { key: "yellow", label: "Kuning", color: "#ffecb3" },
   { key: "purple", label: "Ungu", color: "#e3bdf2" },
   { key: "pink", label: "Pink", color: "#ffbccf" },
-  { key: "teal", label: "Teal", color: "#a5ede4" },
-  { key: "orange", label: "Oranye", color: "#ffcc99" },
-  { key: "brown", label: "Coklat", color: "#d6c1ba" },
-  { key: "gray", label: "Abu-abu", color: "#cfcfcf" },
-  { key: "indigo", label: "Nila", color: "#c6d0ff" },
-  { key: "cyan", label: "Sian", color: "#b5f0f7" },
+  { key: "teal", label: "Teal", color: "#b7efe8" },
+  { key: "orange", label: "Oranye", color: "#ffd2a8" },
+  { key: "brown", label: "Coklat", color: "#d7c2b4" },
+  { key: "gray", label: "Abu-abu", color: "#d0d7de" },
+  { key: "indigo", label: "Nila", color: "#c7d2fe" },
+  { key: "cyan", label: "Sian", color: "#b2ebf2" },
 ];
-const DOUBLE_TAP_MAX_DELAY = 300;
+
 const DOUBLE_TAP_MAX_DISTANCE = 34;
 const INDICATOR_DOUBLE_TAP_DELAY = 420;
 const ZOOM_SCROLL_SMOOTH_DURATION_MS = 210;
@@ -187,19 +327,151 @@ const TRANSPOSE_DISSOLVE_OUT_MS = 180;
 const TRANSPOSE_DISSOLVE_IN_MS = 230;
 
 // --- MIDI Audio Transition Constants ---
-const MIDI_TARGET_VOLUME = -3; // Standard volume in dB (combined with Tone.Destination -6dB)
-const MIDI_SILENT_VOLUME = -60; // "Silent" volume in dB
-const MIDI_FADE_IN_MS = 120; // Fade-in duration for play (prevent clicks)
-const MIDI_FADE_OUT_MS = 1200; // Fade-out duration for pause
-const MIDI_CROSSFADE_OUT_MS = 200; // Crossfade out duration for transpose/instrument/seek
-const MIDI_CROSSFADE_IN_MS = 200; // Crossfade in duration (symmetric for seamless feel)
-const MIDI_LOAD_TIMEOUT_MS = 15000; // Fallback timeout for sequence load event
+const MIDI_SF2_URL = 'assets/soundfont/GeneralUser-GS.sf2'; // GeneralUser GS 2.0.3 (128 GM + 13 drum kits, high quality)
+const MIDI_GLOBAL_TRANSPOSE_OFFSET = 0;
+
+// Instrument lists are populated at runtime from the active .sf2 preset data.
+// Keep only keyed buckets here so the UI never falls back to a curated hardcoded list.
+const SOUNDFONT_INSTRUMENTS = {
+  'assets/soundfont/GeneralUser-GS.sf2': [],
+  'assets/soundfont/TimGM6mb.sf2': [],
+};
+
+/**
+ * Normalize soundfont URL/path into a key present in SOUNDFONT_INSTRUMENTS.
+ * Accepts relative paths, absolute URLs, and path variants (e.g. ./assets/...).
+ * Falls back to MIDI_SF2_URL when no known match is found.
+ * @param {string} sfUrl
+ * @returns {string}
+ */
+function normalizeSoundfontKey(sfUrl) {
+  var raw = String(sfUrl || '').trim();
+  var keys = Object.keys(SOUNDFONT_INSTRUMENTS || {});
+  if (!keys.length) return MIDI_SF2_URL;
+  if (!raw) return MIDI_SF2_URL;
+
+  // Exact key match first
+  if (SOUNDFONT_INSTRUMENTS[raw]) return raw;
+
+  var normalized = raw
+    .replace(/\\/g, '/')
+    .replace(/^\.?\//, '')
+    .replace(/^.*\/assets\//i, 'assets/');
+
+  if (SOUNDFONT_INSTRUMENTS[normalized]) return normalized;
+
+  // Filename-based fallback for absolute URLs and uncommon prefixes
+  var lower = normalized.toLowerCase();
+  if (lower.indexOf('generaluser-gs.sf2') !== -1) {
+    return 'assets/soundfont/GeneralUser-GS.sf2';
+  }
+  if (lower.indexOf('timgm6mb.sf2') !== -1) {
+    return 'assets/soundfont/TimGM6mb.sf2';
+  }
+
+  return MIDI_SF2_URL;
+}
+
+/**
+ * Resolve the preset list for a soundfont.
+ * @param {string} sfUrl
+ * @returns {Array}
+ */
+function getSoundfontInstrumentList(sfUrl) {
+  var sfKey = normalizeSoundfontKey(sfUrl || MIDI_SF2_URL);
+  var list = SOUNDFONT_INSTRUMENTS[sfKey];
+  return Array.isArray(list) ? list : [];
+}
+
+/**
+ * Resolve the active preset program for a soundfont.
+ * Prefers an explicitly requested program, then remembered per-soundfont state,
+ * then the first preset in the loaded soundfont list.
+ * @param {string} sfUrl
+ * @param {string|number} preferredProgram
+ * @returns {string}
+ */
+function resolveSoundfontInstrumentProgram(sfUrl, preferredProgram) {
+  var list = getSoundfontInstrumentList(sfUrl);
+  if (!list.length) {
+    return preferredProgram != null ? String(preferredProgram) : '';
+  }
+
+  var targets = [];
+  if (preferredProgram != null && String(preferredProgram) !== '') {
+    targets.push(String(preferredProgram));
+  }
+
+  if (typeof prefs !== 'undefined' && prefs && prefs.midiInstrumentBySoundfont) {
+    var remembered = prefs.midiInstrumentBySoundfont[normalizeSoundfontKey(sfUrl || MIDI_SF2_URL)];
+    if (remembered != null && String(remembered) !== '') {
+      targets.push(String(remembered));
+    }
+  }
+
+  for (var i = 0; i < targets.length; i++) {
+    var hit = list.find(function (item) { return String(item[0]) === targets[i]; });
+    if (hit) return String(hit[0]);
+  }
+
+  return String(list[0][0]);
+}
+
+/**
+ * Resolve an instrument display name from the active soundfont list.
+ * Falls back to the first entry for that soundfont when program is unavailable.
+ * @param {string|number} program
+ * @param {string} sfUrl
+ * @returns {string}
+ */
+function getSoundfontInstrumentLabel(program, sfUrl) {
+  var list = getSoundfontInstrumentList(sfUrl);
+  if (!list.length) return 'Memuat Instrumen...';
+
+  var target = resolveSoundfontInstrumentProgram(sfUrl, program);
+  var hit = list.find(function (item) { return String(item[0]) === target; });
+  return (hit || list[0])[1];
+}
+
+/**
+ * Build instrument option markup strictly from the active soundfont map.
+ * @param {string} sfUrl
+ * @param {string|number} selectedProgram
+ * @returns {{ html: string, list: Array, activeProgram: string, activeLabel: string }}
+ */
+function buildSoundfontInstrumentOptionsHtml(sfUrl, selectedProgram) {
+  var sfKey = normalizeSoundfontKey(sfUrl || MIDI_SF2_URL);
+  var list = getSoundfontInstrumentList(sfKey);
+  if (!Array.isArray(list) || !list.length) {
+    return { html: '', list: [], activeProgram: '', activeLabel: 'Memuat Instrumen...' };
+  }
+
+  var currentVal = resolveSoundfontInstrumentProgram(sfKey, selectedProgram);
+  var activeItem = list.find(function (item) {
+    return String(item[0]) === currentVal;
+  }) || list[0];
+  var activeProgram = String(activeItem[0]);
+
+  var html = list.map(function (item) {
+    var prog = item[0];
+    var name = item[1];
+    var icon = getMidiInstrumentIcon(prog, name);
+    var isSelected = String(prog) === activeProgram;
+    var classes = 'cis-option' + (isSelected ? ' cis-default selected' : '');
+    return '<button type="button" class="' + classes + '" data-val="' + prog + '" title="' + name + '">' +
+      '<span class="material-symbols-outlined cis-menu-icon">' + icon + '</span> ' + name + '</button>';
+  }).join('\n');
+
+  return {
+    html: html,
+    list: list,
+    activeProgram: activeProgram,
+    activeLabel: activeItem[1]
+  };
+}
+
 const MIDI_END_THRESHOLD_S = 0.8; // Threshold in seconds for detecting song end
-const MIDI_TRANSPOSE_DEBOUNCE_MS = 80; // Debounce rapid transpose MIDI updates
 const MIDI_PRELOAD_NEXT_S = 3; // Seconds before end to preload next song
-const MIDI_SOUNDFONT_URL = 'https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus';
-const MIDI_MICRO_RAMP_S = 0.025; // 25ms micro-ramp for click-free instant volume changes
-const MIDI_TAIL_LINGER_MS = 3000; // How long retired players linger to let SoundFont release/reverb tails finish
 
 // --- Note-Aligned Chord Editor Constants ---
 const NOTE_CHORD_Y_OFFSET_PCT = 2.5; // Chord vertical offset above note (% of page height)
@@ -207,73 +479,21 @@ const NOTE_IDX_BEFORE = -1; // Sentinel: chord before first note (intro)
 const NOTE_IDX_AFTER = 99999; // Sentinel: chord after last note (outro)
 
 /**
- * MidiTimeAuthority — Single source of truth for playback position.
- * Uses wall-clock (performance.now()) to advance time when playing,
- * so we never depend on unreliable player currentTime during transitions.
+ * MidiTimeAuthority — Thin proxy to MidiEngine for backward compatibility.
+ * Provides read-only access to playback position/state.
+ * Write methods are no-ops — MidiEngine manages timing internally.
  */
 const MidiTimeAuthority = {
-  _time: 0,
-  _timestamp: 0,
-  _playing: false,
-  _duration: 0,
+  get _playing() { return typeof MidiEngine !== 'undefined' && MidiEngine.isPlaying(); },
+
+  setTime(t) { if (typeof MidiEngine !== 'undefined') MidiEngine.seek(t); },
+  getTime() { return typeof MidiEngine !== 'undefined' ? MidiEngine.getTime() : 0; },
+  setPlaying() {}, // no-op
+  setDuration() {}, // no-op
+  getDuration() { return typeof MidiEngine !== 'undefined' ? MidiEngine.getDuration() : 0; },
+  sync() {}, // no-op
+  reset() { if (typeof MidiEngine !== 'undefined') MidiEngine.reset(); },
   _seekCooldownUntil: 0,
-
-  setTime(t, dur, noCooldown) {
-    this._time = Math.max(0, t || 0);
-    this._timestamp = performance.now();
-    if (dur !== undefined && dur > 0) this._duration = dur;
-    if (!noCooldown) {
-      this._seekCooldownUntil = performance.now() + 300;
-    }
-  },
-
-  getTime() {
-    if (!this._playing) return this._time;
-    const elapsed = (performance.now() - this._timestamp) / 1000;
-    const t = this._time + elapsed;
-    return this._duration > 0 ? Math.min(t, this._duration) : t;
-  },
-
-  setPlaying(playing) {
-    if (playing === this._playing) return;
-    if (playing) {
-      this._timestamp = performance.now();
-    } else {
-      this._time = this.getTime();
-      this._timestamp = performance.now();
-    }
-    this._playing = playing;
-  },
-
-  /**
-   * Correct drift by syncing to the player's reported time (only when stable).
-   * Uses tighter threshold for smoother seekbar.
-   */
-  sync(playerTime) {
-    if (!this._playing) return;
-    if (performance.now() < this._seekCooldownUntil) return;
-    const authorityTime = this.getTime();
-    const diff = playerTime - authorityTime;
-    const absDiff = Math.abs(diff);
-
-    if (absDiff > 0.15 && absDiff < 5) {
-      // Blend 40% toward player time — gentle correction
-      const blended = authorityTime + diff * 0.4;
-      this._time = blended;
-      this._timestamp = performance.now();
-    }
-  },
-
-  getDuration() { return this._duration; },
-  setDuration(d) { if (d > 0) this._duration = d; },
-
-  reset() {
-    this._time = 0;
-    this._timestamp = performance.now();
-    this._playing = false;
-    this._duration = 0;
-    this._seekCooldownUntil = 0;
-  },
 };
 
 /**
@@ -298,20 +518,6 @@ function getMidiInstrumentIcon(programNumber) {
 }
 
 /**
- * Get Tone.js volume destination node.
- * @returns {object|null} The Tone.js volume node or null
- */
-function getToneVolNode() {
-  if (!window.Tone) return null;
-  return (
-    window.Tone.Destination ||
-    (window.Tone.getDestination ? window.Tone.getDestination() : null) ||
-    window.Tone.Master ||
-    null
-  );
-}
-
-/**
  * Shared time formatter for MIDI display.
  * @param {number} seconds
  * @returns {string} e.g. "1:05"
@@ -324,115 +530,22 @@ function formatMidiTime(seconds) {
 }
 
 /**
- * Smoothly fade Tone.js master volume to a target value.
- * Uses exponential ramp for natural-sounding fades and avoids clicks
- * by anchoring the current value before scheduling.
- * @param {number} targetVol - Target volume in dB
- * @param {number} durationMs - Fade duration in milliseconds
- * @returns {Promise<void>} Resolves after fade completes
- */
-async function fadeMidiVolume(targetVol, durationMs) {
-  const volNode = getToneVolNode();
-  if (!volNode || !volNode.volume || !window.Tone) return;
-  const t = window.Tone.now();
-
-  // Cancel any previously scheduled ramps to avoid conflicts
-  volNode.volume.cancelScheduledValues(t);
-  // Anchor current value so the ramp starts from the correct level
-  volNode.volume.setValueAtTime(volNode.volume.value, t);
-
-  if (durationMs > 0) {
-    // Use linearRamp for dB-space (already perceptually logarithmic)
-    // Add a micro-offset to avoid zero-duration ramp bugs in some browsers
-    volNode.volume.linearRampToValueAtTime(targetVol, t + durationMs / 1000 + 0.001);
-  } else {
-    volNode.volume.value = targetVol;
-  }
-
-  // Wait for ramp to complete plus a small safety margin
-  await new Promise((r) => setTimeout(r, durationMs + 50));
-
-  // Snap to target to avoid floating-point drift
-  try {
-    volNode.volume.cancelScheduledValues(window.Tone.now());
-    volNode.volume.value = targetVol;
-  } catch (_e) {}
-}
-
-/**
- * Retire an old SoundFontPlayer so its SoundFont release/reverb tails can
- * ring out naturally instead of being abruptly cut off.
- *
- * The player is kept alive for `lingerMs` (default MIDI_TAIL_LINGER_MS) after
- * being detached from `_midiSfPlayer`. After the linger period, `.stop()` is
- * called to free resources.
- *
- * @param {object} player - The SoundFontPlayer instance to retire (may be null)
- * @param {number} [lingerMs] - How long to let it ring (default MIDI_TAIL_LINGER_MS)
- */
-function retirePlayer(player, lingerMs) {
-  if (!player) return;
-  const delay = lingerMs != null ? lingerMs : MIDI_TAIL_LINGER_MS;
-  // Fire-and-forget: the closure prevents GC while the timer is alive
-  setTimeout(() => {
-    try { if (player.isPlaying()) player.stop(); } catch (_e) {}
-  }, delay);
-}
-
-/**
  * Reset all MIDI state to defaults. Called when closing viewer or switching songs.
  */
-function resetMidiState() {
-  MidiTimeAuthority.reset();
+function resetMidiState(options) {
+  if (typeof MidiEngine !== 'undefined' && !(options && options.keepEngineState)) {
+    MidiEngine.reset();
+  }
   window._midiSavedTime = null;
-  // NOTE: _midiKnownDuration is intentionally NOT reset here.
-  // It is preserved during song-to-song transitions so the mini player
-  // doesn't flicker (disappear/reappear). It gets overwritten once the
-  // new song's MIDI loads. Only set to 0 when explicitly closing the viewer.
-  _midiOriginalSeq = null;
-  _midiCurrentTransposedSeq = null;
-  // NOTE: isMidiSwitching is intentionally NOT reset here.
-  // Callers manage this flag to avoid race conditions with syncMiniPlayerUI.
-  window.isMidiFading = false;
 
   // Clear midi-available so expanded-layout won't show empty player
+  // Skip removal during song switching to prevent portrait flicker
   var mc = document.getElementById('midi-collapse');
-  if (mc) mc.classList.remove('midi-available');
+  if (mc && !(options && options.keepAvailable)) mc.classList.remove('midi-available');
 
   // Reset play UI to avoid stale playing state
   var midiEl = document.getElementById('custom-midi-player');
   if (midiEl) midiEl.classList.remove('playing');
   var playIcon = document.getElementById('custom-play-icon');
   if (playIcon) playIcon.textContent = 'play_arrow';
-}
-
-/**
- * Create a transposed copy of a NoteSequence.
- * Efficiently clones and shifts pitch values in-place.
- * @param {object} seq - Original NoteSequence
- * @param {number} step - Semitones to shift
- * @param {number} instrument - MIDI program number (-1 = keep original)
- * @returns {object} Transposed NoteSequence
- */
-function transposeNoteSequence(seq, step, instrument) {
-  if (!seq || !seq.notes) return seq;
-  const instrInt = parseInt(instrument, 10);
-  const applyInstr = !isNaN(instrInt) && instrInt >= 0;
-
-  // Use structuredClone for efficient deep copy
-  const clone = typeof structuredClone === 'function'
-    ? structuredClone(seq)
-    : JSON.parse(JSON.stringify(seq));
-
-  const notes = clone.notes;
-  for (let i = 0; i < notes.length; i++) {
-    const note = notes[i];
-    if (!note.isDrum) {
-      if (applyInstr) note.program = instrInt;
-      if (step !== 0) {
-        note.pitch = Math.max(0, Math.min(127, note.pitch + step));
-      }
-    }
-  }
-  return clone;
 }

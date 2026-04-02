@@ -10,11 +10,20 @@ let currentViewMode = "single";
 let currentScrollMode = "horizontal";
 
 let prefs = {
+  uiStyle: "sanctuary",
+  colorScheme: "warm",
+  layoutStyle: "balanced",
   defaultTwoPage: false,
   defaultVerticalScroll: false,
   preferNaturalChords: true,
-  midiSoundfont: "https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus",
-  midiInstrument: "-1"
+  midiSoundfont: "assets/soundfont/GeneralUser-GS.sf2",
+  midiInstrument: "",
+  midiInstrumentBySoundfont: {},
+  midiInstrumentUserSelected: false,
+  preloadEnabled: true,
+  preloadCount: 1,
+  preloadCacheMax: 12,
+  preloadShuffle: true
 };
 
 let chordUiPrefs = {
@@ -54,6 +63,8 @@ let wheelState = null;
 let wheelRenderTimeout = null;
 let isFinalizingWheelZoom = false;
 let renderRequestId = 0;
+let isSoundfontSwitching = false;
+let soundfontSwitchRequestId = 0;
 let zoomInProgress = false;
 let zoomDeferInsert = false;
 let chordEditorCollapsed = localStorage.getItem(CHORD_COLLAPSE_STORAGE_KEY) === "1";
@@ -63,6 +74,15 @@ let lastViewerTapPoint = null;
 let lastIndicatorTapAt = 0;
 let lastIndicatorTapEl = null;
 const chordDissolveTimers = new WeakMap();
+
+// Shuffle predetermination: the next song is decided when the current one loads,
+// so we can show it in the UI and preload its audio in the background.
+let shuffleNextGlobalIdx = -1;      // Predetermined next global index (shuffle-all)
+let shuffleNextPlaylistIdx = -1;    // Predetermined next playlist-song index (shuffle-playlist)
+
+// Shuffle history: tracks previously played songs so "previous" navigates back through history
+let shuffleHistory = [];             // Stack of { globalIdx, playlistIdx? } for shuffle-all/playlist
+const SHUFFLE_HISTORY_MAX = 50;      // Max history entries to keep
 
 // --- Note-Aligned Chord Editor State ---
 let noteChordConfig = null; // { version: 2, type: "note-aligned", pages: {} }

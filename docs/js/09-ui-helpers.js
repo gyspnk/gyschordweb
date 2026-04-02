@@ -37,8 +37,8 @@ function checkLayoutCollisions() {
     const center = header.querySelector('.song-navigation');
     const right = header.querySelector('.landscape-controls');
 
-    // In expanded layout, center (song-navigation) is a flex child that can shrink.
-    // Only measure fixed-width sections (left & right) and add a minimum for center.
+    // In expanded layout, center can shrink, but it still needs room for the
+    // navigation buttons plus a readable title area.
     let fixedWidth = 0;
     [left, right].forEach(el => {
       if (el && el.offsetParent !== null) {
@@ -48,11 +48,14 @@ function checkLayoutCollisions() {
       }
     });
 
-    // Minimum center width: prev/next/midi-toggle buttons + small title area
-    const MIN_CENTER_WIDTH = 160;
     if (center && center.offsetParent !== null) {
       const style = getComputedStyle(center);
-      fixedWidth += MIN_CENTER_WIDTH +
+      const navButtons = Array.from(center.querySelectorAll('button')).reduce((sum, button) => {
+        return sum + button.scrollWidth;
+      }, 0);
+      const navGap = parseFloat(style.gap || style.columnGap || 0);
+      const minTitleWidth = window.innerWidth >= 1200 ? 220 : 180;
+      fixedWidth += navButtons + navGap * Math.max(0, center.querySelectorAll('button').length - 1) + minTitleWidth +
         parseFloat(style.marginLeft || 0) + parseFloat(style.marginRight || 0);
     }
 
@@ -304,6 +307,67 @@ function updatePageNavButtons() {
 function updateSongNavButtons() {
   prevSongBtn.disabled = currentSongIndex <= 0;
   nextSongBtn.disabled = currentSongIndex >= pujianItems.length - 1;
+}
+
+function rebuildInstrumentSelectors(sfUrl) {
+  var sfKey = (typeof normalizeSoundfontKey === 'function')
+    ? normalizeSoundfontKey(sfUrl || (prefs && prefs.midiSoundfont) || MIDI_SF2_URL)
+    : (sfUrl || (prefs && prefs.midiSoundfont) || MIDI_SF2_URL);
+  var preferredProgram = (typeof prefs !== 'undefined' && prefs && prefs.midiInstrument != null)
+    ? String(prefs.midiInstrument)
+    : '';
+  var built = (typeof buildSoundfontInstrumentOptionsHtml === 'function')
+    ? buildSoundfontInstrumentOptionsHtml(sfKey, preferredProgram)
+    : { html: '', list: [], activeProgram: preferredProgram, activeLabel: 'Memuat Instrumen...' };
+
+  if (!built.list.length) return;
+  var currentVal = built.activeProgram;
+
+  if (typeof prefs !== 'undefined') {
+    if (!prefs.midiInstrumentBySoundfont || typeof prefs.midiInstrumentBySoundfont !== 'object') {
+      prefs.midiInstrumentBySoundfont = {};
+    }
+    if (String(prefs.midiInstrument) !== currentVal || prefs.midiInstrumentBySoundfont[sfKey] !== currentVal || prefs.midiInstrumentUserSelected !== true) {
+      prefs.midiInstrument = currentVal;
+      prefs.midiInstrumentBySoundfont[sfKey] = currentVal;
+      prefs.midiInstrumentUserSelected = true;
+      localStorage.setItem('prefs', JSON.stringify(prefs));
+    }
+  }
+
+  document.querySelectorAll('.instrument-capsule-btn').forEach(function (btn) {
+    var wrapper = btn.closest('.instrument-selector-wrapper');
+    if (!wrapper) return;
+    var grid = wrapper.querySelector('.cis-menu-popover .cis-grid');
+    if (grid) grid.innerHTML = built.html;
+  });
+
+  var titleText = built.activeLabel || 'Memuat Instrumen...';
+  var labelText = titleText.length > 20 ? titleText.substring(0, 20) + '...' : titleText;
+  var iconText = (typeof getMidiInstrumentIcon === 'function')
+    ? getMidiInstrumentIcon(currentVal, titleText)
+    : 'music_note';
+
+  document.querySelectorAll('#cis-icon, #mini-cis-icon').forEach(function (el) {
+    el.textContent = iconText;
+  });
+
+  document.querySelectorAll('#cis-label, #mini-cis-label').forEach(function (el) {
+    el.textContent = labelText;
+  });
+
+  var mainBtn = document.getElementById('custom-instrument-select');
+  var miniBtn = document.getElementById('mini-instrument-select');
+  if (mainBtn) {
+    mainBtn.dataset.value = currentVal;
+    mainBtn.title = titleText;
+    mainBtn.setAttribute('aria-label', titleText);
+  }
+  if (miniBtn) {
+    miniBtn.dataset.value = currentVal;
+    miniBtn.title = titleText;
+    miniBtn.setAttribute('aria-label', titleText);
+  }
 }
 
 async function closePdfViewer() {

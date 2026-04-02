@@ -1,43 +1,42 @@
 // --- 3. Init ---
 async function init() {
-  try {
-    // Setup Tone.js audio chain: Volume -> Compressor -> Limiter -> speakers
-    // Intercepts the Destination's internal Volume node so ALL audio
-    // (including SoundFontPlayer output) passes through dynamics processing.
-    // NOTE: No artificial reverb — the SoundFont samples have built-in reverb
-    // in their release tails. The retirePlayer() system lets those tails ring
-    // naturally instead of cutting them off.
-    if (window.Tone) {
-      if (Tone.getDestination) {
-        Tone.getDestination().volume.value = -6; // Master volume: -6 dB
-        try {
-          const compressor = new Tone.Compressor({
-            threshold: -18,   // gentle threshold — avoids pumping
-            ratio: 2.5,       // soft ratio — transparent dynamics
-            attack: 0.01,     // lets transients through cleanly
-            release: 0.3      // smooth release
-          });
-          const limiter = new Tone.Limiter(-1);
-          compressor.connect(limiter);
+  // Restore user preferences FIRST so MidiEngine init can use the stored soundfont
+  chordConfig = createDefaultChordConfig();
+  applyStoredPreferences();
 
-          // Intercept: disconnect Destination.input (Volume) from native output,
-          // then reconnect through compressor -> limiter -> native output.
-          const dest = Tone.getDestination();
-          const rawDest = (Tone.context.rawContext || Tone.context).destination;
-          dest.input.disconnect();
-          dest.input.connect(compressor);
-          limiter.connect(rawDest);
-        } catch(e) {
-          // If insertion fails, reconnect Volume directly so audio still works
-          try {
-            const dest = Tone.getDestination();
-            const rawDest = (Tone.context.rawContext || Tone.context).destination;
-            dest.input.connect(rawDest);
-          } catch(e2) {}
+  try {
+    // Initialize MidiEngine with FluidSynth WASM backend.
+    // The engine handles its own AudioContext, compressor, and limiter chain.
+    // Soundfont + WASM are loaded lazily on first MIDI playback via the Web Worker.
+    if (typeof MidiEngine !== 'undefined') {
+      const sfUrl = (typeof prefs !== 'undefined' && prefs && prefs.midiSoundfont) || MIDI_SF2_URL;
+      isSoundfontSwitching = true;
+      MidiEngine.loadCrossfadePrefs();
+      MidiEngine.init(sfUrl, {
+        onSongEnd: function () {
+          // Dispatch custom event so 05-events.js can handle auto-next, loop, etc.
+          window.dispatchEvent(new CustomEvent('midi-song-end'));
+        },
+        onStateChange: function (playing, time, duration) {
+          window._midiKnownDuration = duration;
+          // Sync mini player / UI state
+          if (typeof syncMiniPlayerUI === 'function') syncMiniPlayerUI();
         }
-      } else if (Tone.Master) {
-        Tone.Master.volume.value = -6;
-      }
+      }).then(function () {
+        isSoundfontSwitching = false;
+        if (typeof rebuildInstrumentSelectors === 'function') {
+          rebuildInstrumentSelectors(sfUrl);
+        }
+      }).catch(function (err) {
+        isSoundfontSwitching = false;
+        if (typeof rebuildInstrumentSelectors === 'function') {
+          rebuildInstrumentSelectors(sfUrl);
+        }
+        console.warn('MidiEngine init deferred (will retry on first play):', err.message);
+      });
+    } else if (typeof rebuildInstrumentSelectors === 'function') {
+      const initSfUrl = (typeof prefs !== 'undefined' && prefs && prefs.midiSoundfont) || MIDI_SF2_URL;
+      rebuildInstrumentSelectors(initSfUrl);
     }
 
     await document.fonts.load('16px "GoudyOldStyleBT-Roman"');
@@ -48,16 +47,23 @@ async function init() {
 
   // Resume AudioContext on first user interaction
   const resumeAudioContext = () => {
-    if (window.Tone && Tone.context.state !== 'running') {
-      Tone.context.resume();
+    if (typeof MidiEngine !== 'undefined') {
+      MidiEngine.resumeContext();
     }
   };
   document.body.addEventListener('click', resumeAudioContext, { once: true, capture: true });
   document.body.addEventListener('touchstart', resumeAudioContext, { once: true, capture: true });
 
+  const systemThemeMedia = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  if (systemThemeMedia && typeof syncHeaderBranding === 'function') {
+    systemThemeMedia.addEventListener('change', function () {
+      if (localStorage.getItem('dark-theme') == null) {
+        syncHeaderBranding();
+      }
+    });
+  }
 
-  chordConfig = createDefaultChordConfig();
-  applyStoredPreferences();
+
   setupEventListeners();
   setupRippleEffect();
   updateChordEditorUI();

@@ -1,52 +1,5 @@
 // --- 4. Event Listeners ---
 
-/**
- * Filter instrument options based on selected soundfont.
- * Salamander only supports acoustic_grand_piano (program 0).
- */
-function filterInstrumentsBySoundfont(sfUrl) {
-  const isSalamander = sfUrl && sfUrl.includes('salamander');
-  document.querySelectorAll('.cis-menu-popover').forEach(function(popover) {
-    popover.querySelectorAll('.cis-option').forEach(function(opt) {
-      var val = opt.getAttribute('data-val');
-      // Salamander only has acoustic_grand_piano (program 0); -1 = default = also maps to 0
-      const shouldHide = isSalamander && val !== '0' && val !== '-1';
-      opt.classList.toggle('cis-hidden', shouldHide);
-    });
-    // Hide category headers whose children are all hidden
-    popover.querySelectorAll('.cis-category').forEach(function(cat) {
-      var next = cat.nextElementSibling;
-      var hasVisible = false;
-      while (next && !next.classList.contains('cis-category')) {
-        if (next.classList.contains('cis-option') && !next.classList.contains('cis-hidden')) {
-          hasVisible = true;
-          break;
-        }
-        next = next.nextElementSibling;
-      }
-      cat.classList.toggle('cis-hidden', !hasVisible);
-    });
-  });
-  // Auto-select Grand Piano if current instrument isn't available in Salamander
-  if (isSalamander && typeof prefs !== 'undefined' && prefs.midiInstrument !== '0' && prefs.midiInstrument !== '-1') {
-    prefs.midiInstrument = '0';
-    localStorage.setItem('prefs', JSON.stringify(prefs));
-    document.querySelectorAll('.cis-option').forEach(function(o) {
-      o.classList.toggle('selected', o.getAttribute('data-val') === '0');
-    });
-    document.querySelectorAll('#cis-icon, #mini-cis-icon').forEach(function(el) {
-      if (typeof getMidiInstrumentIcon === 'function') el.textContent = getMidiInstrumentIcon('0');
-    });
-    document.querySelectorAll('#cis-label, #mini-cis-label').forEach(function(el) {
-      el.textContent = 'Grand Piano';
-    });
-    var cis = document.getElementById('custom-instrument-select');
-    if (cis) cis.dataset.value = '0';
-    var mcis = document.getElementById('mini-instrument-select');
-    if (mcis) mcis.dataset.value = '0';
-  }
-}
-
 function setupEventListeners() {
   pujianBtn.addEventListener("click", () => navigateTo("pujian"));
 
@@ -85,11 +38,24 @@ function setupEventListeners() {
         )
           return;
 
+        if (isSoundfontSwitching) {
+          if (typeof showToast === "function") {
+            showToast("Sedang memuat daftar instrumen SoundFont...", "hourglass_empty");
+          }
+          return;
+        }
+
         const currentDropdownObj = e.target.closest(
           ".instrument-selector-wrapper",
         );
         const uiWrapper = currentDropdownObj;
         if (uiWrapper) {
+          // Always regenerate from active soundfont before opening,
+          // so static HTML can never override dynamic map content.
+          if (typeof rebuildInstrumentSelectors === 'function') {
+            rebuildInstrumentSelectors((prefs && prefs.midiSoundfont) || MIDI_SF2_URL);
+          }
+
           // ensure autonext menu is closed if it's open
           const autoBtn = document.getElementById("autonext-btn");
           const autonextWrapper = autoBtn
@@ -114,15 +80,6 @@ function setupEventListeners() {
             });
 
           uiWrapper.classList.toggle("is-open");
-
-          // Sync soundfont toggle state when popover opens
-          if (uiWrapper.classList.contains("is-open")) {
-            const currentSf = (prefs && prefs.midiSoundfont) || MIDI_SOUNDFONT_URL;
-            uiWrapper.querySelectorAll(".cis-sf-btn").forEach((b) => {
-              b.classList.toggle("selected", b.getAttribute("data-sf") === currentSf);
-            });
-            filterInstrumentsBySoundfont(currentSf);
-          }
 
           if (currentDropdownObj) {
             const capBtn = currentDropdownObj.querySelector(
@@ -151,213 +108,162 @@ function setupEventListeners() {
         });
     });
 
-    // Soundfont toggle buttons inside instrument popover
-    document.querySelectorAll(".cis-sf-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const sfUrl = btn.getAttribute("data-sf");
-        if (!sfUrl) return;
-        // Update all soundfont toggles across both popovers
-        document.querySelectorAll(".cis-sf-btn").forEach((b) => {
-          b.classList.toggle("selected", b.getAttribute("data-sf") === sfUrl);
-        });
-        prefs.midiSoundfont = sfUrl;
-        localStorage.setItem("prefs", JSON.stringify(prefs));
-        // Filter instrument list based on selected soundfont
-        filterInstrumentsBySoundfont(sfUrl);
-        // Apply immediately if a song is loaded
-        if (typeof changeInstrument === "function" && _midiOriginalSeq) {
-          changeInstrument();
+    // Option select — delegated so dynamically rebuilt lists work
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest(".cis-option");
+      if (!btn) return;
+
+      // Block instrument switching while engine is actively rendering/loading.
+      if (isSoundfontSwitching || (typeof MidiEngine !== 'undefined' && MidiEngine.isLoading())) {
+        if (typeof showToast === "function") {
+          showToast("Sedang memuat audio MIDI / SoundFont, harap tunggu...", "hourglass_empty");
         }
-      });
-    });
+        return;
+      }
 
-    // Option select (for all popovers)
-    document.querySelectorAll(".cis-option").forEach((option) => {
-      option.addEventListener("click", (e) => {
-        // Block during transition
-        if (_midiSfPlayerLoading) return;
+      const val = btn.getAttribute("data-val");
+      if (val == null) return;
 
-        // Find nearest button in case user clicked inner element
-        const btn = e.target.closest(".cis-option");
-        if (!btn) return;
-        const val = btn.getAttribute("data-val");
+      // Auto-close menu after selection for all wrappers
+      const uiWrapper = e.target.closest(".instrument-selector-wrapper");
+      if (uiWrapper) {
+        uiWrapper.classList.remove("is-open");
+        const capBtn = uiWrapper.querySelector(".instrument-capsule-btn");
+        if (capBtn) capBtn.setAttribute("aria-expanded", "false");
+      }
 
-        // Auto-close menu after selection for all wrappers
-        const uiWrapper = e.target.closest(".instrument-selector-wrapper");
-        if (uiWrapper) {
-          uiWrapper.classList.remove("is-open");
-          const capBtn = uiWrapper.querySelector(".instrument-capsule-btn");
+      // Also close any other stuck wrappers
+      document
+        .querySelectorAll(".instrument-selector-wrapper.is-open")
+        .forEach((openWrapper) => {
+          openWrapper.classList.remove("is-open");
+          const capBtn = openWrapper.querySelector(".instrument-capsule-btn");
           if (capBtn) capBtn.setAttribute("aria-expanded", "false");
-        }
-
-        // Also close any other stuck wrappers
-        document
-          .querySelectorAll(".instrument-selector-wrapper.is-open")
-          .forEach((openWrapper) => {
-            openWrapper.classList.remove("is-open");
-            const capBtn = openWrapper.querySelector(".instrument-capsule-btn");
-            if (capBtn) capBtn.setAttribute("aria-expanded", "false");
-          });
-
-        // Remove active states
-        if (
-          typeof customInstrumentSelect !== "undefined" &&
-          customInstrumentSelect
-        )
-          customInstrumentSelect.classList.remove("active");
-
-        // Update UI styling for ALL .cis-option buttons matching the value
-        document.querySelectorAll(".cis-option").forEach((o) => {
-          if (o.getAttribute("data-val") === val) {
-            o.classList.add("selected");
-          } else {
-            o.classList.remove("selected");
-          }
         });
 
-        const miniInstrumentSelect = document.getElementById(
-          "mini-instrument-select",
-        );
-        if (
-          typeof customInstrumentSelect !== "undefined" &&
-          customInstrumentSelect
-        )
-          customInstrumentSelect.dataset.value = val;
-        if (miniInstrumentSelect) miniInstrumentSelect.dataset.value = val;
+      // Remove active states
+      if (
+        typeof customInstrumentSelect !== "undefined" &&
+        customInstrumentSelect
+      )
+        customInstrumentSelect.classList.remove("active");
 
-        const titleText = btn.getAttribute("title") || "Pilih Alat Musik";
-        if (
-          typeof customInstrumentSelect !== "undefined" &&
-          customInstrumentSelect
-        )
-          customInstrumentSelect.title = titleText;
-        if (miniInstrumentSelect) miniInstrumentSelect.title = titleText;
-
-        document.querySelectorAll("#cis-icon, #mini-cis-icon").forEach((el) => {
-          if (typeof getMidiInstrumentIcon === "function")
-            el.textContent = getMidiInstrumentIcon(val);
-        });
-
-        document
-          .querySelectorAll("#cis-label, #mini-cis-label")
-          .forEach((el) => {
-            let labelText =
-              titleText === "Pilih Alat Musik" ? "Pilihan" : titleText;
-            if (labelText.length > 20)
-              labelText = labelText.substring(0, 20) + "...";
-            el.textContent = labelText;
-          });
-
-        if (typeof prefs !== "undefined") {
-          prefs.midiInstrument = val;
-          localStorage.setItem("prefs", JSON.stringify(prefs));
-        }
-
-        // Re-preload all pool players
-        if (typeof changeInstrument === "function") {
-          changeInstrument();
+      // Update UI styling for instrument selector options only
+      document.querySelectorAll(".instrument-selector-wrapper .cis-option").forEach((o) => {
+        if (o.getAttribute("data-val") === val) {
+          o.classList.add("selected");
+        } else {
+          o.classList.remove("selected");
         }
       });
+
+      const miniInstrumentSelect = document.getElementById(
+        "mini-instrument-select",
+      );
+      if (
+        typeof customInstrumentSelect !== "undefined" &&
+        customInstrumentSelect
+      )
+        customInstrumentSelect.dataset.value = val;
+      if (miniInstrumentSelect) miniInstrumentSelect.dataset.value = val;
+
+      const titleText = btn.getAttribute("title") || btn.textContent.trim() || "Memuat Instrumen...";
+      if (
+        typeof customInstrumentSelect !== "undefined" &&
+        customInstrumentSelect
+      )
+        customInstrumentSelect.title = titleText;
+      if (
+        typeof customInstrumentSelect !== "undefined" &&
+        customInstrumentSelect
+      )
+        customInstrumentSelect.setAttribute("aria-label", titleText);
+      if (miniInstrumentSelect) {
+        miniInstrumentSelect.title = titleText;
+        miniInstrumentSelect.setAttribute("aria-label", titleText);
+      }
+
+      document.querySelectorAll("#cis-icon, #mini-cis-icon").forEach((el) => {
+        if (typeof getMidiInstrumentIcon === "function")
+          el.textContent = getMidiInstrumentIcon(val, titleText);
+      });
+
+      document
+        .querySelectorAll("#cis-label, #mini-cis-label")
+        .forEach((el) => {
+          let labelText = titleText;
+          if (labelText.length > 20)
+            labelText = labelText.substring(0, 20) + "...";
+          el.textContent = labelText;
+        });
+
+      if (typeof prefs !== "undefined") {
+        const activeSf = (typeof normalizeSoundfontKey === "function")
+          ? normalizeSoundfontKey((prefs && prefs.midiSoundfont) || MIDI_SF2_URL)
+          : ((prefs && prefs.midiSoundfont) || MIDI_SF2_URL);
+        if (!prefs.midiInstrumentBySoundfont || typeof prefs.midiInstrumentBySoundfont !== "object") {
+          prefs.midiInstrumentBySoundfont = {};
+        }
+        prefs.midiInstrument = val;
+        prefs.midiInstrumentBySoundfont[activeSf] = String(val);
+        prefs.midiInstrumentUserSelected = true;
+        localStorage.setItem("prefs", JSON.stringify(prefs));
+      }
+
+      // Re-preload all pool players
+      if (typeof changeInstrument === "function") {
+        changeInstrument();
+      }
     });
 
     // Play/Pause — named function so mini player can call directly (real user gesture)
     async function toggleMidiPlayback() {
-      if (window.isMidiFading) return;
-      if (_midiSfPlayerLoading) {
+      if (typeof MidiEngine === 'undefined') return;
+      if (MidiEngine.isLoading()) {
         if (typeof showToast === "function")
           showToast("Sedang memuat audio MIDI, harap tunggu...", "hourglass_empty");
         return;
       }
 
-      if (window.Tone && window.Tone.start) {
-        try { await window.Tone.start(); } catch (e) {}
-      }
+      // Resume AudioContext on user gesture
+      MidiEngine.resumeContext();
 
-      const volNode = getToneVolNode();
-      if (!_midiCurrentTransposedSeq) return;
-
-      // Recreate player if it was retired (e.g. after pause let tails ring)
-      if (!_midiSfPlayer) {
-        const sfUrl = (typeof prefs !== 'undefined' && prefs && prefs.midiSoundfont) || MIDI_SOUNDFONT_URL;
-        _midiSfPlayer = new core.SoundFontPlayer(sfUrl);
-        _midiSfPlayer._soundFontURL = sfUrl;
-        try { await _midiSfPlayer.loadSamples(_midiCurrentTransposedSeq); } catch (_e) { return; }
-      }
+      if (!MidiEngine.getCurrentMidiUrl()) return;
 
       try {
         window.isMidiSwitching = false;
-        const shouldPlay = !MidiTimeAuthority._playing;
+        const shouldPlay = !MidiEngine.isPlaying();
 
         if (shouldPlay) {
           if (typeof window._verifyPlaylistModeForCurrentSong === "function") {
             window._verifyPlaylistModeForCurrentSong();
           }
 
-          window.isMidiFading = true;
-
-          // Set volume to silent BEFORE starting to prevent click
-          if (volNode && volNode.volume) {
-            volNode.volume.cancelScheduledValues(window.Tone.now());
-            volNode.volume.value = MIDI_SILENT_VOLUME;
+          // If at end, restart from beginning
+          const dur = MidiEngine.getDuration();
+          if (dur > 0 && MidiEngine.getTime() >= dur - MIDI_END_THRESHOLD_S) {
+            MidiEngine.seek(0);
           }
 
-          let restoreTime = MidiTimeAuthority.getTime();
-          const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
-
-          if (dur > 0 && restoreTime >= dur - MIDI_END_THRESHOLD_S) {
-            restoreTime = 0;
-            MidiTimeAuthority.setTime(0, dur);
-          }
-
-          // Stop if already playing
-          if (_midiSfPlayer.isPlaying()) {
-            try { _midiSfPlayer.stop(); } catch (e) {}
-          }
-
-          // Start from offset (audio is silent, no click)
-          _midiSfPlayer.start(_midiCurrentTransposedSeq, undefined, restoreTime);
-
-          MidiTimeAuthority.setTime(restoreTime, dur);
-          MidiTimeAuthority.setPlaying(true);
+          MidiEngine.play();
 
           // Update UI immediately
           customPlayIcon.textContent = "pause";
           document.getElementById("custom-midi-player").classList.add("playing");
           window._midiSavedTime = null;
-
-          // Fade in AFTER start — await to prevent race condition
-          await fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
-          window.isMidiFading = false;
         } else {
-          window.isMidiFading = true;
+          MidiEngine.pause();
 
-          MidiTimeAuthority.setPlaying(false);
-          window._midiSavedTime = MidiTimeAuthority.getTime();
+          window._midiSavedTime = MidiEngine.getTime();
 
-          // Update UI immediately for responsiveness
+          // Update UI immediately
           customPlayIcon.textContent = "play_arrow";
           document.getElementById("custom-midi-player").classList.remove("playing");
-
-          // Fade out completely, then retire player to let SoundFont tails ring
-          await fadeMidiVolume(MIDI_SILENT_VOLUME, MIDI_FADE_OUT_MS);
-
-          if (_midiSfPlayer && _midiSfPlayer.isPlaying()) {
-            // Retire: let release/reverb tails finish naturally, then auto-stop
-            retirePlayer(_midiSfPlayer, MIDI_TAIL_LINGER_MS);
-            _midiSfPlayer = null; // Will be recreated on next play
-          }
-
-          if (volNode && volNode.volume) {
-            volNode.volume.value = MIDI_SILENT_VOLUME;
-          }
-          window.isMidiFading = false;
         }
       } catch (err) {
         console.error("Gagal start/stop MIDI:", err);
         customPlayIcon.textContent = "play_arrow";
         document.getElementById("custom-midi-player").classList.remove("playing");
-        window.isMidiFading = false;
       }
     }
     window.toggleMidiPlayback = toggleMidiPlayback;
@@ -367,79 +273,51 @@ function setupEventListeners() {
     let isDraggingSeekbar = false;
     window._midiLastSeekValue = -1;
 
-    // Debounce: track when end detection last fired to prevent double-triggering
-    let _midiEndDetectedAt = 0;
+    // Song end is now handled by MidiEngine's onSongEnd callback (wired in 04-init.js).
+    // Listen for the custom event dispatched from that callback:
+    window.addEventListener('midi-song-end', function () {
+      if (window.isMidiSwitching) return;
+
+      syncSeekbarUI(0, MidiEngine.getDuration());
+      customPlayIcon.textContent = "play_arrow";
+      document.getElementById("custom-midi-player").classList.remove("playing");
+      window._midiLastSeekValue = 0;
+      window._midiSavedTime = null;
+
+      const endMode = PlaylistManager.getAutoNextMode();
+
+      // Loop intercept — repeat one: restart from 0
+      if (endMode === "one") {
+        MidiEngine.seek(0);
+        MidiEngine.play();
+        customPlayIcon.textContent = "pause";
+        document.getElementById("custom-midi-player").classList.add("playing");
+        return;
+      }
+
+      // Auto next intercept — only for active auto-next modes (never for 'off')
+      if (endMode !== 'off' && typeof window._playlistCheckAutoNext === "function") {
+        window._autoAdvanceFromEnd = true;
+        window._playlistCheckAutoNext();
+      }
+    });
 
     let _seekbarRafId = null;
     function seekbarAnimationLoop() {
       _seekbarRafId = requestAnimationFrame(seekbarAnimationLoop);
 
-      if (isDraggingSeekbar || _midiSfPlayerLoading || window.isMidiSwitching) return;
-      if (!document.body.classList.contains("viewer-active") && !MidiTimeAuthority._playing) return;
+      // Sync loading bar on both MIDI player and mini player (always, even when skipping seekbar)
+      var engineLoading = typeof MidiEngine !== 'undefined' && MidiEngine.isLoading();
+      var midiPlayerLoading = document.getElementById('midi-player-loading');
+      if (midiPlayerLoading) midiPlayerLoading.style.display = engineLoading ? '' : 'none';
+      var miniPlayerLoading = document.getElementById('mini-player-loading');
+      if (miniPlayerLoading) miniPlayerLoading.style.display = engineLoading ? '' : 'none';
 
-      const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
-      const curr = MidiTimeAuthority.getTime();
+      if (isDraggingSeekbar || engineLoading || window.isMidiSwitching) return;
+      if (!document.body.classList.contains("viewer-active") && !(typeof MidiEngine !== 'undefined' && MidiEngine.isPlaying())) return;
 
-      // Song end detection — use proper threshold constant
-      const now = performance.now();
-      if (dur > 0 && curr >= dur - MIDI_END_THRESHOLD_S && MidiTimeAuthority._playing && !window.isMidiSwitching
-          && (now - _midiEndDetectedAt) > 1000) {
-        _midiEndDetectedAt = now;
-        MidiTimeAuthority.setPlaying(false);
-        MidiTimeAuthority.setTime(0, dur);
-        if (_midiSfPlayer) {
-          // Micro-ramp to silent, then retire player to let SoundFont tails ring
-          const volNode = getToneVolNode();
-          if (volNode && volNode.volume && window.Tone) {
-            const t = window.Tone.now();
-            volNode.volume.cancelScheduledValues(t);
-            volNode.volume.setValueAtTime(volNode.volume.value, t);
-            volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_MICRO_RAMP_S);
-          }
-          retirePlayer(_midiSfPlayer, MIDI_TAIL_LINGER_MS);
-          _midiSfPlayer = null;
-        }
-        syncSeekbarUI(0, dur);
-        customPlayIcon.textContent = "play_arrow";
-        document.getElementById("custom-midi-player").classList.remove("playing");
-        window._midiLastSeekValue = 0;
-        window._midiSavedTime = null;
-
-        const endMode = PlaylistManager.getAutoNextMode();
-
-        // Loop intercept — repeat one: create fresh player and restart from 0
-        if (endMode === "one") {
-          (async () => {
-            try {
-              const volNode = getToneVolNode();
-              if (volNode && volNode.volume) {
-                volNode.volume.cancelScheduledValues(window.Tone.now());
-                volNode.volume.value = MIDI_SILENT_VOLUME;
-              }
-              // Create fresh player (old one is still ringing out via retirePlayer)
-              const sfUrl = (typeof prefs !== 'undefined' && prefs && prefs.midiSoundfont) || MIDI_SOUNDFONT_URL;
-              const loopSeq = _midiCurrentTransposedSeq;
-              _midiSfPlayer = new core.SoundFontPlayer(sfUrl);
-              _midiSfPlayer._soundFontURL = sfUrl;
-              await _midiSfPlayer.loadSamples(loopSeq);
-              _midiSfPlayer.start(loopSeq);
-              MidiTimeAuthority.setPlaying(true);
-              MidiTimeAuthority.setTime(0, dur);
-              fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
-              customPlayIcon.textContent = "pause";
-              document.getElementById("custom-midi-player").classList.add("playing");
-            } catch (e2) {}
-          })();
-          return;
-        }
-
-        // Auto next intercept — only for active auto-next modes (never for 'off')
-        if (endMode !== 'off' && typeof window._playlistCheckAutoNext === "function") {
-          window._autoAdvanceFromEnd = true;
-          window._playlistCheckAutoNext();
-        }
-        return;
-      }
+      const dur = (typeof MidiEngine !== 'undefined' ? MidiEngine.getDuration() : 0) || window._midiKnownDuration || 0;
+      const curr = typeof MidiEngine !== 'undefined' ? MidiEngine.getTime() : 0;
 
       // Only update DOM if value changed significantly
       if (Math.abs(curr - window._midiLastSeekValue) < 0.05 && customSeekbar.max == dur) return;
@@ -456,8 +334,7 @@ function setupEventListeners() {
     seekbars.forEach((bar) => {
       bar.addEventListener("input", (e) => {
         isDraggingSeekbar = true;
-        const dur =
-          MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
+        const dur = (typeof MidiEngine !== 'undefined' ? MidiEngine.getDuration() : 0) || window._midiKnownDuration || 0;
         const val = parseFloat(e.target.value);
         if (customTimeDisplay)
           customTimeDisplay.textContent = `${formatMidiTime(val)} / ${dur > 0 ? formatMidiTime(dur) : "0:00"}`;
@@ -473,53 +350,12 @@ function setupEventListeners() {
 
       bar.addEventListener("change", (e) => {
         isDraggingSeekbar = false;
-        if (_midiSfPlayerLoading) return;
+        if (typeof MidiEngine !== 'undefined' && MidiEngine.isLoading()) return;
         const val = parseFloat(e.target.value);
-        const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
+        const dur = (typeof MidiEngine !== 'undefined' ? MidiEngine.getDuration() : 0) || window._midiKnownDuration || 0;
 
-        if (_midiCurrentTransposedSeq) {
-          const wasPlaying = _midiSfPlayer ? _midiSfPlayer.isPlaying() : false;
-          window.isMidiSwitching = true;
-          const volNode = getToneVolNode();
-          // Micro-ramp to silent before retiring — prevents audible click
-          if (volNode && volNode.volume && window.Tone) {
-            const t = window.Tone.now();
-            volNode.volume.cancelScheduledValues(t);
-            volNode.volume.setValueAtTime(volNode.volume.value, t);
-            volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_MICRO_RAMP_S);
-          }
-
-          const _seekSeq = _midiCurrentTransposedSeq;
-          // Delay so the micro-ramp reaches silence first
-          setTimeout(async () => {
-            // Retire old player to let SoundFont tails ring naturally
-            if (_midiSfPlayer) {
-              retirePlayer(_midiSfPlayer, MIDI_TAIL_LINGER_MS);
-            }
-
-            // Create fresh player for the new seek position
-            const sfUrl = (typeof prefs !== 'undefined' && prefs && prefs.midiSoundfont) || MIDI_SOUNDFONT_URL;
-            _midiSfPlayer = new core.SoundFontPlayer(sfUrl);
-            _midiSfPlayer._soundFontURL = sfUrl;
-            try { await _midiSfPlayer.loadSamples(_seekSeq); } catch (_e) {}
-
-            if (wasPlaying) {
-              try {
-                _midiSfPlayer.start(_seekSeq, undefined, val);
-              } catch (err) {}
-              MidiTimeAuthority.setTime(val, dur);
-              MidiTimeAuthority.setPlaying(true);
-              fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_CROSSFADE_IN_MS);
-            } else {
-              MidiTimeAuthority.setTime(val, dur);
-              // Restore volume for when playback resumes
-              if (volNode && volNode.volume) {
-                volNode.volume.value = MIDI_TARGET_VOLUME;
-              }
-            }
-
-            window.isMidiSwitching = false;
-          }, MIDI_MICRO_RAMP_S * 1000 + 5);
+        if (typeof MidiEngine !== 'undefined' && MidiEngine.getCurrentMidiUrl()) {
+          MidiEngine.seek(val);
         }
         syncSeekbarUI(val, dur);
         window._midiLastSeekValue = val;

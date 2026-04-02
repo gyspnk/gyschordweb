@@ -17,7 +17,7 @@
   // ─── Silent audio bridge ─────────────────────────────────────────────────────
   // Mobile browsers (Android Chrome, iOS Safari) ONLY show media notifications
   // (lock screen / notification shade controls) when an HTMLMediaElement is
-  // actively playing. Tone.js uses the Web Audio API, which doesn't trigger
+  // actively playing. The MidiEngine uses the Web Audio API, which doesn't trigger
   // the browser's media session UI.
   //
   // Strategy: create a short silent WAV, loop it via <audio>, and keep it
@@ -77,7 +77,7 @@
 
     // Some mobile browsers require the element to be in the DOM
     audio.style.cssText = 'position:fixed;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';
-    document.documentElement.appendChild(audio);
+    (document.body || document.documentElement).appendChild(audio);
 
     _silentAudio = audio;
     _silentAudioReady = true;
@@ -182,11 +182,8 @@
     }
 
     // Resume AudioContext (critical for iOS Safari)
-    if (window.Tone && window.Tone.context) {
-      const ctx = window.Tone.context;
-      if (ctx.state !== 'running') {
-        try { await ctx.resume(); } catch (_e) {}
-      }
+    if (typeof MidiEngine !== 'undefined') {
+      MidiEngine.resumeContext();
     }
 
     // Re-start silent audio if it was killed by the OS while backgrounded
@@ -353,16 +350,9 @@
 
     window.toggleMidiPlayback = async function (...args) {
       await orig.apply(this, args);
-      const playing = _isPlaying();
-      // Sync silent audio element to activate/deactivate browser media controls
-      if (playing) {
-        _playSilentAudio();
-      } else {
-        _pauseSilentAudio();
-      }
-      _updatePlaybackState(playing ? 'playing' : 'paused');
-      _updatePositionState();
-      if (playing) {
+      // Full sync: metadata + playback state + position + silent audio
+      _fullSync();
+      if (_isPlaying()) {
         await _requestWakeLock();
       } else {
         _releaseWakeLock();

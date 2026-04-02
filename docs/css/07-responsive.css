@@ -1,54 +1,65 @@
 /* ---- Small phones (< 360px) ---- */
 @media (max-width: 359px) {
-  .mini-player { width: calc(100% - 16px); padding: 10px 12px; border-radius: 16px; }
-  .mini-cis-label { display: none; }
-  .mini-transport .icon-button { width: 32px; height: 32px; }
-  .mini-transport .icon-button.play-pause { width: 38px; height: 38px; }
   .pujian-nomor { width: 2.5rem; height: 2.5rem; font-size: 0.875rem; border-radius: 10px; }
-  .app-header h1 { font-size: 1.15rem; }
+  #search-container { left: 0.5rem; right: 0.5rem; }
+  .app-brand-copy h1 { font-size: 1rem; }
+  .nav-btn { min-height: 54px; }
 }
 
 /* ---- Mobile (< 480px): Compact extras row ---- */
 @media (max-width: 479px) {
-  .mini-player { gap: 2px; }
-  .mini-title { font-size: 13px; }
-  .mini-subtitle { font-size: 11px; }
+  .settings-panel:not(.settings-panel-redesign) {
+    padding-inline: 0.2rem;
+  }
+
+  .app-content {
+    padding-inline: 0.75rem;
+  }
 }
 
 /* ---- Tablet portrait (480px – 767px) ---- */
 @media (min-width: 480px) and (max-width: 767px) {
-  .pujian-list, .settings-panel {
-    max-width: 560px;
+  .pujian-list, .settings-panel:not(.settings-panel-redesign) {
+    max-width: min(var(--layout-settings-width), 560px);
   }
-  .pujian-list li { padding: 1rem 1.25rem; }
-  .mini-player { max-width: 480px; }
-  #search-container { left: 2rem; right: 2rem; }
-  .app-content { padding: 1rem 1.5rem; }
+  .settings-panel.settings-panel-redesign {
+    max-width: min(var(--layout-settings-redesign-width), 760px);
+  }
+  .pujian-list li { padding: var(--layout-list-item-padding); }
+  #search-container { left: 1.25rem; right: 1.25rem; }
+  .app-content { padding: var(--layout-content-padding-tablet); }
 }
 
 /* ---- Tablet landscape / small desktop (768px+) ---- */
 @media (min-width: 768px) {
-  .pujian-list, .settings-panel {
-    max-width: 720px;
+  .pujian-list, .settings-panel:not(.settings-panel-redesign) {
+    max-width: min(var(--layout-settings-width), 720px);
   }
-  .app-content { padding: 1.25rem 2rem; }
-  #search-container { left: 2rem; right: 2rem; max-width: 600px; margin: 0 auto; }
-  .mini-player { max-width: 540px; }
+  .settings-panel.settings-panel-redesign {
+    max-width: min(var(--layout-settings-redesign-width), 960px);
+  }
+  .app-content { padding: var(--layout-content-padding-tablet); }
+  #search-container { left: 1.5rem; right: 1.5rem; max-width: min(var(--layout-search-width), 680px); margin: 0 auto; }
 }
 
 /* ---- Desktop (1024px+) ---- */
 @media (min-width: 1024px) {
-  .pujian-list, .settings-panel {
-    max-width: 800px;
+  .pujian-list, .settings-panel:not(.settings-panel-redesign) {
+    max-width: min(var(--layout-settings-width), 800px);
   }
-  .app-content { padding: 1.5rem 3rem; }
-  #search-container { max-width: 640px; }
-  .mini-player { max-width: 600px; }
+  .settings-panel.settings-panel-redesign {
+    max-width: min(var(--layout-settings-redesign-width), 1120px);
+  }
+  .app-content { padding: var(--layout-content-padding-desktop); }
+  #search-container { max-width: var(--layout-search-width); }
 }
 
 /* ---- Large desktop (1440px+) ---- */
 @media (min-width: 1440px) {
-  .pujian-list, .settings-panel {
-    max-width: 900px;
+  .pujian-list, .settings-panel:not(.settings-panel-redesign) {
+    max-width: min(var(--layout-settings-width), 900px);
+  }
+  .settings-panel.settings-panel-redesign {
+    max-width: min(var(--layout-settings-redesign-width), 1240px);
   }
 }

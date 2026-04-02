@@ -6,9 +6,18 @@ function navigateTo(page) {
   });
   document.querySelector(".app-header").style.display = "flex";
 
+  // Remove viewer-active on any non-viewer navigation
+  document.body.classList.remove('viewer-active');
+  document.body.setAttribute('data-page', page);
+
   const miniPlayerContainer = document.getElementById('mini-player');
+  const appContent = document.getElementById('main-content');
   if (page === "pengaturan" || page === "report-bug" || page === "about-project") {
-    if (miniPlayerContainer) miniPlayerContainer.classList.add('is-hidden');
+    if (miniPlayerContainer) {
+      miniPlayerContainer.classList.add('is-hidden');
+      miniPlayerContainer.classList.remove('mini-player-enter');
+    }
+    if (appContent) appContent.classList.remove('has-mini-player');
   }
 
 
@@ -114,8 +123,131 @@ function renderSettingLabel(icon, text) {
   `;
 }
 
+function getUiStyleMeta(styleKey) {
+  return UI_STYLE_PRESETS.find((preset) => preset.key === styleKey) || UI_STYLE_PRESETS[0];
+}
+
+function getLayoutStyleMeta(layoutKey) {
+  return LAYOUT_STYLE_PRESETS.find((preset) => preset.key === layoutKey) || LAYOUT_STYLE_PRESETS[0];
+}
+
+function getColorSchemeMeta(schemeKey) {
+  return COLOR_SCHEME_PRESETS.find((preset) => preset.key === schemeKey) || COLOR_SCHEME_PRESETS[0];
+}
+
+function renderUiStyleOptions(activeStyle) {
+  return UI_STYLE_PRESETS.map((preset) => {
+    const isSelected = preset.key === activeStyle;
+    return `
+      <button
+        class="ui-style-option ${isSelected ? "selected" : ""}"
+        data-ui-style="${preset.key}"
+        type="button"
+        aria-pressed="${isSelected ? "true" : "false"}"
+      >
+        <span class="ui-style-preview ui-style-preview--${preset.key}" aria-hidden="true">
+          <span class="ui-style-preview-bar"></span>
+          <span class="ui-style-preview-search"></span>
+          <span class="ui-style-preview-card"></span>
+          <span class="ui-style-preview-card is-secondary"></span>
+          <span class="ui-style-preview-nav">
+            <span></span>
+            <span class="is-active"></span>
+            <span></span>
+          </span>
+        </span>
+        <span class="ui-style-copy">
+          <strong>${preset.label}</strong>
+          <span>${preset.description}</span>
+        </span>
+      </button>
+    `;
+  }).join("");
+}
+
+function renderLayoutStyleOptions(activeLayout) {
+  return LAYOUT_STYLE_PRESETS.map((preset) => {
+    const isSelected = preset.key === activeLayout;
+    return `
+      <button
+        class="layout-style-option ${isSelected ? "selected" : ""}"
+        data-layout-style="${preset.key}"
+        type="button"
+        aria-pressed="${isSelected ? "true" : "false"}"
+      >
+        <span class="layout-style-preview layout-style-preview--${preset.key}" aria-hidden="true">
+          <span class="layout-style-frame is-header"></span>
+          <span class="layout-style-columns">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+          <span class="layout-style-frame is-footer"></span>
+        </span>
+        <span class="ui-style-copy">
+          <strong>${preset.label}</strong>
+          <span>${preset.description}</span>
+        </span>
+      </button>
+    `;
+  }).join("");
+}
+
+function renderColorSchemeOptions(activeScheme) {
+  return COLOR_SCHEME_PRESETS.map((preset) => {
+    const isSelected = preset.key === activeScheme;
+    return `
+      <button
+        class="color-scheme-option ${isSelected ? "selected" : ""}"
+        data-color-scheme="${preset.key}"
+        type="button"
+        aria-pressed="${isSelected ? "true" : "false"}"
+      >
+        <span
+          class="color-scheme-preview"
+          aria-hidden="true"
+          style="--scheme-swatch-1: ${preset.swatches[0]}; --scheme-swatch-2: ${preset.swatches[1]}; --scheme-swatch-3: ${preset.swatches[2]};"
+        >
+          <span class="color-scheme-swatch is-large"></span>
+          <span class="color-scheme-swatch"></span>
+          <span class="color-scheme-swatch"></span>
+        </span>
+        <span class="ui-style-copy">
+          <strong>${preset.label}</strong>
+          <span>${preset.description}</span>
+        </span>
+      </button>
+    `;
+  }).join("");
+}
+
+function renderDependencyCreditCards() {
+  return APP_DEPENDENCY_CREDITS.map((dependency) => `
+    <article class="dependency-card">
+      <div class="dependency-card-head">
+        <div class="dependency-card-identity">
+          <span class="material-symbols-outlined dependency-card-icon">${dependency.icon}</span>
+          <div class="dependency-card-copy">
+            <h3>${dependency.name}</h3>
+            <p>${dependency.provider}</p>
+          </div>
+        </div>
+        <span class="dependency-badge">${dependency.category}</span>
+      </div>
+      <p class="dependency-card-text">${dependency.purpose}</p>
+      <div class="dependency-meta">
+        <span><strong>Versi:</strong> ${dependency.version}</span>
+        <span><strong>Sumber:</strong> ${dependency.source}</span>
+      </div>
+    </article>
+  `).join("");
+}
+
 function renderSettings() {
   const activeAccent = document.body.getAttribute("data-accent") || "gold";
+  const activeUiStyle = getUiStyleMeta(prefs.uiStyle);
+  const activeColorScheme = getColorSchemeMeta(prefs.colorScheme);
+  const activeLayoutStyle = getLayoutStyleMeta(prefs.layoutStyle);
   const accentPalette = ACCENT_PRESETS
     .map((preset) => {
       const color = preset.key === "custom" ? customAccentColor : preset.color;
@@ -164,184 +296,302 @@ function renderSettings() {
     .join("");
 
   mainContent.innerHTML = `
-    <div class="settings-panel">
-      <div class="settings-section">
-        <h2 class="settings-section-title"><span class="material-symbols-outlined">settings</span> Umum</h2>
-        <div class="settings-card">
-          <div class="setting-item">
-            ${renderSettingLabel("music_off", "Hindari Chord Awal ♯ / ♭")}
-            <label class="md-switch">
-              <input type="checkbox" id="prefer-natural-chords-toggle" ${prefs.preferNaturalChords ? "checked" : ""}>
-              <span class="md-slider"></span>
-            </label>
+    <div class="settings-panel settings-panel-redesign">
+      <section class="settings-hero">
+        <div class="settings-hero-copy">
+          <p class="settings-eyebrow">Appearance Studio</p>
+          <h2>Rancang ulang pengalaman Kidung Rohani</h2>
+          <p>Gabungkan gaya UI, skema warna shell, layout aplikasi, mode terang atau gelap, aksen utama, dan tampilan chord dari satu studio pengaturan.</p>
+        </div>
+        <div class="settings-hero-metrics">
+          <div class="settings-hero-metric">
+            <strong>${UI_STYLE_PRESETS.length}</strong>
+            <span>gaya UI</span>
+          </div>
+          <div class="settings-hero-metric">
+            <strong>${COLOR_SCHEME_PRESETS.length}</strong>
+            <span>skema warna</span>
+          </div>
+          <div class="settings-hero-metric">
+            <strong id="settings-active-style-label">${activeUiStyle.label}</strong>
+            <span>style aktif</span>
+          </div>
+          <div class="settings-hero-metric">
+            <strong>${LAYOUT_STYLE_PRESETS.length}</strong>
+            <span>layout app</span>
+          </div>
+          <div class="settings-hero-metric">
+            <strong id="settings-active-layout-label">${activeLayoutStyle.label}</strong>
+            <span>layout aktif</span>
+          </div>
+          <div class="settings-hero-metric">
+            <strong id="settings-active-scheme-label">${activeColorScheme.label}</strong>
+            <span>skema aktif</span>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="settings-section">
-        <h2 class="settings-section-title"><span class="material-symbols-outlined">info</span> Info</h2>
-        <div class="settings-card help-banner-card" id="about-project-btn" role="button" aria-label="Buka halaman tentang project" tabindex="0">
-          <div class="help-banner-content">
-            <span class="material-symbols-outlined help-banner-icon">info</span>
-            <div class="help-banner-text">
-              <h3>Tentang Project Ini</h3>
-              <p>Latar belakang, informasi & tujuan</p>
+      <div class="settings-layout-grid">
+        <section class="settings-section settings-section-span">
+          <div class="settings-section-heading">
+            <h2 class="settings-section-title"><span class="material-symbols-outlined">palette</span> Theme Studio</h2>
+            <p class="settings-section-caption">Pilih karakter visual aplikasi lalu padukan dengan skema shell, warna aksen, mode gelap, dan tuning chord.</p>
+          </div>
+          <div class="settings-card settings-card-studio">
+            <div class="appearance-studio">
+              <div class="appearance-style-gallery">
+                ${renderUiStyleOptions(activeUiStyle.key)}
+              </div>
+              <div class="appearance-layout-gallery">
+                ${renderLayoutStyleOptions(activeLayoutStyle.key)}
+              </div>
+              <div class="appearance-control-grid">
+                <div class="settings-subcard settings-subcard--shell">
+                  <div class="settings-inline-toggle">
+                    <div>
+                      <div class="settings-subcard-title">Mode tampilan, skema & aksen</div>
+                      <p class="settings-subcard-text">Mode gelap, skema warna dasar, aksen utama, dan warna kustom diterapkan ke seluruh shell aplikasi.</p>
+                    </div>
+                    <label class="md-switch">
+                      <input type="checkbox" id="dark-theme-toggle" ${document.body.classList.contains("dark-theme") || (!document.body.classList.contains("light-theme-forced") && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "checked" : ""}>
+                      <span class="md-slider"></span>
+                    </label>
+                  </div>
+                  <div class="settings-field">
+                    <span class="settings-field-title">Skema warna aplikasi</span>
+                    <div class="appearance-color-gallery">
+                      ${renderColorSchemeOptions(activeColorScheme.key)}
+                    </div>
+                  </div>
+                  <div class="settings-field">
+                    <span class="settings-field-title">Warna aksen utama</span>
+                    <div class="accent-palette accent-palette-studio">
+                      ${accentPalette}
+                    </div>
+                  </div>
+                  <div class="settings-inline-input">
+                    <label for="custom-accent-input" class="settings-field-title">Warna kustom</label>
+                    <input type="color" id="custom-accent-input" class="setting-color-input" value="${customAccentColor}" aria-label="Pilih warna custom accent">
+                  </div>
+                </div>
+                <div class="settings-subcard settings-subcard--chord-style">
+                  <div class="settings-subcard-title">Tema huruf & fill chord</div>
+                  <p class="settings-subcard-text">Pilih warna huruf dan fill chord di viewer, lalu tentukan apakah masing-masing mengikuti tema utama.</p>
+                  <div class="settings-inline-toggle settings-inline-toggle-wrap">
+                    ${renderSettingLabel("sync", "Samakan Huruf Chord ke Tema Utama")}
+                    <label class="md-switch">
+                      <input type="checkbox" id="chord-sync-theme-toggle" ${chordUiPrefs.syncThemeWithAccent ? "checked" : ""}>
+                      <span class="md-slider"></span>
+                    </label>
+                  </div>
+                  <div class="settings-field">
+                    <span class="settings-field-title">Tema huruf chord</span>
+                    <div class="chord-theme-palette ${chordUiPrefs.syncThemeWithAccent ? "is-disabled" : ""}">
+                      ${chordThemePalette}
+                    </div>
+                  </div>
+                  <div class="settings-inline-toggle settings-inline-toggle-wrap">
+                    ${renderSettingLabel("tune", "Samakan Fill Chord ke Tema Utama")}
+                    <label class="md-switch">
+                      <input type="checkbox" id="chord-sync-fill-toggle" ${chordUiPrefs.syncFillWithAccent ? "checked" : ""}>
+                      <span class="md-slider"></span>
+                    </label>
+                  </div>
+                  <div class="settings-field">
+                    <span class="settings-field-title">Warna fill chord</span>
+                    <div class="chord-fill-palette ${chordUiPrefs.syncFillWithAccent ? "is-disabled" : ""}">
+                      ${chordFillPalette}
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-subcard settings-subcard--tuning">
+                  <div class="settings-subcard-title">Tuning chord</div>
+                  <p class="settings-subcard-text">Gunakan gaya fill dan proporsi chord yang paling nyaman untuk membaca partitur. Warna huruf dan fill diatur pada panel tema chord.</p>
+                  <div class="setting-item setting-item-inline">
+                    ${renderSettingLabel("format_color_fill", "Fill Chord")}
+                    <select id="chord-fill-select" class="setting-select">
+                      <option value="none" ${chordUiPrefs.fill === "none" ? "selected" : ""}>Tanpa Fill</option>
+                      <option value="soft" ${chordUiPrefs.fill === "soft" ? "selected" : ""}>Soft Rounded</option>
+                      <option value="solid" ${chordUiPrefs.fill === "solid" ? "selected" : ""}>Solid Rounded</option>
+                    </select>
+                  </div>
+                  <div class="setting-item setting-item-slider compact-slider">
+                    <span id="chord-opacity-label" class="setting-label">
+                      <span class="material-symbols-outlined">opacity</span>
+                      <span>Opacity Latar Chord (${chordUiPrefs.fillOpacityPercent}%)</span>
+                    </span>
+                    <input
+                      id="chord-fill-opacity"
+                      class="setting-range"
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="5"
+                      value="${chordUiPrefs.fillOpacityPercent}"
+                    >
+                  </div>
+                  <div class="setting-item setting-item-slider compact-slider">
+                    <span id="chord-font-override-label" class="setting-label">
+                      <span class="material-symbols-outlined">format_size</span>
+                      <span>Ukuran Font Chord (${chordUiPrefs.fontOverridePercent}%)</span>
+                    </span>
+                    <input
+                      id="chord-font-override"
+                      class="setting-range"
+                      type="range"
+                      min="80"
+                      max="180"
+                      step="5"
+                      value="${chordUiPrefs.fontOverridePercent}"
+                    >
+                  </div>
+                  <div class="setting-item setting-item-slider compact-slider">
+                    <span id="chord-fill-padding-label" class="setting-label">
+                      <span class="material-symbols-outlined">padding</span>
+                      <span>Padding Chord (${chordUiPrefs.fillPaddingPercent}%)</span>
+                    </span>
+                    <input
+                      id="chord-fill-padding"
+                      class="setting-range"
+                      type="range"
+                      min="0"
+                      max="400"
+                      step="10"
+                      value="${chordUiPrefs.fillPaddingPercent}"
+                    >
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <span class="material-symbols-outlined help-banner-arrow">chevron_right</span>
-        </div>
-      </div>
+        </section>
 
-      <div class="settings-section">
-        <h2 class="settings-section-title"><span class="material-symbols-outlined">palette</span> Tampilan</h2>
-        <div class="settings-card">
-          <div class="setting-item">
-            ${renderSettingLabel("dark_mode", "Tema Gelap")}
-            <label class="md-switch">
-              <input type="checkbox" id="dark-theme-toggle" ${document.body.classList.contains("dark-theme") || (!document.body.classList.contains("light-theme-forced") && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "checked" : ""}>
-              <span class="md-slider"></span>
-            </label>
+        <section class="settings-section">
+          <div class="settings-section-heading">
+            <h2 class="settings-section-title"><span class="material-symbols-outlined">menu_book</span> Pengalaman Baca</h2>
+            <p class="settings-section-caption">Atur perilaku default saat membuka pujian dan cara chord disesuaikan.</p>
           </div>
-          <div class="setting-divider"></div>
-          <div class="setting-item">
-            ${renderSettingLabel("format_paint", "Warna Aksen")}
-            <div class="accent-palette">
-              ${accentPalette}
+          <div class="settings-card">
+            <div class="setting-item">
+              ${renderSettingLabel("music_off", "Hindari Chord Awal ♯ / ♭")}
+              <label class="md-switch">
+                <input type="checkbox" id="prefer-natural-chords-toggle" ${prefs.preferNaturalChords ? "checked" : ""}>
+                <span class="md-slider"></span>
+              </label>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item">
+              ${renderSettingLabel("auto_stories", "Mode Dua Halaman")}
+              <label class="md-switch">
+                <input type="checkbox" id="default-two-page-toggle" ${prefs.defaultTwoPage ? "checked" : ""}>
+                <span class="md-slider"></span>
+              </label>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item">
+              ${renderSettingLabel("swap_vert", "Scroll Vertikal")}
+              <label class="md-switch">
+                <input type="checkbox" id="default-vertical-scroll-toggle" ${prefs.defaultVerticalScroll ? "checked" : ""}>
+                <span class="md-slider"></span>
+              </label>
             </div>
           </div>
-          <div class="setting-divider"></div>
-          <div class="setting-item">
-            ${renderSettingLabel("colors", "Custom Accent")}
-            <input type="color" id="custom-accent-input" class="setting-color-input" value="${customAccentColor}" aria-label="Pilih warna custom accent">
-          </div>
-        </div>
-      </div>
+        </section>
 
-      <div class="settings-section">
-        <h2 class="settings-section-title"><span class="material-symbols-outlined">menu_book</span> Viewer Default</h2>
-        <div class="settings-card">
-          <div class="setting-item">
-            ${renderSettingLabel("auto_stories", "Mode Dua Halaman")}
-            <label class="md-switch">
-              <input type="checkbox" id="default-two-page-toggle" ${prefs.defaultTwoPage ? "checked" : ""}>
-              <span class="md-slider"></span>
-            </label>
+        <section class="settings-section">
+          <div class="settings-section-heading">
+            <h2 class="settings-section-title"><span class="material-symbols-outlined">library_music</span> Audio & SoundFont</h2>
+            <p class="settings-section-caption">Kontrol kualitas instrumen dan strategi preload agar transisi tetap ringan.</p>
           </div>
-          <div class="setting-divider"></div>
-          <div class="setting-item">
-            ${renderSettingLabel("swap_vert", "Scroll Vertikal")}
-            <label class="md-switch">
-              <input type="checkbox" id="default-vertical-scroll-toggle" ${prefs.defaultVerticalScroll ? "checked" : ""}>
-              <span class="md-slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <h2 class="settings-section-title"><span class="material-symbols-outlined">music_note</span> Tampilan Chord</h2>
-        <div class="settings-card">
-          <div class="setting-item">
-            ${renderSettingLabel("text_format", "Tema Huruf Chord")}
-            <div class="chord-theme-palette ${chordUiPrefs.syncThemeWithAccent ? "is-disabled" : ""}">
-              ${chordThemePalette}
+          <div class="settings-card">
+            <div class="setting-item">
+              ${renderSettingLabel("piano", "Pilih SoundFont")}
+              <select id="soundfont-select" class="setting-select">
+                <option value="assets/soundfont/GeneralUser-GS.sf2" ${prefs.midiSoundfont === "assets/soundfont/GeneralUser-GS.sf2" ? "selected" : ""}>GeneralUser GS (30 MB, High Quality)</option>
+                <option value="assets/soundfont/TimGM6mb.sf2" ${prefs.midiSoundfont === "assets/soundfont/TimGM6mb.sf2" ? "selected" : ""}>TimGM6mb (6 MB, Compact)</option>
+              </select>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item">
+              ${renderSettingLabel("bolt", "Preload PDF & MIDI")}
+              <label class="md-switch">
+                <input type="checkbox" id="preload-enabled-toggle" ${prefs.preloadEnabled !== false ? "checked" : ""}>
+                <span class="md-slider"></span>
+              </label>
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item setting-item-slider">
+              <span id="preload-count-label" class="setting-label">
+                <span class="material-symbols-outlined">queue_music</span>
+                <span>Jumlah Preload (${prefs.preloadCount || 1} lagu sebelum & sesudah)</span>
+              </span>
+              <input
+                id="preload-count-range"
+                class="setting-range"
+                type="range"
+                min="1"
+                max="5"
+                step="1"
+                value="${prefs.preloadCount || 1}"
+                ${prefs.preloadEnabled === false ? "disabled" : ""}
+              >
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item setting-item-slider">
+              <span id="preload-cache-max-label" class="setting-label">
+                <span class="material-symbols-outlined">inventory_2</span>
+                <span>Maksimum Cache Preload (${prefs.preloadCacheMax || 12} lagu)</span>
+              </span>
+              <input
+                id="preload-cache-max-range"
+                class="setting-range"
+                type="range"
+                min="1"
+                max="50"
+                step="1"
+                value="${prefs.preloadCacheMax || 12}"
+                ${prefs.preloadEnabled === false ? "disabled" : ""}
+              >
+            </div>
+            <div class="setting-divider"></div>
+            <div class="setting-item">
+              ${renderSettingLabel("shuffle", "Preload saat Shuffle")}
+              <label class="md-switch">
+                <input type="checkbox" id="preload-shuffle-toggle" ${prefs.preloadShuffle !== false ? "checked" : ""} ${prefs.preloadEnabled === false ? "disabled" : ""}>
+                <span class="md-slider"></span>
+              </label>
             </div>
           </div>
-          <div class="setting-divider"></div>
-          <div class="setting-item">
-            ${renderSettingLabel("sync", "Samakan Huruf Chord ke Tema Utama")}
-            <label class="md-switch">
-              <input type="checkbox" id="chord-sync-theme-toggle" ${chordUiPrefs.syncThemeWithAccent ? "checked" : ""}>
-              <span class="md-slider"></span>
-            </label>
-          </div>
-          <div class="setting-divider"></div>
-          <div class="setting-item">
-            ${renderSettingLabel("format_color_fill", "Fill Chord")}
-            <select id="chord-fill-select" class="setting-select">
-              <option value="none" ${chordUiPrefs.fill === "none" ? "selected" : ""}>Tanpa Fill</option>
-              <option value="soft" ${chordUiPrefs.fill === "soft" ? "selected" : ""}>Soft Rounded</option>
-              <option value="solid" ${chordUiPrefs.fill === "solid" ? "selected" : ""}>Solid Rounded</option>
-            </select>
-          </div>
-          <div class="setting-divider"></div>
-          <div class="setting-item">
-            ${renderSettingLabel("colorize", "Warna Fill Chord")}
-            <div class="chord-fill-palette ${chordUiPrefs.syncFillWithAccent ? "is-disabled" : ""}">
-              ${chordFillPalette}
-            </div>
-          </div>
-          <div class="setting-divider"></div>
-          <div class="setting-item">
-            ${renderSettingLabel("tune", "Samakan Fill Chord ke Tema Utama")}
-            <label class="md-switch">
-              <input type="checkbox" id="chord-sync-fill-toggle" ${chordUiPrefs.syncFillWithAccent ? "checked" : ""}>
-              <span class="md-slider"></span>
-            </label>
-          </div>
-          <div class="setting-divider"></div>
-          <div class="setting-item setting-item-slider">
-            <span id="chord-opacity-label" class="setting-label">
-              <span class="material-symbols-outlined">opacity</span>
-              <span>Opacity Latar Chord (${chordUiPrefs.fillOpacityPercent}%)</span>
-            </span>
-            <input
-              id="chord-fill-opacity"
-              class="setting-range"
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              value="${chordUiPrefs.fillOpacityPercent}"
-            >
-          </div>
-          <div class="setting-divider"></div>
-          <div class="setting-item setting-item-slider">
-            <span id="chord-font-override-label" class="setting-label">
-              <span class="material-symbols-outlined">format_size</span>
-              <span>Ukuran Font Chord (${chordUiPrefs.fontOverridePercent}%)</span>
-            </span>
-            <input
-              id="chord-font-override"
-              class="setting-range"
-              type="range"
-              min="80"
-              max="180"
-              step="5"
-              value="${chordUiPrefs.fontOverridePercent}"
-            >
-          </div>
-          <div class="setting-divider"></div>
-          <div class="setting-item setting-item-slider">
-            <span id="chord-fill-padding-label" class="setting-label">
-              <span class="material-symbols-outlined">padding</span>
-              <span>Padding Chord (${chordUiPrefs.fillPaddingPercent}%)</span>
-            </span>
-            <input
-              id="chord-fill-padding"
-              class="setting-range"
-              type="range"
-              min="0"
-              max="400"
-              step="10"
-              value="${chordUiPrefs.fillPaddingPercent}"
-            >
-          </div>
-        </div>
-      </div>
+        </section>
 
-      <div class="settings-section">
-        <h2 class="settings-section-title"><span class="material-symbols-outlined">help</span> Bantuan</h2>
-        <div class="settings-card help-banner-card" id="report-bug-btn" role="button" aria-label="Buka halaman report bug" tabindex="0">
-          <div class="help-banner-content">
-            <span class="material-symbols-outlined help-banner-icon">support_agent</span>
-            <div class="help-banner-text">
-              <h3>Hubungi Developer</h3>
-              <p>Laporkan bug, error, atau beri saran</p>
+        <section class="settings-section settings-section-span">
+          <div class="settings-section-heading">
+            <h2 class="settings-section-title"><span class="material-symbols-outlined">info</span> Info & Bantuan</h2>
+            <p class="settings-section-caption">Akses ringkas ke latar belakang proyek dan jalur laporan bug.</p>
+          </div>
+          <div class="settings-link-grid">
+            <div class="settings-card help-banner-card" id="about-project-btn" role="button" aria-label="Buka halaman tentang project" tabindex="0">
+              <div class="help-banner-content">
+                <span class="material-symbols-outlined help-banner-icon">info</span>
+                <div class="help-banner-text">
+                  <h3>Tentang Project Ini</h3>
+                  <p>Latar belakang, informasi, dan tujuan pengembangan aplikasi.</p>
+                </div>
+              </div>
+              <span class="material-symbols-outlined help-banner-arrow">chevron_right</span>
+            </div>
+            <div class="settings-card help-banner-card" id="report-bug-btn" role="button" aria-label="Buka halaman report bug" tabindex="0">
+              <div class="help-banner-content">
+                <span class="material-symbols-outlined help-banner-icon">support_agent</span>
+                <div class="help-banner-text">
+                  <h3>Hubungi Developer</h3>
+                  <p>Laporkan bug, error, atau kirim saran untuk iterasi berikutnya.</p>
+                </div>
+              </div>
+              <span class="material-symbols-outlined help-banner-arrow">chevron_right</span>
             </div>
           </div>
-          <span class="material-symbols-outlined help-banner-arrow">chevron_right</span>
-        </div>
+        </section>
       </div>
     </div>`;
 }
@@ -363,7 +613,7 @@ function renderAboutProjectPage() {
           <span class="material-symbols-outlined report-hero-icon">info</span>
         </div>
         <h3>Latar Belakang & Informasi</h3>
-        <p>Tujuan dan perjalanan pengembangan project Kidung Rohani</p>
+        <p>Tujuan, perjalanan pengembangan, kontributor utama, dan kredit dependency yang menopang aplikasi Kidung Rohani.</p>
       </div>
 
       <div class="settings-card about-project-card" style="padding: 1.5rem; display: flex; flex-direction: column; text-align: left;">
@@ -374,6 +624,58 @@ function renderAboutProjectPage() {
           <p style="margin-bottom: 1rem;">Project ini dimulai dari tahun 2025, saya terpikir untuk membuat aplikasi ini dikarenakan saya merasa sebagai seorang pemusik pemula, saya masih sering kesulitan mencari chord, apalagi saat ada perpindahan nada dasarnya. Sehingga memotivasi saya untuk membuat suatu alat yang bisa memudahkan saya dan rekan - rekan sekalian dalam belajar musik di Kidung Rohani maupun dalam pelayanan...</p>
           <p style="margin-bottom: 1rem;">Project ini sempat berhenti beberapa bulan karena ada kesibukan pribadi hingga baru dapat diselesaikan di bulan April 2026... Puji Tuhan saya dapat melanjutkan project ini hingga sampai saat tahap ini.</p>
           <p style="margin-bottom: 1rem;">Akhir kata.. kiranya semua yang telah dilakukan di project ini hanya untuk kemuliaan nama Tuhan saja... terima kasih, Tuhan Yesus Memberkati kita semua.. Amin...</p>
+        </div>
+      </div>
+
+      <div class="report-section">
+        <h3 class="section-badge"><span class="material-symbols-outlined">group</span> Kontributor & Dedikasi</h3>
+        <p class="report-section-caption">Bagian ini merangkum pihak-pihak utama yang terlibat langsung dalam pengembangan dan input konten project ini.</p>
+        <div class="about-contributor-grid">
+          <article class="about-contributor-card about-contributor-card--primary">
+            <div class="about-contributor-icon">
+              <span class="material-symbols-outlined">code</span>
+            </div>
+            <div class="about-contributor-copy">
+              <h4>Developer Utama</h4>
+              <p class="about-contributor-name">Gilbert Then</p>
+              <p>Gereja Yesus Sejati Pontianak</p>
+            </div>
+          </article>
+          <article class="about-contributor-card">
+            <div class="about-contributor-icon">
+              <span class="material-symbols-outlined">music_note</span>
+            </div>
+            <div class="about-contributor-copy">
+              <h4>Contributor Input Chord</h4>
+              <p class="about-contributor-name">Clement JJ</p>
+              <p>Gereja Yesus Sejati Pontianak</p>
+            </div>
+          </article>
+          <article class="about-contributor-card about-contributor-card--tribute">
+            <div class="about-contributor-icon">
+              <span class="material-symbols-outlined">auto_awesome</span>
+            </div>
+            <div class="about-contributor-copy">
+              <h4>Dedikasi Utama</h4>
+              <p class="about-contributor-name">Tuhan Yesus Kristus</p>
+              <p>Segala kemuliaan dan izin penyelesaian project dikembalikan kepada-Nya.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <div class="report-section">
+        <h3 class="section-badge"><span class="material-symbols-outlined">handshake</span> Credits & Dependencies</h3>
+        <p class="report-section-caption">Kredit berikut merangkum komponen runtime, engine audio, font, ikon, dan tooling repository yang dipakai aplikasi ini.</p>
+        <div class="dependency-section-summary about-dependency-summary">
+          <div>
+            <div class="settings-subcard-title">Stack aplikasi & kredit aset</div>
+            <p class="settings-subcard-text">Seluruh dependency utama ditampilkan khusus di halaman ini agar informasi proyek tetap terpusat.</p>
+          </div>
+          <span class="dependency-count-badge">${APP_DEPENDENCY_CREDITS.length} entri</span>
+        </div>
+        <div class="dependency-credit-grid">
+          ${renderDependencyCreditCards()}
         </div>
       </div>
     </div>

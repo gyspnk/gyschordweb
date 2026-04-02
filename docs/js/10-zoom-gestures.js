@@ -299,6 +299,19 @@ function handleGlobalKeydown(event) {
     return;
   }
 
+  // Transpose shortcuts: [ = down, ] = up
+  if (event.key === "[" || event.key === "]") {
+    event.preventDefault();
+    if (typeof onTranspose === "function") {
+      onTranspose(event.key === "]" ? 1 : -1);
+    }
+    return;
+  }
+
+  // Don't hijack arrow keys when a family-chord dropdown is open
+  const openDropdown = document.querySelector(".family-chord-dropdown.is-open");
+  if (openDropdown) return;
+
   switch (event.key) {
     case "ArrowLeft":
       event.preventDefault();
