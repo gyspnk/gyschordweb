@@ -198,6 +198,7 @@ const MIDI_END_THRESHOLD_S = 0.8; // Threshold in seconds for detecting song end
 const MIDI_TRANSPOSE_DEBOUNCE_MS = 80; // Debounce rapid transpose MIDI updates
 const MIDI_PRELOAD_NEXT_S = 3; // Seconds before end to preload next song
 const MIDI_SOUNDFONT_URL = 'https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus';
+const MIDI_MICRO_RAMP_S = 0.015; // 15ms micro-ramp for click-free instant volume changes
 
 // --- Note-Aligned Chord Editor Constants ---
 const NOTE_CHORD_Y_OFFSET_PCT = 2.5; // Chord vertical offset above note (% of page height)
@@ -349,10 +350,14 @@ async function fadeMidiVolume(targetVol, durationMs) {
 function resetMidiState() {
   MidiTimeAuthority.reset();
   window._midiSavedTime = null;
-  window._midiKnownDuration = 0;
+  // NOTE: _midiKnownDuration is intentionally NOT reset here.
+  // It is preserved during song-to-song transitions so the mini player
+  // doesn't flicker (disappear/reappear). It gets overwritten once the
+  // new song's MIDI loads. Only set to 0 when explicitly closing the viewer.
   _midiOriginalSeq = null;
   _midiCurrentTransposedSeq = null;
-  window.isMidiSwitching = false;
+  // NOTE: isMidiSwitching is intentionally NOT reset here.
+  // Callers manage this flag to avoid race conditions with syncMiniPlayerUI.
   window.isMidiFading = false;
 
   // Clear midi-available so expanded-layout won't show empty player

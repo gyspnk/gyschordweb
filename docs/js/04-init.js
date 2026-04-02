@@ -1,27 +1,36 @@
 // --- 3. Init ---
 async function init() {
   try {
-    // Setup Tone.js audio chain: Volume -> Compressor -> Limiter -> Destination
-    // This prevents clicking/popping and manages dynamics for MIDI polyphony
+    // Setup Tone.js audio chain: Volume -> Compressor -> Limiter -> speakers
+    // Intercepts the Destination's internal Volume node so ALL audio
+    // (including SoundFontPlayer output) passes through dynamics processing.
     if (window.Tone) {
       if (Tone.getDestination) {
         Tone.getDestination().volume.value = -6; // Master volume: -6 dB
         try {
-          // Compressor to tame transients (reduces clicks from note onset)
+          // Build processing chain first (no audio impact yet)
           const compressor = new Tone.Compressor({
             threshold: -24,
             ratio: 4,
             attack: 0.003,
-            release: 0.1
+            release: 0.25  // Longer release for smoother dynamics
           });
-          // Limiter at -1 dB to prevent clipping on polyphonic passages
           const limiter = new Tone.Limiter(-1);
-          Tone.getDestination().chain(compressor, limiter);
+          compressor.connect(limiter);
+
+          // Intercept: disconnect Destination.input (Volume) from native output,
+          // then reconnect through compressor -> limiter -> native output.
+          const dest = Tone.getDestination();
+          const rawDest = (Tone.context.rawContext || Tone.context).destination;
+          dest.input.disconnect();
+          dest.input.connect(compressor);
+          limiter.connect(rawDest);
         } catch(e) {
-          // Fallback: just limiter
+          // If insertion fails, reconnect Volume directly so audio still works
           try {
-            const limiter = new Tone.Limiter(-1);
-            Tone.getDestination().chain(limiter);
+            const dest = Tone.getDestination();
+            const rawDest = (Tone.context.rawContext || Tone.context).destination;
+            dest.input.connect(rawDest);
           } catch(e2) {}
         }
       } else if (Tone.Master) {

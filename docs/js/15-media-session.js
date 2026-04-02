@@ -10,6 +10,75 @@
   let _wakeLockSentinel = null;
   let _lastKnownTitle = '';
   let _mediaSessionActive = false;
+  let _silentAudio = null; // HTMLAudioElement used to activate Media Session on mobile
+
+  // ─── Silent audio element ────────────────────────────────────────────────────
+  // Mobile browsers (Android Chrome, iOS Safari) require an active HTMLMediaElement
+  // for Media Session notifications (lock screen / notification shade controls).
+  // Tone.js uses the Web Audio API which doesn't trigger the browser's media UI.
+  // We create a tiny silent WAV that loops while MIDI is playing.
+
+  function _createSilentAudio() {
+    if (_silentAudio) return _silentAudio;
+    // Minimal valid WAV: 1 channel, 8000 Hz, 8-bit, 1 second of silence
+    const sampleRate = 8000;
+    const numSamples = sampleRate; // 1 second
+    const headerSize = 44;
+    const dataSize = numSamples;
+    const buffer = new ArrayBuffer(headerSize + dataSize);
+    const view = new DataView(buffer);
+
+    // RIFF header
+    _writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    _writeString(view, 8, 'WAVE');
+    // fmt  sub-chunk
+    _writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);       // sub-chunk size
+    view.setUint16(20, 1, true);        // PCM
+    view.setUint16(22, 1, true);        // mono
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate, true); // byte rate
+    view.setUint16(32, 1, true);        // block align
+    view.setUint16(34, 8, true);        // bits per sample
+    // data sub-chunk
+    _writeString(view, 36, 'data');
+    view.setUint32(40, dataSize, true);
+    // samples: 128 = silence for 8-bit unsigned PCM
+    const samples = new Uint8Array(buffer, headerSize, dataSize);
+    samples.fill(128);
+
+    const blob = new Blob([buffer], { type: 'audio/wav' });
+    const url = URL.createObjectURL(blob);
+
+    _silentAudio = new Audio(url);
+    _silentAudio.loop = true;
+    _silentAudio.volume = 0.01; // near-silent but non-zero so browsers don't skip it
+    // Prevent the silent audio from interfering with audio focus unnecessarily
+    _silentAudio.setAttribute('playsinline', '');
+    return _silentAudio;
+  }
+
+  function _writeString(view, offset, str) {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i));
+    }
+  }
+
+  /** Start the silent audio to activate Media Session on mobile. */
+  function _playSilentAudio() {
+    const audio = _createSilentAudio();
+    if (audio.paused) {
+      audio.play().catch(() => {}); // may fail without user gesture, that's OK
+    }
+  }
+
+  /** Pause the silent audio when MIDI stops. */
+  function _pauseSilentAudio() {
+    if (_silentAudio && !_silentAudio.paused) {
+      _silentAudio.pause();
+    }
+  }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -149,6 +218,12 @@
     _updateMetadata();
     _updatePlaybackState();
     _updatePositionState();
+    // Keep silent audio in sync with MIDI playback state
+    if (_isPlaying()) {
+      _playSilentAudio();
+    } else {
+      _pauseSilentAudio();
+    }
   }
 
   // ─── Action handlers ──────────────────────────────────────────────────────────
@@ -161,6 +236,7 @@
       if (!_isPlaying() && typeof window.toggleMidiPlayback === 'function') {
         await window.toggleMidiPlayback();
       }
+      _playSilentAudio();
       _updatePlaybackState('playing');
       await _requestWakeLock();
     });
@@ -170,6 +246,7 @@
       if (_isPlaying() && typeof window.toggleMidiPlayback === 'function') {
         await window.toggleMidiPlayback();
       }
+      _pauseSilentAudio();
       _updatePlaybackState('paused');
       _releaseWakeLock();
     });
@@ -245,6 +322,12 @@
     window.toggleMidiPlayback = async function (...args) {
       await orig.apply(this, args);
       const playing = _isPlaying();
+      // Sync silent audio element to activate/deactivate browser media controls
+      if (playing) {
+        _playSilentAudio();
+      } else {
+        _pauseSilentAudio();
+      }
       _updatePlaybackState(playing ? 'playing' : 'paused');
       _updatePositionState();
       if (playing) {

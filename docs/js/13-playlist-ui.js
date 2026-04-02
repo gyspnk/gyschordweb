@@ -376,8 +376,9 @@ function syncMiniPlayerUI() {
   const inViewer = document.body.classList.contains('viewer-active');
   const hasSong = document.getElementById('pdf-viewer-title')?.textContent;
   
-  // Also show if we are not in viewer but playing
+  // Also show if we are not in viewer but playing, loading, or a song was recently loaded
   const isPlaying = typeof MidiTimeAuthority !== 'undefined' ? MidiTimeAuthority._playing : false;
+  const isSongLoaded = !!hasSong && (typeof _midiSfPlayerLoading !== 'undefined' ? _midiSfPlayerLoading : false);
   
   const inSettings = (document.getElementById('pengaturan-btn')?.classList.contains('selected') || 
     document.querySelector('.report-page') !== null ||
@@ -386,7 +387,7 @@ function syncMiniPlayerUI() {
   if (inViewer || inSettings) {
     miniPlayer.classList.add('is-hidden');
     if (appContent) appContent.classList.remove('has-mini-player');
-  } else if (dur > 0 || isPlaying || window.isMidiSwitching) {
+  } else if (dur > 0 || isPlaying || window.isMidiSwitching || isSongLoaded) {
     miniPlayer.classList.remove('is-hidden');
     if (appContent) appContent.classList.add('has-mini-player');
     miniTitle.textContent = document.getElementById('pdf-viewer-title')?.textContent || 'Lagu';

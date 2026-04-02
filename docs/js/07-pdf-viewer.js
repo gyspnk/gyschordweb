@@ -28,15 +28,16 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   };
   const loadingTask = _canReuseDoc ? null : pdfjsLib.getDocument(pdfOptions);
 
-  // Cut MIDI audio immediately on manual navigation — before the animation wait —
-  // to prevent the old song from sustaining audibly during the transition.
+  // Begin fading MIDI audio on manual navigation — before the animation wait —
+  // so reverb tails decay naturally. The actual stop happens later in the main path.
   if (!_earlyIsSameSong && window._manualNavigation && _midiSfPlayer) {
     const volNode = getToneVolNode();
-    if (volNode && volNode.volume) {
-      volNode.volume.cancelScheduledValues(window.Tone.now());
-      volNode.volume.value = MIDI_SILENT_VOLUME;
+    if (volNode && volNode.volume && window.Tone) {
+      const t = window.Tone.now();
+      volNode.volume.cancelScheduledValues(t);
+      volNode.volume.setValueAtTime(volNode.volume.value, t);
+      volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_CROSSFADE_OUT_MS / 1000);
     }
-    try { _midiSfPlayer.stop(); } catch (e) {}
   }
 
   if (!_canReuseDoc) {
@@ -128,16 +129,21 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         window._verifyPlaylistModeForCurrentSong();
       }
 
-      // Stop playback: instant for manual prev/next, fade for auto-next
+      // Stop playback: quick crossfade for manual prev/next, longer fade for auto-next.
+      // Using crossfade instead of instant silence allows reverb tails to decay.
       if (_midiSfPlayer && _midiSfPlayer.isPlaying()) {
         if (window._manualNavigation) {
-          // Instant stop — no fade, just kill the volume and stop
+          // Quick crossfade — lets reverb tails decay naturally
           const volNode = getToneVolNode();
-          if (volNode && volNode.volume) {
-            volNode.volume.cancelScheduledValues(window.Tone.now());
-            volNode.volume.value = MIDI_SILENT_VOLUME;
+          if (volNode && volNode.volume && window.Tone) {
+            const t = window.Tone.now();
+            volNode.volume.cancelScheduledValues(t);
+            volNode.volume.setValueAtTime(volNode.volume.value, t);
+            volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_CROSSFADE_OUT_MS / 1000);
           }
-          try { _midiSfPlayer.stop(); } catch (e) {}
+          // Delay stop so the crossfade ramp can complete audibly
+          await new Promise(r => setTimeout(r, MIDI_CROSSFADE_OUT_MS));
+          try { if (_midiSfPlayer && _midiSfPlayer.isPlaying()) _midiSfPlayer.stop(); } catch (e) {}
         } else {
           await fadeMidiVolume(MIDI_SILENT_VOLUME, MIDI_FADE_OUT_MS);
           try { _midiSfPlayer.stop(); } catch (e) {}
@@ -145,7 +151,11 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       }
       window._manualNavigation = false;
 
-      // Reset MIDI state
+      // Set isMidiSwitching BEFORE resetMidiState so the mini player never
+      // sees a gap where both duration=0 and isMidiSwitching=false.
+      window.isMidiSwitching = true;
+
+      // Reset MIDI state (but preserve isMidiSwitching)
       resetMidiState();
       window.isMidiSwitching = true;
       syncSeekbarUI(0, 0);

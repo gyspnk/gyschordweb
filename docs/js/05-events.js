@@ -378,13 +378,19 @@ function setupEventListeners() {
         MidiTimeAuthority.setPlaying(false);
         MidiTimeAuthority.setTime(0, dur);
         if (_midiSfPlayer && _midiSfPlayer.isPlaying()) {
-          // Silence volume before stop to prevent click
+          // Micro-ramp to silent before stop — prevents audible click
           const volNode = getToneVolNode();
-          if (volNode && volNode.volume) {
-            volNode.volume.cancelScheduledValues(window.Tone.now());
-            volNode.volume.value = MIDI_SILENT_VOLUME;
+          if (volNode && volNode.volume && window.Tone) {
+            const t = window.Tone.now();
+            volNode.volume.cancelScheduledValues(t);
+            volNode.volume.setValueAtTime(volNode.volume.value, t);
+            volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_MICRO_RAMP_S);
           }
-          try { _midiSfPlayer.stop(); } catch (e) {}
+          // Delay stop so the micro-ramp reaches silence first
+          const _endRef = _midiSfPlayer;
+          setTimeout(() => {
+            try { if (_endRef && _endRef.isPlaying()) _endRef.stop(); } catch (e) {}
+          }, MIDI_MICRO_RAMP_S * 1000 + 5);
         }
         syncSeekbarUI(0, dur);
         customPlayIcon.textContent = "play_arrow";
@@ -398,20 +404,26 @@ function setupEventListeners() {
         if (endMode === "one") {
           try {
             const volNode = getToneVolNode();
-            if (volNode && volNode.volume) {
-              volNode.volume.cancelScheduledValues(window.Tone.now());
-              volNode.volume.value = MIDI_SILENT_VOLUME;
+            if (volNode && volNode.volume && window.Tone) {
+              const t = window.Tone.now();
+              volNode.volume.cancelScheduledValues(t);
+              volNode.volume.setValueAtTime(volNode.volume.value, t);
+              volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_MICRO_RAMP_S);
             }
-            // Guard: stop any in-progress playback before restarting
-            if (_midiSfPlayer.isPlaying()) {
-              try { _midiSfPlayer.stop(); } catch (e2) {}
-            }
-            _midiSfPlayer.start(_midiCurrentTransposedSeq);
-            MidiTimeAuthority.setPlaying(true);
-            MidiTimeAuthority.setTime(0, dur);
-            fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
-            customPlayIcon.textContent = "pause";
-            document.getElementById("custom-midi-player").classList.add("playing");
+            // Delay stop+restart so the micro-ramp reaches silence first
+            const _loopRef = _midiSfPlayer;
+            const _loopSeq = _midiCurrentTransposedSeq;
+            setTimeout(() => {
+              try {
+                if (_loopRef && _loopRef.isPlaying()) _loopRef.stop();
+                _loopRef.start(_loopSeq);
+                MidiTimeAuthority.setPlaying(true);
+                MidiTimeAuthority.setTime(0, dur);
+                fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_FADE_IN_MS);
+                customPlayIcon.textContent = "pause";
+                document.getElementById("custom-midi-player").classList.add("playing");
+              } catch (e2) {}
+            }, MIDI_MICRO_RAMP_S * 1000 + 5);
           } catch (e) {}
           return;
         }
@@ -464,33 +476,40 @@ function setupEventListeners() {
           const wasPlaying = _midiSfPlayer.isPlaying();
           window.isMidiSwitching = true;
           const volNode = getToneVolNode();
-          // Set volume silent before stop+start to prevent click
-          if (volNode && volNode.volume) {
-            volNode.volume.cancelScheduledValues(window.Tone.now());
-            volNode.volume.value = MIDI_SILENT_VOLUME;
+          // Micro-ramp to silent before stop+start — prevents audible click
+          if (volNode && volNode.volume && window.Tone) {
+            const t = window.Tone.now();
+            volNode.volume.cancelScheduledValues(t);
+            volNode.volume.setValueAtTime(volNode.volume.value, t);
+            volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_MICRO_RAMP_S);
           }
 
-          // SoundFontPlayer: stop and restart from new offset
-          if (_midiSfPlayer.isPlaying()) {
-            try { _midiSfPlayer.stop(); } catch (err) {}
-          }
-
-          if (wasPlaying) {
-            try {
-              _midiSfPlayer.start(_midiCurrentTransposedSeq, undefined, val);
-            } catch (err) {}
-            MidiTimeAuthority.setTime(val, dur);
-            MidiTimeAuthority.setPlaying(true);
-            fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_CROSSFADE_IN_MS);
-          } else {
-            MidiTimeAuthority.setTime(val, dur);
-            // Restore volume for when playback resumes
-            if (volNode && volNode.volume) {
-              volNode.volume.value = MIDI_TARGET_VOLUME;
+          // Delay stop+restart so the micro-ramp reaches silence first
+          const _seekPlayer = _midiSfPlayer;
+          const _seekSeq = _midiCurrentTransposedSeq;
+          setTimeout(() => {
+            // SoundFontPlayer: stop and restart from new offset
+            if (_seekPlayer.isPlaying()) {
+              try { _seekPlayer.stop(); } catch (err) {}
             }
-          }
 
-          window.isMidiSwitching = false;
+            if (wasPlaying) {
+              try {
+                _seekPlayer.start(_seekSeq, undefined, val);
+              } catch (err) {}
+              MidiTimeAuthority.setTime(val, dur);
+              MidiTimeAuthority.setPlaying(true);
+              fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_CROSSFADE_IN_MS);
+            } else {
+              MidiTimeAuthority.setTime(val, dur);
+              // Restore volume for when playback resumes
+              if (volNode && volNode.volume) {
+                volNode.volume.value = MIDI_TARGET_VOLUME;
+              }
+            }
+
+            window.isMidiSwitching = false;
+          }, MIDI_MICRO_RAMP_S * 1000 + 5);
         }
         syncSeekbarUI(val, dur);
         window._midiLastSeekValue = val;
