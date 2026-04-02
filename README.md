@@ -52,21 +52,49 @@ Codebase ini terus mengalami optimasi pembersihan performa dan refaktorisasi mod
 
 ```text
 docs/
-  ├── index.html              # Frame Skeleton HTML & DOM mark-up utama
-  ├── script.js               # Sentral Skrip Engine Vanilla (State, Logika PDF, Chord)
-  ├── style.css               # Aggregator CSS Masterplate (berbasis @import)
-  ├── css/                    # Modul-Modul File Cascading terpisah
-  │   ├── 01-fonts.css        # Tipografi UI & Google Symbols
-  │   ├── 02-theme.css        # Palet Warna Aksentuasi UI & Dark Mode
-  │   ├── 03-layout.css       # Grid Flexbox Master Utama
-  │   ├── 04-viewer.css       # Skilus PDF Viewer Frame & Gestures
-  │   ├── 05-components.css   # Kumpulan Component Buttons, Slider MD3
-  │   ├── ...dsb
+  ├── index.html                    # Frame Skeleton HTML & DOM mark-up utama
+  ├── style.css                     # Aggregator CSS Masterplate (berbasis @import)
+  ├── sw.js                         # Service Worker (PWA caching)
+  ├── assets-list.json              # Database Manifest Mapping PDF (daftar lagu)
+  ├── chord-assets-list.json        # Database Manifest Mapping Chord TXT
+  ├── generate_assets_list.py       # Python Engine Automasi Data-Scraping Indeks JSON
   │
-  ├── assets/                 # Folder Penyimpanan Sentral seluruh PDF dan Backup Chord (txt)
-  ├── assets-list.json        # Database Manifest Mapping PDF yang terbaca List KR 
-  └── generate_assets_list.py # Python Engine Automasi Data-Scraping Indeks JSON
+  ├── css/                          # Modul-Modul File Cascading terpisah
+  │   ├── 01-fonts.css              # Tipografi UI & Google Symbols
+  │   ├── 02-theme.css              # Palet Warna Aksentuasi UI & Dark Mode
+  │   ├── 03-layout.css             # Grid Flexbox Master Utama
+  │   ├── 04-viewer.css             # Skilus PDF Viewer Frame & Gestures
+  │   ├── 05-components.css         # Kumpulan Component Buttons, Slider MD3
+  │   ├── 06-help.css               # Panel Bantuan / Help Overlay
+  │   ├── 07-responsive.css         # Media Queries & Breakpoint Responsif
+  │   ├── 08-animations.css         # Animasi & Transisi UI
+  │   ├── 09-scaling.css            # Skala Teks Komputasi Responsif
+  │   └── 10-toast.css              # Notifikasi Toast
+  │
+  ├── js/                           # Modul-Modul JavaScript terpisah (dimuat berurutan)
+  │   ├── 01-config.js              # Konstanta, MidiTimeAuthority, konfigurasi global
+  │   ├── 02-dom.js                 # Referensi elemen DOM & variabel state awal
+  │   ├── 03-state.js               # Manajemen state aplikasi
+  │   ├── 04-init.js                # Inisialisasi aplikasi & Service Worker
+  │   ├── 05-events.js              # Event listeners (play/pause, seekbar RAF)
+  │   ├── 06-navigation.js          # Navigasi lagu, keyboard shortcut
+  │   ├── 07-pdf-viewer.js          # PDF.js viewer, MIDI loader, transpose
+  │   ├── 08-chord-logic.js         # Rendering chord overlay & transpose UI
+  │   ├── 09-ui-helpers.js          # Toast, tema, warna aksen, helper UI
+  │   ├── 10-zoom-gestures.js       # Pinch-to-zoom & panning gesture
+  │   ├── 11-handlers.js            # Handler event chord UI (ukuran, warna, dsb.)
+  │   ├── 12-playlist.js            # Logika playlist & shuffle
+  │   ├── 13-playlist-ui.js         # UI panel playlist
+  │   └── 14-note-chord-editor.js   # Chord Editor Panel (mode tersembunyi)
+  │
+  └── assets/                       # Folder Penyimpanan Sentral seluruh aset
+      ├── pdf/                      # File Partitur PDF
+      ├── chord/                    # File Chord TXT (format JSON, per lagu)
+      ├── midi/                     # File MIDI per lagu
+      ├── chord-grid/               # Gambar Grid Chord (referensi fingering)
+      └── fonts/                    # Font lokal (fallback)
 ```
+
 
 ---
 

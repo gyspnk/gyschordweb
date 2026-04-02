@@ -189,16 +189,24 @@ body.dark-theme .zoom-toast {
   }
 }
 
-body:not(.is-expanded-layout) .landscape-controls {
+body:not(.is-expanded-layout):not(.measure-layout) .landscape-controls {
   gap: 0.5rem;
 }
 
-body:not(.is-expanded-layout) .transpose-toggle-btn {
+body:not(.is-expanded-layout):not(.measure-layout) .transpose-toggle-btn {
   display: flex;
 }
 
+/* In portrait, the footer transpose controls show inline — no toggle button needed
+   unless the screen is narrow enough that we collapse them (handled at ≤640px) */
+@media (orientation: portrait) {
+  body:not(.is-expanded-layout):not(.measure-layout) .transpose-toggle-btn {
+    display: none;
+  }
+}
+
 /* Make header transpose collapsible */
-body:not(.is-expanded-layout) .transpose-controls-header {
+body:not(.is-expanded-layout):not(.measure-layout) .transpose-controls-header {
   position: absolute;
   right: 0;
   top: calc(100% + 0.4rem);
@@ -211,11 +219,11 @@ body:not(.is-expanded-layout) .transpose-controls-header {
   transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
   box-shadow: var(--shadow-2);
   backdrop-filter: blur(4px);
-  z-index: 25;
+  z-index: 950;
 }
 
 /* Because the landscape-controls are flex, the transpose-collapse wrapper must be position relative */
-body:not(.is-expanded-layout) .transpose-collapse.is-open .transpose-controls-header {
+body:not(.is-expanded-layout):not(.measure-layout) .transpose-collapse.is-open .transpose-controls-header {
   opacity: 1;
   visibility: visible;
   transform: translateY(0) scale(1);
@@ -225,6 +233,13 @@ body:not(.is-expanded-layout) .transpose-collapse.is-open .transpose-controls-he
 body.is-expanded-layout .transpose-controls-header,
 body.measure-layout .transpose-controls-header {
   display: flex;
+  position: static;
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: auto;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 body.is-expanded-layout .transpose-controls-footer,
@@ -238,7 +253,7 @@ body.measure-layout .transpose-controls-footer {
     grid-template-columns: auto 1fr auto;
   }
 
-  .transpose-toggle-btn {
+  body:not(.measure-layout) .transpose-toggle-btn {
     display: flex;
   }
 
@@ -256,7 +271,7 @@ body.measure-layout .transpose-controls-footer {
     transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
     box-shadow: var(--shadow-2);
     backdrop-filter: blur(4px);
-    z-index: 25;
+    z-index: 950;
   }
 
   .transpose-collapse.is-open .transpose-controls-footer {
@@ -300,3 +315,77 @@ body.measure-layout .transpose-controls-footer {
     padding: 0 0.2rem;
   }
 }
+
+/* --- Update Banner --- */
+#update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+  transform: translateY(-100%);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease;
+  pointer-events: none;
+}
+#update-banner.is-visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.update-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-size: 13px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.update-banner-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.update-banner-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.update-banner-text strong {
+  font-size: 14px;
+}
+.update-banner-text span {
+  font-size: 12px;
+  opacity: 0.85;
+}
+.update-banner-action {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  border: 2px solid var(--md-sys-color-on-primary);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--md-sys-color-on-primary);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.update-banner-action:hover {
+  background: var(--md-sys-color-on-primary);
+  color: var(--md-sys-color-primary);
+}
+.update-banner-dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--md-sys-color-on-primary);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.update-banner-dismiss:hover { opacity: 1; }

@@ -198,7 +198,7 @@ function renderSettings() {
           <div class="setting-item">
             ${renderSettingLabel("dark_mode", "Tema Gelap")}
             <label class="md-switch">
-              <input type="checkbox" id="dark-theme-toggle" ${document.body.classList.contains("dark-theme") ? "checked" : ""}>
+              <input type="checkbox" id="dark-theme-toggle" ${document.body.classList.contains("dark-theme") || (!document.body.classList.contains("light-theme-forced") && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "checked" : ""}>
               <span class="md-slider"></span>
             </label>
           </div>
@@ -311,18 +311,21 @@ function renderSettings() {
               value="${chordUiPrefs.fontOverridePercent}"
             >
           </div>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <h2 class="settings-section-title"><span class="material-symbols-outlined">piano</span> MIDI & Audio</h2>
-        <div class="settings-card">
-          <div class="setting-item">
-            ${renderSettingLabel("graphic_eq", "Soundfont")}
-            <select id="soundfont-select" class="setting-select">
-              <option value="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus" ${prefs.midiSoundfont === "https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus" ? "selected" : ""}>SGM Plus (Default)</option>
-              <option value="https://storage.googleapis.com/magentadata/js/soundfonts/salamander" ${prefs.midiSoundfont === "https://storage.googleapis.com/magentadata/js/soundfonts/salamander" ? "selected" : ""}>Salamander Piano</option>
-            </select>
+          <div class="setting-divider"></div>
+          <div class="setting-item setting-item-slider">
+            <span id="chord-fill-padding-label" class="setting-label">
+              <span class="material-symbols-outlined">padding</span>
+              <span>Padding Chord (${chordUiPrefs.fillPaddingPercent}%)</span>
+            </span>
+            <input
+              id="chord-fill-padding"
+              class="setting-range"
+              type="range"
+              min="0"
+              max="400"
+              step="10"
+              value="${chordUiPrefs.fillPaddingPercent}"
+            >
           </div>
         </div>
       </div>

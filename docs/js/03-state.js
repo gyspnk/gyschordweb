@@ -23,6 +23,7 @@ let chordUiPrefs = {
   fillColor: "blue",
   fontOverridePercent: 100,
   fillOpacityPercent: 70,
+  fillPaddingPercent: 100,
   syncThemeWithAccent: false,
   syncFillWithAccent: false
 };
@@ -62,3 +63,7 @@ let lastViewerTapPoint = null;
 let lastIndicatorTapAt = 0;
 let lastIndicatorTapEl = null;
 const chordDissolveTimers = new WeakMap();
+
+// --- Note-Aligned Chord Editor State ---
+let noteChordConfig = null; // { version: 2, type: "note-aligned", pages: {} }
+let pageNotesCache = {}; // Map pageNum -> { notes: [...], pageWidth, pageHeight }

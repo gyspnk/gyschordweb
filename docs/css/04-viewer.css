@@ -24,9 +24,47 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
     gap: 0.5rem; overflow: hidden;
     transition: left 0.2s, right 0.2s;
 }
+/* Expanded layout: landscape only — grid centers title with equal flanking columns */
+@media (orientation: landscape) {
+  body.is-expanded-layout .pdf-viewer-header,
+  body.measure-layout .pdf-viewer-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+  }
+  body.is-expanded-layout .song-navigation,
+  body.measure-layout .song-navigation {
+    position: static;
+    min-width: 0;
+    overflow: hidden;
+    transform: none;
+    left: auto;
+    right: auto;
+  }
+  body.is-expanded-layout .header-left,
+  body.measure-layout .header-left {
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  body.is-expanded-layout .landscape-controls,
+  body.measure-layout .landscape-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}
+/* Disable all transitions during layout measurement for accurate readings */
+body.measure-layout .pdf-viewer-header *,
+body.measure-layout .pdf-viewer-footer * {
+  transition: none !important;
+}
 .song-title-wrapper {
     display: flex; flex-direction: column; align-items: center; text-align: center;
-    min-width: 0;
+    min-width: 0; overflow: hidden;
     transition: opacity 0.15s ease-out;
 }
 .song-title-wrapper.is-navigating {
@@ -36,7 +74,7 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 .song-navigation h2 { 
   margin: 0; font-size: 1.125rem; font-weight: 600;
   font-family: var(--font-display);
-  white-space: nowrap; overflow: hidden; text-overflow: clip;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   max-width: 100%;
   letter-spacing: -0.01em;
 }
@@ -184,7 +222,7 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   user-select: none;
   text-shadow: 0 0 4px rgba(255, 255, 255, 0.92);
   min-height: 1.2em;
-  padding: 0.12rem 0.26rem;
+  padding: calc(var(--chord-fill-padding-scale, 1) * 0.12rem) calc(var(--chord-fill-padding-scale, 1) * 0.26rem);
   border-radius: 4px;
 }
 
@@ -314,6 +352,84 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
 
 .chord-editor-toolbar.is-collapsed #chord-editor-toggle-btn {
   color: var(--md-sys-color-primary);
+}
+
+/* --- Note-Aligned Chord Editor --- */
+.chord-layer.note-aligned-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.chord-layer.note-aligned-layer.editor-mode {
+  pointer-events: auto;
+  cursor: default;
+}
+
+.note-target {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  color: var(--md-sys-color-primary);
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+  z-index: 5;
+  opacity: 0.7;
+}
+
+.note-target:hover {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 25%, transparent);
+  transform: translate(-50%, -50%) scale(1.25);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent);
+  opacity: 1;
+}
+
+.note-target-sentinel {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--md-sys-color-tertiary, #7c5800) 15%, transparent);
+  border-color: color-mix(in srgb, var(--md-sys-color-tertiary, #7c5800) 45%, transparent);
+  color: var(--md-sys-color-tertiary, #7c5800);
+  font-size: 0.65rem;
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+.note-target-sentinel:hover {
+  background: color-mix(in srgb, var(--md-sys-color-tertiary, #7c5800) 30%, transparent);
+  opacity: 1;
+}
+
+.note-chord-marker {
+  z-index: 10;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.chord-layer.note-aligned-layer.viewer-mode .note-chord-marker {
+  pointer-events: none;
+}
+
+.chord-layer.note-aligned-layer.editor-mode .note-chord-marker {
+  outline: 1px dashed color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
+  pointer-events: auto;
+}
+
+/* Load chord button in editor toolbar */
+#chord-load-btn {
+  width: 40px;
+  height: 40px;
 }
 
 
@@ -468,9 +584,9 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
                 visibility 0s;
   }
 
-body.is-expanded-layout .midi-collapse, body.measure-layout .midi-collapse { flex-direction: row; }
-body.is-expanded-layout #midi-toggle-btn, body.measure-layout #midi-toggle-btn { display: none !important; }
-body.is-expanded-layout .midi-panel, body.measure-layout .midi-panel { 
+body.is-expanded-layout .midi-collapse.midi-available, body.measure-layout .midi-collapse.midi-available { flex-direction: row; }
+body.is-expanded-layout .midi-collapse.midi-available #midi-toggle-btn, body.measure-layout .midi-collapse.midi-available #midi-toggle-btn { display: none !important; }
+body.is-expanded-layout .midi-collapse.midi-available .midi-panel, body.measure-layout .midi-collapse.midi-available .midi-panel { 
     opacity: 1 !important; visibility: visible !important; pointer-events: auto !important; transform: none !important;
     position: static; box-shadow: none; border: none; background: transparent; padding: 0; margin-top: 0; 
   }
@@ -503,7 +619,7 @@ midi-player {
   max-width: 250px;
 }
 
-body.is-expanded-layout .midi-panel, body.measure-layout .midi-panel { display: flex !important; align-items: center; gap: 0.5rem; }
+body.is-expanded-layout .midi-collapse.midi-available .midi-panel, body.measure-layout .midi-collapse.midi-available .midi-panel { display: flex !important; align-items: center; gap: 0.5rem; }
 body.is-expanded-layout .midi-controls-wrapper, body.measure-layout .midi-controls-wrapper { margin-bottom: 0; }
 body.is-expanded-layout midi-player, body.measure-layout midi-player { max-width: 300px; }
 
@@ -526,21 +642,6 @@ body.is-expanded-layout midi-player, body.measure-layout midi-player { max-width
   font-style: normal;
   color: var(--md-sys-color-on-surface);
 }
-
-
-
-
-
-
-
-
-.cis-icon, 
-
-.custom-instrument-dropdown.is-open 
-
-
-
-
 
 .player-btn {
   background: transparent;
@@ -569,9 +670,104 @@ body.is-expanded-layout midi-player, body.measure-layout midi-player { max-width
 /* .player-time styling moved below to .player-track-container section for coherence */
 
 
-body.is-expanded-layout 
-body.is-expanded-layout .custom-instrument-dropdown, body.measure-layout 
-body.is-expanded-layout .custom-player-controls, body.measure-layout 
+body.is-expanded-layout .midi-available .custom-midi-player,
+body.measure-layout .midi-available .custom-midi-player {
+  transition: none;
+  min-width: 0;
+  max-width: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  padding: 0;
+  flex-shrink: 1;
+}
+body.is-expanded-layout .midi-available .custom-player-controls,
+body.measure-layout .midi-available .custom-player-controls {
+  gap: 8px;
+}
+body.is-expanded-layout .midi-available .seekbar-wrapper,
+body.measure-layout .midi-available .seekbar-wrapper {
+  min-width: 80px;
+}
+body.is-expanded-layout .midi-available .player-btn,
+body.measure-layout .midi-available .player-btn {
+  width: 36px;
+  height: 36px;
+}
+body.is-expanded-layout .midi-available .player-btn .material-symbols-outlined,
+body.measure-layout .midi-available .player-btn .material-symbols-outlined {
+  font-size: 1.4rem;
+}
+body.is-expanded-layout .midi-available .instrument-capsule-btn,
+body.measure-layout .midi-available .instrument-capsule-btn {
+  width: auto;
+  min-width: 0;
+  max-width: 140px;
+}
+body.is-expanded-layout .midi-available .cis-label,
+body.measure-layout .midi-available .cis-label {
+  display: none;
+}
+body.is-expanded-layout .midi-available .player-track-container,
+body.measure-layout .midi-available .player-track-container {
+  margin-top: 0;
+}
+
+/* In portrait, always collapse MIDI to toggle button — never show it inline */
+@media (orientation: portrait) {
+  body.is-expanded-layout .midi-collapse.midi-available #midi-toggle-btn,
+  body.measure-layout .midi-collapse.midi-available #midi-toggle-btn {
+    display: flex !important;
+  }
+  body.is-expanded-layout .midi-collapse.midi-available .midi-panel,
+  body.measure-layout .midi-collapse.midi-available .midi-panel {
+    position: absolute !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translateY(-8px) scale(0.96) !important;
+  }
+  body.is-expanded-layout #midi-toggle-btn[aria-expanded="true"] + .midi-panel,
+  body.measure-layout #midi-toggle-btn[aria-expanded="true"] + .midi-panel {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transform: translateY(0) scale(1) !important;
+  }
+}
+
+/* Collapsible MIDI panel: anchor to header bottom instead of toggle-button position.
+   Setting midi-collapse to static makes .midi-panel position relative to
+   .pdf-viewer-header (which has position: relative), so it appears as a full-width
+   bar flush below the header bar rather than a small popup below the left button. */
+body:not(.is-expanded-layout):not(.measure-layout) .midi-collapse {
+  position: static;
+}
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel {
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 0;
+  border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+  transform-origin: top center;
+  box-sizing: border-box;
+}
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+}
+/* Shrink PDF content area to account for the open MIDI panel so it doesn't overlap */
+body:not(.is-expanded-layout):not(.measure-layout):has(#midi-toggle-btn[aria-expanded="true"]) .pdf-viewer-content {
+  height: calc(100svh - var(--pdf-viewer-header-height) - 58px - var(--viewer-footer-height));
+  height: calc(100dvh - var(--pdf-viewer-header-height) - 58px - var(--viewer-footer-height));
+}
 
 
 /* ANIMATIONS & OVERHAULS */
@@ -725,7 +921,6 @@ body.is-expanded-layout .custom-player-controls, body.measure-layout
   z-index: 1;
   pointer-events: none;
   width: 0%;
-  transition: width 0.1s linear;
 }
 
 /* Optional: animate fill when playing */
@@ -890,6 +1085,53 @@ body.is-expanded-layout .custom-player-controls, body.measure-layout
   margin: 16px 16px 8px 16px;
   padding-bottom: 4px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  max-height: 50px;
+  overflow: hidden;
+  opacity: 1;
+  transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease, padding 0.3s ease;
+}
+.cis-category.cis-hidden {
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+  padding: 0;
+  border-bottom-width: 0;
+  pointer-events: none;
+}
+
+/* Soundfont toggle inside instrument popover */
+.cis-soundfont-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 10px 10px 2px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: inherit;
+}
+.cis-sf-btn {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.15s ease, box-shadow 0.25s ease;
+}
+.cis-sf-btn:active {
+  transform: scale(0.95);
+}
+.cis-sf-btn:hover {
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent);
+}
+.cis-sf-btn.selected {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
+  color: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+  font-weight: 600;
 }
 
 .cis-grid {
@@ -911,8 +1153,19 @@ body.is-expanded-layout .custom-player-controls, body.measure-layout
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease, margin 0.3s ease;
   width: 100%;
+  max-height: 60px;
+  overflow: hidden;
+  opacity: 1;
+}
+.cis-option.cis-hidden {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin: 0;
+  pointer-events: none;
 }
 
 .cis-option:hover {
@@ -1056,7 +1309,6 @@ body.is-expanded-layout .custom-player-controls, body.measure-layout
 .custom-midi-player .seekbar-fill {
   background: var(--md-sys-color-primary) !important;
   box-shadow: 0 0 4px color-mix(in srgb, var(--md-sys-color-primary) 50%, transparent) !important;
-  transition: width 0.15s linear !important;
   position: absolute;
   /* removed overflow hidden for shadows */ /* For shimmer */
 }

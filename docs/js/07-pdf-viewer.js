@@ -38,6 +38,8 @@ async function openPdfViewer(songId, backgroundLoad = false) {
 
   if (!isSameSong) {
     chordConfig = createDefaultChordConfig();
+    noteChordConfig = createDefaultNoteChordConfig();
+    pageNotesCache = {};
     // Reset transpose saat ganti lagu
     transposeStep = 0;
     updateTransposeUI();
@@ -63,6 +65,8 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       }
 
       midiToggleBtn.style.display = "flex";
+      document.getElementById('midi-collapse').classList.add('midi-available');
+      if (typeof checkLayoutCollisions === 'function') checkLayoutCollisions();
       if (typeof midiPanel !== "undefined" && midiPanel) {
         midiToggleBtn.setAttribute("aria-expanded", "false");
       }
@@ -85,14 +89,31 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         window._verifyPlaylistModeForCurrentSong();
       }
 
-      // Fade out if currently playing
+      // Stop playback: instant for manual prev/next, fade for auto-next
       if (_midiSfPlayer && _midiSfPlayer.isPlaying()) {
-        await fadeMidiVolume(MIDI_SILENT_VOLUME, MIDI_FADE_OUT_MS);
-        try { _midiSfPlayer.stop(); } catch (e) {}
+        if (window._manualNavigation) {
+          // Instant stop — no fade, just kill the volume and stop
+          const volNode = getToneVolNode();
+          if (volNode && volNode.volume) {
+            volNode.volume.cancelScheduledValues(window.Tone.now());
+            volNode.volume.value = MIDI_SILENT_VOLUME;
+          }
+          try { _midiSfPlayer.stop(); } catch (e) {}
+        } else {
+          await fadeMidiVolume(MIDI_SILENT_VOLUME, MIDI_FADE_OUT_MS);
+          try { _midiSfPlayer.stop(); } catch (e) {}
+        }
       }
+      window._manualNavigation = false;
 
       // Reset MIDI state
       resetMidiState();
+      window.isMidiSwitching = true;
+      syncSeekbarUI(0, 0);
+      window._midiLastSeekValue = 0;
+
+      // Increment generation to cancel any in-flight MIDI loads from previous songs
+      const thisGeneration = ++_midiLoadGeneration;
 
       const volNode = getToneVolNode();
       if (volNode && volNode.volume) {
@@ -103,6 +124,9 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         window.core
             .urlToNoteSequence(encodeURI(rawUrl))
             .then((seq) => {
+              // Cancel if a newer song load has started
+              if (_midiLoadGeneration !== thisGeneration) return;
+
               if (!seq || !seq.notes || !Array.isArray(seq.notes) || seq.notes.length === 0) {
                 console.warn('Empty or invalid sequence, aborting load.');
                 window.isMidiSwitching = false;
@@ -122,6 +146,7 @@ async function openPdfViewer(songId, backgroundLoad = false) {
             loadAndStartMidi(seq, {
               forceStart: wasForcedNext,
               transpose: currentTranspose,
+              generation: thisGeneration,
             });
           })
           .catch((err) => {
@@ -166,6 +191,8 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       }
 
       midiToggleBtn.style.display = "flex";
+      document.getElementById('midi-collapse').classList.add('midi-available');
+      if (typeof checkLayoutCollisions === 'function') checkLayoutCollisions();
       if (typeof midiPanel !== "undefined" && midiPanel) {
         midiToggleBtn.setAttribute("aria-expanded", "false");
       }
@@ -206,6 +233,14 @@ async function openPdfViewer(songId, backgroundLoad = false) {
 
     if (!isSameSong) {
       await loadChordConfigurationForSong(song);
+      // Also load note-aligned chord config
+      if (typeof loadNoteChordConfiguration === "function") {
+        pageNotesCache = {}; // Clear note cache for new song
+        await loadNoteChordConfiguration(song);
+        if (hasNoteAlignedChords()) {
+          detectNoteAlignedFamilyChord();
+        }
+      }
       currentPageNum = 1;
       currentViewMode =
         pdfDoc.numPages > 1 && prefs.defaultTwoPage ? "double" : "single";
@@ -299,7 +334,25 @@ async function renderPage(num) {
     await page.render({ canvasContext: canvas.getContext("2d"), viewport })
       .promise;
 
-    const chordLayer = createChordLayer(pageNumToRender);
+    // Extract notes for note-aligned chord editor
+    if (typeof extractPageNotes === "function") {
+      try {
+        const noteData = await extractPageNotes(page);
+        pageNotesCache[pageNumToRender] = noteData;
+      } catch (e) {
+        console.warn("Note extraction failed for page", pageNumToRender, e);
+        pageNotesCache[pageNumToRender] = { notes: [], pageWidth: 0, pageHeight: 0 };
+      }
+    }
+
+    // Use note-aligned chord layer if we have notes, otherwise fall back to grid
+    const cachedNotes = pageNotesCache[pageNumToRender];
+    let chordLayer;
+    if (cachedNotes && cachedNotes.notes.length > 0 && typeof createNoteAlignedChordLayer === "function") {
+      chordLayer = createNoteAlignedChordLayer(pageNumToRender, cachedNotes.notes);
+    } else {
+      chordLayer = createChordLayer(pageNumToRender);
+    }
     pageContainer.appendChild(canvas);
     pageContainer.appendChild(chordLayer);
 
@@ -351,6 +404,10 @@ async function renderPage(num) {
     }
 
     nextWrapper.addEventListener("click", onChordLayerClick);
+    // Also listen for note-aligned chord clicks
+    if (typeof onNoteAlignedChordClick === "function") {
+      nextWrapper.addEventListener("click", onNoteAlignedChordClick);
+    }
     return nextWrapper;
   } catch (error) {
     console.error("Gagal merender halaman:", error);
@@ -645,6 +702,8 @@ async function onPrevSong(forceAutoplay = false, allowRewind = false) {
   if (forceAutoplay === true) {
     window._forceAutoPlayNext = true;
   }
+  // Mark as manual navigation so openPdfViewer skips fade-out
+  window._manualNavigation = true;
 
   // Seek to 0 logic
   if (
@@ -656,14 +715,27 @@ async function onPrevSong(forceAutoplay = false, allowRewind = false) {
     if (currTime > 2) {
       try {
         const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
+        const volNode = getToneVolNode();
+        // Micro-fade out before stop to prevent click
         if (_midiSfPlayer.isPlaying()) {
+          if (volNode && volNode.volume) {
+            volNode.volume.cancelScheduledValues(window.Tone.now());
+            volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, window.Tone.now() + MIDI_CROSSFADE_OUT_MS / 1000);
+          }
+          await new Promise(r => setTimeout(r, MIDI_CROSSFADE_OUT_MS));
           _midiSfPlayer.stop();
+        }
+        // Ensure volume is silent before start
+        if (volNode && volNode.volume) {
+          volNode.volume.cancelScheduledValues(window.Tone.now());
+          volNode.volume.value = MIDI_SILENT_VOLUME;
         }
         if (_midiCurrentTransposedSeq) {
           _midiSfPlayer.start(_midiCurrentTransposedSeq, undefined, 0);
         }
         MidiTimeAuthority.setTime(0, dur);
         MidiTimeAuthority.setPlaying(true);
+        fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_CROSSFADE_IN_MS);
         if (forceAutoplay) {
           const playIcon = document.getElementById('custom-play-icon');
           if (playIcon) playIcon.textContent = 'pause';
@@ -742,6 +814,8 @@ async function onNextSong(forceAutoplay = false) {
   if (forceAutoplay === true) {
     window._forceAutoPlayNext = true;
   }
+  // Mark as manual navigation so openPdfViewer skips fade-out
+  window._manualNavigation = true;
 
   let mode = typeof PlaylistManager !== 'undefined' ? PlaylistManager.getAutoNextMode() : 'number';
 
@@ -849,7 +923,7 @@ function updateViewerUI() {
  */
 async function loadAndStartMidi(seq, opts = {}) {
   if (!seq) return;
-  const { forceStart = false, transpose = 0 } = opts;
+  const { forceStart = false, transpose = 0, generation } = opts;
 
   _midiSfPlayerLoading = true;
   _midiSfPlayerReady = false;
@@ -894,6 +968,13 @@ async function loadAndStartMidi(seq, opts = {}) {
     return;
   }
 
+  // Cancel if a newer song load has superseded this one
+  if (generation !== undefined && _midiLoadGeneration !== generation) {
+    _midiSfPlayerLoading = false;
+    if (midiPreloadBar) midiPreloadBar.style.display = "none";
+    return;
+  }
+
   // Progress: 100%
   if (midiPreloadFill) midiPreloadFill.style.width = "100%";
 
@@ -921,7 +1002,16 @@ async function loadAndStartMidi(seq, opts = {}) {
       try { await window.Tone.start(); } catch (e) {}
     }
 
-    _midiSfPlayer.start(transposedSeq);
+    // Guard: stop any in-progress playback before starting
+    if (_midiSfPlayer.isPlaying()) {
+      try { _midiSfPlayer.stop(); } catch (e) {}
+    }
+
+    try {
+      _midiSfPlayer.start(transposedSeq);
+    } catch (e) {
+      console.warn("loadAndStartMidi start race:", e.message);
+    }
     MidiTimeAuthority.setTime(0, knownDuration);
     MidiTimeAuthority.setPlaying(true);
 
@@ -933,6 +1023,36 @@ async function loadAndStartMidi(seq, opts = {}) {
 
   syncSeekbarUI(0, knownDuration);
   window.isMidiSwitching = false;
+
+  // Background preload adjacent transpose samples for faster switching
+  preloadAdjacentTransposeSamples(typeof transposeStep === "number" ? transposeStep : 0);
+}
+
+/**
+ * Preload SoundFont samples for transpose steps adjacent to the current one.
+ * Runs in background (fire-and-forget) so the next transpose press is near-instant.
+ * @param {number} currentStep - The current transpose step
+ */
+function preloadAdjacentTransposeSamples(currentStep) {
+  if (!_midiOriginalSeq || !_midiSfPlayer) return;
+
+  // Resolve instrument
+  let instrumentValue = "-1";
+  if (prefs && prefs.midiInstrument !== undefined) {
+    instrumentValue = prefs.midiInstrument;
+  } else if (customInstrumentSelect && customInstrumentSelect.dataset.value) {
+    instrumentValue = customInstrumentSelect.dataset.value;
+  }
+
+  // Preload step-1 and step+1 (within valid range)
+  const stepsToPreload = [currentStep - 1, currentStep + 1]
+    .filter(s => s >= -11 && s <= 11);
+
+  for (const step of stepsToPreload) {
+    const seq = transposeNoteSequence(_midiOriginalSeq, step, instrumentValue);
+    // Fire-and-forget — don't await, just let it cache in the background
+    _midiSfPlayer.loadSamples(seq).catch(() => {});
+  }
 }
 
 /**
@@ -969,8 +1089,14 @@ async function swapTranspose(step) {
   MidiTimeAuthority.setPlaying(false);
   if (wasPlaying) MidiTimeAuthority.setTime(currTime, dur);
 
-  // Stop current playback
+  // Micro-fade out before stopping to prevent click
   if (wasPlaying) {
+    const volNode = getToneVolNode();
+    if (volNode && volNode.volume) {
+      volNode.volume.cancelScheduledValues(window.Tone.now());
+      volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, window.Tone.now() + MIDI_CROSSFADE_OUT_MS / 1000);
+    }
+    await new Promise(r => setTimeout(r, MIDI_CROSSFADE_OUT_MS));
     try { _midiSfPlayer.stop(); } catch (e) {}
   }
 
@@ -984,12 +1110,17 @@ async function swapTranspose(step) {
   _midiSfPlayerLoading = false;
   window.isMidiSwitching = false;
 
-  // Resume from same position
+  // Resume from same position with silent start + fade in to prevent click
   if (wasPlaying) {
     const volNode = getToneVolNode();
     if (volNode && volNode.volume) {
       volNode.volume.cancelScheduledValues(window.Tone.now());
-      volNode.volume.value = MIDI_TARGET_VOLUME;
+      volNode.volume.value = MIDI_SILENT_VOLUME;
+    }
+
+    // Guard: stop any in-progress playback before starting
+    if (_midiSfPlayer.isPlaying()) {
+      try { _midiSfPlayer.stop(); } catch (e) {}
     }
 
     try {
@@ -998,6 +1129,7 @@ async function swapTranspose(step) {
 
     MidiTimeAuthority.setTime(currTime, dur);
     MidiTimeAuthority.setPlaying(true);
+    fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_CROSSFADE_IN_MS);
 
     customPlayIcon.textContent = "pause";
     document.getElementById("custom-midi-player").classList.add("playing");
@@ -1005,6 +1137,9 @@ async function swapTranspose(step) {
 
   syncSeekbarUI(wasPlaying ? currTime : MidiTimeAuthority.getTime(), dur);
   window._midiLastSeekValue = -1;
+
+  // Background preload adjacent transpose samples for faster next switch
+  preloadAdjacentTransposeSamples(step);
 }
 
 /**
@@ -1021,8 +1156,14 @@ async function changeInstrument() {
   MidiTimeAuthority.setPlaying(false);
   if (wasPlaying) MidiTimeAuthority.setTime(currTime, dur);
 
-  // Stop current player
+  // Micro-fade out before stopping to prevent click
   if (_midiSfPlayer && _midiSfPlayer.isPlaying()) {
+    const volNode = getToneVolNode();
+    if (volNode && volNode.volume) {
+      volNode.volume.cancelScheduledValues(window.Tone.now());
+      volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, window.Tone.now() + MIDI_CROSSFADE_OUT_MS / 1000);
+    }
+    await new Promise(r => setTimeout(r, MIDI_CROSSFADE_OUT_MS));
     try { _midiSfPlayer.stop(); } catch (e) {}
   }
 
@@ -1073,6 +1214,11 @@ async function changeInstrument() {
       volNode.volume.value = MIDI_SILENT_VOLUME;
     }
 
+    // Guard: stop any in-progress playback before starting
+    if (_midiSfPlayer.isPlaying()) {
+      try { _midiSfPlayer.stop(); } catch (e) {}
+    }
+
     try {
       _midiSfPlayer.start(newSeq, undefined, currTime);
     } catch (e) {}
@@ -1087,6 +1233,9 @@ async function changeInstrument() {
 
   syncSeekbarUI(currTime, dur);
   window.isMidiSwitching = false;
+
+  // Background preload adjacent transpose samples for faster switching
+  preloadAdjacentTransposeSamples(currentTranspose);
 }
 
 /**
@@ -1096,14 +1245,13 @@ async function changeInstrument() {
 function syncSeekbarUI(time, duration) {
   const dur = duration || 0;
   const t = Math.max(0, time || 0);
+  const pct = dur > 0 ? (t / dur) * 100 + "%" : "0%";
 
   if (typeof customSeekbar !== "undefined" && customSeekbar) {
-    customSeekbar.max = dur;
+    if (dur > 0 && customSeekbar.max != dur) customSeekbar.max = dur;
     customSeekbar.value = t;
     const fill = document.getElementById("custom-seekbar-fill");
-    if (fill) {
-      fill.style.width = dur > 0 ? (t / dur) * 100 + "%" : "0%";
-    }
+    if (fill) fill.style.width = pct;
   }
   if (typeof customTimeDisplay !== "undefined" && customTimeDisplay) {
     customTimeDisplay.textContent = `${formatMidiTime(t)} / ${dur > 0 ? formatMidiTime(dur) : "0:00"}`;
@@ -1112,12 +1260,10 @@ function syncSeekbarUI(time, duration) {
   // Mini player UI sync
   const miniSeekbar = document.getElementById("mini-seekbar");
   if (miniSeekbar) {
-    miniSeekbar.max = dur;
+    if (dur > 0 && miniSeekbar.max != dur) miniSeekbar.max = dur;
     miniSeekbar.value = t;
     const miniFill = document.getElementById("mini-seekbar-fill");
-    if (miniFill) {
-      miniFill.style.width = dur > 0 ? (t / dur) * 100 + "%" : "0%";
-    }
+    if (miniFill) miniFill.style.width = pct;
   }
   const miniTimeDisplay = document.getElementById("mini-time-display");
   if (miniTimeDisplay) {

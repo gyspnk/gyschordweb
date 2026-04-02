@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   /* Palet Warna Sumber — "Hymn of Praise" Sacred Palette */
   --source-blue: #1976d2; --source-red: #c62828; --source-green: #2e7d32;
   --source-yellow: #f9a825; --source-purple: #6a1b9a; --source-pink: #ad1457;
@@ -53,6 +54,7 @@
 }
 
 body.dark-theme {
+  color-scheme: dark;
   --md-sys-color-primary: color-mix(in srgb, var(--accent, var(--source-gold)) 80%, #ffffff);
   --md-sys-color-on-primary: color-mix(in srgb, var(--accent, var(--source-gold)) 20%, #000000);
   --md-sys-color-primary-container: color-mix(in srgb, var(--accent, var(--source-gold)) 25%, #0e0c08);
@@ -68,9 +70,20 @@ body.dark-theme {
 }
 
 @media (prefers-color-scheme: dark) {
-  body:not(.light-theme-forced) {
+  body:not(.light-theme-forced):not(.dark-theme) {
+    color-scheme: dark;
+    --md-sys-color-primary: color-mix(in srgb, var(--accent, var(--source-gold)) 80%, #ffffff);
+    --md-sys-color-on-primary: color-mix(in srgb, var(--accent, var(--source-gold)) 20%, #000000);
+    --md-sys-color-primary-container: color-mix(in srgb, var(--accent, var(--source-gold)) 25%, #0e0c08);
+    --md-sys-color-on-primary-container: color-mix(in srgb, var(--accent, var(--source-gold)) 90%, #ffffff);
     --md-sys-color-surface: #12110e;
     --md-sys-color-surface-container: #1d1b17;
+    --md-sys-color-surface-container-high: #282520;
+    --md-sys-color-on-surface: #e8e3db;
+    --md-sys-color-on-surface-variant: #cdc6bc;
+    --md-sys-color-outline: #979189;
+    --md-sys-color-outline-variant: #4a4640;
+    --md-sys-state-layer-primary: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
   }
 }
 
@@ -84,3 +97,41 @@ body[data-accent="brown"] { --accent: var(--source-brown); } body[data-accent="g
 body[data-accent="indigo"] { --accent: var(--source-indigo); } body[data-accent="cyan"] { --accent: var(--source-cyan); }
 body[data-accent="burgundy"] { --accent: var(--source-burgundy); }
 body[data-accent="custom"] { --accent: var(--source-custom); }
+
+/* --- Global Custom Scrollbar --- */
+/* Modern browsers: scrollbar-color + scrollbar-width */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--md-sys-color-outline) 60%, transparent) transparent;
+}
+
+/* WebKit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--md-sys-color-outline) 50%, transparent);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--md-sys-color-outline);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Touch devices: hide scrollbar but keep scrollable */
+@media (hover: none) and (pointer: coarse) {
+  ::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--md-sys-color-outline) 30%, transparent);
+  }
+}

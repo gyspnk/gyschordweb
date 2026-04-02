@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "grid": {
+    "cols": 105,
+    "rows": 149
+  },
+  "pages": {
+    "1": [
+      {
+        "row": 22,
+        "col": 14,
+        "text": "C"
+      },
+      {
+        "row": 22,
+        "col": 24,
+        "text": "Am"
+      },
+      {
+        "row": 22,
+        "col": 35,
+        "text": "G"
+      },
+      {
+        "row": 22,
+        "col": 57,
+        "text": "F"
+      },
+      {
+        "row": 22,
+        "col": 78,
+        "text": "C"
+      },
+      {
+        "row": 53,
+        "col": 14,
+        "text": "G"
+      },
+      {
+        "row": 53,
+        "col": 35,
+        "text": "Am"
+      },
+      {
+        "row": 53,
+        "col": 57,
+        "text": "G"
+      },
+      {
+        "row": 53,
+        "col": 67,
+        "text": "D"
+      },
+      {
+        "row": 53,
+        "col": 78,
+        "text": "G"
+      },
+      {
+        "row": 84,
+        "col": 14,
+        "text": "C"
+      },
+      {
+        "row": 84,
+        "col": 24,
+        "text": "Am"
+      },
+      {
+        "row": 84,
+        "col": 35,
+        "text": "G"
+      },
+      {
+        "row": 84,
+        "col": 57,
+        "text": "F"
+      },
+      {
+        "row": 84,
+        "col": 78,
+        "text": "G"
+      },
+      {
+        "row": 115,
+        "col": 13,
+        "text": "Am"
+      },
+      {
+        "row": 115,
+        "col": 24,
+        "text": "Em"
+      },
+      {
+        "row": 115,
+        "col": 35,
+        "text": "F"
+      },
+      {
+        "row": 115,
+        "col": 45,
+        "text": "Em"
+      },
+      {
+        "row": 115,
+        "col": 56,
+        "text": "Dm"
+      },
+      {
+        "row": 115,
+        "col": 66,
+        "text": "G"
+      },
+      {
+        "row": 115,
+        "col": 78,
+        "text": "C"
+      }
+    ]
+  }
+}

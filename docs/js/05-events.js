@@ -1,5 +1,52 @@
 // --- 4. Event Listeners ---
 
+/**
+ * Filter instrument options based on selected soundfont.
+ * Salamander only supports acoustic_grand_piano (program 0).
+ */
+function filterInstrumentsBySoundfont(sfUrl) {
+  const isSalamander = sfUrl && sfUrl.includes('salamander');
+  document.querySelectorAll('.cis-menu-popover').forEach(function(popover) {
+    popover.querySelectorAll('.cis-option').forEach(function(opt) {
+      var val = opt.getAttribute('data-val');
+      // Salamander only has acoustic_grand_piano (program 0); -1 = default = also maps to 0
+      const shouldHide = isSalamander && val !== '0' && val !== '-1';
+      opt.classList.toggle('cis-hidden', shouldHide);
+    });
+    // Hide category headers whose children are all hidden
+    popover.querySelectorAll('.cis-category').forEach(function(cat) {
+      var next = cat.nextElementSibling;
+      var hasVisible = false;
+      while (next && !next.classList.contains('cis-category')) {
+        if (next.classList.contains('cis-option') && !next.classList.contains('cis-hidden')) {
+          hasVisible = true;
+          break;
+        }
+        next = next.nextElementSibling;
+      }
+      cat.classList.toggle('cis-hidden', !hasVisible);
+    });
+  });
+  // Auto-select Grand Piano if current instrument isn't available in Salamander
+  if (isSalamander && typeof prefs !== 'undefined' && prefs.midiInstrument !== '0' && prefs.midiInstrument !== '-1') {
+    prefs.midiInstrument = '0';
+    localStorage.setItem('prefs', JSON.stringify(prefs));
+    document.querySelectorAll('.cis-option').forEach(function(o) {
+      o.classList.toggle('selected', o.getAttribute('data-val') === '0');
+    });
+    document.querySelectorAll('#cis-icon, #mini-cis-icon').forEach(function(el) {
+      if (typeof getMidiInstrumentIcon === 'function') el.textContent = getMidiInstrumentIcon('0');
+    });
+    document.querySelectorAll('#cis-label, #mini-cis-label').forEach(function(el) {
+      el.textContent = 'Grand Piano';
+    });
+    var cis = document.getElementById('custom-instrument-select');
+    if (cis) cis.dataset.value = '0';
+    var mcis = document.getElementById('mini-instrument-select');
+    if (mcis) mcis.dataset.value = '0';
+  }
+}
+
 function setupEventListeners() {
   pujianBtn.addEventListener("click", () => navigateTo("pujian"));
 
@@ -67,6 +114,16 @@ function setupEventListeners() {
             });
 
           uiWrapper.classList.toggle("is-open");
+
+          // Sync soundfont toggle state when popover opens
+          if (uiWrapper.classList.contains("is-open")) {
+            const currentSf = (prefs && prefs.midiSoundfont) || MIDI_SOUNDFONT_URL;
+            uiWrapper.querySelectorAll(".cis-sf-btn").forEach((b) => {
+              b.classList.toggle("selected", b.getAttribute("data-sf") === currentSf);
+            });
+            filterInstrumentsBySoundfont(currentSf);
+          }
+
           if (currentDropdownObj) {
             const capBtn = currentDropdownObj.querySelector(
               ".instrument-capsule-btn",
@@ -92,6 +149,27 @@ function setupEventListeners() {
             if (capBtn) capBtn.setAttribute("aria-expanded", "false");
           }
         });
+    });
+
+    // Soundfont toggle buttons inside instrument popover
+    document.querySelectorAll(".cis-sf-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const sfUrl = btn.getAttribute("data-sf");
+        if (!sfUrl) return;
+        // Update all soundfont toggles across both popovers
+        document.querySelectorAll(".cis-sf-btn").forEach((b) => {
+          b.classList.toggle("selected", b.getAttribute("data-sf") === sfUrl);
+        });
+        prefs.midiSoundfont = sfUrl;
+        localStorage.setItem("prefs", JSON.stringify(prefs));
+        // Filter instrument list based on selected soundfont
+        filterInstrumentsBySoundfont(sfUrl);
+        // Apply immediately if a song is loaded
+        if (typeof changeInstrument === "function" && _midiOriginalSeq) {
+          changeInstrument();
+        }
+      });
     });
 
     // Option select (for all popovers)
@@ -183,8 +261,8 @@ function setupEventListeners() {
       });
     });
 
-    // Play/Pause button — fixed race condition, proper fade sequencing
-    customPlayBtn.addEventListener("click", async () => {
+    // Play/Pause — named function so mini player can call directly (real user gesture)
+    async function toggleMidiPlayback() {
       if (window.isMidiFading) return;
       if (_midiSfPlayerLoading) {
         if (typeof showToast === "function")
@@ -271,7 +349,9 @@ function setupEventListeners() {
         document.getElementById("custom-midi-player").classList.remove("playing");
         window.isMidiFading = false;
       }
-    });
+    }
+    window.toggleMidiPlayback = toggleMidiPlayback;
+    customPlayBtn.addEventListener("click", toggleMidiPlayback);
 
     // Seekbar sync using requestAnimationFrame for smooth updates
     let isDraggingSeekbar = false;
@@ -281,7 +361,7 @@ function setupEventListeners() {
     function seekbarAnimationLoop() {
       _seekbarRafId = requestAnimationFrame(seekbarAnimationLoop);
 
-      if (isDraggingSeekbar || _midiSfPlayerLoading) return;
+      if (isDraggingSeekbar || _midiSfPlayerLoading || window.isMidiSwitching) return;
       if (!document.body.classList.contains("viewer-active") && !MidiTimeAuthority._playing) return;
 
       const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
@@ -292,6 +372,12 @@ function setupEventListeners() {
         MidiTimeAuthority.setPlaying(false);
         MidiTimeAuthority.setTime(0, dur);
         if (_midiSfPlayer && _midiSfPlayer.isPlaying()) {
+          // Silence volume before stop to prevent click
+          const volNode = getToneVolNode();
+          if (volNode && volNode.volume) {
+            volNode.volume.cancelScheduledValues(window.Tone.now());
+            volNode.volume.value = MIDI_SILENT_VOLUME;
+          }
           try { _midiSfPlayer.stop(); } catch (e) {}
         }
         syncSeekbarUI(0, dur);
@@ -307,6 +393,10 @@ function setupEventListeners() {
             if (volNode && volNode.volume) {
               volNode.volume.cancelScheduledValues(window.Tone.now());
               volNode.volume.value = MIDI_SILENT_VOLUME;
+            }
+            // Guard: stop any in-progress playback before restarting
+            if (_midiSfPlayer.isPlaying()) {
+              try { _midiSfPlayer.stop(); } catch (e2) {}
             }
             _midiSfPlayer.start(_midiCurrentTransposedSeq);
             MidiTimeAuthority.setPlaying(true);
@@ -365,9 +455,10 @@ function setupEventListeners() {
           const wasPlaying = _midiSfPlayer.isPlaying();
           window.isMidiSwitching = true;
           const volNode = getToneVolNode();
+          // Set volume silent before stop+start to prevent click
           if (volNode && volNode.volume) {
             volNode.volume.cancelScheduledValues(window.Tone.now());
-            volNode.volume.value = MIDI_TARGET_VOLUME;
+            volNode.volume.value = MIDI_SILENT_VOLUME;
           }
 
           // SoundFontPlayer: stop and restart from new offset
@@ -381,8 +472,13 @@ function setupEventListeners() {
             } catch (err) {}
             MidiTimeAuthority.setTime(val, dur);
             MidiTimeAuthority.setPlaying(true);
+            fadeMidiVolume(MIDI_TARGET_VOLUME, MIDI_CROSSFADE_IN_MS);
           } else {
             MidiTimeAuthority.setTime(val, dur);
+            // Restore volume for when playback resumes
+            if (volNode && volNode.volume) {
+              volNode.volume.value = MIDI_TARGET_VOLUME;
+            }
           }
 
           window.isMidiSwitching = false;
@@ -434,7 +530,25 @@ function setupEventListeners() {
       indicator.addEventListener("dblclick", onZoomIndicatorDoubleClick);
     });
 
-  chordSaveBtn.addEventListener("click", saveChordConfigurationFile);
+  chordSaveBtn.addEventListener("click", () => {
+    // Save note-aligned chord if we have notes detected, otherwise use grid format
+    const hasNotes = pageNotesCache && Object.values(pageNotesCache).some(c => c && c.notes && c.notes.length > 0);
+    if (hasNotes && typeof saveNoteChordConfigurationFile === "function") {
+      saveNoteChordConfigurationFile();
+    } else {
+      saveChordConfigurationFile();
+    }
+  });
+
+  // Load chord file button
+  const chordLoadBtn = document.getElementById("chord-load-btn");
+  if (chordLoadBtn) {
+    chordLoadBtn.addEventListener("click", () => {
+      if (typeof loadNoteChordFromFile === "function") {
+        loadNoteChordFromFile();
+      }
+    });
+  }
 
   if (chordEditorToggleBtn) {
     chordEditorToggleBtn.addEventListener("click", onToggleChordEditorCollapse);

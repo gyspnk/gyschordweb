@@ -177,13 +177,28 @@
 }
 
 .setting-color-input {
-  width: 44px;
-  height: 34px;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--border-radius-md);
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: 50%;
   padding: 2px;
   background: var(--md-sys-color-surface);
   cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.15s ease;
+}
+.setting-color-input:hover {
+  transform: translateY(-1px);
+}
+.setting-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.setting-color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+.setting-color-input::-moz-color-swatch {
+  border: none;
+  border-radius: 50%;
 }
 
 .setting-range {
@@ -344,6 +359,14 @@
   pointer-events: none;
 }
 
+/* Suppress mini player when viewer popups (transpose / key selector) are open */
+body.viewer-popup-open .mini-player {
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.4;
+  transition: z-index 0s, opacity 0.15s ease;
+}
+
 /* Row 1: Song info + transport */
 .mini-player-top {
   display: flex;
@@ -453,33 +476,108 @@
   display: inline-block;
 }
 .mini-instrument-capsule {
-  padding: 4px 8px;
+  padding: 0 6px;
   height: 26px;
-  font-size: 11px;
-  display: flex;
+  font-size: 10px;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 3px;
   background: var(--md-sys-color-surface-variant);
   border-radius: 6px;
+  box-sizing: border-box;
+  line-height: 26px;
+  vertical-align: middle;
 }
-.mini-instrument-capsule .cis-icon { font-size: 14px; margin-right: 4px; }
+.mini-instrument-capsule .cis-icon {
+  font-size: 13px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 .mini-cis-label {
-  max-width: 60px;
+  max-width: clamp(40px, 15vw, 100px);
+  line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .instrument-selector-wrapper {
   position: relative;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+/* Mini player popovers: constrain to available viewport space above mini player */
+.mini-player .cis-menu-popover {
+  max-height: min(400px, calc(100vh - var(--bottom-nav-height) - 180px));
+  max-height: min(400px, calc(100svh - var(--bottom-nav-height) - 180px));
+  left: auto;
+  right: 0;
+  min-width: 220px;
+}
+.mini-cis-popover {
+  bottom: calc(100% + 8px);
+  top: auto;
+  transform-origin: bottom right;
+}
+.mini-player .family-chord-dropdown {
+  z-index: 1001;
+}
+.mini-family-dropdown {
+  bottom: calc(100% + 8px);
+  top: auto;
+  left: 0;
+  transform-origin: bottom left;
+}
+.mini-family-dropdown.is-open {
+  transform: translateY(0) scale(1);
 }
 .mini-loop {
-  width: 30px; height: 30px;
+  width: 26px; height: 26px;
   flex-shrink: 0;
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: transform var(--duration-short) var(--ease-spring);
 }
 .mini-loop:active { transform: scale(0.82); }
-.mini-loop .material-symbols-outlined { font-size: 18px; }
+.mini-loop .material-symbols-outlined { font-size: 16px; }
+
+/* Extras toggle button: hidden by default, shown when collapsed */
+.mini-extras-toggle {
+  display: none;
+  width: 26px; height: 26px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--md-sys-color-surface-variant);
+  transition: transform var(--duration-short) var(--ease-spring), background-color var(--duration-short);
+}
+.mini-extras-toggle:active { transform: scale(0.82); }
+.mini-extras-toggle .material-symbols-outlined { font-size: 16px; }
+
+/* Collapsible extras: auto-collapse when mini-player is narrow */
+.mini-player.is-extras-collapsed .mini-player-extras {
+  display: none;
+}
+.mini-player.is-extras-collapsed .mini-extras-toggle {
+  display: flex;
+}
+/* When user manually expands while collapsed */
+.mini-player.is-extras-expanded .mini-player-extras {
+  display: flex;
+}
+.mini-player.is-extras-expanded .mini-extras-toggle {
+  display: flex;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
 
 /* Row 3: Seekbar */
 .mini-player-middle {

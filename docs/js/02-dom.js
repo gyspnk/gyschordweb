@@ -21,6 +21,7 @@ const midiPanel = document.getElementById("midi-panel");
 let _midiSfPlayer = null; // core.SoundFontPlayer instance
 let _midiSfPlayerReady = false; // Whether samples are loaded
 let _midiSfPlayerLoading = false; // Loading in progress
+let _midiLoadGeneration = 0; // Incremented on each song change to cancel stale loads
 // Global original sequence (unmodified from MIDI file)
 let _midiOriginalSeq = null;
 // Current transposed/instrumented sequence being played

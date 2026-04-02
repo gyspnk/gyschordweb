@@ -28,7 +28,7 @@ function checkLayoutCollisions() {
   document.body.classList.remove('is-expanded-layout');
 
   let layoutFits = true;
-  const buffer = 48; // padding and gaps buffer
+  const buffer = 24; // minimal buffer for safety margin
 
   // Check Header
   const header = document.querySelector('.pdf-viewer-header');
@@ -37,12 +37,31 @@ function checkLayoutCollisions() {
     const center = header.querySelector('.song-navigation');
     const right = header.querySelector('.landscape-controls');
 
-    let headerRequiredWidth = 0;
-    if (left && left.offsetParent !== null) headerRequiredWidth += left.scrollWidth;
-    if (center && center.offsetParent !== null) headerRequiredWidth += center.scrollWidth;
-    if (right && right.offsetParent !== null) headerRequiredWidth += right.scrollWidth;
+    // In expanded layout, center (song-navigation) is a flex child that can shrink.
+    // Only measure fixed-width sections (left & right) and add a minimum for center.
+    let fixedWidth = 0;
+    [left, right].forEach(el => {
+      if (el && el.offsetParent !== null) {
+        const style = getComputedStyle(el);
+        fixedWidth += el.scrollWidth +
+          parseFloat(style.marginLeft || 0) + parseFloat(style.marginRight || 0);
+      }
+    });
 
-    if (header.clientWidth < (headerRequiredWidth + buffer)) {
+    // Minimum center width: prev/next buttons + small title area
+    const MIN_CENTER_WIDTH = 120;
+    if (center && center.offsetParent !== null) {
+      const style = getComputedStyle(center);
+      fixedWidth += MIN_CENTER_WIDTH +
+        parseFloat(style.marginLeft || 0) + parseFloat(style.marginRight || 0);
+    }
+
+    // Account for header gaps
+    const headerStyle = getComputedStyle(header);
+    const headerGap = parseFloat(headerStyle.gap || headerStyle.columnGap || 0);
+    fixedWidth += headerGap * 2;
+
+    if (header.clientWidth < (fixedWidth + buffer)) {
       layoutFits = false;
     }
   }
@@ -55,9 +74,17 @@ function checkLayoutCollisions() {
     const right = footer.querySelector('.page-navigation');
 
     let footerRequiredWidth = 0;
-    if (left && left.offsetParent !== null) footerRequiredWidth += left.scrollWidth;
-    if (center && center.offsetParent !== null) footerRequiredWidth += center.scrollWidth;
-    if (right && right.offsetParent !== null) footerRequiredWidth += right.scrollWidth;
+    [left, center, right].forEach(el => {
+      if (el && el.offsetParent !== null) {
+        const style = getComputedStyle(el);
+        footerRequiredWidth += el.scrollWidth +
+          parseFloat(style.marginLeft || 0) + parseFloat(style.marginRight || 0);
+      }
+    });
+
+    const footerStyle = getComputedStyle(footer);
+    const footerGap = parseFloat(footerStyle.gap || footerStyle.columnGap || 0);
+    footerRequiredWidth += footerGap * 2;
 
     if (footer.clientWidth < (footerRequiredWidth + buffer)) {
       layoutFits = false;
@@ -66,8 +93,9 @@ function checkLayoutCollisions() {
 
   document.body.classList.remove('measure-layout');
 
-  // If we have enough room in BOTH header and footer, switch to expanded layout!
-  if (layoutFits) {
+  // Only use expanded layout in landscape — in portrait, landscape-controls are hidden
+  // so there's nowhere to show the inline MIDI or transpose controls.
+  if (layoutFits && window.matchMedia('(orientation: landscape)').matches) {
     document.body.classList.add('is-expanded-layout');
   } else {
     document.body.classList.remove('is-expanded-layout');
@@ -92,6 +120,8 @@ function onToggleTransposeCollapse(event) {
   if (toggleBtn) {
     toggleBtn.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
   }
+
+  syncViewerPopupState();
 }
 
 function closeTransposeCollapse() {
@@ -122,6 +152,18 @@ function onToggleFamilyChordDropdown(event) {
   if (!wasOpen) {
     dropdown.classList.add('is-open');
   }
+
+  // Suppress mini player when a viewer popup is open to prevent z-index conflict
+  syncViewerPopupState();
+}
+
+function syncViewerPopupState() {
+  const viewerOverlay = document.querySelector('.pdf-viewer-overlay');
+  const hasViewerPopup = viewerOverlay && (
+    viewerOverlay.querySelector('.family-chord-dropdown.is-open') ||
+    viewerOverlay.querySelector('.transpose-collapse.is-open')
+  );
+  document.body.classList.toggle('viewer-popup-open', !!hasViewerPopup);
 }
 
 function onGlobalDocumentClick(event) {
@@ -135,6 +177,9 @@ function onGlobalDocumentClick(event) {
 
   if (event.target.closest(".transpose-collapse")) return;
   closeTransposeCollapse();
+
+  // Restore mini player when popups close
+  syncViewerPopupState();
 }
 
 function fitViewerTitle() {

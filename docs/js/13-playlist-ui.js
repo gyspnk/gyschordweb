@@ -26,8 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (miniPlayBtn) {
     miniPlayBtn.addEventListener('click', () => {
-      if (typeof customPlayBtn !== 'undefined' && customPlayBtn) {
-        customPlayBtn.click(); // Proxy to main player
+      // Call toggleMidiPlayback directly so the click runs in a real user gesture context
+      // (using customPlayBtn.click() is a synthetic event that can't resume AudioContext)
+      if (typeof window.toggleMidiPlayback === 'function') {
+        window.toggleMidiPlayback();
       }
     });
   }
@@ -39,6 +41,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (miniNextBtn) {
     miniNextBtn.addEventListener('click', () => {
       onNextSong(true); // This will be intercepted if auto-next playlist is active
+    });
+  }
+
+  // Mini player title: tap to open PDF viewer for current song
+  const miniPlayerInfo = document.querySelector('.mini-player-info');
+  if (miniPlayerInfo) {
+    miniPlayerInfo.addEventListener('click', () => {
+      if (typeof currentSongIndex !== 'undefined' && currentSongIndex >= 0 && typeof openPdfViewer === 'function') {
+        openPdfViewer(currentSongIndex);
+      }
     });
   }
 
@@ -187,8 +199,57 @@ document.addEventListener('DOMContentLoaded', () => {
   // Sync Mini Player on interval
   setInterval(syncMiniPlayerUI, 500);
 
-  // Add interactive javascript animations to all mini player buttons
+  // Collapsible extras row: auto-collapse when mini-player is narrow
   const miniPlayerContainer = document.getElementById('mini-player');
+  const miniExtrasToggle = document.getElementById('mini-extras-toggle');
+  if (miniPlayerContainer && miniExtrasToggle) {
+    let userExpandedExtras = false;
+
+    miniExtrasToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (miniPlayerContainer.classList.contains('is-extras-expanded')) {
+        // User is collapsing
+        miniPlayerContainer.classList.remove('is-extras-expanded');
+        userExpandedExtras = false;
+      } else {
+        // User is expanding
+        miniPlayerContainer.classList.add('is-extras-expanded');
+        userExpandedExtras = true;
+      }
+    });
+
+    // Use ResizeObserver to detect when the mini-player extras don't fit
+    if (typeof ResizeObserver !== 'undefined') {
+      const extrasRow = miniPlayerContainer.querySelector('.mini-player-extras');
+      const extrasObserver = new ResizeObserver(() => {
+        if (!extrasRow) return;
+        const containerWidth = miniPlayerContainer.clientWidth - 32; // account for padding
+        // Measure actual content width needed: sum of all children's natural widths + gaps
+        let requiredWidth = 0;
+        const gap = 6; // matches CSS gap
+        const children = extrasRow.children;
+        for (let i = 0; i < children.length; i++) {
+          requiredWidth += children[i].scrollWidth;
+          if (i > 0) requiredWidth += gap;
+        }
+
+        if (containerWidth > 0 && requiredWidth > containerWidth) {
+          if (!miniPlayerContainer.classList.contains('is-extras-collapsed')) {
+            miniPlayerContainer.classList.add('is-extras-collapsed');
+            userExpandedExtras = false;
+            miniPlayerContainer.classList.remove('is-extras-expanded');
+          }
+        } else {
+          miniPlayerContainer.classList.remove('is-extras-collapsed');
+          miniPlayerContainer.classList.remove('is-extras-expanded');
+          userExpandedExtras = false;
+        }
+      });
+      extrasObserver.observe(miniPlayerContainer);
+    }
+  }
+
+  // Add interactive javascript animations to all mini player buttons
   if (miniPlayerContainer) {
     const miniBtns = miniPlayerContainer.querySelectorAll('button');
     miniBtns.forEach(btn => {
@@ -321,10 +382,13 @@ function syncMiniPlayerUI() {
   const inSettings = (document.getElementById('pengaturan-btn')?.classList.contains('selected') || 
     document.querySelector('.report-page') !== null ||
     document.querySelector('.settings-panel') !== null);
+  const appContent = document.getElementById('main-content');
   if (inViewer || inSettings) {
     miniPlayer.classList.add('is-hidden');
+    if (appContent) appContent.classList.remove('has-mini-player');
   } else if (dur > 0 || isPlaying) {
     miniPlayer.classList.remove('is-hidden');
+    if (appContent) appContent.classList.add('has-mini-player');
     miniTitle.textContent = document.getElementById('pdf-viewer-title')?.textContent || 'Lagu';
     
     // Subtitle logic
@@ -370,6 +434,7 @@ function syncMiniPlayerUI() {
     }
   } else {
     miniPlayer.classList.add('is-hidden');
+    if (appContent) appContent.classList.remove('has-mini-player');
   }
 }
 
@@ -563,18 +628,46 @@ function renderPlaylistDetail(id) {
 // Helpers called from HTML strings
 window.setNextMode = function(mode) {
   PlaylistManager.setAutoNextMode(mode);
-  const playlistBtn = document.getElementById("playlist-btn");
-  if (playlistBtn && playlistBtn.classList.contains("selected")) {
-    renderPlaylistList();
-  }
-  showToast(`Auto Next: ${mode === 'off' ? 'Mati (No Loop)' : mode === 'one' ? '1 Lagu Saja' : mode === 'number' ? 'Sesuai Nomor' : 'Sesuai Playlist'}`, "info");
 
-  // Sync loop icons
-  const globalMode = mode;
+  // Update mode buttons in-place instead of re-rendering the whole playlist view
+  document.querySelectorAll('.playlist-mode-btn').forEach(function(btn) {
+    const btnMode = btn.getAttribute('onclick');
+    // Extract the mode from onclick="setNextMode('xxx')"
+    const match = btnMode && btnMode.match(/setNextMode\(['"]([^'"]+)['"]\)/);
+    if (match) {
+      const isSelected = match[1] === mode;
+      btn.classList.toggle('selected', isSelected);
+      // Animate the newly selected button
+      if (isSelected) {
+        btn.animate([
+          { transform: 'scale(0.92)', opacity: 0.7 },
+          { transform: 'scale(1.06)', opacity: 1 },
+          { transform: 'scale(1)', opacity: 1 }
+        ], { duration: 250, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+      }
+    }
+  });
+
+  showToast(`Auto Next: ${mode === 'off' ? 'Mati (No Loop)' : mode === 'one' ? '1 Lagu Saja' : mode === 'number' ? 'Sesuai Nomor' : mode === 'playlist' ? 'Sesuai Playlist' : mode === 'shuffle-all' ? 'Acak Semua' : 'Acak Playlist'}`, "info");
+
+  // Sync loop icons with animation
   const icons = document.querySelectorAll('#mini-loop-icon, #custom-loop-icon');
   icons.forEach(icon => {
-    icon.textContent = globalMode === 'one' ? 'repeat_one' : globalMode === 'number' ? 'repeat_on' : globalMode === 'playlist' ? 'playlist_play' : (globalMode === 'shuffle-all' || globalMode === 'shuffle-playlist') ? 'shuffle' : 'repeat';  
-    if (globalMode !== 'off') {
+    const newIcon = mode === 'one' ? 'repeat_one' : mode === 'number' ? 'repeat_on' : mode === 'playlist' ? 'playlist_play' : (mode === 'shuffle-all' || mode === 'shuffle-playlist') ? 'shuffle' : 'repeat';
+    if (icon.textContent !== newIcon) {
+      icon.animate([
+        { transform: 'scale(1) rotate(0deg)', opacity: 1 },
+        { transform: 'scale(0.5) rotate(-90deg)', opacity: 0 },
+      ], { duration: 120, easing: 'ease-in', fill: 'forwards' }).onfinish = function() {
+        icon.textContent = newIcon;
+        icon.animate([
+          { transform: 'scale(0.5) rotate(90deg)', opacity: 0 },
+          { transform: 'scale(1.15) rotate(0deg)', opacity: 1 },
+          { transform: 'scale(1) rotate(0deg)', opacity: 1 }
+        ], { duration: 200, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+      };
+    }
+    if (mode !== 'off') {
       icon.classList.add("loop-active");
       icon.style.color = "var(--md-sys-color-primary)";
     } else {

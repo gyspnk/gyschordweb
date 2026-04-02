@@ -116,8 +116,17 @@ function filterPujianList() {
 function handleSettingsChange(e) {
   const targetId = e.target.id;
   if (targetId === "dark-theme-toggle") {
-    document.body.classList.toggle("dark-theme", e.target.checked);
-    localStorage.setItem("dark-theme", e.target.checked ? "1" : "0");
+    const wantDark = e.target.checked;
+    document.body.classList.toggle("dark-theme", wantDark);
+    // On dark-scheme devices, force light theme when user explicitly disables dark mode
+    if (!wantDark) {
+      document.body.classList.add("light-theme-forced");
+    } else {
+      document.body.classList.remove("light-theme-forced");
+      // Ensure dark-theme class is set even if previously relying on OS preference
+      document.body.classList.add("dark-theme");
+    }
+    localStorage.setItem("dark-theme", wantDark ? "1" : "0");
   } else if (targetId === "default-two-page-toggle") {
     prefs.defaultTwoPage = e.target.checked;
     if (e.target.checked) {
@@ -185,10 +194,11 @@ function handleSettingsChange(e) {
     persistChordUiPrefs();
     rerenderViewerIfActive();
     updateChordSettingsLabels();
-  } else if (targetId === "soundfont-select") {
-    prefs.midiSoundfont = e.target.value;
-    localStorage.setItem("prefs", JSON.stringify(prefs));
-    showToast("Soundfont akan diterapkan saat memutar lagu berikutnya");
+  } else if (targetId === "chord-fill-padding") {
+    chordUiPrefs.fillPaddingPercent = Number.parseInt(e.target.value, 10);
+    persistChordUiPrefs();
+    rerenderViewerIfActive();
+    updateChordSettingsLabels();
   }
 }
 
@@ -214,6 +224,13 @@ function updateChordSettingsLabels() {
     const opacityText = opacityLabel.querySelector("span:last-child");
     if (opacityText) {
       opacityText.textContent = `Opacity Latar Chord (${chordUiPrefs.fillOpacityPercent}%)`;
+    }
+  }
+  const paddingLabel = document.getElementById("chord-fill-padding-label");
+  if (paddingLabel) {
+    const paddingText = paddingLabel.querySelector("span:last-child");
+    if (paddingText) {
+      paddingText.textContent = `Padding Chord (${chordUiPrefs.fillPaddingPercent}%)`;
     }
   }
 }
@@ -243,9 +260,16 @@ function updateHideChordButton() {
 }
 
 function applyStoredPreferences() {
-  if (localStorage.getItem("dark-theme") === "1") {
+  const darkPref = localStorage.getItem("dark-theme");
+  if (darkPref === "1") {
     document.body.classList.add("dark-theme");
+    document.body.classList.remove("light-theme-forced");
+  } else if (darkPref === "0") {
+    document.body.classList.remove("dark-theme");
+    // Explicitly chose light mode — force it on dark-scheme devices
+    document.body.classList.add("light-theme-forced");
   }
+  // If darkPref is null (never set), respect OS preference (no classes added)
 
   const storedAccent = localStorage.getItem("accent") || "gold";
   customAccentColor = localStorage.getItem(ACCENT_CUSTOM_COLOR_KEY) || DEFAULT_CUSTOM_ACCENT;

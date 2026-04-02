@@ -178,8 +178,9 @@ function parsePdfKeyToSemitone(keyStr) {
 
 function updateTransposeVisibility() {
   const hasChords = originalFamilyChord !== null || Object.values(chordConfig.pages).some(page => page && page.length > 0);
+  const hasNoteChords = typeof hasNoteAlignedChords === "function" && hasNoteAlignedChords();
   const hasMidi = typeof midiToggleBtn !== "undefined" && midiToggleBtn && midiToggleBtn.style.display !== "none";
-  const showTranspose = hasChords || chordEditorEnabled || hasMidi;
+  const showTranspose = hasChords || hasNoteChords || chordEditorEnabled || hasMidi;
 
   document.querySelectorAll('.transpose-collapse').forEach(el => {
     el.style.display = showTranspose ? '' : 'none';
@@ -351,6 +352,7 @@ function createChordMarkerElement(entry) {
   marker.textContent = formatChordForDisplay(entry.text);
   marker.style.setProperty("--chord-font-size", `${getChordFontSizeRem()}rem`);
   marker.style.setProperty("--chord-fill-opacity", `${chordUiPrefs.fillOpacityPercent}%`);
+  marker.style.setProperty("--chord-fill-padding-scale", `${chordUiPrefs.fillPaddingPercent / 100}`);
 
   const xPercent = ((entry.col - 0.5) / chordConfig.grid.cols) * 100;
   const yPercent = ((entry.row - 0.5) / chordConfig.grid.rows) * 100;
@@ -374,6 +376,10 @@ function getChordFontSizeRem() {
 
 function onChordLayerClick(event) {
   if (!chordEditorEnabled || !pdfDoc || !document.body.classList.contains("viewer-active")) return;
+
+  // Skip if clicking within a note-aligned layer (handled by onNoteAlignedChordClick)
+  const noteAlignedLayer = event.target.closest(".note-aligned-layer");
+  if (noteAlignedLayer) return;
 
   const marker = event.target.closest(".chord-marker");
   if (marker) {
@@ -608,6 +614,11 @@ function refreshVisibleChordMarkers() {
 
     chordDissolveTimers.set(marker, timeoutId);
   });
+
+  // Also refresh note-aligned chord markers on transpose
+  if (typeof refreshNoteChordMarkers === "function") {
+    refreshNoteChordMarkers();
+  }
 }
 
 function getChordAt(pageNum, row, col) {
@@ -692,6 +703,12 @@ function updateChordEditorUI() {
   document.body.classList.toggle("chord-editor-enabled", chordEditorEnabled);
   if (chordEditorToolbar) {
     chordEditorToolbar.classList.toggle("is-collapsed", chordEditorCollapsed);
+  }
+  // Update label based on whether we're using note-aligned or grid mode
+  const label = chordEditorToolbar?.querySelector(".chord-editor-label");
+  if (label) {
+    const hasNotes = pageNotesCache && Object.values(pageNotesCache).some(c => c && c.notes && c.notes.length > 0);
+    label.textContent = hasNotes ? "Chord Editor (Note-Aligned)" : "Chord Editor 105x149";
   }
   updateTransposeVisibility();
 }

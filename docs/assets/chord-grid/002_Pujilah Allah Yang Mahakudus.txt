@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "grid": {
+    "cols": 105,
+    "rows": 149
+  },
+  "pages": {
+    "1": [
+      {
+        "row": 22,
+        "col": 13,
+        "text": "C"
+      },
+      {
+        "row": 22,
+        "col": 56,
+        "text": "G"
+      },
+      {
+        "row": 22,
+        "col": 78,
+        "text": "C"
+      },
+      {
+        "row": 59,
+        "col": 13,
+        "text": "F"
+      },
+      {
+        "row": 59,
+        "col": 38,
+        "text": "C"
+      },
+      {
+        "row": 59,
+        "col": 60,
+        "text": "F"
+      },
+      {
+        "row": 59,
+        "col": 69,
+        "text": "C"
+      },
+      {
+        "row": 59,
+        "col": 82,
+        "text": "G"
+      },
+      {
+        "row": 59,
+        "col": 92,
+        "text": "C"
+      }
+    ]
+  }
+}

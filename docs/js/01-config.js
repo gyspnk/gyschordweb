@@ -199,6 +199,11 @@ const MIDI_TRANSPOSE_DEBOUNCE_MS = 80; // Debounce rapid transpose MIDI updates
 const MIDI_PRELOAD_NEXT_S = 3; // Seconds before end to preload next song
 const MIDI_SOUNDFONT_URL = 'https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus';
 
+// --- Note-Aligned Chord Editor Constants ---
+const NOTE_CHORD_Y_OFFSET_PCT = 2.5; // Chord vertical offset above note (% of page height)
+const NOTE_IDX_BEFORE = -1; // Sentinel: chord before first note (intro)
+const NOTE_IDX_AFTER = 99999; // Sentinel: chord after last note (outro)
+
 /**
  * MidiTimeAuthority — Single source of truth for playback position.
  * Uses wall-clock (performance.now()) to advance time when playing,
@@ -344,10 +349,21 @@ async function fadeMidiVolume(targetVol, durationMs) {
 function resetMidiState() {
   MidiTimeAuthority.reset();
   window._midiSavedTime = null;
+  window._midiKnownDuration = 0;
   _midiOriginalSeq = null;
   _midiCurrentTransposedSeq = null;
   window.isMidiSwitching = false;
   window.isMidiFading = false;
+
+  // Clear midi-available so expanded-layout won't show empty player
+  var mc = document.getElementById('midi-collapse');
+  if (mc) mc.classList.remove('midi-available');
+
+  // Reset play UI to avoid stale playing state
+  var midiEl = document.getElementById('custom-midi-player');
+  if (midiEl) midiEl.classList.remove('playing');
+  var playIcon = document.getElementById('custom-play-icon');
+  if (playIcon) playIcon.textContent = 'play_arrow';
 }
 
 /**

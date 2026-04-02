@@ -33,7 +33,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=6" />
 
     <script
       src="https://mozilla.github.io/pdf.js/build/pdf.mjs"
@@ -109,6 +109,14 @@
             <span class="material-symbols-outlined">skip_next</span>
           </button>
         </div>
+        <button
+          id="mini-extras-toggle"
+          class="icon-button mini-btn mini-extras-toggle"
+          aria-label="Toggle controls"
+          type="button"
+        >
+          <span class="material-symbols-outlined">tune</span>
+        </button>
       </div>
 
       <!-- Row 2: Transpose, instrument, loop -->
@@ -123,13 +131,7 @@
               -
             </button>
             <div
-              class="family-chord-dropdown"
-              style="
-                bottom: 100%;
-                top: auto;
-                left: 50%;
-                transform: translateX(-50%) translateY(-8px) scale(0.96);
-              "
+              class="family-chord-dropdown mini-family-dropdown"
               hidden
             ></div>
           </div>
@@ -171,11 +173,14 @@
             >
           </button>
           <div
-            class="cis-menu-popover"
-            style="bottom: 100%; top: auto; margin-bottom: 8px"
+            class="cis-menu-popover mini-cis-popover"
             id="mini-cis-menu"
             role="listbox"
           >
+              <div class="cis-soundfont-toggle">
+                <button type="button" class="cis-sf-btn selected" data-sf="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus">SGM Plus</button>
+                <button type="button" class="cis-sf-btn" data-sf="https://storage.googleapis.com/magentadata/js/soundfonts/salamander">Salamander</button>
+              </div>
               <div class="cis-grid">
                 <!-- PIANO -->
                 <div class="cis-category">Piano & Keyboard</div>
@@ -832,7 +837,7 @@
       <header class="pdf-viewer-header">
         <div
           class="header-left"
-          style="display: flex; align-items: center; gap: 0.5rem; z-index: 10"
+          style="display: flex; align-items: center; gap: 0.5rem"
         >
           <button
             id="pdf-viewer-close"
@@ -910,6 +915,10 @@
                     </button>
                     <!-- Popover menu list -->
                     <div class="cis-menu-popover" id="cis-menu" role="listbox">
+                      <div class="cis-soundfont-toggle">
+                        <button type="button" class="cis-sf-btn selected" data-sf="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus">SGM Plus</button>
+                        <button type="button" class="cis-sf-btn" data-sf="https://storage.googleapis.com/magentadata/js/soundfonts/salamander">Salamander</button>
+                      </div>
                       <div class="cis-grid">
                         <!-- PIANO -->
                         <div class="cis-category">Piano & Keyboard</div>
@@ -1790,6 +1799,14 @@
         <div id="chord-editor-controls" class="chord-editor-controls">
           <div class="chord-editor-label">Chord Editor 105x149</div>
           <button
+            id="chord-load-btn"
+            class="icon-button"
+            type="button"
+            aria-label="Muat file chord"
+          >
+            <span class="material-symbols-outlined">upload_file</span>
+          </button>
+          <button
             id="chord-save-btn"
             class="icon-button"
             type="button"
@@ -1942,20 +1959,21 @@
       Gunakan Tombol untuk Zoom
     </div>
 
-    <script defer src="js/01-config.js"></script>
-    <script defer src="js/02-dom.js"></script>
-    <script defer src="js/03-state.js"></script>
+    <script defer src="js/01-config.js?v=10"></script>
+    <script defer src="js/02-dom.js?v=6"></script>
+    <script defer src="js/03-state.js?v=7"></script>
 
-    <script defer src="js/05-events.js"></script>
-    <script defer src="js/06-navigation.js"></script>
-    <script defer src="js/07-pdf-viewer.js"></script>
-    <script defer src="js/08-chord-logic.js"></script>
-    <script defer src="js/04-init.js"></script>
-    <script defer src="js/09-ui-helpers.js"></script>
-    <script defer src="js/10-zoom-gestures.js"></script>
-    <script defer src="js/11-handlers.js"></script>
-    <script defer src="js/12-playlist.js"></script>
-    <script defer src="js/13-playlist-ui.js"></script>
+    <script defer src="js/05-events.js?v=6"></script>
+    <script defer src="js/06-navigation.js?v=7"></script>
+    <script defer src="js/07-pdf-viewer.js?v=6"></script>
+    <script defer src="js/08-chord-logic.js?v=8"></script>
+    <script defer src="js/14-note-chord-editor.js?v=7"></script>
+    <script defer src="js/04-init.js?v=6"></script>
+    <script defer src="js/09-ui-helpers.js?v=6"></script>
+    <script defer src="js/10-zoom-gestures.js?v=6"></script>
+    <script defer src="js/11-handlers.js?v=7"></script>
+    <script defer src="js/12-playlist.js?v=6"></script>
+    <script defer src="js/13-playlist-ui.js?v=6"></script>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {

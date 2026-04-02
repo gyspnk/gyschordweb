@@ -1,1 +1,19 @@
 node_modules/
+
+# Playwright MCP session artifacts (logs, snapshots, screenshots)
+.playwright-mcp/*.log
+.playwright-mcp/*.yml
+.playwright-mcp/*.png
+
+# Development scripts archive (one-off fix/patch scripts, not needed for deployment)
+scripts_archive/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Playwright
+.playwright-mcp/
+playwright-report/
+test-results/
