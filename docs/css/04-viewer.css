@@ -23,6 +23,7 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
     display: flex; align-items: center; justify-content: center;
     gap: 0.5rem; overflow: visible;
     transition: left 0.2s, right 0.2s;
+    z-index: 1;
 }
 /* Expanded layout: landscape only — grid centers title with equal flanking columns */
 @media (orientation: landscape) {
@@ -66,6 +67,7 @@ body.measure-layout .pdf-viewer-footer * {
     display: flex; flex-direction: column; align-items: center; text-align: center;
     min-width: 0; overflow: hidden;
     transition: opacity 0.15s ease-out;
+    cursor: pointer;
 }
 .song-title-wrapper.is-navigating {
     opacity: 0;
@@ -451,49 +453,36 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
     flex-shrink: 0;
     min-width: 0;
   }
-  /* song-navigation is the 1fr grid cell; keep it non-positioned so the title
-     can anchor absolutely to .pdf-viewer-header (position:relative) */
+  /* song-navigation: flex row; title flex-grows to fill space between buttons */
   .song-navigation {
     position: static;
     display: flex;
     align-items: center;
+    gap: 0;
     overflow: visible;
     left: auto;
     right: auto;
     transform: none;
     min-width: 0;
-  }
-  /* Title floats absolutely centered on the page regardless of button asymmetry */
-  .song-title-wrapper {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
     width: 100%;
-    max-width: calc(100% - 200px);
-    pointer-events: none;
-    z-index: 0;
+  }
+  /* Title takes all remaining space; fitViewerTitle() shrinks font to fit */
+  .song-title-wrapper {
+    position: static;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow: hidden;
+    transform: none;
+    max-width: none;
+    pointer-events: auto;
+    z-index: auto;
   }
-  /* Buttons stay in flex flow above the floating title */
-  #song-prev {
-    position: relative;
-    z-index: 1;
-    flex-shrink: 0;
-  }
-  #song-next {
-    margin-left: auto;
-    position: relative;
-    z-index: 1;
-    flex-shrink: 0;
-  }
-  .song-navigation .midi-collapse {
-    position: relative;
-    z-index: 1;
-    flex-shrink: 0;
-  }
+  #song-prev { flex-shrink: 0; }
+  #song-next { flex-shrink: 0; margin-left: 0; }
+  .song-navigation .midi-collapse { flex-shrink: 0; }
   
   .pdf-viewer-footer {
     display: grid;
@@ -823,6 +812,12 @@ body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-play
 /* Remove inline margin-left on button wrappers so only gap controls spacing */
 body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .instrument-selector-wrapper {
   margin-left: 0 !important;
+}
+/* CIS popover: open rightward from right edge of button to stay on-screen */
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .cis-menu-popover {
+  left: auto !important;
+  right: 0 !important;
+  transform-origin: top right;
 }
 /* Compact popup MIDI player: hide text labels and reduce spacing */
 body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {

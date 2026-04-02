@@ -357,6 +357,9 @@ function setupEventListeners() {
     let isDraggingSeekbar = false;
     window._midiLastSeekValue = -1;
 
+    // Debounce: track when end detection last fired to prevent double-triggering
+    let _midiEndDetectedAt = 0;
+
     let _seekbarRafId = null;
     function seekbarAnimationLoop() {
       _seekbarRafId = requestAnimationFrame(seekbarAnimationLoop);
@@ -368,7 +371,10 @@ function setupEventListeners() {
       const curr = MidiTimeAuthority.getTime();
 
       // Song end detection — use proper threshold constant
-      if (dur > 0 && curr >= dur - MIDI_END_THRESHOLD_S && MidiTimeAuthority._playing && !window.isMidiSwitching) {
+      const now = performance.now();
+      if (dur > 0 && curr >= dur - MIDI_END_THRESHOLD_S && MidiTimeAuthority._playing && !window.isMidiSwitching
+          && (now - _midiEndDetectedAt) > 1000) {
+        _midiEndDetectedAt = now;
         MidiTimeAuthority.setPlaying(false);
         MidiTimeAuthority.setTime(0, dur);
         if (_midiSfPlayer && _midiSfPlayer.isPlaying()) {
@@ -386,8 +392,10 @@ function setupEventListeners() {
         window._midiLastSeekValue = 0;
         window._midiSavedTime = null;
 
+        const endMode = PlaylistManager.getAutoNextMode();
+
         // Loop intercept — repeat one
-        if (PlaylistManager.getAutoNextMode() === "one") {
+        if (endMode === "one") {
           try {
             const volNode = getToneVolNode();
             if (volNode && volNode.volume) {
@@ -408,8 +416,9 @@ function setupEventListeners() {
           return;
         }
 
-        // Auto next intercept — playlist/number/shuffle modes
-        if (typeof window._playlistCheckAutoNext === "function") {
+        // Auto next intercept — only for active auto-next modes (never for 'off')
+        if (endMode !== 'off' && typeof window._playlistCheckAutoNext === "function") {
+          window._autoAdvanceFromEnd = true;
           window._playlistCheckAutoNext();
         }
         return;
@@ -590,7 +599,7 @@ function setupEventListeners() {
     btn.addEventListener("click", onToggleChordsHidden),
   );
 
-  pdfViewerTitle.addEventListener("click", handleTitleActivatorTap);
+  songTitleWrapper.addEventListener("click", handleTitleActivatorTap);
 
   if (screen.orientation) {
     screen.orientation.addEventListener("change", handleOrientationChange);

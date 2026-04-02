@@ -1,24 +1,63 @@
 // --- 6. PDF Viewer ---
 async function openPdfViewer(songId, backgroundLoad = false) {
+  // Guard against rapid prev/next navigation: each call gets a generation number.
+  // After the animation delay, stale calls (superseded by a newer navigation) abort
+  // before touching any shared audio/MIDI/PDF state, preventing race conditions.
+  const thisOpenGeneration = ++_openPdfViewerGeneration;
+
   currentSongIndex = parseInt(songId, 10);
   localStorage.setItem("GysLastPlayedSongIndex", currentSongIndex);
   const song = pujianItems[currentSongIndex];
   if (!song) return;
 
+  // Determine early if this is the same song that is already loaded and rendered.
+  let _earlyRawUrl = song.fileHref;
+  if (_earlyRawUrl) {
+    _earlyRawUrl = _earlyRawUrl.replace(/\/pdf\//i, "/midi/").replace(/\.pdf$/i, ".mid");
+  }
+  const _earlyIsSameSong = window._midiCurrentlyLoadedRawUrl === _earlyRawUrl;
+  // If the same song is already decoded and the canvas is still rendered, we can
+  // skip the heavy PDF re-load/render to avoid audio jank during the transition.
+  const _canReuseDoc = _earlyIsSameSong && !!pdfDoc;
+
   // Start fetching PDF immediately to overlap network with transition
+  // (skipped when we can reuse the existing decoded document)
   const pdfOptions = {
     url: song.fileHref,
     standardFontDataUrl: "https://mozilla.github.io/pdf.js/standard_fonts/",
   };
-  const loadingTask = pdfjsLib.getDocument(pdfOptions);
+  const loadingTask = _canReuseDoc ? null : pdfjsLib.getDocument(pdfOptions);
 
-  songTitleWrapper.classList.add("is-navigating");
-  canvasWrapper.classList.add("is-navigating");
-  await new Promise((resolve) => setTimeout(resolve, 150));
+  // Cut MIDI audio immediately on manual navigation — before the animation wait —
+  // to prevent the old song from sustaining audibly during the transition.
+  if (!_earlyIsSameSong && window._manualNavigation && _midiSfPlayer) {
+    const volNode = getToneVolNode();
+    if (volNode && volNode.volume) {
+      volNode.volume.cancelScheduledValues(window.Tone.now());
+      volNode.volume.value = MIDI_SILENT_VOLUME;
+    }
+    try { _midiSfPlayer.stop(); } catch (e) {}
+  }
+
+  if (!_canReuseDoc) {
+    // Animate title/canvas only when actually switching content
+    songTitleWrapper.classList.add("is-navigating");
+    canvasWrapper.classList.add("is-navigating");
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    // Abort if a newer navigation started during the animation delay.
+    // This prevents multiple rapid prev/next presses from concurrently
+    // corrupting shared MIDI/PDF state.
+    if (_openPdfViewerGeneration !== thisOpenGeneration) {
+      return;
+    }
+  }
 
   pdfViewerTitle.textContent = song.judul;
   pdfViewerNumber.textContent = `No. ${song.nomor}`;
-  songTitleWrapper.classList.remove("is-navigating");
+  if (!_canReuseDoc) {
+    songTitleWrapper.classList.remove("is-navigating");
+  }
   fitViewerTitle();
 
   if (!backgroundLoad && !document.body.classList.contains("viewer-active")) {
@@ -203,63 +242,78 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   updateChordEditorUI();
 
   try {
-    pdfDoc = await loadingTask.promise;
+    if (_canReuseDoc) {
+      // Fast path: same song, pdfDoc already decoded, canvas already rendered.
+      // Just restore the viewer UI without any PDF work — keeps audio seamless.
+      [pageCountElPortrait, pageCountElLandscape].forEach((el) => {
+        el.textContent = pdfDoc.numPages;
+      });
+      updateViewerUI();
+      updateHideChordButton();
+      updateSongNavButtons();
+      fitViewerTitle();
+      // canvasWrapper.is-navigating was never added in this path, but clear it defensively
+      canvasWrapper.classList.remove("is-navigating");
+      songTitleWrapper.classList.remove("is-navigating");
+    } else {
+      pdfDoc = await loadingTask.promise;
 
-    // Extract PDF Key
-    try {
-      const page1 = await pdfDoc.getPage(1);
-      const textContent = await page1.getTextContent();
-      const pdfText = textContent.items.map((item) => item.str).join(" ");
+      // Extract PDF Key
+      try {
+        const page1 = await pdfDoc.getPage(1);
+        const textContent = await page1.getTextContent();
+        const pdfText = textContent.items.map((item) => item.str).join(" ");
 
-      const keyMatch = pdfText.match(
-        /(?:(?:do|la)\s*={1,2}\s*|[23469]\s*[\/|]\s*[248]\s+)([A-G](?:es|is|s|#|b)?(?:m)?)\b/i,
-      );
-      if (keyMatch) {
-        originalPdfKey = keyMatch[1];
-      } else {
+        const keyMatch = pdfText.match(
+          /(?:(?:do|la)\s*={1,2}\s*|[23469]\s*[\/|]\s*[248]\s+)([A-G](?:es|is|s|#|b)?(?:m)?)\b/i,
+        );
+        if (keyMatch) {
+          originalPdfKey = keyMatch[1];
+        } else {
+          originalPdfKey = null;
+        }
+      } catch (err) {
+        console.warn(
+          "Gagal mengekstrak teks PDF untuk mendeteksi nada dasar:",
+          err,
+        );
         originalPdfKey = null;
       }
-    } catch (err) {
-      console.warn(
-        "Gagal mengekstrak teks PDF untuk mendeteksi nada dasar:",
-        err,
-      );
-      originalPdfKey = null;
-    }
 
-    [pageCountElPortrait, pageCountElLandscape].forEach((el) => {
-      el.textContent = pdfDoc.numPages;
-    });
+      [pageCountElPortrait, pageCountElLandscape].forEach((el) => {
+        el.textContent = pdfDoc.numPages;
+      });
 
-    if (!isSameSong) {
-      await loadChordConfigurationForSong(song);
-      // Also load note-aligned chord config
-      if (typeof loadNoteChordConfiguration === "function") {
-        pageNotesCache = {}; // Clear note cache for new song
-        await loadNoteChordConfiguration(song);
-        if (hasNoteAlignedChords()) {
-          detectNoteAlignedFamilyChord();
+      if (!isSameSong) {
+        await loadChordConfigurationForSong(song);
+        // Also load note-aligned chord config
+        if (typeof loadNoteChordConfiguration === "function") {
+          pageNotesCache = {}; // Clear note cache for new song
+          await loadNoteChordConfiguration(song);
+          if (hasNoteAlignedChords()) {
+            detectNoteAlignedFamilyChord();
+          }
         }
+        currentPageNum = 1;
+        currentViewMode =
+          pdfDoc.numPages > 1 && prefs.defaultTwoPage ? "double" : "single";
+        currentScrollMode = prefs.defaultVerticalScroll
+          ? "vertical"
+          : "horizontal";
+        currentScale = "page-fit";
       }
-      currentPageNum = 1;
-      currentViewMode =
-        pdfDoc.numPages > 1 && prefs.defaultTwoPage ? "double" : "single";
-      currentScrollMode = prefs.defaultVerticalScroll
-        ? "vertical"
-        : "horizontal";
-      currentScale = "page-fit";
+
+      updateViewerUI();
+      updateHideChordButton();
+      await renderPage(currentPageNum);
+      updateSongNavButtons();
+      fitViewerTitle();
+
+      // Force a reflow before removing the class to ensure proper transition
+      void canvasWrapper.offsetWidth;
+
+      canvasWrapper.classList.remove("is-navigating");
     }
-
-    updateViewerUI();
-    updateHideChordButton();
-    await renderPage(currentPageNum);
-    updateSongNavButtons();
-    fitViewerTitle();
-
-    // Force a reflow before removing the class to ensure proper transition
-    void canvasWrapper.offsetWidth;
-
-    canvasWrapper.classList.remove("is-navigating");
   } catch (reason) {
     viewerLoader.classList.remove("visible");
     songTitleWrapper.classList.remove("is-navigating");

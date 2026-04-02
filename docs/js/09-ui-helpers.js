@@ -184,8 +184,8 @@ function onGlobalDocumentClick(event) {
 
 function fitViewerTitle() {
   autoFitTextSingleLine(pdfViewerTitle, {
-    maxPx: 18,
-    minPx: 10
+    maxPx: 16,
+    minPx: 9
   });
 }
 
@@ -308,7 +308,9 @@ function updateSongNavButtons() {
 
 async function closePdfViewer() {
   document.body.classList.remove("viewer-active");
-  pdfDoc = null;
+  // Keep pdfDoc alive so reopening the same song from the mini player can skip
+  // re-decoding and re-rendering — avoids main-thread jank that dips the audio.
+  // pdfDoc is replaced automatically when a different song is loaded.
   // Do NOT reset currentSongIndex so the Mini Player remains globally synced.
   titleTapCount = 0;
   lastViewerTapAt = 0;

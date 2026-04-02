@@ -746,7 +746,10 @@ window.playSongFromPlaylist = async function(songIndex, isBackground = false, fo
 
 window._playlistCheckAutoNext = function() {
   const mode = PlaylistManager.getAutoNextMode();
-  if (mode === 'off') return false;
+  if (mode === 'off') {
+    window._autoAdvanceFromEnd = false; // clear stale flag
+    return false;
+  }
   
   if (mode === 'number') {
     // Next song by global index
