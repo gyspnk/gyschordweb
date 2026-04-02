@@ -4,16 +4,18 @@ async function init() {
     // Setup Tone.js audio chain: Volume -> Compressor -> Limiter -> speakers
     // Intercepts the Destination's internal Volume node so ALL audio
     // (including SoundFontPlayer output) passes through dynamics processing.
+    // NOTE: No artificial reverb — the SoundFont samples have built-in reverb
+    // in their release tails. The retirePlayer() system lets those tails ring
+    // naturally instead of cutting them off.
     if (window.Tone) {
       if (Tone.getDestination) {
         Tone.getDestination().volume.value = -6; // Master volume: -6 dB
         try {
-          // Build processing chain first (no audio impact yet)
           const compressor = new Tone.Compressor({
-            threshold: -24,
-            ratio: 4,
-            attack: 0.003,
-            release: 0.25  // Longer release for smoother dynamics
+            threshold: -18,   // gentle threshold — avoids pumping
+            ratio: 2.5,       // soft ratio — transparent dynamics
+            attack: 0.01,     // lets transients through cleanly
+            release: 0.3      // smooth release
           });
           const limiter = new Tone.Limiter(-1);
           compressor.connect(limiter);

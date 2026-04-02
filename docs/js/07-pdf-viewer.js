@@ -591,6 +591,13 @@ async function applyScaleAndRerender({
   const zoomRatio = newScale / oldScale;
   const activeWrapper = canvasWrapper;
 
+  // Clear any in-flight glide animation so bounding rect reads are accurate
+  activeWrapper.style.transition = "";
+  activeWrapper.style.transform = "";
+  activeWrapper.style.transformOrigin = "";
+  activeWrapper.classList.remove("pinch-preview", "wheel-preview", "zoom-animating");
+  activeWrapper.getBoundingClientRect(); // force reflow
+
   // Compute anchor position relative to wrapper origin in document coordinates.
   const activeRect = activeWrapper.getBoundingClientRect();
   const wrapperBaseX = container.scrollLeft + (activeRect.left - rect.left);
@@ -780,14 +787,26 @@ async function onPrevSong(forceAutoplay = false, allowRewind = false) {
       try {
         const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
         const volNode = getToneVolNode();
-        // Micro-fade out before stop to prevent click
-        if (_midiSfPlayer.isPlaying()) {
-          if (volNode && volNode.volume) {
-            volNode.volume.cancelScheduledValues(window.Tone.now());
-            volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, window.Tone.now() + MIDI_CROSSFADE_OUT_MS / 1000);
+        const wasPlaying = _midiSfPlayer.isPlaying();
+        // Micro-fade out, then retire old player to let tails ring
+        if (wasPlaying) {
+          if (volNode && volNode.volume && window.Tone) {
+            const t = window.Tone.now();
+            volNode.volume.cancelScheduledValues(t);
+            volNode.volume.setValueAtTime(volNode.volume.value, t);
+            volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_CROSSFADE_OUT_MS / 1000);
           }
           await new Promise(r => setTimeout(r, MIDI_CROSSFADE_OUT_MS));
-          _midiSfPlayer.stop();
+          retirePlayer(_midiSfPlayer, MIDI_TAIL_LINGER_MS);
+        } else {
+          retirePlayer(_midiSfPlayer, 0);
+        }
+        // Create fresh player and restart from 0
+        const sfUrl = (prefs && prefs.midiSoundfont) || MIDI_SOUNDFONT_URL;
+        _midiSfPlayer = new core.SoundFontPlayer(sfUrl);
+        _midiSfPlayer._soundFontURL = sfUrl;
+        if (_midiCurrentTransposedSeq) {
+          await _midiSfPlayer.loadSamples(_midiCurrentTransposedSeq);
         }
         // Ensure volume is silent before start
         if (volNode && volNode.volume) {
@@ -1130,10 +1149,10 @@ function preloadAdjacentTransposeSamples(currentStep) {
  * @param {number} step - Transpose step (-5 to +6)
  */
 async function swapTranspose(step) {
-  if (!_midiOriginalSeq || !_midiSfPlayer) return;
+  if (!_midiOriginalSeq) return;
   if (_midiSfPlayerLoading) return;
 
-  const wasPlaying = _midiSfPlayer.isPlaying();
+  const wasPlaying = _midiSfPlayer && _midiSfPlayer.isPlaying();
   const dur = MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0;
   const currTime = MidiTimeAuthority.getTime();
 
@@ -1156,18 +1175,27 @@ async function swapTranspose(step) {
   MidiTimeAuthority.setPlaying(false);
   if (wasPlaying) MidiTimeAuthority.setTime(currTime, dur);
 
-  // Micro-fade out before stopping to prevent click
-  if (wasPlaying) {
+  // Retire old player so tails ring out, then create a fresh one
+  if (wasPlaying && _midiSfPlayer) {
     const volNode = getToneVolNode();
-    if (volNode && volNode.volume) {
-      volNode.volume.cancelScheduledValues(window.Tone.now());
-      volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, window.Tone.now() + MIDI_CROSSFADE_OUT_MS / 1000);
+    if (volNode && volNode.volume && window.Tone) {
+      const t = window.Tone.now();
+      volNode.volume.cancelScheduledValues(t);
+      volNode.volume.setValueAtTime(volNode.volume.value, t);
+      volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_CROSSFADE_OUT_MS / 1000);
     }
     await new Promise(r => setTimeout(r, MIDI_CROSSFADE_OUT_MS));
-    try { _midiSfPlayer.stop(); } catch (e) {}
+    retirePlayer(_midiSfPlayer, MIDI_TAIL_LINGER_MS);
+  } else if (_midiSfPlayer) {
+    retirePlayer(_midiSfPlayer, 0);
   }
 
-  // Load new samples (only fetches missing pitch samples — cached ones are reused)
+  // Create fresh player for the new transposition
+  const sfUrl = (prefs && prefs.midiSoundfont) || MIDI_SOUNDFONT_URL;
+  _midiSfPlayer = new core.SoundFontPlayer(sfUrl);
+  _midiSfPlayer._soundFontURL = sfUrl;
+
+  // Load samples for the new transposed sequence
   try {
     await _midiSfPlayer.loadSamples(newSeq);
   } catch (err) {
@@ -1183,11 +1211,6 @@ async function swapTranspose(step) {
     if (volNode && volNode.volume) {
       volNode.volume.cancelScheduledValues(window.Tone.now());
       volNode.volume.value = MIDI_SILENT_VOLUME;
-    }
-
-    // Guard: stop any in-progress playback before starting
-    if (_midiSfPlayer.isPlaying()) {
-      try { _midiSfPlayer.stop(); } catch (e) {}
     }
 
     try {
@@ -1223,22 +1246,29 @@ async function changeInstrument() {
   MidiTimeAuthority.setPlaying(false);
   if (wasPlaying) MidiTimeAuthority.setTime(currTime, dur);
 
-  // Micro-fade out before stopping to prevent click
-  if (_midiSfPlayer && _midiSfPlayer.isPlaying()) {
-    const volNode = getToneVolNode();
-    if (volNode && volNode.volume) {
-      volNode.volume.cancelScheduledValues(window.Tone.now());
-      volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, window.Tone.now() + MIDI_CROSSFADE_OUT_MS / 1000);
+  // Retire old player so tails ring out naturally
+  if (_midiSfPlayer) {
+    if (wasPlaying) {
+      const volNode = getToneVolNode();
+      if (volNode && volNode.volume && window.Tone) {
+        const t = window.Tone.now();
+        volNode.volume.cancelScheduledValues(t);
+        volNode.volume.setValueAtTime(volNode.volume.value, t);
+        volNode.volume.linearRampToValueAtTime(MIDI_SILENT_VOLUME, t + MIDI_CROSSFADE_OUT_MS / 1000);
+      }
+      await new Promise(r => setTimeout(r, MIDI_CROSSFADE_OUT_MS));
+      retirePlayer(_midiSfPlayer, MIDI_TAIL_LINGER_MS);
+    } else {
+      retirePlayer(_midiSfPlayer, 0);
     }
-    await new Promise(r => setTimeout(r, MIDI_CROSSFADE_OUT_MS));
-    try { _midiSfPlayer.stop(); } catch (e) {}
   }
 
   window.isMidiSwitching = true;
 
-  // Recreate player to pick up new instrument (SoundFont caches by program number)
+  // Create fresh player for new instrument
   const sfUrl = (prefs && prefs.midiSoundfont) || MIDI_SOUNDFONT_URL;
   _midiSfPlayer = new core.SoundFontPlayer(sfUrl);
+  _midiSfPlayer._soundFontURL = sfUrl;
 
   const currentTranspose = typeof transposeStep === "number" ? transposeStep : 0;
 
@@ -1279,11 +1309,6 @@ async function changeInstrument() {
     if (volNode && volNode.volume) {
       volNode.volume.cancelScheduledValues(window.Tone.now());
       volNode.volume.value = MIDI_SILENT_VOLUME;
-    }
-
-    // Guard: stop any in-progress playback before starting
-    if (_midiSfPlayer.isPlaying()) {
-      try { _midiSfPlayer.stop(); } catch (e) {}
     }
 
     try {

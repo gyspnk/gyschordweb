@@ -189,7 +189,7 @@ const TRANSPOSE_DISSOLVE_IN_MS = 230;
 // --- MIDI Audio Transition Constants ---
 const MIDI_TARGET_VOLUME = -3; // Standard volume in dB (combined with Tone.Destination -6dB)
 const MIDI_SILENT_VOLUME = -60; // "Silent" volume in dB
-const MIDI_FADE_IN_MS = 80; // Fade-in duration for play (prevent clicks)
+const MIDI_FADE_IN_MS = 120; // Fade-in duration for play (prevent clicks)
 const MIDI_FADE_OUT_MS = 1200; // Fade-out duration for pause
 const MIDI_CROSSFADE_OUT_MS = 200; // Crossfade out duration for transpose/instrument/seek
 const MIDI_CROSSFADE_IN_MS = 200; // Crossfade in duration (symmetric for seamless feel)
@@ -198,7 +198,8 @@ const MIDI_END_THRESHOLD_S = 0.8; // Threshold in seconds for detecting song end
 const MIDI_TRANSPOSE_DEBOUNCE_MS = 80; // Debounce rapid transpose MIDI updates
 const MIDI_PRELOAD_NEXT_S = 3; // Seconds before end to preload next song
 const MIDI_SOUNDFONT_URL = 'https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus';
-const MIDI_MICRO_RAMP_S = 0.015; // 15ms micro-ramp for click-free instant volume changes
+const MIDI_MICRO_RAMP_S = 0.025; // 25ms micro-ramp for click-free instant volume changes
+const MIDI_TAIL_LINGER_MS = 3000; // How long retired players linger to let SoundFont release/reverb tails finish
 
 // --- Note-Aligned Chord Editor Constants ---
 const NOTE_CHORD_Y_OFFSET_PCT = 2.5; // Chord vertical offset above note (% of page height)
@@ -324,6 +325,8 @@ function formatMidiTime(seconds) {
 
 /**
  * Smoothly fade Tone.js master volume to a target value.
+ * Uses exponential ramp for natural-sounding fades and avoids clicks
+ * by anchoring the current value before scheduling.
  * @param {number} targetVol - Target volume in dB
  * @param {number} durationMs - Fade duration in milliseconds
  * @returns {Promise<void>} Resolves after fade completes
@@ -332,16 +335,48 @@ async function fadeMidiVolume(targetVol, durationMs) {
   const volNode = getToneVolNode();
   if (!volNode || !volNode.volume || !window.Tone) return;
   const t = window.Tone.now();
+
+  // Cancel any previously scheduled ramps to avoid conflicts
   volNode.volume.cancelScheduledValues(t);
+  // Anchor current value so the ramp starts from the correct level
   volNode.volume.setValueAtTime(volNode.volume.value, t);
 
   if (durationMs > 0) {
-    volNode.volume.linearRampToValueAtTime(targetVol, t + durationMs / 1000);
+    // Use linearRamp for dB-space (already perceptually logarithmic)
+    // Add a micro-offset to avoid zero-duration ramp bugs in some browsers
+    volNode.volume.linearRampToValueAtTime(targetVol, t + durationMs / 1000 + 0.001);
   } else {
     volNode.volume.value = targetVol;
   }
 
-  await new Promise((r) => setTimeout(r, durationMs + 30));
+  // Wait for ramp to complete plus a small safety margin
+  await new Promise((r) => setTimeout(r, durationMs + 50));
+
+  // Snap to target to avoid floating-point drift
+  try {
+    volNode.volume.cancelScheduledValues(window.Tone.now());
+    volNode.volume.value = targetVol;
+  } catch (_e) {}
+}
+
+/**
+ * Retire an old SoundFontPlayer so its SoundFont release/reverb tails can
+ * ring out naturally instead of being abruptly cut off.
+ *
+ * The player is kept alive for `lingerMs` (default MIDI_TAIL_LINGER_MS) after
+ * being detached from `_midiSfPlayer`. After the linger period, `.stop()` is
+ * called to free resources.
+ *
+ * @param {object} player - The SoundFontPlayer instance to retire (may be null)
+ * @param {number} [lingerMs] - How long to let it ring (default MIDI_TAIL_LINGER_MS)
+ */
+function retirePlayer(player, lingerMs) {
+  if (!player) return;
+  const delay = lingerMs != null ? lingerMs : MIDI_TAIL_LINGER_MS;
+  // Fire-and-forget: the closure prevents GC while the timer is alive
+  setTimeout(() => {
+    try { if (player.isPlaying()) player.stop(); } catch (_e) {}
+  }, delay);
 }
 
 /**

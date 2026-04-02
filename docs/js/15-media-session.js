@@ -10,19 +10,27 @@
   let _wakeLockSentinel = null;
   let _lastKnownTitle = '';
   let _mediaSessionActive = false;
-  let _silentAudio = null; // HTMLAudioElement used to activate Media Session on mobile
+  let _silentAudio = null;       // HTMLAudioElement bridge for Media Session
+  let _silentAudioReady = false; // True once the audio element is created and can play
+  let _silentAudioPending = false; // Prevents concurrent play attempts
 
-  // ─── Silent audio element ────────────────────────────────────────────────────
-  // Mobile browsers (Android Chrome, iOS Safari) require an active HTMLMediaElement
-  // for Media Session notifications (lock screen / notification shade controls).
-  // Tone.js uses the Web Audio API which doesn't trigger the browser's media UI.
-  // We create a tiny silent WAV that loops while MIDI is playing.
+  // ─── Silent audio bridge ─────────────────────────────────────────────────────
+  // Mobile browsers (Android Chrome, iOS Safari) ONLY show media notifications
+  // (lock screen / notification shade controls) when an HTMLMediaElement is
+  // actively playing. Tone.js uses the Web Audio API, which doesn't trigger
+  // the browser's media session UI.
+  //
+  // Strategy: create a short silent WAV, loop it via <audio>, and keep it
+  // playing while MIDI is active. The audio element provides the "anchor" that
+  // browsers need to display notification controls.
 
-  function _createSilentAudio() {
-    if (_silentAudio) return _silentAudio;
-    // Minimal valid WAV: 1 channel, 8000 Hz, 8-bit, 1 second of silence
+  /**
+   * Generates a minimal valid WAV data-URI with `seconds` of silence.
+   * Uses 8-bit mono @ 8 kHz to keep memory tiny.
+   */
+  function _generateSilentWavURL(seconds) {
     const sampleRate = 8000;
-    const numSamples = sampleRate; // 1 second
+    const numSamples = sampleRate * Math.max(1, Math.ceil(seconds));
     const headerSize = 44;
     const dataSize = numSamples;
     const buffer = new ArrayBuffer(headerSize + dataSize);
@@ -32,31 +40,23 @@
     _writeString(view, 0, 'RIFF');
     view.setUint32(4, 36 + dataSize, true);
     _writeString(view, 8, 'WAVE');
-    // fmt  sub-chunk
+    // fmt sub-chunk
     _writeString(view, 12, 'fmt ');
-    view.setUint32(16, 16, true);       // sub-chunk size
+    view.setUint32(16, 16, true);
     view.setUint16(20, 1, true);        // PCM
     view.setUint16(22, 1, true);        // mono
     view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate, true); // byte rate
-    view.setUint16(32, 1, true);        // block align
-    view.setUint16(34, 8, true);        // bits per sample
+    view.setUint32(28, sampleRate, true);
+    view.setUint16(32, 1, true);
+    view.setUint16(34, 8, true);
     // data sub-chunk
     _writeString(view, 36, 'data');
     view.setUint32(40, dataSize, true);
-    // samples: 128 = silence for 8-bit unsigned PCM
-    const samples = new Uint8Array(buffer, headerSize, dataSize);
-    samples.fill(128);
+    // 128 = silence for unsigned 8-bit PCM
+    new Uint8Array(buffer, headerSize, dataSize).fill(128);
 
     const blob = new Blob([buffer], { type: 'audio/wav' });
-    const url = URL.createObjectURL(blob);
-
-    _silentAudio = new Audio(url);
-    _silentAudio.loop = true;
-    _silentAudio.volume = 0.01; // near-silent but non-zero so browsers don't skip it
-    // Prevent the silent audio from interfering with audio focus unnecessarily
-    _silentAudio.setAttribute('playsinline', '');
-    return _silentAudio;
+    return URL.createObjectURL(blob);
   }
 
   function _writeString(view, offset, str) {
@@ -65,16 +65,43 @@
     }
   }
 
-  /** Start the silent audio to activate Media Session on mobile. */
+  function _ensureSilentAudio() {
+    if (_silentAudio) return _silentAudio;
+    const url = _generateSilentWavURL(2); // 2-second loop
+    const audio = new Audio();
+    audio.src = url;
+    audio.loop = true;
+    audio.volume = 0.01; // near-silent but non-zero — browsers skip volume=0
+    audio.setAttribute('playsinline', '');
+    audio.preload = 'auto';
+
+    // Some mobile browsers require the element to be in the DOM
+    audio.style.cssText = 'position:fixed;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';
+    document.documentElement.appendChild(audio);
+
+    _silentAudio = audio;
+    _silentAudioReady = true;
+    return audio;
+  }
+
+  /** Start the silent audio to activate browser media notification. */
   function _playSilentAudio() {
-    const audio = _createSilentAudio();
-    if (audio.paused) {
-      audio.play().catch(() => {}); // may fail without user gesture, that's OK
+    if (_silentAudioPending) return;
+    const audio = _ensureSilentAudio();
+    if (!audio.paused) return; // already playing
+    _silentAudioPending = true;
+    const p = audio.play();
+    if (p && typeof p.then === 'function') {
+      p.then(() => { _silentAudioPending = false; })
+       .catch(() => { _silentAudioPending = false; });
+    } else {
+      _silentAudioPending = false;
     }
   }
 
   /** Pause the silent audio when MIDI stops. */
   function _pauseSilentAudio() {
+    _silentAudioPending = false;
     if (_silentAudio && !_silentAudio.paused) {
       _silentAudio.pause();
     }
@@ -160,6 +187,11 @@
       if (ctx.state !== 'running') {
         try { await ctx.resume(); } catch (_e) {}
       }
+    }
+
+    // Re-start silent audio if it was killed by the OS while backgrounded
+    if (_isPlaying() && _silentAudio && _silentAudio.paused) {
+      _playSilentAudio();
     }
 
     // Re-sync Media Session state after coming back to foreground
@@ -341,12 +373,16 @@
 
   // ─── Polling ─────────────────────────────────────────────────────────────────
   // Keeps position state and playback state fresh at 1 Hz.
-  // Metadata is updated only when the title changes (via MutationObserver below).
+  // Also ensures silent audio stays in sync with MIDI playback.
 
   setInterval(() => {
     if (!_hasSong()) return;
     _updatePositionState();
     _updatePlaybackState();
+    // Keep silent audio aligned — OS can kill it in background
+    if (_isPlaying() && _silentAudioReady && _silentAudio && _silentAudio.paused) {
+      _playSilentAudio();
+    }
   }, 1000);
 
   // ─── MutationObserver on song title ─────────────────────────────────────────
@@ -371,6 +407,23 @@
     _observeTitleChanges();
     _patchToggleMidi();
     _fullSync();
+
+    // Pre-warm the silent audio element on first user gesture.
+    // Mobile browsers require .play() to originate from a gesture context.
+    // We play+pause immediately so subsequent programmatic .play() calls succeed.
+    function _warmUpSilentAudio() {
+      const audio = _ensureSilentAudio();
+      const p = audio.play();
+      if (p && typeof p.then === 'function') {
+        p.then(() => {
+          // If MIDI is not currently playing, pause immediately (just warming up)
+          if (!_isPlaying()) audio.pause();
+        }).catch(() => {});
+      }
+    }
+
+    document.body.addEventListener('click', _warmUpSilentAudio, { once: true, capture: true });
+    document.body.addEventListener('touchstart', _warmUpSilentAudio, { once: true, capture: true });
   });
 
 })();

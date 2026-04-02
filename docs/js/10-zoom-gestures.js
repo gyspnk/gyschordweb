@@ -446,6 +446,14 @@ async function handleTouchEnd(event) {
   if (!pinchState) return;
   if (event.touches && event.touches.length >= 2) return;
 
+  if (zoomInProgress) {
+    canvasWrapper.style.transform = "";
+    canvasWrapper.style.transformOrigin = "";
+    canvasWrapper.classList.remove("pinch-preview");
+    pinchState = null;
+    return;
+  }
+
   const finalScale = pinchState.previewScale;
   const oldScale = pinchState.baseScale;
   const savedPinchState = { ...pinchState };
@@ -476,6 +484,7 @@ async function handleTouchEnd(event) {
   // DO NOT remove transform yet - that causes the glitch
   const activeWrapper = canvasWrapper;
 
+  zoomInProgress = true;
   currentScale = finalScale;
   updateZoomIndicator();
 
@@ -493,6 +502,7 @@ async function handleTouchEnd(event) {
     activeWrapper.style.transform = "";
     activeWrapper.style.transformOrigin = "";
     updateCenteringAndOverflow();
+    zoomInProgress = false;
     return;
   }
 
@@ -575,6 +585,7 @@ async function handleTouchEnd(event) {
   }
 
   updateCenteringAndOverflow();
+  zoomInProgress = false;
 }
 
 function handleViewerTouchStart(event) {
