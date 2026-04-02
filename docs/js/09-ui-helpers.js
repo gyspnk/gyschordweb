@@ -48,8 +48,8 @@ function checkLayoutCollisions() {
       }
     });
 
-    // Minimum center width: prev/next buttons + small title area
-    const MIN_CENTER_WIDTH = 120;
+    // Minimum center width: prev/next/midi-toggle buttons + small title area
+    const MIN_CENTER_WIDTH = 160;
     if (center && center.offsetParent !== null) {
       const style = getComputedStyle(center);
       fixedWidth += MIN_CENTER_WIDTH +

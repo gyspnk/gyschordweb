@@ -910,6 +910,9 @@ function updateViewerUI() {
   checkOrientation();
   updateChordEditorUI();
   updateTransposeUI();
+  // Re-check layout collisions whenever button visibility changes so the
+  // transpose control correctly collapses/expands in the header.
+  if (typeof checkLayoutCollisions === 'function') checkLayoutCollisions();
 }
 
 /**

@@ -366,6 +366,10 @@ body.viewer-popup-open .mini-player {
   opacity: 0.4;
   transition: z-index 0s, opacity 0.15s ease;
 }
+/* Keep mini player fully hidden when is-hidden is set, even with viewer-popup-open */
+body.viewer-popup-open .mini-player.is-hidden {
+  opacity: 0;
+}
 
 /* Row 1: Song info + transport */
 .mini-player-top {

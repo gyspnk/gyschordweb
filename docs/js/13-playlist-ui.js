@@ -386,7 +386,7 @@ function syncMiniPlayerUI() {
   if (inViewer || inSettings) {
     miniPlayer.classList.add('is-hidden');
     if (appContent) appContent.classList.remove('has-mini-player');
-  } else if (dur > 0 || isPlaying) {
+  } else if (dur > 0 || isPlaying || window.isMidiSwitching) {
     miniPlayer.classList.remove('is-hidden');
     if (appContent) appContent.classList.add('has-mini-player');
     miniTitle.textContent = document.getElementById('pdf-viewer-title')?.textContent || 'Lagu';
@@ -655,16 +655,20 @@ window.setNextMode = function(mode) {
   icons.forEach(icon => {
     const newIcon = mode === 'one' ? 'repeat_one' : mode === 'number' ? 'repeat_on' : mode === 'playlist' ? 'playlist_play' : (mode === 'shuffle-all' || mode === 'shuffle-playlist') ? 'shuffle' : 'repeat';
     if (icon.textContent !== newIcon) {
-      icon.animate([
+      const anim1 = icon.animate([
         { transform: 'scale(1) rotate(0deg)', opacity: 1 },
         { transform: 'scale(0.5) rotate(-90deg)', opacity: 0 },
-      ], { duration: 120, easing: 'ease-in', fill: 'forwards' }).onfinish = function() {
+      ], { duration: 120, easing: 'ease-in' });
+      anim1.onfinish = function() {
         icon.textContent = newIcon;
         icon.animate([
           { transform: 'scale(0.5) rotate(90deg)', opacity: 0 },
           { transform: 'scale(1.15) rotate(0deg)', opacity: 1 },
           { transform: 'scale(1) rotate(0deg)', opacity: 1 }
-        ], { duration: 200, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+        ], { duration: 200, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'forwards' }).onfinish = function() {
+          // Clear all animations so CSS/inline styles take over cleanly
+          icon.getAnimations().forEach(a => a.cancel());
+        };
       };
     }
     if (mode !== 'off') {

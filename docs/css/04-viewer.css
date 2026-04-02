@@ -21,7 +21,7 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
 .song-navigation {
   position: absolute; left: 104px; right: 104px;
     display: flex; align-items: center; justify-content: center;
-    gap: 0.5rem; overflow: hidden;
+    gap: 0.5rem; overflow: visible;
     transition: left 0.2s, right 0.2s;
 }
 /* Expanded layout: landscape only — grid centers title with equal flanking columns */
@@ -36,7 +36,7 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   body.measure-layout .song-navigation {
     position: static;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
     transform: none;
     left: auto;
     right: auto;
@@ -440,6 +440,60 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   .hide-chord-btn-landscape { display: none !important; }
   .pdf-viewer-header { justify-content: flex-start; }
   .pdf-viewer-overlay { --viewer-footer-height: var(--pdf-viewer-footer-height); }
+
+  /* Header grid: equal auto flanks ensure the 1fr center is page-centered */
+  .pdf-viewer-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    justify-content: unset;
+  }
+  .header-left {
+    flex-shrink: 0;
+    min-width: 0;
+  }
+  /* song-navigation is the 1fr grid cell; keep it non-positioned so the title
+     can anchor absolutely to .pdf-viewer-header (position:relative) */
+  .song-navigation {
+    position: static;
+    display: flex;
+    align-items: center;
+    overflow: visible;
+    left: auto;
+    right: auto;
+    transform: none;
+    min-width: 0;
+  }
+  /* Title floats absolutely centered on the page regardless of button asymmetry */
+  .song-title-wrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: calc(100% - 200px);
+    pointer-events: none;
+    z-index: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+  }
+  /* Buttons stay in flex flow above the floating title */
+  #song-prev {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+  #song-next {
+    margin-left: auto;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+  .song-navigation .midi-collapse {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+  }
   
   .pdf-viewer-footer {
     display: grid;
@@ -452,6 +506,7 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
     align-items: center;
     padding: 0 0.5rem;
     box-sizing: border-box;
+    overflow: visible;
   }
 
   .pdf-viewer-footer.has-page-nav {
@@ -481,6 +536,77 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
 
   #controls-portrait {
     justify-self: end;
+  }
+
+  /* When view controls (double-page / scroll) are hidden (single page),
+     show transpose inline in footer — no toggle needed */
+  .pdf-viewer-footer.no-view-controls .transpose-collapse .transpose-toggle-btn {
+    display: none;
+  }
+  .pdf-viewer-footer.no-view-controls .transpose-collapse .transpose-controls-footer {
+    display: flex;
+  }
+  /* No view controls = 2 columns: [transpose auto] [zoom 1fr] */
+  .pdf-viewer-footer.no-view-controls {
+    grid-template-columns: auto 1fr;
+  }
+
+  /* Compact the inline transpose so zoom is never cropped */
+  .pdf-viewer-footer.no-view-controls .transpose-controls {
+    gap: 0;
+    padding: 0.1rem 0.2rem;
+  }
+  .pdf-viewer-footer.no-view-controls .transpose-controls .transpose-reset-btn {
+    display: none; /* rarely used inline; still accessible via header popup */
+  }
+  .pdf-viewer-footer.no-view-controls .transpose-controls .icon-button {
+    width: 32px;
+    height: 32px;
+  }
+  .pdf-viewer-footer.no-view-controls .transpose-controls .icon-button .material-symbols-outlined {
+    font-size: 17px;
+  }
+  .pdf-viewer-footer.no-view-controls .transpose-controls .transpose-indicator {
+    min-width: auto;
+    font-size: 0.7rem;
+    padding: 0 0.2rem;
+  }
+  .pdf-viewer-footer.no-view-controls .transpose-controls .family-chord-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+
+  /* When view controls ARE visible (multi-page), transpose becomes a collapsible toggle */
+  .pdf-viewer-footer:not(.no-view-controls) .transpose-collapse .transpose-controls-footer {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 0.4rem);
+    display: flex;
+    margin-right: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px) scale(0.96);
+    transform-origin: left bottom;
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+    box-shadow: var(--shadow-2);
+    backdrop-filter: blur(4px);
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 16px;
+    padding: 6px 8px;
+    z-index: 950;
+    white-space: nowrap;
+  }
+  .pdf-viewer-footer:not(.no-view-controls) .transpose-collapse.is-open .transpose-controls-footer {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+  .pdf-viewer-footer:not(.no-view-controls) .transpose-collapse .transpose-toggle-btn {
+    display: flex;
   }
 }
 
@@ -584,12 +710,8 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
                 visibility 0s;
   }
 
-body.is-expanded-layout .midi-collapse.midi-available, body.measure-layout .midi-collapse.midi-available { flex-direction: row; }
-body.is-expanded-layout .midi-collapse.midi-available #midi-toggle-btn, body.measure-layout .midi-collapse.midi-available #midi-toggle-btn { display: none !important; }
-body.is-expanded-layout .midi-collapse.midi-available .midi-panel, body.measure-layout .midi-collapse.midi-available .midi-panel { 
-    opacity: 1 !important; visibility: visible !important; pointer-events: auto !important; transform: none !important;
-    position: static; box-shadow: none; border: none; background: transparent; padding: 0; margin-top: 0; 
-  }
+/* MIDI is always a popup toggle regardless of layout mode */
+/* (inline player rules removed — midi-collapse now lives inside .song-navigation) */
 
 
 .midi-controls-wrapper {
@@ -619,9 +741,7 @@ midi-player {
   max-width: 250px;
 }
 
-body.is-expanded-layout .midi-collapse.midi-available .midi-panel, body.measure-layout .midi-collapse.midi-available .midi-panel { display: flex !important; align-items: center; gap: 0.5rem; }
-body.is-expanded-layout .midi-controls-wrapper, body.measure-layout .midi-controls-wrapper { margin-bottom: 0; }
-body.is-expanded-layout midi-player, body.measure-layout midi-player { max-width: 300px; }
+
 
 
 .instrument-select:hover {
@@ -670,72 +790,7 @@ body.is-expanded-layout midi-player, body.measure-layout midi-player { max-width
 /* .player-time styling moved below to .player-track-container section for coherence */
 
 
-body.is-expanded-layout .midi-available .custom-midi-player,
-body.measure-layout .midi-available .custom-midi-player {
-  transition: none;
-  min-width: 0;
-  max-width: none;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  border: none;
-  padding: 0;
-  flex-shrink: 1;
-}
-body.is-expanded-layout .midi-available .custom-player-controls,
-body.measure-layout .midi-available .custom-player-controls {
-  gap: 8px;
-}
-body.is-expanded-layout .midi-available .seekbar-wrapper,
-body.measure-layout .midi-available .seekbar-wrapper {
-  min-width: 80px;
-}
-body.is-expanded-layout .midi-available .player-btn,
-body.measure-layout .midi-available .player-btn {
-  width: 36px;
-  height: 36px;
-}
-body.is-expanded-layout .midi-available .player-btn .material-symbols-outlined,
-body.measure-layout .midi-available .player-btn .material-symbols-outlined {
-  font-size: 1.4rem;
-}
-body.is-expanded-layout .midi-available .instrument-capsule-btn,
-body.measure-layout .midi-available .instrument-capsule-btn {
-  width: auto;
-  min-width: 0;
-  max-width: 140px;
-}
-body.is-expanded-layout .midi-available .cis-label,
-body.measure-layout .midi-available .cis-label {
-  display: none;
-}
-body.is-expanded-layout .midi-available .player-track-container,
-body.measure-layout .midi-available .player-track-container {
-  margin-top: 0;
-}
 
-/* In portrait, always collapse MIDI to toggle button — never show it inline */
-@media (orientation: portrait) {
-  body.is-expanded-layout .midi-collapse.midi-available #midi-toggle-btn,
-  body.measure-layout .midi-collapse.midi-available #midi-toggle-btn {
-    display: flex !important;
-  }
-  body.is-expanded-layout .midi-collapse.midi-available .midi-panel,
-  body.measure-layout .midi-collapse.midi-available .midi-panel {
-    position: absolute !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    transform: translateY(-8px) scale(0.96) !important;
-  }
-  body.is-expanded-layout #midi-toggle-btn[aria-expanded="true"] + .midi-panel,
-  body.measure-layout #midi-toggle-btn[aria-expanded="true"] + .midi-panel {
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-    transform: translateY(0) scale(1) !important;
-  }
-}
 
 /* Collapsible MIDI panel: anchor to header bottom instead of toggle-button position.
    Setting midi-collapse to static makes .midi-panel position relative to
@@ -759,10 +814,70 @@ body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-play
   min-width: 0;
   max-width: 100%;
   width: 100%;
+  box-sizing: border-box;
   border-radius: 0;
   box-shadow: none;
   border: none;
+  padding: 4px 10px;
 }
+/* Remove inline margin-left on button wrappers so only gap controls spacing */
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .instrument-selector-wrapper {
+  margin-left: 0 !important;
+}
+/* Compact popup MIDI player: hide text labels and reduce spacing */
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
+  gap: 6px;
+}
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .cis-label,
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .cis-chevron {
+  display: none;
+}
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .instrument-capsule-btn {
+  width: auto;
+  min-width: 40px;
+  padding: 0 8px;
+}
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-container {
+  min-width: 0;
+}
+
+/* Mobile: compact MIDI player for narrow screens */
+@media (max-width: 479px) {
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
+    padding: 4px 10px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-btn {
+    width: 36px;
+    height: 36px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-btn .material-symbols-outlined {
+    font-size: 1.4rem;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
+    gap: 6px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-time {
+    font-size: 0.65rem;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .instrument-capsule-btn {
+    height: 34px;
+    padding: 0 6px;
+    min-width: 34px;
+  }
+}
+@media (max-width: 359px) {
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-btn {
+    width: 32px;
+    height: 32px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-btn .material-symbols-outlined {
+    font-size: 1.2rem;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
+    gap: 4px;
+  }
+}
+
 /* Shrink PDF content area to account for the open MIDI panel so it doesn't overlap */
 body:not(.is-expanded-layout):not(.measure-layout):has(#midi-toggle-btn[aria-expanded="true"]) .pdf-viewer-content {
   height: calc(100svh - var(--pdf-viewer-header-height) - 58px - var(--viewer-footer-height));
@@ -831,7 +946,7 @@ body:not(.is-expanded-layout):not(.measure-layout):has(#midi-toggle-btn[aria-exp
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-width: 320px;
+  min-width: 200px;
   max-width: calc(100vw - 32px); /* Prevent leaking off screen */
   position: relative;
   border-radius: 20px;

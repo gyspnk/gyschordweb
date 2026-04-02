@@ -33,6 +33,9 @@
   }
 }
 
+/* Portrait mobile: song-navigation is already static/flex (overridden in 04-viewer.css portrait block),
+   so left/right have no effect. Landscape tablets still use absolute positioning. */
+
 @media (max-height: 480px) and (orientation: landscape) {
   .page-indicator, .zoom-level-indicator {
     display: none;

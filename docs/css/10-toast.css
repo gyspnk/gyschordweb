@@ -7,17 +7,28 @@
   color: #fff;
   padding: 10px 16px;
   border-radius: var(--border-radius-xl);
-  z-index: 300;
+  z-index: 1100; /* above mini player (900) */
   font-size: 0.9rem;
   font-weight: 500;
   box-shadow: var(--shadow-3);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s, bottom 0.25s ease;
   display: flex;
   align-items: center;
   gap: 8px;
   pointer-events: none;
+}
+
+/* general-toast sits slightly higher than zoom-toast by default */
+#general-toast {
+  bottom: 140px;
+}
+
+/* When mini player is visible, push both toasts above it */
+.mini-player:not(.is-hidden) ~ #general-toast,
+.mini-player:not(.is-hidden) ~ #zoom-toast {
+  bottom: calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px) + 125px);
 }
 
 .zoom-toast.show {
@@ -197,8 +208,9 @@ body:not(.is-expanded-layout):not(.measure-layout) .transpose-toggle-btn {
   display: flex;
 }
 
-/* In portrait, the footer transpose controls show inline — no toggle button needed
-   unless the screen is narrow enough that we collapse them (handled at ≤640px) */
+/* In portrait, the footer manages its own transpose toggle visibility
+   based on .no-view-controls / .has-page-nav via 04-viewer.css rules.
+   Hide the generic transpose-toggle-btn here; the footer-specific rules override as needed. */
 @media (orientation: portrait) {
   body:not(.is-expanded-layout):not(.measure-layout) .transpose-toggle-btn {
     display: none;
@@ -248,43 +260,6 @@ body.measure-layout .transpose-controls-footer {
 }
 
 @media (max-width: 640px) and (orientation: portrait) {
-  .pdf-viewer-footer {
-    overflow: visible;
-    grid-template-columns: auto 1fr auto;
-  }
-
-  body:not(.measure-layout) .transpose-toggle-btn {
-    display: flex;
-  }
-
-  .transpose-controls-footer {
-    position: absolute;
-    left: 0;
-    bottom: calc(100% + 0.4rem);
-    display: flex;
-    margin-right: 0;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(8px) scale(0.96);
-    transform-origin: left bottom;
-    pointer-events: none;
-    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
-    box-shadow: var(--shadow-2);
-    backdrop-filter: blur(4px);
-    z-index: 950;
-  }
-
-  .transpose-collapse.is-open .transpose-controls-footer {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0) scale(1);
-    pointer-events: auto;
-  }
-
-  .pdf-viewer-footer.has-page-nav {
-    grid-template-columns: auto auto minmax(0, 1fr) auto;
-  }
-
   .pdf-viewer-footer.has-page-nav .zoom-controls .zoom-level-indicator {
     display: none;
   }
