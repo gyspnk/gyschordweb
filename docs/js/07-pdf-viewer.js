@@ -116,8 +116,8 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         // Close panel instantly (no CSS transition) to prevent flicker
         midiPanel.classList.add('no-transition');
         midiToggleBtn.setAttribute("aria-expanded", "false");
-        // Re-enable transitions after a frame
-        requestAnimationFrame(function () { midiPanel.classList.remove('no-transition'); });
+        // Re-enable transitions after two frames to ensure hidden state is committed
+        requestAnimationFrame(function () { requestAnimationFrame(function () { midiPanel.classList.remove('no-transition'); }); });
       }
 
       const playIcon = document.getElementById("custom-play-icon");
@@ -146,7 +146,7 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       if (typeof midiPanel !== "undefined" && midiPanel && midiToggleBtn) {
         midiPanel.classList.add('no-transition');
         midiToggleBtn.setAttribute("aria-expanded", "false");
-        requestAnimationFrame(function () { midiPanel.classList.remove('no-transition'); });
+        requestAnimationFrame(function () { requestAnimationFrame(function () { midiPanel.classList.remove('no-transition'); }); });
       }
 
       // Set isMidiSwitching BEFORE resetMidiState so the mini player never
@@ -255,7 +255,7 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         // Close panel instantly (no CSS transition) to prevent flicker
         midiPanel.classList.add('no-transition');
         midiToggleBtn.setAttribute("aria-expanded", "false");
-        requestAnimationFrame(function () { midiPanel.classList.remove('no-transition'); });
+        requestAnimationFrame(function () { requestAnimationFrame(function () { midiPanel.classList.remove('no-transition'); }); });
       }
     } // End of track matched guard
   }

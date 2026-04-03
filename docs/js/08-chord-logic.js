@@ -2,7 +2,7 @@
 function createDefaultChordConfig() {
   return {
     version: 1,
-    grid: { ...CHORD_GRID },
+    grid: { cols: 105, rows: 149 },
     pages: {}
   };
 }

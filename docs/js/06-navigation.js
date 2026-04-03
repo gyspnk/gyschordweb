@@ -29,18 +29,21 @@ function navigateTo(page) {
     if (playlistBtn) playlistBtn.classList.add("selected");
     searchContainer.style.display = "none";
     if (typeof renderPlaylistView === "function") renderPlaylistView();
-  } else if (page === "pengaturan") {
-    pengaturanBtn.classList.add("selected");
-    searchContainer.style.display = "none";
-    renderSettings();
   } else if (page === "report-bug") {
     pengaturanBtn.classList.add("selected");
     searchContainer.style.display = "none";
     renderReportBugPage();
+    mainContent.scrollTop = 0;
   } else if (page === "about-project") {
     pengaturanBtn.classList.add("selected");
     searchContainer.style.display = "none";
     renderAboutProjectPage();
+    mainContent.scrollTop = 0;
+  } else if (page === "pengaturan") {
+    pengaturanBtn.classList.add("selected");
+    searchContainer.style.display = "none";
+    renderSettings();
+    mainContent.scrollTop = 0;
   }
 }
 
@@ -348,10 +351,7 @@ function renderSettings() {
               <div class="appearance-control-grid">
                 <div class="settings-subcard settings-subcard--shell">
                   <div class="settings-inline-toggle">
-                    <div>
-                      <div class="settings-subcard-title">Mode tampilan, skema & aksen</div>
-                      <p class="settings-subcard-text">Mode gelap, skema warna dasar, aksen utama, dan warna kustom diterapkan ke seluruh shell aplikasi.</p>
-                    </div>
+                    <div class="settings-subcard-title">Mode tampilan, skema & aksen</div>
                     <label class="md-switch">
                       <input type="checkbox" id="dark-theme-toggle" ${document.body.classList.contains("dark-theme") || (!document.body.classList.contains("light-theme-forced") && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "checked" : ""}>
                       <span class="md-slider"></span>
@@ -376,7 +376,6 @@ function renderSettings() {
                 </div>
                 <div class="settings-subcard settings-subcard--chord-style">
                   <div class="settings-subcard-title">Tema huruf & fill chord</div>
-                  <p class="settings-subcard-text">Pilih warna huruf dan fill chord di viewer, lalu tentukan apakah masing-masing mengikuti tema utama.</p>
                   <div class="settings-inline-toggle settings-inline-toggle-wrap">
                     ${renderSettingLabel("sync", "Samakan Huruf Chord ke Tema Utama")}
                     <label class="md-switch">
@@ -406,14 +405,24 @@ function renderSettings() {
                 </div>
                 <div class="settings-subcard settings-subcard--tuning">
                   <div class="settings-subcard-title">Tuning chord</div>
-                  <p class="settings-subcard-text">Gunakan gaya fill dan proporsi chord yang paling nyaman untuk membaca partitur. Warna huruf dan fill diatur pada panel tema chord.</p>
                   <div class="setting-item setting-item-inline">
                     ${renderSettingLabel("format_color_fill", "Fill Chord")}
-                    <select id="chord-fill-select" class="setting-select">
-                      <option value="none" ${chordUiPrefs.fill === "none" ? "selected" : ""}>Tanpa Fill</option>
-                      <option value="soft" ${chordUiPrefs.fill === "soft" ? "selected" : ""}>Soft Rounded</option>
-                      <option value="solid" ${chordUiPrefs.fill === "solid" ? "selected" : ""}>Solid Rounded</option>
-                    </select>
+                    <div class="settings-custom-dropdown">
+                      <button class="settings-dropdown-btn" type="button" aria-haspopup="listbox">
+                        <span class="settings-dropdown-label" id="chord-fill-dropdown-label">${chordUiPrefs.fill === "soft" ? "Soft Rounded" : chordUiPrefs.fill === "solid" ? "Solid Rounded" : "Tanpa Fill"}</span>
+                        <span class="material-symbols-outlined settings-dropdown-chevron">expand_more</span>
+                      </button>
+                      <div class="settings-dropdown-popover" role="listbox">
+                        <button class="settings-dropdown-option ${chordUiPrefs.fill === "none" ? "selected" : ""}" type="button" data-settings-select="chord-fill-select" data-value="none"><span class="material-symbols-outlined">check</span>Tanpa Fill</button>
+                        <button class="settings-dropdown-option ${chordUiPrefs.fill === "soft" ? "selected" : ""}" type="button" data-settings-select="chord-fill-select" data-value="soft"><span class="material-symbols-outlined">check</span>Soft Rounded</button>
+                        <button class="settings-dropdown-option ${chordUiPrefs.fill === "solid" ? "selected" : ""}" type="button" data-settings-select="chord-fill-select" data-value="solid"><span class="material-symbols-outlined">check</span>Solid Rounded</button>
+                      </div>
+                      <select id="chord-fill-select" style="display:none;">
+                        <option value="none" ${chordUiPrefs.fill === "none" ? "selected" : ""}>Tanpa Fill</option>
+                        <option value="soft" ${chordUiPrefs.fill === "soft" ? "selected" : ""}>Soft Rounded</option>
+                        <option value="solid" ${chordUiPrefs.fill === "solid" ? "selected" : ""}>Solid Rounded</option>
+                      </select>
+                    </div>
                   </div>
                   <div class="setting-item setting-item-slider compact-slider">
                     <span id="chord-opacity-label" class="setting-label">
@@ -466,100 +475,124 @@ function renderSettings() {
           </div>
         </section>
 
-        <section class="settings-section">
-          <div class="settings-section-heading">
-            <h2 class="settings-section-title"><span class="material-symbols-outlined">menu_book</span> Pengalaman Baca</h2>
-            <p class="settings-section-caption">Atur perilaku default saat membuka pujian dan cara chord disesuaikan.</p>
-          </div>
-          <div class="settings-card">
-            <div class="setting-item">
-              ${renderSettingLabel("music_off", "Hindari Chord Awal ♯ / ♭")}
-              <label class="md-switch">
-                <input type="checkbox" id="prefer-natural-chords-toggle" ${prefs.preferNaturalChords ? "checked" : ""}>
-                <span class="md-slider"></span>
-              </label>
+        <section class="settings-section settings-section-span">
+          <div class="settings-card settings-card-studio section-accented-card">
+            <div class="section-accented-banner">
+              <div class="section-accented-icon-bg">
+                <span class="material-symbols-outlined">menu_book</span>
+              </div>
+              <div class="section-accented-copy">
+                <p class="settings-eyebrow">Pengalaman Baca</p>
+                <p class="section-accented-caption">Atur perilaku default saat membuka pujian dan cara chord disesuaikan.</p>
+              </div>
             </div>
-            <div class="setting-divider"></div>
-            <div class="setting-item">
-              ${renderSettingLabel("auto_stories", "Mode Dua Halaman")}
-              <label class="md-switch">
-                <input type="checkbox" id="default-two-page-toggle" ${prefs.defaultTwoPage ? "checked" : ""}>
-                <span class="md-slider"></span>
-              </label>
-            </div>
-            <div class="setting-divider"></div>
-            <div class="setting-item">
-              ${renderSettingLabel("swap_vert", "Scroll Vertikal")}
-              <label class="md-switch">
-                <input type="checkbox" id="default-vertical-scroll-toggle" ${prefs.defaultVerticalScroll ? "checked" : ""}>
-                <span class="md-slider"></span>
-              </label>
+            <div class="section-accented-items">
+              <div class="setting-item">
+                ${renderSettingLabel("music_off", "Hindari Chord Awal ♯ / ♭")}
+                <label class="md-switch">
+                  <input type="checkbox" id="prefer-natural-chords-toggle" ${prefs.preferNaturalChords ? "checked" : ""}>
+                  <span class="md-slider"></span>
+                </label>
+              </div>
+              <div class="setting-divider"></div>
+              <div class="setting-item">
+                ${renderSettingLabel("auto_stories", "Mode Dua Halaman")}
+                <label class="md-switch">
+                  <input type="checkbox" id="default-two-page-toggle" ${prefs.defaultTwoPage ? "checked" : ""}>
+                  <span class="md-slider"></span>
+                </label>
+              </div>
+              <div class="setting-divider"></div>
+              <div class="setting-item">
+                ${renderSettingLabel("swap_vert", "Scroll Vertikal")}
+                <label class="md-switch">
+                  <input type="checkbox" id="default-vertical-scroll-toggle" ${prefs.defaultVerticalScroll ? "checked" : ""}>
+                  <span class="md-slider"></span>
+                </label>
+              </div>
             </div>
           </div>
         </section>
 
-        <section class="settings-section">
-          <div class="settings-section-heading">
-            <h2 class="settings-section-title"><span class="material-symbols-outlined">library_music</span> Audio & SoundFont</h2>
-            <p class="settings-section-caption">Kontrol kualitas instrumen dan strategi preload agar transisi tetap ringan.</p>
-          </div>
-          <div class="settings-card">
-            <div class="setting-item">
-              ${renderSettingLabel("piano", "Pilih SoundFont")}
-              <select id="soundfont-select" class="setting-select">
-                <option value="assets/soundfont/GeneralUser-GS.sf2" ${prefs.midiSoundfont === "assets/soundfont/GeneralUser-GS.sf2" ? "selected" : ""}>GeneralUser GS (30 MB, High Quality)</option>
-                <option value="assets/soundfont/TimGM6mb.sf2" ${prefs.midiSoundfont === "assets/soundfont/TimGM6mb.sf2" ? "selected" : ""}>TimGM6mb (6 MB, Compact)</option>
-              </select>
+        <section class="settings-section settings-section-span">
+          <div class="settings-card settings-card-studio section-accented-card">
+            <div class="section-accented-banner">
+              <div class="section-accented-icon-bg">
+                <span class="material-symbols-outlined">library_music</span>
+              </div>
+              <div class="section-accented-copy">
+                <p class="settings-eyebrow">Audio & SoundFont</p>
+                <p class="section-accented-caption">Kontrol kualitas instrumen dan strategi preload agar transisi tetap ringan.</p>
+              </div>
             </div>
-            <div class="setting-divider"></div>
-            <div class="setting-item">
-              ${renderSettingLabel("bolt", "Preload PDF & MIDI")}
-              <label class="md-switch">
-                <input type="checkbox" id="preload-enabled-toggle" ${prefs.preloadEnabled !== false ? "checked" : ""}>
-                <span class="md-slider"></span>
-              </label>
-            </div>
-            <div class="setting-divider"></div>
-            <div class="setting-item setting-item-slider">
-              <span id="preload-count-label" class="setting-label">
-                <span class="material-symbols-outlined">queue_music</span>
-                <span>Jumlah Preload (${prefs.preloadCount || 1} lagu sebelum & sesudah)</span>
-              </span>
-              <input
-                id="preload-count-range"
-                class="setting-range"
-                type="range"
-                min="1"
-                max="5"
-                step="1"
-                value="${prefs.preloadCount || 1}"
-                ${prefs.preloadEnabled === false ? "disabled" : ""}
-              >
-            </div>
-            <div class="setting-divider"></div>
-            <div class="setting-item setting-item-slider">
-              <span id="preload-cache-max-label" class="setting-label">
-                <span class="material-symbols-outlined">inventory_2</span>
-                <span>Maksimum Cache Preload (${prefs.preloadCacheMax || 12} lagu)</span>
-              </span>
-              <input
-                id="preload-cache-max-range"
-                class="setting-range"
-                type="range"
-                min="1"
-                max="50"
-                step="1"
-                value="${prefs.preloadCacheMax || 12}"
-                ${prefs.preloadEnabled === false ? "disabled" : ""}
-              >
-            </div>
-            <div class="setting-divider"></div>
-            <div class="setting-item">
-              ${renderSettingLabel("shuffle", "Preload saat Shuffle")}
-              <label class="md-switch">
-                <input type="checkbox" id="preload-shuffle-toggle" ${prefs.preloadShuffle !== false ? "checked" : ""} ${prefs.preloadEnabled === false ? "disabled" : ""}>
-                <span class="md-slider"></span>
-              </label>
+            <div class="section-accented-items">
+              <div class="setting-item setting-item-select">
+                ${renderSettingLabel("piano", "Pilih SoundFont")}
+                <div class="settings-custom-dropdown">
+                  <button class="settings-dropdown-btn" type="button" aria-haspopup="listbox">
+                    <span class="settings-dropdown-label" id="soundfont-dropdown-label">${prefs.midiSoundfont === "assets/soundfont/TimGM6mb.sf2" ? "TimGM6mb (6 MB, Compact)" : "GeneralUser GS (30 MB, High Quality)"}</span>
+                    <span class="material-symbols-outlined settings-dropdown-chevron">expand_more</span>
+                  </button>
+                  <div class="settings-dropdown-popover" role="listbox">
+                    <button class="settings-dropdown-option ${prefs.midiSoundfont !== 'assets/soundfont/TimGM6mb.sf2' ? 'selected' : ''}" type="button" data-settings-select="soundfont-select" data-value="assets/soundfont/GeneralUser-GS.sf2"><span class="material-symbols-outlined">check</span>GeneralUser GS (30 MB, High Quality)</button>
+                    <button class="settings-dropdown-option ${prefs.midiSoundfont === 'assets/soundfont/TimGM6mb.sf2' ? 'selected' : ''}" type="button" data-settings-select="soundfont-select" data-value="assets/soundfont/TimGM6mb.sf2"><span class="material-symbols-outlined">check</span>TimGM6mb (6 MB, Compact)</button>
+                  </div>
+                  <select id="soundfont-select" style="display:none;">
+                    <option value="assets/soundfont/GeneralUser-GS.sf2" ${prefs.midiSoundfont === "assets/soundfont/GeneralUser-GS.sf2" ? "selected" : ""}>GeneralUser GS (30 MB, High Quality)</option>
+                    <option value="assets/soundfont/TimGM6mb.sf2" ${prefs.midiSoundfont === "assets/soundfont/TimGM6mb.sf2" ? "selected" : ""}>TimGM6mb (6 MB, Compact)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="setting-divider"></div>
+              <div class="setting-item">
+                ${renderSettingLabel("bolt", "Preload PDF & MIDI")}
+                <label class="md-switch">
+                  <input type="checkbox" id="preload-enabled-toggle" ${prefs.preloadEnabled !== false ? "checked" : ""}>
+                  <span class="md-slider"></span>
+                </label>
+              </div>
+              <div class="setting-divider"></div>
+              <div class="setting-item setting-item-slider">
+                <span id="preload-count-label" class="setting-label">
+                  <span class="material-symbols-outlined">queue_music</span>
+                  <span>Jumlah Preload (${prefs.preloadCount || 1} lagu sebelum & sesudah)</span>
+                </span>
+                <input
+                  id="preload-count-range"
+                  class="setting-range"
+                  type="range"
+                  min="1"
+                  max="5"
+                  step="1"
+                  value="${prefs.preloadCount || 1}"
+                  ${prefs.preloadEnabled === false ? "disabled" : ""}
+                >
+              </div>
+              <div class="setting-divider"></div>
+              <div class="setting-item setting-item-slider">
+                <span id="preload-cache-max-label" class="setting-label">
+                  <span class="material-symbols-outlined">inventory_2</span>
+                  <span>Maksimum Cache Preload (${prefs.preloadCacheMax || 12} lagu)</span>
+                </span>
+                <input
+                  id="preload-cache-max-range"
+                  class="setting-range"
+                  type="range"
+                  min="1"
+                  max="50"
+                  step="1"
+                  value="${prefs.preloadCacheMax || 12}"
+                  ${prefs.preloadEnabled === false ? "disabled" : ""}
+                >
+              </div>
+              <div class="setting-divider"></div>
+              <div class="setting-item">
+                ${renderSettingLabel("shuffle", "Preload saat Shuffle")}
+                <label class="md-switch">
+                  <input type="checkbox" id="preload-shuffle-toggle" ${prefs.preloadShuffle !== false ? "checked" : ""} ${prefs.preloadEnabled === false ? "disabled" : ""}>
+                  <span class="md-slider"></span>
+                </label>
+              </div>
             </div>
           </div>
         </section>
@@ -605,7 +638,7 @@ function renderAboutProjectPage() {
           <span>Kembali</span>
         </button>
         <h2>Tentang Project Ini</h2>
-        <div style="width: 48px;"></div>
+        <div class="report-header-spacer"></div>
       </div>
 
       <div class="report-hero">
@@ -624,43 +657,6 @@ function renderAboutProjectPage() {
           <p style="margin-bottom: 1rem;">Project ini dimulai dari tahun 2025, saya terpikir untuk membuat aplikasi ini dikarenakan saya merasa sebagai seorang pemusik pemula, saya masih sering kesulitan mencari chord, apalagi saat ada perpindahan nada dasarnya. Sehingga memotivasi saya untuk membuat suatu alat yang bisa memudahkan saya dan rekan - rekan sekalian dalam belajar musik di Kidung Rohani maupun dalam pelayanan...</p>
           <p style="margin-bottom: 1rem;">Project ini sempat berhenti beberapa bulan karena ada kesibukan pribadi hingga baru dapat diselesaikan di bulan April 2026... Puji Tuhan saya dapat melanjutkan project ini hingga sampai saat tahap ini.</p>
           <p style="margin-bottom: 1rem;">Akhir kata.. kiranya semua yang telah dilakukan di project ini hanya untuk kemuliaan nama Tuhan saja... terima kasih, Tuhan Yesus Memberkati kita semua.. Amin...</p>
-        </div>
-      </div>
-
-      <div class="report-section">
-        <h3 class="section-badge"><span class="material-symbols-outlined">group</span> Kontributor & Dedikasi</h3>
-        <p class="report-section-caption">Bagian ini merangkum pihak-pihak utama yang terlibat langsung dalam pengembangan dan input konten project ini.</p>
-        <div class="about-contributor-grid">
-          <article class="about-contributor-card about-contributor-card--primary">
-            <div class="about-contributor-icon">
-              <span class="material-symbols-outlined">code</span>
-            </div>
-            <div class="about-contributor-copy">
-              <h4>Developer Utama</h4>
-              <p class="about-contributor-name">Gilbert Then</p>
-              <p>Gereja Yesus Sejati Pontianak</p>
-            </div>
-          </article>
-          <article class="about-contributor-card">
-            <div class="about-contributor-icon">
-              <span class="material-symbols-outlined">music_note</span>
-            </div>
-            <div class="about-contributor-copy">
-              <h4>Contributor Input Chord</h4>
-              <p class="about-contributor-name">Clement JJ</p>
-              <p>Gereja Yesus Sejati Pontianak</p>
-            </div>
-          </article>
-          <article class="about-contributor-card about-contributor-card--tribute">
-            <div class="about-contributor-icon">
-              <span class="material-symbols-outlined">auto_awesome</span>
-            </div>
-            <div class="about-contributor-copy">
-              <h4>Dedikasi Utama</h4>
-              <p class="about-contributor-name">Tuhan Yesus Kristus</p>
-              <p>Segala kemuliaan dan izin penyelesaian project dikembalikan kepada-Nya.</p>
-            </div>
-          </article>
         </div>
       </div>
 
@@ -691,7 +687,7 @@ function renderReportBugPage() {
           <span>Kembali</span>
         </button>
         <h2>Hubungi Developer</h2>
-        <div style="width: 48px;"></div> <!-- Spacer for flex centering -->
+        <div class="report-header-spacer"></div>
       </div>
 
       <div class="report-hero">
@@ -710,12 +706,6 @@ function renderReportBugPage() {
           <p class="dev-name">Gilbert Then</p>
           <p class="dev-org">Gereja Yesus Sejati Pontianak</p>
         </div>
-      </div>
-
-      <div class="report-section" style="margin-top:-1rem; opacity:0.6;">
-        <h3 class="section-badge" style="font-size:0.8rem; margin-bottom:0.5rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">group</span> Kontributor (Nonprofit)</h3>
-        <p style="font-size:0.8rem; margin:0;">Input Chord: Clement JJ</p>
-        <p style="font-size:0.8rem; margin:0;">Hak Cipta: Tuhan Yesus Kristus</p>
       </div>
 
       <div class="report-section">
@@ -746,16 +736,19 @@ function renderReportBugPage() {
         <h3 class="section-badge"><span class="material-symbols-outlined">photo_camera</span> Media Sosial</h3>
         <div class="report-social-grid">
           <a class="social-chip" href="https://www.instagram.com/gilbert_then01/" target="_blank" rel="noopener noreferrer">
-            <span class="material-symbols-outlined">link</span>
-            <span>@gilbert_then01</span>
+            <svg class="social-chip-instagram-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            <span class="social-chip-platform">Instagram</span>
+            <span class="social-chip-handle">@gilbert_then01</span>
           </a>
           <a class="social-chip" href="https://www.instagram.com/gys.pontianak/" target="_blank" rel="noopener noreferrer">
-            <span class="material-symbols-outlined">link</span>
-            <span>@gys.pontianak</span>
+            <svg class="social-chip-instagram-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            <span class="social-chip-platform">Instagram</span>
+            <span class="social-chip-handle">@gys.pontianak</span>
           </a>
           <a class="social-chip" href="https://www.instagram.com/youthptk_gys/" target="_blank" rel="noopener noreferrer">
-            <span class="material-symbols-outlined">link</span>
-            <span>@youthptk_gys</span>
+            <svg class="social-chip-instagram-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            <span class="social-chip-platform">Instagram</span>
+            <span class="social-chip-handle">@youthptk_gys</span>
           </a>
         </div>
       </div>

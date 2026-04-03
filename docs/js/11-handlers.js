@@ -51,6 +51,53 @@ function handleMainContentClick(e) {
     return;
   }
 
+  // Settings custom dropdown option selected
+  const settingsDropdownOption = e.target.closest('[data-settings-select]');
+  if (settingsDropdownOption) {
+    const selectId = settingsDropdownOption.dataset.settingsSelect;
+    const value = settingsDropdownOption.dataset.value;
+    const hiddenSelect = document.getElementById(selectId);
+    if (hiddenSelect) {
+      hiddenSelect.value = value;
+      hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    // Update dropdown label
+    const wrapper = settingsDropdownOption.closest('.settings-custom-dropdown');
+    if (wrapper) {
+      const label = wrapper.querySelector('.settings-dropdown-label');
+      if (label) {
+        // Use text content minus the check icon text
+        label.textContent = settingsDropdownOption.textContent.replace(/^check\s*/, '').trim();
+      }
+      wrapper.querySelectorAll('.settings-dropdown-option').forEach(function(opt) {
+        opt.classList.toggle('selected', opt === settingsDropdownOption);
+      });
+      wrapper.classList.remove('is-open');
+      const btn = wrapper.querySelector('.settings-dropdown-btn');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+    return;
+  }
+
+  // Settings custom dropdown toggle (open/close)
+  const settingsDropdownBtn = e.target.closest('.settings-dropdown-btn');
+  if (settingsDropdownBtn) {
+    const wrapper = settingsDropdownBtn.closest('.settings-custom-dropdown');
+    if (wrapper) {
+      // Close all other open dropdowns first
+      document.querySelectorAll('.settings-custom-dropdown.is-open').forEach(function(other) {
+        if (other !== wrapper) {
+          other.classList.remove('is-open');
+          const btn = other.querySelector('.settings-dropdown-btn');
+          if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+      const isOpen = wrapper.classList.toggle('is-open');
+      settingsDropdownBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+    return;
+  }
+
   const aboutProjectBtn = e.target.closest("#about-project-btn");
   if (aboutProjectBtn) {
     navigateTo("about-project");
@@ -464,9 +511,10 @@ function onToggleChordsHidden() {
 }
 
 function updateHideChordButton() {
-  // Show button only when viewer is active and there are chord pages
-  const hasChords = chordConfig && Object.keys(chordConfig.pages).length > 0;
-  const shouldShow = document.body.classList.contains("viewer-active") && hasChords;
+  // Show button only when viewer is active and there are chord pages (either format)
+  const hasOldChords = chordConfig && Object.keys(chordConfig.pages).length > 0;
+  const hasNewChords = typeof hasNoteAlignedChords === "function" && hasNoteAlignedChords();
+  const shouldShow = document.body.classList.contains("viewer-active") && (hasOldChords || hasNewChords);
 
   hideChordBtns.forEach((btn) => {
     btn.style.display = shouldShow ? "" : "none";

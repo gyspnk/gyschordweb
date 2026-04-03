@@ -46,7 +46,7 @@ var MidiEngine = (function () {
   var _startWallTime = 0;       // performance.now() when playback started
   var _duration = 0;            // Current song duration
   var _currentBuffer = null;    // Current AudioBuffer
-  var _volume = 0.9;            // Linear gain (0-1)
+  var _volume = 1.0;            // Linear gain (0-1)
   var _muted = false;
 
   // Song metadata

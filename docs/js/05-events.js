@@ -106,6 +106,14 @@ function setupEventListeners() {
             if (capBtn) capBtn.setAttribute("aria-expanded", "false");
           }
         });
+      // Close settings custom dropdowns on outside click
+      document.querySelectorAll(".settings-custom-dropdown.is-open").forEach(function(wrapper) {
+        if (!wrapper.contains(e.target)) {
+          wrapper.classList.remove("is-open");
+          const btn = wrapper.querySelector(".settings-dropdown-btn");
+          if (btn) btn.setAttribute("aria-expanded", "false");
+        }
+      });
     });
 
     // Option select — delegated so dynamically rebuilt lists work

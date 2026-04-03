@@ -73,7 +73,21 @@
   margin: 0;
   font-weight: 600;
   text-align: center;
-  flex-grow: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+.report-header-spacer {
+  flex-shrink: 0;
+  visibility: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  font-size: inherit;
+  font-weight: 600;
+  /* Mirror width of .report-back-btn */
+  min-width: 80px;
 }
 
 .report-back-btn {
@@ -319,16 +333,33 @@ body.dark-theme .secondary-link { background: linear-gradient(135deg, var(--sour
 .social-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 1rem;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
   background: var(--md-sys-color-surface-container);
   color: var(--md-sys-color-on-surface);
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 999px;
   text-decoration: none;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   transition: all 0.2s;
+}
+
+.social-chip-instagram-icon {
+  color: var(--md-sys-color-primary);
+  flex-shrink: 0;
+}
+
+.social-chip-platform {
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--md-sys-color-primary);
+}
+
+.social-chip-handle {
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .social-chip .material-symbols-outlined { font-size: 1.1rem; color: var(--md-sys-color-primary); }
@@ -338,6 +369,12 @@ body.dark-theme .secondary-link { background: linear-gradient(135deg, var(--sour
   color: var(--md-sys-color-on-primary-container);
   border-color: var(--md-sys-color-primary);
   transform: translateY(-2px);
+}
+
+.social-chip:hover .social-chip-platform,
+.social-chip:hover .social-chip-handle,
+.social-chip:hover .social-chip-instagram-icon {
+  color: inherit;
 }
 
 .md-switch { position: relative; display: inline-block; width: 52px; height: 32px; flex-shrink: 0; }
