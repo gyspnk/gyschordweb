@@ -14,13 +14,13 @@
 @media (max-width: 767px) {
   .pdf-viewer-header .icon-button,
   .pdf-viewer-footer .icon-button {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
   }
 
   .pdf-viewer-header .icon-button .material-symbols-outlined,
   .pdf-viewer-footer .icon-button .material-symbols-outlined {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .page-indicator, .zoom-level-indicator {

@@ -117,7 +117,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
   position: absolute;
   left: 0;
   bottom: 0;
-  width: clamp(88px, 28vw, 136px);
+  width: min(7.5em, 100%);
   height: 3px;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--md-sys-color-primary), color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent));
@@ -155,7 +155,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
   }
 
   .app-brand-copy h1::after {
-    width: 92px;
+    width: min(6.8em, 100%);
   }
 }
 @media (max-width: 767px) {
@@ -217,12 +217,12 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
   }
 
   .app-brand {
-    gap: 0.75rem;
+    gap: 0.6rem;
   }
 
   .app-brand-logo {
-    height: 24px;
-    max-width: min(30vw, 88px);
+    height: 30px;
+    max-width: min(38vw, 122px);
   }
 
   .app-brand-kicker {
@@ -235,6 +235,11 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 @media (min-width: 1024px) {
   .app-header {
     padding: 0 1.75rem;
+    overflow: hidden;
+  }
+
+  .app-brand-copy {
+    padding-top: 0.35rem;
   }
 
   #search-container {

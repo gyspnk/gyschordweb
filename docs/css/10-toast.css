@@ -254,6 +254,46 @@ body.measure-layout .transpose-controls-header {
   backdrop-filter: none;
 }
 
+body.is-expanded-layout .transpose-controls-header,
+body.measure-layout .transpose-controls-header {
+  gap: 0.08rem;
+  padding: 0.08rem 0.18rem;
+  border-color: color-mix(in srgb, var(--viewer-chrome-border) 76%, transparent);
+  background: color-mix(in srgb, var(--viewer-chrome-surface) 78%, var(--md-sys-color-surface-container-high));
+}
+
+body.is-expanded-layout .transpose-controls-header .icon-button,
+body.measure-layout .transpose-controls-header .icon-button {
+  width: 32px;
+  height: 32px;
+}
+
+body.is-expanded-layout .transpose-controls-header .icon-button .material-symbols-outlined,
+body.measure-layout .transpose-controls-header .icon-button .material-symbols-outlined {
+  font-size: 17px;
+}
+
+body.is-expanded-layout .transpose-controls-header .transpose-indicator,
+body.measure-layout .transpose-controls-header .transpose-indicator {
+  min-width: 4.25rem;
+  font-size: 0.7rem;
+  color: var(--viewer-title-accent);
+}
+
+body.is-expanded-layout .transpose-controls-header .family-chord-btn,
+body.measure-layout .transpose-controls-header .family-chord-btn {
+  width: 28px;
+  height: 28px;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 1360px) and (orientation: landscape) {
+  body.is-expanded-layout .transpose-controls-header .transpose-reset-btn,
+  body.measure-layout .transpose-controls-header .transpose-reset-btn {
+    display: none;
+  }
+}
+
 body.is-expanded-layout .transpose-controls-footer,
 body.measure-layout .transpose-controls-footer {
   display: none;

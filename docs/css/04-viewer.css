@@ -22,7 +22,12 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
   height: var(--viewer-header-height-active);
   box-sizing: border-box;
 }
-.header-left,
+.header-left {
+  min-height: 100%;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-width: 0;
+}
 .song-navigation,
 .landscape-controls {
   min-height: 100%;
@@ -35,41 +40,26 @@ body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
     transition: left 0.2s, right 0.2s;
     z-index: 1;
 }
-/* Expanded layout: landscape only — grid centers title with equal flanking columns */
+/* Expanded/measure layout: landscape only — header-left fills full width, landscape-controls pushed right */
 @media (orientation: landscape) {
-  body.is-expanded-layout .pdf-viewer-header,
-  body.measure-layout .pdf-viewer-header {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  body.is-expanded-layout .song-navigation,
-  body.measure-layout .song-navigation {
-    position: static;
+  /* Expanded: full-width header-left with MIDI player inline on left */
+  body.is-expanded-layout .header-left {
+    flex: 1 1 auto;
+    max-width: none;
     min-width: 0;
-    overflow: visible;
-    transform: none;
-    left: auto;
-    right: auto;
-    width: 100%;
-    max-width: min(100%, 540px);
-    justify-self: center;
-  }
-  body.is-expanded-layout .header-left,
-  body.measure-layout .header-left {
-    min-width: 0;
-    max-width: min(38vw, 360px);
     overflow: visible;
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
-  body.is-expanded-layout .landscape-controls,
-  body.measure-layout .landscape-controls {
+  /* Measurement pass: constrain header-left for accurate fit detection */
+  body.measure-layout .header-left {
+    flex: 0 0 auto;
+    max-width: min(38vw, 360px);
+    min-width: 0;
+    overflow: visible;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
     gap: 0.5rem;
   }
 }
@@ -87,6 +77,22 @@ body.measure-layout .pdf-viewer-footer * {
   border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
     transition: opacity 0.15s ease-out;
     cursor: pointer;
+}
+
+body.is-expanded-layout .song-title-wrapper,
+body.measure-layout .song-title-wrapper {
+  max-width: clamp(128px, 15vw, 190px);
+  padding: 0.08rem 0.42rem 0.12rem;
+}
+
+body.is-expanded-layout .song-navigation h2,
+body.measure-layout .song-navigation h2 {
+  font-size: clamp(0.95rem, 1.3vw, 1.03rem);
+}
+
+body.is-expanded-layout #pdf-viewer-number,
+body.measure-layout #pdf-viewer-number {
+  font-size: 0.7rem;
 }
 .song-title-wrapper.is-navigating {
     opacity: 0;
@@ -648,17 +654,11 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
 }
 
 @media (max-width: 1024px) and (orientation: portrait) {
-  .pdf-viewer-overlay {
-    --viewer-header-height-active: 76px;
-  }
-
   .pdf-viewer-header {
     grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-rows: auto auto;
-    min-height: 76px;
-    height: auto;
-    padding: 0.35rem 0.5rem 0.45rem;
-    row-gap: 0.26rem;
+    column-gap: 0.35rem;
+    padding: 0 0.45rem;
+    align-items: center;
   }
 
   .header-left {
@@ -672,44 +672,43 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   }
 
   .song-navigation {
-    grid-row: 2;
-    grid-column: 1 / -1;
+    grid-row: 1;
+    grid-column: 2;
     width: 100%;
-    padding: 0 0.25rem;
   }
 
   .song-title-wrapper {
-    padding-inline: 0.45rem;
+    padding-inline: 0.35rem;
   }
 
   .song-navigation h2 {
-    font-size: 1.04rem;
+    font-size: 1rem;
   }
 
   .pdf-viewer-footer {
-    min-height: 84px;
-    padding: 0.45rem 0.6rem 0.55rem;
+    min-height: 72px;
+    padding: 0.35rem 0.5rem 0.45rem;
   }
 }
 
 @media (max-width: 767px) and (orientation: portrait) {
   .pdf-viewer-overlay {
-    --viewer-header-height-active: 70px;
+    --viewer-header-height-active: 54px;
   }
 
   .pdf-viewer-header {
-    padding: 0.25rem 0.35rem 0.4rem;
+    padding: 0.2rem 0.3rem 0.3rem;
   }
 
   .pdf-viewer-header .icon-button,
   .pdf-viewer-footer .icon-button {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
   }
 
   .pdf-viewer-header .icon-button .material-symbols-outlined,
   .pdf-viewer-footer .icon-button .material-symbols-outlined {
-    font-size: 19px;
+    font-size: 18px;
   }
 
   .song-navigation {
@@ -717,24 +716,24 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   }
 
   .song-navigation h2 {
-    font-size: 0.94rem;
+    font-size: 0.92rem;
   }
 
   #pdf-viewer-number {
-    font-size: 0.68rem;
+    font-size: 0.66rem;
   }
 
   .pdf-viewer-footer {
-    min-height: 74px;
-    column-gap: 0.25rem;
-    padding: 0.35rem;
+    min-height: 68px;
+    column-gap: 0.2rem;
+    padding: 0.25rem 0.3rem;
   }
 
   .page-indicator,
   .zoom-level-indicator {
-    min-width: 38px;
-    padding: 0 0.2rem;
-    font-size: 0.78rem;
+    min-width: 36px;
+    padding: 0 0.15rem;
+    font-size: 0.76rem;
   }
 
   body:not(.is-expanded-layout):not(.measure-layout) .midi-collapse {
@@ -757,30 +756,30 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
 
   body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
     border-radius: 0 0 20px 20px;
-    padding: 10px 10px 11px;
+    padding: 8px 10px;
   }
 
   body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
-    gap: 10px;
+    gap: 8px;
   }
 
-  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-primary {
-    grid-template-columns: 44px minmax(0, 1fr);
-    align-items: start;
-    gap: 10px;
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-play.player-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 15px;
   }
 
   body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-heading {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
   }
 
   body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    gap: 8px;
+    display: flex;
+    gap: 6px;
     align-items: center;
+    flex-wrap: wrap;
   }
 
   body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action {
@@ -789,19 +788,25 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   }
 
   body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.instrument-capsule-btn {
-    height: 38px;
-    border-radius: 14px;
-    padding: 0 12px;
+    height: 34px;
+    border-radius: 12px;
+    padding: 0 10px;
   }
 
   body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player .player-time {
-    font-size: 0.74rem !important;
+    font-size: 0.70rem !important;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-container {
+    padding: 6px 10px;
+    gap: 4px;
+    border-radius: 14px;
   }
 }
 
 @media (max-width: 420px) and (orientation: portrait) {
   .header-left {
-    gap: 0.25rem;
+    gap: 0.15rem;
   }
 
   .song-navigation {
@@ -809,11 +814,11 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   }
 
   .song-navigation h2 {
-    font-size: 0.88rem;
+    font-size: 0.85rem;
   }
 
   .pdf-viewer-footer {
-    min-height: 68px;
+    min-height: 62px;
   }
 
   .page-navigation,
@@ -829,12 +834,24 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
       "page page page";
   }
 
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-play.player-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 14px;
+  }
+
   body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
-    grid-template-columns: minmax(0, 1fr) auto;
+    flex-wrap: wrap;
   }
 
   body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action {
-    grid-column: 1 / -1;
+    flex: 1 1 100%;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-container {
+    padding: 5px 8px;
+    gap: 3px;
+    border-radius: 12px;
   }
 }
 
@@ -855,11 +872,23 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   }
 }
 
+body.is-expanded-layout .landscape-controls,
+body.measure-layout .landscape-controls {
+  gap: 0.68rem;
+}
+
 .zoom-controls, .page-navigation, .page-navigation-landscape, .zoom-controls-landscape { display: flex; align-items: center; }
 .page-indicator, .zoom-level-indicator {
   font-size: 0.9rem; font-weight: 500; color: var(--md-sys-color-on-surface-variant);
   padding: 0 0.5rem; min-width: 50px; text-align: center;
   transition: all 0.2s;
+}
+
+body.is-expanded-layout .zoom-level-indicator,
+body.measure-layout .zoom-level-indicator {
+  min-width: 42px;
+  padding: 0 0.35rem;
+  font-size: 0.84rem;
 }
 .page-indicator span[id^="page-num"] {
     color: var(--md-sys-color-primary);
@@ -1112,7 +1141,7 @@ body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .cis-menu-popover
 }
 /* Compact popup MIDI player: hide text labels and reduce spacing */
 body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
-  gap: 6px;
+  gap: 8px;
 }
 body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .cis-label,
 body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .cis-chevron {
@@ -1130,7 +1159,7 @@ body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-con
 /* Mobile: compact MIDI player for narrow screens */
 @media (max-width: 479px) {
   body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
-    padding: 4px 10px;
+    padding: 8px;
   }
   body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-btn {
     width: 36px;
@@ -1143,12 +1172,24 @@ body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-con
     gap: 6px;
   }
   body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-time {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
   }
   body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .instrument-capsule-btn {
-    height: 34px;
+    height: 32px;
     padding: 0 6px;
-    min-width: 34px;
+    min-width: 32px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-container {
+    padding: 5px 8px;
+    gap: 3px;
+    border-radius: 12px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-heading {
+    gap: 4px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-kicker {
+    font-size: 0.58rem;
+    padding: 0.12rem 0.4rem;
   }
 }
 @media (max-width: 359px) {
@@ -1807,7 +1848,7 @@ body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-play
   border: 1px solid var(--viewer-panel-border);
   background: var(--viewer-panel-surface);
   box-shadow: var(--viewer-panel-shadow);
-  padding: 14px;
+  padding: 12px;
 }
 
 body.is-expanded-layout .midi-collapse .custom-midi-player,
@@ -1815,13 +1856,13 @@ body.measure-layout .midi-collapse .custom-midi-player {
   min-width: 0;
   max-width: 100%;
   width: min(100%, 360px);
-  border-radius: 22px;
-  padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 40%, transparent);
+  border-radius: 18px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--viewer-chrome-border) 78%, transparent);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--md-sys-color-surface) 92%, transparent), color-mix(in srgb, var(--md-sys-color-surface-container-high) 96%, transparent)),
-    radial-gradient(circle at top right, color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent), transparent 38%);
-  box-shadow: 0 18px 34px -28px rgba(0, 0, 0, 0.45);
+    linear-gradient(180deg, color-mix(in srgb, var(--viewer-chrome-surface) 97%, transparent), color-mix(in srgb, var(--md-sys-color-surface-container-high) 84%, var(--viewer-chrome-surface))),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent), transparent 42%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 24px -22px rgba(0, 0, 0, 0.46);
 }
 
 .custom-midi-player {
@@ -1848,27 +1889,44 @@ body.measure-layout .midi-collapse .custom-midi-player {
   pointer-events: none;
 }
 
+body.is-expanded-layout .midi-collapse .custom-midi-player::before,
+body.measure-layout .midi-collapse .custom-midi-player::before {
+  height: 1px;
+  border-radius: 18px 18px 0 0;
+  opacity: 0.55;
+  background: color-mix(in srgb, var(--viewer-title-accent) 42%, transparent);
+}
+
+body.is-expanded-layout .midi-collapse .custom-midi-player::after,
+body.measure-layout .midi-collapse .custom-midi-player::after {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 34%);
+}
+
 .custom-player-controls {
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .custom-player-primary {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: 12px;
+  display: contents;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .custom-player-heading {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+  min-width: 0;
+  grid-column: 1 / -1;
 }
 
 .custom-player-kicker {
@@ -1901,12 +1959,12 @@ body.measure-layout .midi-collapse .custom-midi-player {
 }
 
 .custom-player-play.player-btn {
-  width: 56px;
-  height: 56px;
-  border-radius: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 18px;
   background: linear-gradient(145deg, color-mix(in srgb, var(--md-sys-color-primary) 88%, white), color-mix(in srgb, var(--md-sys-color-primary) 76%, black));
   color: var(--md-sys-color-on-primary);
-  box-shadow: 0 18px 26px -18px color-mix(in srgb, var(--md-sys-color-primary) 52%, transparent);
+  box-shadow: 0 14px 22px -14px color-mix(in srgb, var(--md-sys-color-primary) 52%, transparent);
   transition: transform var(--duration-short) var(--ease-standard), box-shadow var(--duration-medium) var(--ease-standard), filter var(--duration-medium) var(--ease-standard);
 }
 
@@ -1944,14 +2002,15 @@ body.measure-layout .midi-collapse .custom-midi-player {
 .player-track-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   justify-content: center;
   min-width: 0;
   margin-top: 0;
-  padding: 12px 14px;
-  border-radius: 20px;
+  padding: 8px 12px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--md-sys-color-surface) 72%, var(--md-sys-color-primary-container));
   border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 14%, transparent);
+  box-sizing: border-box;
 }
 
 .custom-midi-player .player-time {
@@ -2028,10 +2087,13 @@ body.measure-layout .midi-collapse .custom-midi-player {
 }
 
 .custom-player-actions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
+  box-sizing: border-box;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
 }
 
 .custom-player-actions .instrument-selector-wrapper {
@@ -2052,14 +2114,14 @@ body.measure-layout .midi-collapse .custom-midi-player {
 .midi-action-btn.instrument-capsule-btn {
   width: 100%;
   min-width: 0;
-  height: 42px;
-  padding: 0 14px;
-  border-radius: 16px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 14px;
   border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 52%, transparent);
   background: color-mix(in srgb, var(--md-sys-color-surface) 84%, var(--md-sys-color-surface-container-high));
   color: var(--md-sys-color-on-surface);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  gap: 8px;
+  gap: 6px;
 }
 
 .midi-action-btn.instrument-capsule-btn:hover {
@@ -2089,8 +2151,8 @@ body.measure-layout .midi-collapse .custom-midi-player {
 }
 
 .midi-icon-btn.instrument-capsule-btn {
-  width: 42px;
-  min-width: 42px;
+  width: 38px;
+  min-width: 38px;
   padding: 0;
   justify-content: center;
   background: color-mix(in srgb, var(--md-sys-color-primary-container) 66%, transparent);
@@ -2146,9 +2208,9 @@ body.measure-layout .custom-player-actions {
 
 body.is-expanded-layout .custom-player-play.player-btn,
 body.measure-layout .custom-player-play.player-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 15px;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
 }
 
 body.is-expanded-layout .midi-action-btn .cis-label,
@@ -2165,22 +2227,22 @@ body.measure-layout .midi-instrument-action {
 
 body.is-expanded-layout .midi-action-btn.instrument-capsule-btn,
 body.measure-layout .midi-action-btn.instrument-capsule-btn {
-  width: 42px;
-  min-width: 42px;
-  height: 38px;
+  width: 38px;
+  min-width: 38px;
+  height: 36px;
   padding: 0;
   justify-content: center;
-  border-radius: 13px;
+  border-radius: 12px;
 }
 
 body.is-expanded-layout .pdf-viewer-overlay:has(.midi-collapse.midi-available),
 body.measure-layout .pdf-viewer-overlay:has(.midi-collapse.midi-available) {
-  --viewer-header-height-active: 72px;
+  --viewer-header-height-active: 68px;
 }
 
 body.is-expanded-layout .midi-collapse,
 body.measure-layout .midi-collapse {
-  width: min(38vw, 360px);
+  width: min(36vw, 340px);
   min-width: 0;
 }
 
@@ -2192,16 +2254,17 @@ body.measure-layout .midi-collapse.midi-available .midi-panel {
 
 body.is-expanded-layout .custom-player-controls,
 body.measure-layout .custom-player-controls {
+  display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 body.is-expanded-layout .custom-player-primary,
 body.measure-layout .custom-player-primary {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
   flex: 1 1 auto;
 }
@@ -2264,19 +2327,18 @@ body.measure-layout .custom-midi-player .player-slider::-moz-range-thumb {
 }
 
 @media (max-width: 1100px) and (orientation: landscape) {
-  body.is-expanded-layout .header-left,
   body.measure-layout .header-left {
-    max-width: min(34vw, 320px);
+    max-width: min(32vw, 300px);
   }
 
   body.is-expanded-layout .midi-collapse,
   body.measure-layout .midi-collapse {
-    width: min(34vw, 320px);
+    width: min(32vw, 300px);
   }
 
   body.is-expanded-layout .song-navigation,
   body.measure-layout .song-navigation {
-    max-width: min(100%, 460px);
+    max-width: min(100%, 440px);
   }
 }
 
@@ -2286,26 +2348,25 @@ body.measure-layout .custom-midi-player .player-slider::-moz-range-thumb {
     gap: 0.75rem;
   }
 
-  body.is-expanded-layout .header-left,
   body.measure-layout .header-left {
     max-width: min(32vw, 420px);
   }
 
   body.is-expanded-layout .midi-collapse,
   body.measure-layout .midi-collapse {
-    width: min(32vw, 400px);
+    width: min(29vw, 360px);
   }
 
   body.is-expanded-layout .song-navigation,
   body.measure-layout .song-navigation {
-    max-width: min(100%, 620px);
+    max-width: min(100%, 520px);
   }
 
   body.is-expanded-layout .midi-collapse .custom-midi-player,
   body.measure-layout .midi-collapse .custom-midi-player {
-    min-width: 260px;
-    max-width: 380px;
-    padding: 4px 10px;
+    min-width: 244px;
+    max-width: 364px;
+    padding: 3px 8px;
   }
 }
 
@@ -2366,7 +2427,6 @@ body.measure-layout .custom-midi-player .player-slider::-moz-range-thumb {
   .pdf-viewer-header {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-rows: auto auto;
     align-items: center;
   }
 
@@ -2383,6 +2443,8 @@ body.measure-layout .custom-midi-player .player-slider::-moz-range-thumb {
   }
 
   .song-navigation {
+    grid-row: 1;
+    grid-column: 2;
     position: static;
     left: auto;
     right: auto;
@@ -2426,3 +2488,244 @@ body.measure-layout .custom-midi-player .player-slider::-moz-range-thumb {
     border-radius: 16px;
   }
 }
+
+/* Final portrait mobile header overrides: absolutely-center the song-navigation
+   inside header-left (which is position:relative and fills the full header width).
+   Equal left/right margins via --portrait-side-width ensure perfect centering. */
+@media (max-width: 1024px) and (orientation: portrait) {
+  .pdf-viewer-header {
+    --portrait-side-width: 92px;
+    display: flex;
+    padding: 0.25rem 0.35rem 0.4rem;
+  }
+
+  /* header-left is the real layout host — make it the positioning context */
+  .header-left {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 0.35rem;
+    z-index: 1;
+  }
+
+  /* Song navigation centred absolutely inside header-left */
+  .song-navigation {
+    position: absolute !important;
+    left: var(--portrait-side-width) !important;
+    right: var(--portrait-side-width) !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: auto !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .song-navigation > button {
+    pointer-events: auto;
+    flex-shrink: 0;
+  }
+
+  .song-title-wrapper {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 100%;
+    text-align: center;
+    pointer-events: auto;
+  }
+
+  /* Hide-chord button pushed to far right via auto-margin */
+  .hide-chord-btn-portrait {
+    margin-left: auto;
+    flex-shrink: 0;
+    z-index: 2;
+  }
+}
+
+@media (max-width: 767px) and (orientation: portrait) {
+  .pdf-viewer-header {
+    --portrait-side-width: 90px;
+  }
+}
+
+@media (max-width: 420px) and (orientation: portrait) {
+  .pdf-viewer-header {
+    --portrait-side-width: 90px;
+  }
+
+  .song-title-wrapper {
+    border-radius: 16px;
+  }
+}
+
+/* Final MIDI/player and portrait chrome cleanup */
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-primary {
+  align-items: center;
+  gap: 12px;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-heading {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-container {
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
+  width: min(100%, clamp(228px, 28vw, 320px));
+  max-width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-self: stretch;
+  gap: 8px;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action {
+  min-width: 0;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.instrument-capsule-btn {
+  width: 100%;
+}
+
+body.is-expanded-layout .pdf-viewer-overlay:has(.midi-collapse.midi-available),
+body.measure-layout .pdf-viewer-overlay:has(.midi-collapse.midi-available) {
+  --viewer-header-height-active: 64px;
+}
+
+body.is-expanded-layout .midi-collapse .custom-midi-player,
+body.measure-layout .midi-collapse .custom-midi-player {
+  min-width: 228px;
+  max-width: 348px;
+  padding: 2px 6px;
+}
+
+body.is-expanded-layout .custom-player-controls,
+body.measure-layout .custom-player-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+body.is-expanded-layout .custom-player-primary,
+body.measure-layout .custom-player-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body.is-expanded-layout .player-track-container,
+body.measure-layout .player-track-container {
+  gap: 3px;
+  padding: 6px 9px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--viewer-chrome-border) 62%, transparent);
+  background: color-mix(in srgb, var(--viewer-chrome-surface) 72%, var(--md-sys-color-surface-container));
+}
+
+body.is-expanded-layout .custom-player-heading,
+body.measure-layout .custom-player-heading {
+  gap: 6px;
+}
+
+body.is-expanded-layout .custom-player-play.player-btn,
+body.measure-layout .custom-player-play.player-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 58%, var(--viewer-chrome-surface));
+  color: var(--md-sys-color-on-primary-container);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+body.is-expanded-layout .custom-player-actions,
+body.measure-layout .custom-player-actions {
+  gap: 5px;
+}
+
+body.is-expanded-layout .midi-action-btn.instrument-capsule-btn,
+body.measure-layout .midi-action-btn.instrument-capsule-btn,
+body.is-expanded-layout .midi-icon-btn.instrument-capsule-btn,
+body.measure-layout .midi-icon-btn.instrument-capsule-btn {
+  width: 34px;
+  min-width: 34px;
+  height: 36px;
+  border-radius: 12px;
+  border-color: color-mix(in srgb, var(--viewer-chrome-border) 72%, transparent);
+  background: color-mix(in srgb, var(--viewer-chrome-surface) 74%, var(--md-sys-color-surface-container-high));
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+body.is-expanded-layout .custom-midi-player .player-time,
+body.measure-layout .custom-midi-player .player-time {
+  padding: 0.12rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--viewer-chrome-border) 56%, transparent);
+  background: color-mix(in srgb, var(--viewer-chrome-surface) 60%, var(--md-sys-color-surface-container-high));
+  color: var(--viewer-title-accent);
+  font-size: 0.64rem !important;
+}
+
+@media (max-width: 640px) {
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-primary {
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-heading {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-container {
+    padding: 8px 10px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action {
+    flex-basis: auto;
+  }
+}
+
+@media (max-width: 420px) {
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action {
+    grid-column: 1 / -1;
+  }
+}
+
+

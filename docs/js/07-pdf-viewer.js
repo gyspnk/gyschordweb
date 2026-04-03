@@ -142,6 +142,13 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       }
       window._manualNavigation = false;
 
+      // Instantly collapse MIDI panel (no CSS transition) when switching songs
+      if (typeof midiPanel !== "undefined" && midiPanel && midiToggleBtn) {
+        midiPanel.classList.add('no-transition');
+        midiToggleBtn.setAttribute("aria-expanded", "false");
+        requestAnimationFrame(function () { midiPanel.classList.remove('no-transition'); });
+      }
+
       // Set isMidiSwitching BEFORE resetMidiState so the mini player never
       // sees a gap where both duration=0 and isMidiSwitching=false.
       window.isMidiSwitching = true;

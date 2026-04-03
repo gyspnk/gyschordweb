@@ -506,6 +506,13 @@ async function handleTouchEnd(event) {
   let newWrapper = null;
   try {
     newWrapper = await renderPage(currentPageNum);
+  } catch (e) {
+    zoomDeferInsert = false;
+    activeWrapper.classList.remove("pinch-preview");
+    activeWrapper.style.transform = "";
+    activeWrapper.style.transformOrigin = "";
+    zoomInProgress = false;
+    return;
   } finally {
     zoomDeferInsert = false;
   }
@@ -527,6 +534,7 @@ async function handleTouchEnd(event) {
   activeWrapper.style.transform = "";
   activeWrapper.style.transformOrigin = "";
   activeWrapper.replaceWith(newWrapper);
+  canvasWrapper = newWrapper; // Update global reference so next pinch works
 
   updateCenteringAndOverflow();
 

@@ -69,7 +69,7 @@
   --md-sys-state-layer-primary: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
   --pdf-viewer-header-height: 56px;
   --pdf-viewer-footer-height: 72px;
-  --mini-player-reserved-height: 152px;
+  --mini-player-reserved-height: 142px;
   --viewer-shell-background:
     radial-gradient(circle at top center, color-mix(in srgb, var(--md-sys-color-primary) 14%, transparent), transparent 32%),
     linear-gradient(180deg, color-mix(in srgb, var(--md-sys-color-surface-container-high) 92%, var(--md-sys-color-primary-container)) 0%, var(--md-sys-color-surface) 62%, color-mix(in srgb, var(--md-sys-color-surface) 84%, var(--md-sys-color-primary-container)) 100%);
