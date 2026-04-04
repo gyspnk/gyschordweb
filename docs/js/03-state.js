@@ -13,6 +13,7 @@ let prefs = {
   uiStyle: "sanctuary",
   colorScheme: "warm",
   layoutStyle: "balanced",
+  uiFont: "auto",
   defaultTwoPage: false,
   defaultVerticalScroll: false,
   preferNaturalChords: true,

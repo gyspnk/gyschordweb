@@ -69,12 +69,12 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .app-brand-copy {
   display: flex;
   flex-direction: column;
-  gap: 0.34rem;
+  gap: 0.1rem;
   justify-content: center;
   min-width: 0;
   flex: 1 1 auto;
-  padding-top: 0.54rem;
-  padding-bottom: 0.08rem;
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
 }
 .app-brand-kicker {
   display: block;
@@ -336,3 +336,8 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
   .nav-btn.selected { color: var(--md-sys-color-on-surface); }
   .nav-btn.selected::before { opacity: var(--nav-state-opacity); }
 .app-content::-webkit-scrollbar-thumb { background-color: var(--md-sys-color-outline); border-radius: 4px; }
+
+/* Close the search-bar reserved gap when the search container is hidden (non-Pujian pages) */
+body:not([data-page="pujian"]) .app-content {
+  top: var(--app-header-height);
+}

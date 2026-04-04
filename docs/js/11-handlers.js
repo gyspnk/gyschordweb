@@ -34,6 +34,18 @@ function handleMainContentClick(e) {
     return;
   }
 
+  const fontPresetButton = e.target.closest(".font-preset-option");
+  if (fontPresetButton) {
+    const fontKey = fontPresetButton.dataset.uiFont;
+    const appliedFont = applyFontSelection(fontKey);
+    document.querySelectorAll(".font-preset-option").forEach((btn) => {
+      const isSelected = btn.dataset.uiFont === appliedFont;
+      btn.classList.toggle("selected", isSelected);
+      btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
+    });
+    return;
+  }
+
   const colorSchemeButton = e.target.closest(".color-scheme-option");
   if (colorSchemeButton) {
     const schemeKey = colorSchemeButton.dataset.colorScheme;
@@ -263,6 +275,25 @@ function applyLayoutStyleSelection(layoutKey, persist = true) {
   }
 
   return nextLayout;
+}
+
+function applyFontSelection(fontKey, persist = true) {
+  const validKeys = new Set(FONT_PRESETS.map((p) => p.key));
+  const nextFont = validKeys.has(fontKey) ? fontKey : "auto";
+
+  if (nextFont === "auto") {
+    document.body.removeAttribute("data-ui-font");
+  } else {
+    document.body.setAttribute("data-ui-font", nextFont);
+  }
+
+  if (typeof prefs === "object" && prefs) {
+    prefs.uiFont = nextFont;
+    if (persist) {
+      localStorage.setItem("prefs", JSON.stringify(prefs));
+    }
+  }
+  return nextFont;
 }
 
 function handleSearch() {
@@ -563,6 +594,11 @@ function applyStoredPreferences() {
     applyColorSchemeSelection(prefs.colorScheme, false);
     applyUiStyleSelection(prefs.uiStyle, false);
     applyLayoutStyleSelection(prefs.layoutStyle, false);
+    if (FONT_PRESETS && prefs.uiFont) {
+      const validFontKeys = new Set(FONT_PRESETS.map((item) => item.key));
+      if (!validFontKeys.has(prefs.uiFont)) prefs.uiFont = "auto";
+      applyFontSelection(prefs.uiFont, false);
+    }
     if (!prefs.midiInstrumentBySoundfont || typeof prefs.midiInstrumentBySoundfont !== 'object') {
       prefs.midiInstrumentBySoundfont = {};
     }

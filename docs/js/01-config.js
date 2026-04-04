@@ -207,6 +207,37 @@ const LAYOUT_STYLE_PRESETS = [
     description: "Ruang lebih lega dengan chrome besar untuk tablet, desktop, dan proyeksi.",
   },
 ];
+
+const FONT_PRESETS = [
+  {
+    key: "auto",
+    label: "Otomatis",
+    description: "Mengikuti gaya UI yang aktif.",
+    displayFont: "",
+    bodyFont: "",
+  },
+  {
+    key: "hymnal",
+    label: "Hymnal Serif",
+    description: "Playfair Display + Roboto.",
+    displayFont: "'Playfair Display', serif",
+    bodyFont: "'Roboto', sans-serif",
+  },
+  {
+    key: "editorial",
+    label: "Editorial",
+    description: "Goudy + Abadi — bergaya buku nyanyian.",
+    displayFont: "'GoudyOldStyleBT-Roman', serif",
+    bodyFont: "'AbadiMT-CondensedLight', sans-serif",
+  },
+  {
+    key: "sans",
+    label: "Sans Modern",
+    description: "Font sistem bersih dan modern.",
+    displayFont: "system-ui, sans-serif",
+    bodyFont: "system-ui, sans-serif",
+  },
+];
 const APP_DEPENDENCY_CREDITS = [
   {
     name: "PDF.js",

@@ -21,6 +21,13 @@ function setupEventListeners() {
     midiToggleBtn.addEventListener("click", () => {
       const isExpanded = midiToggleBtn.getAttribute("aria-expanded") === "true";
 
+      // Re-enable CSS transitions (removed during programmatic navigation)
+      // so the open/close animation only plays on user-initiated toggle clicks.
+      if (typeof midiPanel !== "undefined" && midiPanel) {
+        midiPanel.classList.remove('no-transition');
+        void midiPanel.offsetHeight; // commit transition-property before state change
+      }
+
       midiToggleBtn.setAttribute("aria-expanded", !isExpanded);
     });
   }

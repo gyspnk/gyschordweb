@@ -1,5 +1,12 @@
 // --- 5. Navigasi utama ---
 function navigateTo(page) {
+  // Suppress MIDI panel animation during page navigation
+  const midiPanelEl = document.getElementById('midi-panel');
+  if (midiPanelEl) {
+    midiPanelEl.classList.add('no-midi-transition');
+    requestAnimationFrame(() => requestAnimationFrame(() => midiPanelEl.classList.remove('no-midi-transition')));
+  }
+
   const playlistBtn = document.getElementById("playlist-btn");
   [pujianBtn, pengaturanBtn, playlistBtn].forEach((btn) => {
     if (btn) btn.classList.remove("selected");
@@ -246,6 +253,25 @@ function renderDependencyCreditCards() {
   `).join("");
 }
 
+function renderFontPresetOptions(activeFont) {
+  return FONT_PRESETS.map((preset) => {
+    const isSelected = preset.key === activeFont;
+    const styleAttr = preset.displayFont ? `style="font-family: ${preset.displayFont};"` : '';
+    return `
+      <button
+        class="font-preset-option ${isSelected ? "selected" : ""}"
+        data-ui-font="${preset.key}"
+        type="button"
+        aria-pressed="${isSelected ? "true" : "false"}"
+        ${styleAttr}
+      >
+        <strong class="font-preset-label">${preset.label}</strong>
+        <span class="font-preset-preview" ${styleAttr}>Kidung Rohani</span>
+      </button>
+    `;
+  }).join("");
+}
+
 function renderSettings() {
   const activeAccent = document.body.getAttribute("data-accent") || "gold";
   const activeUiStyle = getUiStyleMeta(prefs.uiStyle);
@@ -298,6 +324,16 @@ function renderSettings() {
     )
     .join("");
 
+  const activeFontLabel = (function() {
+    const fp = FONT_PRESETS.find(p => p.key === (prefs.uiFont || "auto"));
+    return fp ? fp.label : "Otomatis";
+  })();
+  const activeChordThemeLabel = (function() {
+    const ct = CHORD_THEME_PRESETS.find(p => p.key === chordUiPrefs.theme);
+    return ct ? ct.label : chordUiPrefs.theme;
+  })();
+  const activeChordFill = chordUiPrefs.fill === "soft" ? "Soft" : chordUiPrefs.fill === "solid" ? "Solid" : "None";
+
   mainContent.innerHTML = `
     <div class="settings-panel settings-panel-redesign">
       <section class="settings-hero">
@@ -308,28 +344,28 @@ function renderSettings() {
         </div>
         <div class="settings-hero-metrics">
           <div class="settings-hero-metric">
-            <strong>${UI_STYLE_PRESETS.length}</strong>
+            <strong id="settings-active-style-label">${activeUiStyle.label}</strong>
             <span>gaya UI</span>
           </div>
           <div class="settings-hero-metric">
-            <strong>${COLOR_SCHEME_PRESETS.length}</strong>
+            <strong id="settings-active-scheme-label">${activeColorScheme.label}</strong>
             <span>skema warna</span>
           </div>
           <div class="settings-hero-metric">
-            <strong id="settings-active-style-label">${activeUiStyle.label}</strong>
-            <span>style aktif</span>
-          </div>
-          <div class="settings-hero-metric">
-            <strong>${LAYOUT_STYLE_PRESETS.length}</strong>
-            <span>layout app</span>
-          </div>
-          <div class="settings-hero-metric">
             <strong id="settings-active-layout-label">${activeLayoutStyle.label}</strong>
-            <span>layout aktif</span>
+            <span>layout</span>
           </div>
           <div class="settings-hero-metric">
-            <strong id="settings-active-scheme-label">${activeColorScheme.label}</strong>
-            <span>skema aktif</span>
+            <strong id="settings-active-font-label">${activeFontLabel}</strong>
+            <span>font</span>
+          </div>
+          <div class="settings-hero-metric">
+            <strong>${activeChordThemeLabel}</strong>
+            <span>tema chord</span>
+          </div>
+          <div class="settings-hero-metric">
+            <strong>${activeChordFill}</strong>
+            <span>fill chord</span>
           </div>
         </div>
       </section>
@@ -359,19 +395,21 @@ function renderSettings() {
                   </div>
                   <div class="settings-field">
                     <span class="settings-field-title">Skema warna aplikasi</span>
-                    <div class="appearance-color-gallery">
+                    <div class="appearance-color-gallery appearance-color-gallery--inline">
                       ${renderColorSchemeOptions(activeColorScheme.key)}
                     </div>
                   </div>
-                  <div class="settings-field">
-                    <span class="settings-field-title">Warna aksen utama</span>
-                    <div class="accent-palette accent-palette-studio">
-                      ${accentPalette}
+                  <div class="shell-accent-row">
+                    <div class="settings-field shell-accent-field">
+                      <span class="settings-field-title">Warna aksen utama</span>
+                      <div class="accent-palette accent-palette-studio">
+                        ${accentPalette}
+                      </div>
                     </div>
-                  </div>
-                  <div class="settings-inline-input">
-                    <label for="custom-accent-input" class="settings-field-title">Warna kustom</label>
-                    <input type="color" id="custom-accent-input" class="setting-color-input" value="${customAccentColor}" aria-label="Pilih warna custom accent">
+                    <div class="settings-inline-input">
+                      <label for="custom-accent-input" class="settings-field-title">Warna kustom</label>
+                      <input type="color" id="custom-accent-input" class="setting-color-input" value="${customAccentColor}" aria-label="Pilih warna custom accent">
+                    </div>
                   </div>
                 </div>
                 <div class="settings-subcard settings-subcard--chord-style">
@@ -468,6 +506,15 @@ function renderSettings() {
                       step="10"
                       value="${chordUiPrefs.fillPaddingPercent}"
                     >
+                  </div>
+                </div>
+                <div class="settings-subcard settings-subcard--font">
+                  <div class="settings-subcard-title">Font &amp; Tipografi</div>
+                  <div class="settings-field">
+                    <span class="settings-field-title">Font antarmuka</span>
+                    <div class="font-preset-gallery">
+                      ${renderFontPresetOptions(prefs.uiFont || "auto")}
+                    </div>
                   </div>
                 </div>
               </div>

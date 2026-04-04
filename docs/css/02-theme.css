@@ -380,6 +380,8 @@ body[data-ui-style="radiant"] {
   --hero-surface: linear-gradient(135deg, color-mix(in srgb, var(--md-sys-color-primary-container) 85%, transparent), color-mix(in srgb, var(--md-sys-color-surface) 82%, white));
   --hero-shadow: 0 28px 56px -38px rgba(0, 0, 0, 0.55);
   --settings-card-radius: 30px;
+  --font-display: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 body.dark-theme[data-ui-style="radiant"] {
@@ -394,6 +396,20 @@ body.dark-theme[data-ui-style="radiant"] {
   --panel-border: color-mix(in srgb, var(--md-sys-color-primary) 26%, var(--md-sys-color-outline));
   --nav-surface: color-mix(in srgb, #1a1d27 76%, transparent);
   --hero-surface: linear-gradient(135deg, #202433, #13151d 72%, #27182c 100%);
+}
+
+/* Manual font override — placed after ui-style rules so it wins in the cascade */
+body[data-ui-font="hymnal"] {
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+body[data-ui-font="editorial"] {
+  --font-display: 'GoudyOldStyleBT-Roman', 'Playfair Display', Georgia, serif;
+  --font-body: 'AbadiMT-CondensedLight', 'Roboto', sans-serif;
+}
+body[data-ui-font="sans"] {
+  --font-display: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 html[data-layout-style="compact"] {

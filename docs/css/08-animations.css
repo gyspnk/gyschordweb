@@ -169,8 +169,11 @@ body.dark-theme .ripple {
               visibility 0.25s;
 }
 /* Suppress transitions during song navigation to prevent flickering */
-.midi-panel.no-transition {
+.midi-panel.no-transition,
+.midi-panel.no-transition .custom-midi-player,
+.midi-panel.no-transition * {
   transition: none !important;
+  animation: none !important;
 }
 
 /* PDF close button */

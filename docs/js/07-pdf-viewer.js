@@ -43,6 +43,13 @@ async function openPdfViewer(songId, backgroundLoad = false) {
     MidiEngine.stop();
   }
 
+  // Instantly hide MIDI panel BEFORE any animation delay to prevent flickering.
+  // The no-transition class suppresses CSS transitions so the panel disappears immediately.
+  if (typeof midiPanel !== "undefined" && midiPanel && typeof midiToggleBtn !== "undefined" && midiToggleBtn) {
+    midiPanel.classList.add('no-transition');
+    midiToggleBtn.setAttribute("aria-expanded", "false");
+  }
+
   if (!_canReuseDoc) {
     // Animate title/canvas only when actually switching content
     songTitleWrapper.classList.add("is-navigating");
@@ -113,11 +120,11 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       document.getElementById('midi-collapse').classList.add('midi-available');
       if (typeof checkLayoutCollisions === 'function') checkLayoutCollisions();
       if (typeof midiPanel !== "undefined" && midiPanel) {
-        // Close panel instantly (no CSS transition) to prevent flicker
+        // Close panel instantly (no CSS transition) to prevent flicker.
+        // no-transition stays on — only removed by the toggle-button click handler
+        // so that programmatic navigation never triggers the CSS open/close animation.
         midiPanel.classList.add('no-transition');
         midiToggleBtn.setAttribute("aria-expanded", "false");
-        // Re-enable transitions after two frames to ensure hidden state is committed
-        requestAnimationFrame(function () { requestAnimationFrame(function () { midiPanel.classList.remove('no-transition'); }); });
       }
 
       const playIcon = document.getElementById("custom-play-icon");
@@ -142,11 +149,11 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       }
       window._manualNavigation = false;
 
-      // Instantly collapse MIDI panel (no CSS transition) when switching songs
+      // Instantly collapse MIDI panel (no CSS transition) when switching songs.
+      // Keep no-transition until MIDI load completes to prevent animation slip.
       if (typeof midiPanel !== "undefined" && midiPanel && midiToggleBtn) {
         midiPanel.classList.add('no-transition');
         midiToggleBtn.setAttribute("aria-expanded", "false");
-        requestAnimationFrame(function () { requestAnimationFrame(function () { midiPanel.classList.remove('no-transition'); }); });
       }
 
       // Set isMidiSwitching BEFORE resetMidiState so the mini player never
@@ -204,6 +211,8 @@ async function openPdfViewer(songId, backgroundLoad = false) {
           syncSeekbarUI(0, MidiEngine.getDuration());
           window.isMidiSwitching = false;
 
+          // no-transition stays on — only the toggle-button click removes it
+
           if (wasForcedNext) {
             customPlayIcon.textContent = "pause";
             document.getElementById("custom-midi-player").classList.add("playing");
@@ -216,6 +225,7 @@ async function openPdfViewer(songId, backgroundLoad = false) {
           console.warn("Gagal memuat MIDI:", err);
           window.isMidiSwitching = false;
           if (midiPreloadBar) midiPreloadBar.style.display = "none";
+          // no-transition stays on — only the toggle-button click removes it
         });
       }
 
@@ -252,10 +262,9 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       document.getElementById('midi-collapse').classList.add('midi-available');
       if (typeof checkLayoutCollisions === 'function') checkLayoutCollisions();
       if (typeof midiPanel !== "undefined" && midiPanel) {
-        // Close panel instantly (no CSS transition) to prevent flicker
+        // Keep panel suppressed — no-transition persists until user clicks toggle.
         midiPanel.classList.add('no-transition');
         midiToggleBtn.setAttribute("aria-expanded", "false");
-        requestAnimationFrame(function () { requestAnimationFrame(function () { midiPanel.classList.remove('no-transition'); }); });
       }
     } // End of track matched guard
   }

@@ -1,8 +1,10 @@
 // --- 7. Chord Overlay Logic ---
+const DEFAULT_CHORD_GRID = { cols: 10, rows: 16 };
+
 function createDefaultChordConfig() {
   return {
     version: 1,
-    grid: { cols: 105, rows: 149 },
+    grid: { ...DEFAULT_CHORD_GRID },
     pages: {}
   };
 }
@@ -181,13 +183,15 @@ function updateTransposeVisibility() {
   const hasNoteChords = typeof hasNoteAlignedChords === "function" && hasNoteAlignedChords();
   const hasMidi = typeof midiToggleBtn !== "undefined" && midiToggleBtn && midiToggleBtn.style.display !== "none";
   const showTranspose = hasChords || hasNoteChords || chordEditorEnabled || hasMidi;
+  // Only show hide-chord buttons when actual chords exist (not just MIDI)
+  const showHideChord = hasChords || hasNoteChords || chordEditorEnabled;
 
   document.querySelectorAll('.transpose-collapse').forEach(el => {
     el.style.display = showTranspose ? '' : 'none';
   });
   if (typeof hideChordBtns !== "undefined") {
     hideChordBtns.forEach(btn => {
-      btn.style.display = showTranspose ? '' : 'none';
+      btn.style.display = showHideChord ? '' : 'none';
     });
   }
 
@@ -236,19 +240,6 @@ function updateFamilyChordUI() {
       btn.textContent = currentKeyString !== '-' && currentKeyString !== '?' ? currentKeyString : fallbackLabel;
     });
 
-  let baseKeySemitone = null;
-  if (originalFamilyChord) {
-    const parsedObj = parseChordToken(originalFamilyChord);
-    if (parsedObj) {
-      baseKeySemitone = wrapSemitone(parsedObj.semitone + baseTransposeOffset);
-    }
-  } else if (typeof originalPdfKey !== 'undefined' && originalPdfKey) {
-    const pdfSemi = parsePdfKeyToSemitone(originalPdfKey);
-    if (pdfSemi !== null) {
-      baseKeySemitone = pdfSemi;
-    }
-  }
-
   const allNotes = accidentalMode === "flat" ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP;
   dds.forEach(dd => {
     dd.innerHTML = '';
@@ -263,8 +254,14 @@ function updateFamilyChordUI() {
       }
       opt.onclick = () => {
          if (typeof MidiEngine !== 'undefined' && MidiEngine.isLoading()) return;
-        if (baseKeySemitone === null) return;
-        let diff = index - baseKeySemitone;
+         if (!originalFamilyChord) return;
+         const parsedObj = parseChordToken(originalFamilyChord);
+         if (!parsedObj) return;
+         const origSemi = parsedObj.semitone;
+         let targetSemi = index;
+         
+         // Calculate transpose step relative to base offset
+         let diff = targetSemi - origSemi - baseTransposeOffset;
          
          diff = diff % 12;
          if (diff > 6) diff -= 12;
