@@ -388,7 +388,7 @@ function renderSettings() {
                 <div class="settings-subcard settings-subcard--shell">
                   <div class="settings-inline-toggle">
                     <div class="settings-subcard-title">Mode tampilan, skema & aksen</div>
-                    <label class="md-switch">
+                    <label class="md-switch md-switch--theme">
                       <input type="checkbox" id="dark-theme-toggle" ${document.body.classList.contains("dark-theme") || (!document.body.classList.contains("light-theme-forced") && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "checked" : ""}>
                       <span class="md-slider"></span>
                     </label>

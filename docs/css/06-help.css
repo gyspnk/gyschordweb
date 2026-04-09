@@ -389,4 +389,43 @@ body.dark-theme .secondary-link { background: linear-gradient(135deg, var(--sour
 .md-switch input:checked + .md-slider { background-color: var(--md-sys-color-primary); }
 .md-switch input:checked + .md-slider::before { transform: translateX(20px); background-color: var(--md-sys-color-on-primary); }
 
+/* ---- Themed dark-mode switch: sun (light) / moon (dark) ---- */
+.md-switch--theme { width: 56px; height: 32px; }
+.md-switch--theme .md-slider {
+  background-color: #78909C;
+  transition: background-color 0.3s;
+}
+.md-switch--theme input:checked + .md-slider {
+  background-color: #37474F;
+}
+/* Sun icon track flash — warm amber tint when light */
+.md-switch--theme .md-slider::before {
+  font-family: 'Material Symbols Outlined';
+  font-size: 16px;
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+  content: 'light_mode';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #FFF9C4;
+  color: #E65100;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3), 0 0 6px rgba(255,179,0,0.4);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s, color 0.3s, box-shadow 0.3s;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+}
+/* Moon icon — cool slate when dark */
+.md-switch--theme input:checked + .md-slider::before {
+  transform: translateX(24px);
+  content: 'dark_mode';
+  background-color: #1A237E;
+  color: #B3C5FF;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5), 0 0 8px rgba(100,130,255,0.35);
+}
+
 .welcome-text { text-align: center; margin-top: 4rem; font-size: 1.1rem; color: var(--md-sys-color-on-surface-variant); }

@@ -286,12 +286,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (localStorage.getItem('miniPlayerCollapsed') === '1') {
       miniPlayerContainer.classList.add('is-mini-collapsed');
       if (appContent) appContent.classList.add('has-mini-player-collapsed');
+      miniCollapseToggle.setAttribute('aria-expanded', 'false');
+      miniCollapseToggle.setAttribute('aria-label', 'Expand mini player');
+    } else {
+      miniCollapseToggle.setAttribute('aria-expanded', 'true');
+      miniCollapseToggle.setAttribute('aria-label', 'Collapse mini player');
     }
 
     miniCollapseToggle.addEventListener('click', function (e) {
       e.stopPropagation();
       var isCollapsed = miniPlayerContainer.classList.toggle('is-mini-collapsed');
       localStorage.setItem('miniPlayerCollapsed', isCollapsed ? '1' : '0');
+      miniCollapseToggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+      miniCollapseToggle.setAttribute('aria-label', isCollapsed ? 'Expand mini player' : 'Collapse mini player');
       if (appContent) {
         appContent.classList.toggle('has-mini-player-collapsed', isCollapsed);
       }
