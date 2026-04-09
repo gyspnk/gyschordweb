@@ -278,6 +278,26 @@ document.addEventListener('DOMContentLoaded', () => {
     scheduleMiniExtrasLayout();
   }
 
+  // --- Mini player collapse / expand toggle ---
+  const miniCollapseToggle = document.getElementById('mini-collapse-toggle');
+  if (miniCollapseToggle && miniPlayerContainer) {
+    const appContent = document.getElementById('main-content');
+    // Restore persisted collapsed state
+    if (localStorage.getItem('miniPlayerCollapsed') === '1') {
+      miniPlayerContainer.classList.add('is-mini-collapsed');
+      if (appContent) appContent.classList.add('has-mini-player-collapsed');
+    }
+
+    miniCollapseToggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var isCollapsed = miniPlayerContainer.classList.toggle('is-mini-collapsed');
+      localStorage.setItem('miniPlayerCollapsed', isCollapsed ? '1' : '0');
+      if (appContent) {
+        appContent.classList.toggle('has-mini-player-collapsed', isCollapsed);
+      }
+    });
+  }
+
 });
 
 function syncAutoNextMenu() {
@@ -358,10 +378,11 @@ function syncMiniPlayerUI() {
     document.querySelector('.report-page') !== null ||
     document.querySelector('.settings-panel') !== null);
   const appContent = document.getElementById('main-content');
+  var isCollapsed = miniPlayer.classList.contains('is-mini-collapsed');
   if (inViewer || inSettings) {
     miniPlayer.classList.add('is-hidden');
     miniPlayer.classList.remove('mini-player-enter');
-    if (appContent) appContent.classList.remove('has-mini-player');
+    if (appContent) { appContent.classList.remove('has-mini-player'); appContent.classList.remove('has-mini-player-collapsed'); }
   } else if (dur > 0 || isPlaying || window.isMidiSwitching || isEngineLoading || !!hasSong) {
     // Show mini player — add entrance animation only on first show
     var wasHidden = miniPlayer.classList.contains('is-hidden');
@@ -371,7 +392,10 @@ function syncMiniPlayerUI() {
       void miniPlayer.offsetWidth; // force reflow to restart animation
       miniPlayer.classList.add('mini-player-enter');
     }
-    if (appContent) appContent.classList.add('has-mini-player');
+    if (appContent) {
+      appContent.classList.add('has-mini-player');
+      appContent.classList.toggle('has-mini-player-collapsed', isCollapsed);
+    }
     miniTitle.textContent = document.getElementById('pdf-viewer-title')?.textContent || 'Lagu';
 
     // Loading bar is now synced by the RAF loop in 05-events.js
@@ -448,7 +472,7 @@ function syncMiniPlayerUI() {
     miniPlayer.classList.remove('mini-player-enter');
     miniPlayer.classList.remove('is-playing');
     if (miniPlayIcon) miniPlayIcon.classList.remove('is-playing');
-    if (appContent) appContent.classList.remove('has-mini-player');
+    if (appContent) { appContent.classList.remove('has-mini-player'); appContent.classList.remove('has-mini-player-collapsed'); }
   }
 }
 

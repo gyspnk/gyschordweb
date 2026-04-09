@@ -940,6 +940,12 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   .pdf-viewer-overlay { --viewer-footer-height: 0px; }
   .song-navigation {
     right: auto; left: 50%; transform: translateX(-50%);
+    pointer-events: none;
+    max-width: calc(100% - 420px);
+  }
+  .song-navigation > button,
+  .song-title-wrapper {
+    pointer-events: auto;
   }
   .landscape-controls {
     display: flex;

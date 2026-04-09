@@ -296,6 +296,19 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
   }
 }
 
+/* Collapsed mini player needs less reserved space */
+.app-content.has-mini-player.has-mini-player-collapsed {
+  padding-bottom: calc(var(--bottom-nav-height) + 80px);
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .app-content.has-mini-player {
+    padding-bottom: calc(var(--bottom-nav-height) + 160px);
+  }
+  .app-content.has-mini-player.has-mini-player-collapsed {
+    padding-bottom: calc(var(--bottom-nav-height) + 60px);
+  }
+}
+
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; width: 100%; height: var(--bottom-nav-height);
   padding-bottom: env(safe-area-inset-bottom, 0px);

@@ -30,6 +30,11 @@
 .mini-player:not(.is-hidden) ~ #zoom-toast {
   bottom: calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px) + 125px);
 }
+/* When mini player is collapsed, toasts need less offset */
+.mini-player.is-mini-collapsed:not(.is-hidden) ~ #general-toast,
+.mini-player.is-mini-collapsed:not(.is-hidden) ~ #zoom-toast {
+  bottom: calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom, 0px) + 72px);
+}
 
 .zoom-toast.show {
   transform: translate(-50%, 0);
