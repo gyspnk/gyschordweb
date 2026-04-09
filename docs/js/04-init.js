@@ -1,5 +1,11 @@
 // --- 3. Init ---
 async function init() {
+  // Detect Chrome on Android and apply 20% UI scale reduction to prevent overlaps
+  const ua = navigator.userAgent || "";
+  if (/Android/i.test(ua) && /Chrome\/\d+/i.test(ua) && !/OPR|Edge|Firefox/i.test(ua)) {
+    document.documentElement.classList.add("chrome-android");
+  }
+
   // Restore user preferences FIRST so MidiEngine init can use the stored soundfont
   chordConfig = createDefaultChordConfig();
   applyStoredPreferences();

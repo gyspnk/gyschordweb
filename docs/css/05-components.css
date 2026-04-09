@@ -39,7 +39,7 @@
 }
 .pujian-list {
   list-style: none; padding: 0; margin: 0 auto;
-  padding-top: 0.75rem;
+  padding-top: calc(var(--search-container-top) - var(--app-header-height) + 52px);
   max-width: var(--layout-list-width);
   animation: simpleFade 0.35s var(--ease-decelerate);
 }
@@ -82,7 +82,7 @@
   display: block;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: clip;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 640px) {

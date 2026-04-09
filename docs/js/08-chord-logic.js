@@ -445,7 +445,7 @@ function encodeChordToken(input) {
 
   const rootRaw = match[1];
   const accidentalRaw = match[2] || "";
-  const suffix = (match[3] || "").trim();
+  const fullSuffix = (match[3] || "").trim();
 
   const rootLetter = /[1-7]/.test(rootRaw) ? NUMBER_TO_NOTE[rootRaw] : rootRaw.toUpperCase();
   const naturalIndex = NATURAL_NOTE_INDEX[rootLetter];
@@ -460,7 +460,15 @@ function encodeChordToken(input) {
   semitone = semitone - transposeStep - baseTransposeOffset;
 
   const normalizedRoot = NOTE_NAMES_SHARP_ASCII[wrapSemitone(semitone)];
-  return `${normalizedRoot}${suffix}`;
+
+  // Reverse-transpose only transposeStep for bass (bass is stored in display-key coordinates)
+  const bass = _parseSlashBass(fullSuffix);
+  if (bass.bassSemitone !== null) {
+    const bassSemi = bass.bassSemitone - transposeStep;
+    const normalizedBass = NOTE_NAMES_SHARP_ASCII[wrapSemitone(bassSemi)];
+    return `${normalizedRoot}${bass.suffixBefore}/${normalizedBass}${bass.suffixAfter}`;
+  }
+  return `${normalizedRoot}${fullSuffix}`;
 }
 
 function formatChordForDisplay(encodedToken) {
@@ -471,22 +479,38 @@ function formatChordForDisplay(encodedToken) {
   const noteSet = accidentalMode === "flat" ? NOTE_NAMES_FLAT : NOTE_NAMES_SHARP;
   const transposed = wrapSemitone(parsed.semitone + transposeStep + baseTransposeOffset);
   
-  // Replace 'b' with '♭' and '#' with '♯' in suffix for common chord extensions and slash chords
+  // Replace 'b' with '♭' and '#' with '♯' in suffix for common chord extensions
   let displaySuffix = parsed.suffix;
   if (accidentalMode === "flat") {
-    displaySuffix = displaySuffix
-      .replace(/b(\d+)/g, "♭$1") // Matches b5, b9, b13, etc.
-      .replace(/\/([A-G])b/gi, "/$1♭"); // Matches slash chords like /Bb or /db
+    displaySuffix = displaySuffix.replace(/b(\d+)/g, "♭$1");
   } else {
-    displaySuffix = displaySuffix
-      .replace(/#(\d+)/g, "♯$1") // Matches #5, #9, #11, etc.
-      .replace(/\/([A-G])#/gi, "/$1♯"); // Matches slash chords like /F# or /f#
+    displaySuffix = displaySuffix.replace(/#(\d+)/g, "♯$1");
   }
-  
-  // Globally replace any remaining standalone sharp/flat in suffix just in case it didn't match the specific patterns
-  displaySuffix = displaySuffix.replace(/#/g, "♯").replace(/♭/g, "♭"); // `♭` replacement already mostly handled, but we explicitly replace `#` with `♯`
+  displaySuffix = displaySuffix.replace(/#/g, "♯");
 
-  return `${noteSet[transposed]}${displaySuffix}`;
+  // Transpose the bass note after "/" — bass is stored in display-key coordinates
+  // (not reverse-transposed like the root), so only apply user transposeStep
+  let bassDisplay = "";
+  if (parsed.bassSemitone !== null) {
+    const transposedBass = wrapSemitone(parsed.bassSemitone + transposeStep);
+    bassDisplay = "/" + noteSet[transposedBass] + (parsed.suffixAfter || "");
+  }
+
+  return `${noteSet[transposed]}${displaySuffix}${bassDisplay}`;
+}
+
+function _parseSlashBass(suffix) {
+  // Extract bass note from suffix like "m/E", "7/G#", "/Bb"
+  const slashMatch = suffix.match(/^(.*)\/([A-Ga-g])([#♯b♭]?)(.*)$/);
+  if (!slashMatch) return { suffixBefore: suffix, bassSemitone: null, bassAccidental: "", suffixAfter: "" };
+  const bassRoot = slashMatch[2].toUpperCase();
+  const bassAccRaw = slashMatch[3] || "";
+  const bassAcc = bassAccRaw === "♭" ? "b" : bassAccRaw === "♯" ? "#" : bassAccRaw;
+  let bassSemi = NATURAL_NOTE_INDEX[bassRoot];
+  if (!Number.isInteger(bassSemi)) return { suffixBefore: suffix, bassSemitone: null, bassAccidental: "", suffixAfter: "" };
+  if (bassAcc === "#") bassSemi += 1;
+  if (bassAcc === "b") bassSemi -= 1;
+  return { suffixBefore: slashMatch[1], bassSemitone: wrapSemitone(bassSemi), bassAccidental: bassAcc, suffixAfter: slashMatch[4] || "" };
 }
 
 function parseChordToken(token) {
@@ -494,7 +518,7 @@ function parseChordToken(token) {
   if (newFormat) {
     const root = newFormat[1].toUpperCase();
     const accidentalRaw = newFormat[2] || "";
-    const suffix = newFormat[3] || "";
+    const fullSuffix = newFormat[3] || "";
     
     const accidental = accidentalRaw === "♭" ? "b" : accidentalRaw === "♯" ? "#" : accidentalRaw;
 
@@ -503,7 +527,8 @@ function parseChordToken(token) {
     if (accidental === "#") semitone += 1;
     if (accidental === "b") semitone -= 1;
 
-    return { semitone: wrapSemitone(semitone), suffix };
+    const bass = _parseSlashBass(fullSuffix);
+    return { semitone: wrapSemitone(semitone), suffix: bass.suffixBefore, bassSemitone: bass.bassSemitone, suffixAfter: bass.suffixAfter };
   }
 
   const legacyFormat = token.match(/^([1-7])([#♯b♭]?)(.*)$/);
@@ -512,13 +537,15 @@ function parseChordToken(token) {
   const legacyRoot = NUMBER_TO_NOTE[legacyFormat[1]];
   let semitone = NATURAL_NOTE_INDEX[legacyRoot];
   const accidentalRaw = legacyFormat[2] || "";
-  const suffix = legacyFormat[3] || "";
+  const fullSuffix = legacyFormat[3] || "";
   
   const accidental = accidentalRaw === "♭" ? "b" : accidentalRaw === "♯" ? "#" : accidentalRaw;
 
   if (accidental === "#") semitone += 1;
   if (accidental === "b") semitone -= 1;
-  return { semitone: wrapSemitone(semitone), suffix };
+
+  const bass = _parseSlashBass(fullSuffix);
+  return { semitone: wrapSemitone(semitone), suffix: bass.suffixBefore, bassSemitone: bass.bassSemitone, suffixAfter: bass.suffixAfter };
 }
 
 function wrapSemitone(value) {
@@ -706,11 +733,10 @@ function updateChordEditorUI() {
   if (chordEditorToolbar) {
     chordEditorToolbar.classList.toggle("is-collapsed", chordEditorCollapsed);
   }
-  // Update label based on whether we're using note-aligned or grid mode
+  // Always show "Chord Editor (Note-Aligned)" label
   const label = chordEditorToolbar?.querySelector(".chord-editor-label");
   if (label) {
-    const hasNotes = pageNotesCache && Object.values(pageNotesCache).some(c => c && c.notes && c.notes.length > 0);
-    label.textContent = hasNotes ? "Chord Editor (Note-Aligned)" : `Chord Editor ${chordConfig.grid.cols}x${chordConfig.grid.rows}`;
+    label.textContent = "Chord Editor (Note-Aligned)";
   }
   updateTransposeVisibility();
 }

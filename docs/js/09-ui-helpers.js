@@ -13,6 +13,7 @@ let _layoutResizeTimer = null;
 function onLayoutResize() {
   if (_layoutResizeTimer) clearTimeout(_layoutResizeTimer);
   _layoutResizeTimer = setTimeout(() => {
+    checkOrientation();
     checkLayoutCollisions();
     syncTransposeCollapseState();
     fitViewerTitle();
@@ -270,7 +271,16 @@ function setupRippleEffect() {
 }
 
 function checkOrientation() {
-  const isPortrait = window.innerHeight > window.innerWidth;
+  // Use matchMedia first (CSS viewport orientation, most reliable across devices),
+  // then screen.orientation API, then fallback to dimension check
+  let isPortrait;
+  if (window.matchMedia) {
+    isPortrait = window.matchMedia("(orientation: portrait)").matches;
+  } else if (screen.orientation && screen.orientation.type) {
+    isPortrait = screen.orientation.type.startsWith("portrait");
+  } else {
+    isPortrait = window.innerHeight > window.innerWidth;
+  }
   orientationWarning.classList.toggle("visible", currentViewMode === "double" && isPortrait);
 }
 

@@ -271,7 +271,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 
 .app-content {
   position: fixed; top: var(--app-content-top); bottom: var(--bottom-nav-height); left: 0; right: 0;
-  overflow-y: auto; padding: var(--layout-content-padding-mobile); padding-bottom: calc(var(--bottom-nav-height) + 20px); box-sizing: border-box;
+  overflow-y: auto; overflow-x: hidden; padding: var(--layout-content-padding-mobile); padding-bottom: calc(var(--bottom-nav-height) + 20px); box-sizing: border-box;
   transition: padding-bottom var(--duration-medium) var(--ease-standard);
 }
 .app-content.has-mini-player {

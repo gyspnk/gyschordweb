@@ -546,10 +546,9 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   }
 
   .pdf-viewer-footer.has-page-nav {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
     grid-template-areas:
-      "transpose zoom controls"
-      "page page page";
+      "transpose zoom page controls";
   }
 
   .transpose-collapse {
@@ -560,6 +559,8 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
   .zoom-controls {
     grid-area: zoom;
     justify-self: center;
+    flex-shrink: 1;
+    min-width: 0;
   }
 
   .pdf-viewer-footer.no-view-controls .zoom-controls {

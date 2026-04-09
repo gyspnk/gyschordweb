@@ -299,7 +299,7 @@ body.measure-layout .transpose-controls-footer {
   display: none;
 }
 
-@media (max-width: 640px) and (orientation: portrait) {
+@media (max-width: 430px) and (orientation: portrait) {
   .pdf-viewer-footer.has-page-nav .zoom-controls .zoom-level-indicator {
     display: none;
   }

@@ -487,6 +487,19 @@ function setupEventListeners() {
     window.addEventListener("orientationchange", handleOrientationChange);
   }
 
+  // Extra matchMedia listener for orientation — more reliable on some Android/iOS browsers
+  if (window.matchMedia) {
+    const orientationMql = window.matchMedia("(orientation: portrait)");
+    const onOrientationMqlChange = () => {
+      if (typeof checkOrientation === "function") checkOrientation();
+    };
+    if (orientationMql.addEventListener) {
+      orientationMql.addEventListener("change", onOrientationMqlChange);
+    } else if (orientationMql.addListener) {
+      orientationMql.addListener(onOrientationMqlChange);
+    }
+  }
+
   window.addEventListener("wheel", handleGlobalScroll, { passive: false });
 
   window.addEventListener("keydown", handleGlobalKeydown, { passive: false });
