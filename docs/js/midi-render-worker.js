@@ -128,7 +128,7 @@ function renderMidi(msg) {
     synth.init(sampleRate, {
       reverbActive: true,
       chorusActive: true,
-      initialGain: 0.5,
+      initialGain: 1.0,
       polyphony: 512
     });
 
