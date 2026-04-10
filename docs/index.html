@@ -33,7 +33,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="style.css?v=68" />
+    <link rel="stylesheet" href="css/tailwind.css?v=1" />
 
     <script
       src="https://mozilla.github.io/pdf.js/build/pdf.mjs"
@@ -829,27 +829,11 @@
       Gunakan Tombol untuk Zoom
     </div>
 
-    <script defer src="js/midi-engine.js?v=11"></script>
-    <script defer src="js/01-config.js?v=29"></script>
-    <script defer src="js/02-dom.js?v=7"></script>
-    <script defer src="js/03-state.js?v=13"></script>
-
-    <script defer src="js/05-events.js?v=16"></script>
-    <script defer src="js/06-navigation.js?v=20"></script>
-    <script defer src="js/07-pdf-viewer.js?v=19"></script>
-    <script defer src="js/08-chord-logic.js?v=12"></script>
-    <script defer src="js/14-note-chord-editor.js?v=7"></script>
-    <script defer src="js/04-init.js?v=11"></script>
-    <script defer src="js/09-ui-helpers.js?v=14"></script>
-    <script defer src="js/10-zoom-gestures.js?v=7"></script>
-    <script defer src="js/11-handlers.js?v=18"></script>
-    <script defer src="js/12-playlist.js?v=6"></script>
-    <script defer src="js/13-playlist-ui.js?v=11"></script>
-    <script defer src="js/15-media-session.js?v=4"></script>
+    <script defer src="js/app.bundle.min.js?v=1"></script>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
+          navigator.serviceWorker.register('./sw.min.js?v=1')
             .then(reg => console.log('Service Worker registered', reg))
             .catch(err => console.error('Service Worker registration failed', err));
         });

@@ -1,0 +1,300 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --app-header-height: clamp(3.5rem, 4.8vw, 4rem);
+    --bottom-nav-height: clamp(4rem, 5.6vw, 4.75rem);
+    --pdf-viewer-header-height: clamp(3rem, 4.8vw, 3.5rem);
+    --pdf-viewer-footer-height: clamp(3.5rem, 5.8vw, 4.5rem);
+    --search-container-top: calc(var(--app-header-height) + 0.25rem);
+    --mini-player-reserved-height: clamp(8.25rem, 20vh, 13.5rem);
+    --layout-content-padding-mobile: clamp(0.75rem, 2.5vw, 1rem);
+    --layout-content-padding-tablet: clamp(0.9rem, 2vw, 1.25rem) clamp(1rem, 3vw, 1.6rem);
+    --layout-content-padding-desktop: clamp(1.2rem, 2.2vw, 1.75rem) clamp(1.5rem, 4vw, 3rem);
+    --layout-search-width: min(42rem, calc(100vw - 1rem));
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  img,
+  svg,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+@layer components {
+  .app-header {
+    @apply px-3 sm:px-4 lg:px-6;
+  }
+
+  #search-container {
+    left: max(0.5rem, env(safe-area-inset-left));
+    right: max(0.5rem, env(safe-area-inset-right));
+    max-width: min(var(--layout-search-width), calc(100vw - 1rem));
+    margin-inline: auto;
+    @apply gap-2 rounded-full;
+  }
+
+  .app-content {
+    @apply px-3 sm:px-4 lg:px-8;
+  }
+
+  .pujian-list,
+  .settings-panel:not(.settings-panel-redesign),
+  .settings-panel.settings-panel-redesign {
+    @apply w-full;
+  }
+
+  .pujian-item {
+    @apply min-w-0;
+  }
+
+  .add-to-playlist-btn {
+    @apply h-10 w-10 shrink-0 rounded-xl;
+  }
+
+  .add-to-playlist-btn .material-symbols-outlined {
+    font-size: 1.1rem;
+    line-height: 1;
+    width: 1.1rem;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pdf-viewer-header,
+  .pdf-viewer-footer {
+    @apply px-1 sm:px-2;
+  }
+
+  .pdf-viewer-header .icon-button,
+  .pdf-viewer-footer .icon-button {
+    width: clamp(2rem, 3.6vw, 2.5rem);
+    height: clamp(2rem, 3.6vw, 2.5rem);
+  }
+
+  .pdf-viewer-header .icon-button .material-symbols-outlined,
+  .pdf-viewer-footer .icon-button .material-symbols-outlined {
+    font-size: clamp(1rem, 2vw, 1.35rem);
+  }
+
+  .song-navigation {
+    max-width: calc(100% - clamp(10.5rem, 30vw, 15.5rem));
+  }
+
+  .song-title-wrapper {
+    max-width: clamp(10rem, 30vw, 16rem);
+  }
+
+  .custom-midi-player {
+    @apply w-full min-w-0;
+  }
+
+  .custom-player-controls {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .custom-player-primary {
+    @apply flex min-w-0 flex-1 items-center gap-2;
+  }
+
+  .custom-player-actions {
+    @apply flex items-center gap-1.5;
+  }
+
+  .mini-player {
+    width: min(42rem, calc(100% - 0.75rem));
+    max-width: min(42rem, calc(100% - 0.75rem));
+    @apply px-2.5 py-2;
+  }
+
+  .mini-player-top {
+    @apply gap-2;
+  }
+
+  .mini-player-extras {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.35rem;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .mini-player-middle {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    @apply gap-1.5;
+  }
+
+  .mini-seekbar-wrapper {
+    width: 100%;
+    min-width: 0;
+  }
+
+  html.chrome-android {
+    font-size: 100%;
+  }
+
+  html.chrome-android .pdf-viewer-header,
+  html.chrome-android .pdf-viewer-footer {
+    transform: none !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 1100px) and (orientation: landscape) {
+  .pdf-viewer-header,
+  .pdf-viewer-footer {
+    gap: 0.3rem;
+    padding-inline: 0.3rem;
+  }
+
+  .pdf-viewer-header .icon-button,
+  .pdf-viewer-footer .icon-button {
+    width: 34px;
+    height: 34px;
+  }
+
+  .pdf-viewer-header .icon-button .material-symbols-outlined,
+  .pdf-viewer-footer .icon-button .material-symbols-outlined {
+    font-size: 17px;
+  }
+
+  .song-navigation {
+    max-width: calc(100% - 168px);
+  }
+}
+
+@media (max-width: 767px) {
+  .app-content {
+    padding-inline: clamp(0.65rem, 2.7vw, 0.95rem);
+  }
+
+  .mini-player {
+    width: calc(100% - 0.5rem);
+    max-width: none;
+    padding: 0.45rem;
+  }
+
+  .mini-player-top {
+    gap: 0.35rem;
+  }
+
+  .mini-player-middle {
+    padding: 0.3rem 0.4rem;
+    border-radius: 0.75rem;
+  }
+
+  .mini-player .mini-title {
+    font-size: 0.82rem;
+  }
+
+  .mini-player .mini-subtitle {
+    font-size: 0.64rem;
+  }
+
+  .mini-player .icon-button,
+  .mini-player .mini-surface-btn {
+    width: 31px;
+    height: 31px;
+  }
+
+  .mini-player .play-pause {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .custom-midi-player {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  .custom-player-kicker {
+    display: none;
+  }
+}
+
+@media (max-width: 430px) {
+  .mini-player {
+    padding: 0.35rem;
+    gap: 0.2rem;
+  }
+
+  .mini-player-top {
+    gap: 0.25rem;
+  }
+
+  .mini-player-middle {
+    padding: 0.2rem 0.35rem;
+    gap: 0.25rem;
+  }
+
+  .mini-player-extras {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto;
+    gap: 0.25rem;
+  }
+
+  .mini-player .mini-title {
+    font-size: 0.78rem;
+  }
+
+  .mini-player .mini-subtitle {
+    font-size: 0.6rem;
+  }
+
+  .mini-player .mini-cis-label {
+    max-width: min(110px, 30vw);
+  }
+}
+
+@media (max-width: 359px) {
+  .mini-player {
+    padding: 0.35rem;
+  }
+
+  .mini-player .mini-cis-label {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) and (pointer: coarse) {
+  :root {
+    --chrome-blur: 12px;
+    --shadow-3: 0 8px 18px -8px rgba(0, 0, 0, 0.22), 0 2px 6px -4px rgba(0, 0, 0, 0.16);
+    --shadow-elevated: 0 10px 22px -14px rgba(0, 0, 0, 0.26), 0 2px 8px -6px rgba(0, 0, 0, 0.18);
+  }
+
+  .app-header,
+  #search-container,
+  .pdf-viewer-header,
+  .pdf-viewer-footer,
+  .mini-player {
+    backdrop-filter: blur(10px) saturate(1.05);
+    -webkit-backdrop-filter: blur(10px) saturate(1.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mini-player,
+  .pdf-viewer-overlay,
+  .canvas-wrapper,
+  .song-title-wrapper,
+  .pujian-list li {
+    transition: none !important;
+  }
+
+  .mini-player.mini-player-enter,
+  .pujian-list li,
+  .settings-panel {
+    animation: none !important;
+  }
+}

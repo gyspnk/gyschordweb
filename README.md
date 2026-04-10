@@ -48,18 +48,17 @@ Penampil partitur super dinamis yang terisolasi anti-konflik dengan *gesture* de
 ---
 
 ## 📁 Struktur Direktori Berbasis Modular
-Codebase ini terus mengalami optimasi pembersihan performa dan refaktorisasi modularity (Misalnya pemecahan stylesheet belasan ribu baris ke partikel pecahan). Hirarkhi rilis strukturnya sekarang memetakan sbb:
+Codebase ini disusun modular agar styling, runtime, dan aset lebih mudah dipelihara. Mulai iterasi ini, `docs/style.css` tidak dipakai lagi; stylesheet runtime utama adalah `docs/css/tailwind.css` hasil build.
 
 ```text
 docs/
   ├── index.html                    # Frame Skeleton HTML & DOM mark-up utama
-  ├── style.css                     # Aggregator CSS Masterplate (berbasis @import)
   ├── sw.js                         # Service Worker (PWA caching)
   ├── assets-list.json              # Database Manifest Mapping PDF (daftar lagu)
   ├── chord-assets-list.json        # Database Manifest Mapping Chord TXT
   ├── generate_assets_list.py       # Python Engine Automasi Data-Scraping Indeks JSON
   │
-  ├── css/                          # Modul-Modul File Cascading terpisah
+  ├── css/                          # Layer CSS sumber + output build
   │   ├── 01-fonts.css              # Tipografi UI & Google Symbols
   │   ├── 02-theme.css              # Palet Warna Aksentuasi UI & Dark Mode
   │   ├── 03-layout.css             # Grid Flexbox Master Utama
@@ -69,53 +68,80 @@ docs/
   │   ├── 07-responsive.css         # Media Queries & Breakpoint Responsif
   │   ├── 08-animations.css         # Animasi & Transisi UI
   │   ├── 09-scaling.css            # Skala Teks Komputasi Responsif
-  │   └── 10-toast.css              # Notifikasi Toast
+  │   ├── 10-toast.css              # Notifikasi Toast
+  │   ├── tailwind-source.css       # Layer Tailwind (`@tailwind` + `@layer` overrides)
+  │   └── tailwind.css              # Output build CSS production (minified)
   │
-  ├── js/                           # Modul-Modul JavaScript terpisah (dimuat berurutan)
-  │   ├── 01-config.js              # Konstanta, MidiTimeAuthority, konfigurasi global
-  │   ├── 02-dom.js                 # Referensi elemen DOM & variabel state awal
-  │   ├── 03-state.js               # Manajemen state aplikasi
-  │   ├── 04-init.js                # Inisialisasi aplikasi & Service Worker
-  │   ├── 05-events.js              # Event listeners (play/pause, seekbar RAF)
-  │   ├── 06-navigation.js          # Navigasi lagu, keyboard shortcut
-  │   ├── 07-pdf-viewer.js          # PDF.js viewer, MIDI loader, transpose
-  │   ├── 08-chord-logic.js         # Rendering chord overlay & transpose UI
-  │   ├── 09-ui-helpers.js          # Toast, tema, warna aksen, helper UI
-  │   ├── 10-zoom-gestures.js       # Pinch-to-zoom & panning gesture
-  │   ├── 11-handlers.js            # Handler event chord UI (ukuran, warna, dsb.)
-  │   ├── 12-playlist.js            # Logika playlist & shuffle
-  │   ├── 13-playlist-ui.js         # UI panel playlist
-  │   └── 14-note-chord-editor.js   # Chord Editor Panel (mode tersembunyi)
+  ├── js/                           # Modul JavaScript aktif + output runtime
+  │   ├── midi-engine.js            # Engine MIDI utama
+  │   ├── app-core.js               # Merge state/config/navigation core
+  │   ├── viewer-core.js            # Merge PDF viewer + chord editor core
+  │   ├── ui-core.js                # Merge init + helper + handler + gesture UI
+  │   ├── playlist-core.js          # Merge logika playlist + UI playlist
+  │   ├── media-session.js          # Integrasi media-session
+  │   ├── midi-render-worker.js     # Source worker MIDI
+  │   ├── midi-render-worker.min.js # Worker MIDI runtime minified
+  │   └── app.bundle.min.js         # Output build JS app runtime (minified)
   │
-  └── assets/                       # Folder Penyimpanan Sentral seluruh aset
-      ├── pdf/                      # File Partitur PDF
-      ├── chord/                    # File Chord TXT (format JSON, per lagu)
-      ├── midi/                     # File MIDI per lagu
-      ├── chord-grid/               # Gambar Grid Chord (referensi fingering)
-      └── fonts/                    # Font lokal (fallback)
+  ├── assets/                       # Folder penyimpanan seluruh aset
+  │   ├── pdf/                      # File Partitur PDF
+  │   ├── chord/                    # File Chord TXT (format JSON, per lagu)
+  │   ├── midi/                     # File MIDI per lagu
+  │   ├── chord-grid/               # Gambar Grid Chord (referensi fingering)
+  │   └── fonts/                    # Font lokal (fallback)
+
+scripts/
+  └── build/
+      ├── css.mjs                   # Builder CSS (Tailwind layer + legacy CSS -> tailwind.css)
+      └── js.mjs                    # Builder JS (merge sources + minify app/worker/sw)
+
+archive/
+  ├── scripts_archive/              # Arsip script patch/fix lama
+  └── docs-js/
+      └── legacy/                   # Arsip file split JS lama (untuk referensi)
+          ├── 01-config.js
+          ├── ...
+          └── 14-note-chord-editor.js
+
+_test_temp/
+  └── tailwind-layer.css            # Intermediate Tailwind layer (generated during build)
+
+tailwind.config.cjs                 # Tailwind configuration
+
 ```
 
 
 ---
 
 ## 🚀 Pengoperasian & Instalasi Lokal (Developer Workflow)
-Aplikasi the-bone *GysChordWeb* beroperasi sepenuhnya di basis *Client-Side Rendering* (tanpa *backend* node server rumit). Hanya saja aplikasi WAJIB ditampakkan via protokol jembatan akses `http/https`, guna menghindari pemblokiran *Cross-Origin Resource Sharing (CORS)* native Browser pada pengambilan sistem berkas internal `pdf.js`.
+Aplikasi *GysChordWeb* berjalan berbasis *client-side rendering* tanpa backend kompleks, tetapi wajib diakses via `http/https` agar aset PDF.js dan file static bekerja tanpa blokir CORS.
 
-**Langkah Pertama: Menyelaraskan Indeks Basis Data**  
-Setiap ada partitur PDF baru maupun Chord Editor `TXT` yang telah dibuang ke folder `/docs/assets/`, eksekusi sejenak Script pemilah ini di *Terminal*:  
+**Langkah 1: Selaraskan indeks aset (PDF/Chord)**
 ```bash
 python docs/generate_assets_list.py
 ```
-*(Algoritma python ini akan meresolusi list baru dengan menghiraukan berkas ekstensi non-PDF dari menu utama dan mencetaknya ulang ke JSON sinkron)*
 
-**Langkah Kedua: Booting Simulator Server**
-Rilis server via instrumen yang ramah di PC Anda:
-- Gunakan Extension **Live Server** (jika bertumpu pada platform VS Code) & tembak pemicu via file `docs/index.html`.
-- Alternatif Server CLI Python Bawaan:
+**Langkah 2: Install dependency dan build aset frontend**
+```bash
+npm install
+npm run build
+```
+
+Perintah `npm run build` menghasilkan:
+- `docs/css/tailwind.css` (CSS production minified)
+- `docs/js/app.bundle.min.js` (JS runtime minified)
+- `docs/js/midi-render-worker.min.js` (worker runtime minified)
+- `docs/sw.min.js` (service worker runtime minified)
+
+**Langkah 3: Jalankan server lokal**
+- Gunakan extension **Live Server** pada folder `docs/`, atau
+- Python HTTP server:
   ```bash
   python -m http.server 8000 --directory docs
   ```
-  Lalu klik URL jembatan localhost dari Output konsol Terminal tersebut. (Misal: [http://localhost:8000](http://localhost:8000))
+
+Lalu buka [http://localhost:8000](http://localhost:8000).
+
 
 ---
 

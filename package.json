@@ -7,7 +7,11 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run build:css && npm run build:js",
+    "build:css": "node scripts/build/css.mjs",
+    "build:css:tailwind": "tailwindcss -c tailwind.config.cjs -i ./docs/css/tailwind-source.css -o ./_test_temp/tailwind-layer.css --minify",
+    "build:js": "node scripts/build/js.mjs"
   },
   "repository": {
     "type": "git",
@@ -23,5 +27,9 @@
   "homepage": "https://github.com/KernelXtream/gyschordweb#readme",
   "dependencies": {
     "puppeteer": "^24.40.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.11",
+    "tailwindcss": "^3.4.17"
   }
 }
