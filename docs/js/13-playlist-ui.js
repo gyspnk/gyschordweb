@@ -282,18 +282,53 @@ document.addEventListener('DOMContentLoaded', () => {
   const miniCollapseToggle = document.getElementById('mini-collapse-toggle');
   if (miniCollapseToggle && miniPlayerContainer) {
     const appContent = document.getElementById('main-content');
+    // Helper: set overflow on collapsible wrappers so popovers are not clipped
+    function setCollapsibleOverflow(visible) {
+      miniPlayerContainer.querySelectorAll('.mini-player-collapsible').forEach(function (el) {
+        el.style.overflow = visible ? 'visible' : '';
+        var inner = el.querySelector('.mini-player-collapsible-inner');
+        if (inner) inner.style.overflow = visible ? 'visible' : '';
+      });
+    }
+
     // Restore persisted collapsed state
     if (localStorage.getItem('miniPlayerCollapsed') === '1') {
       miniPlayerContainer.classList.add('is-mini-collapsed');
       if (appContent) appContent.classList.add('has-mini-player-collapsed');
+      miniCollapseToggle.setAttribute('aria-expanded', 'false');
+      miniCollapseToggle.setAttribute('aria-label', 'Expand mini player');
+    } else {
+      miniCollapseToggle.setAttribute('aria-expanded', 'true');
+      miniCollapseToggle.setAttribute('aria-label', 'Collapse mini player');
+      // Expanded on load — allow popovers to overflow
+      setCollapsibleOverflow(true);
     }
 
     miniCollapseToggle.addEventListener('click', function (e) {
       e.stopPropagation();
       var isCollapsed = miniPlayerContainer.classList.toggle('is-mini-collapsed');
       localStorage.setItem('miniPlayerCollapsed', isCollapsed ? '1' : '0');
+      miniCollapseToggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+      miniCollapseToggle.setAttribute('aria-label', isCollapsed ? 'Expand mini player' : 'Collapse mini player');
       if (appContent) {
         appContent.classList.toggle('has-mini-player-collapsed', isCollapsed);
+      }
+
+      if (isCollapsed) {
+        // Collapsing — revert to CSS default (overflow: hidden)
+        setCollapsibleOverflow(false);
+      } else {
+        // Expanding — wait for animation to finish, then allow overflow
+        var wrappers = miniPlayerContainer.querySelectorAll('.mini-player-collapsible');
+        wrappers.forEach(function (el) {
+          function onEnd(evt) {
+            if (evt.propertyName === 'grid-template-rows') {
+              el.removeEventListener('transitionend', onEnd);
+              setCollapsibleOverflow(true);
+            }
+          }
+          el.addEventListener('transitionend', onEnd);
+        });
       }
     });
   }

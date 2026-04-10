@@ -94,10 +94,14 @@
       <div id="mini-player-loading" class="mini-player-loading" style="display:none;">
         <div class="mini-player-loading-bar"></div>
       </div>
-      <!-- Row 0: Queue label -->
-      <div class="mini-player-kicker">
-        <span class="mini-status-dot" aria-hidden="true"></span>
-        <span class="mini-player-kicker-label">MIDI Queue</span>
+      <!-- Row 0: Queue label (collapsible) -->
+      <div class="mini-player-collapsible">
+        <div class="mini-player-collapsible-inner">
+          <div class="mini-player-kicker">
+            <span class="mini-status-dot" aria-hidden="true"></span>
+            <span class="mini-player-kicker-label">MIDI Queue</span>
+          </div>
+        </div>
       </div>
       <!-- Row 1: Song info + play controls -->
       <div class="mini-player-top">
@@ -149,6 +153,9 @@
         </button>
       </div>
 
+      <!-- Rows 2+3: Collapsible below transport -->
+      <div class="mini-player-collapsible">
+        <div class="mini-player-collapsible-inner">
       <!-- Row 2: Transpose, instrument, loop -->
       <div class="mini-player-extras">
         <div class="mini-transpose-controls">
@@ -256,8 +263,8 @@
             id="mini-seekbar-fill"
           ></div>
         </div>
-      </div>
-    </div>
+      </div>        </div>
+      </div>    </div>
 
     <nav class="bottom-nav">
       <button class="nav-btn selected" id="pujian-btn" aria-label="Pujian">
@@ -822,13 +829,13 @@
       Gunakan Tombol untuk Zoom
     </div>
 
-    <script defer src="js/midi-engine.js?v=10"></script>
+    <script defer src="js/midi-engine.js?v=11"></script>
     <script defer src="js/01-config.js?v=29"></script>
     <script defer src="js/02-dom.js?v=7"></script>
     <script defer src="js/03-state.js?v=13"></script>
 
     <script defer src="js/05-events.js?v=16"></script>
-    <script defer src="js/06-navigation.js?v=19"></script>
+    <script defer src="js/06-navigation.js?v=20"></script>
     <script defer src="js/07-pdf-viewer.js?v=19"></script>
     <script defer src="js/08-chord-logic.js?v=12"></script>
     <script defer src="js/14-note-chord-editor.js?v=7"></script>
@@ -837,7 +844,7 @@
     <script defer src="js/10-zoom-gestures.js?v=7"></script>
     <script defer src="js/11-handlers.js?v=18"></script>
     <script defer src="js/12-playlist.js?v=6"></script>
-    <script defer src="js/13-playlist-ui.js?v=10"></script>
+    <script defer src="js/13-playlist-ui.js?v=11"></script>
     <script defer src="js/15-media-session.js?v=4"></script>
     <script>
       if ('serviceWorker' in navigator) {
