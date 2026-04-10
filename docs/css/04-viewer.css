@@ -991,17 +991,21 @@ body.measure-layout .landscape-controls {
     --viewer-footer-height: 48px;
   }
 
-  /* Hide overflow controls from header landscape-controls */
-  .landscape-controls .transpose-collapse,
-  .landscape-controls .page-navigation-landscape,
-  .landscape-controls .zoom-controls-landscape,
-  .landscape-controls .pdf-viewer-controls-main {
+  /* Hide entire landscape-controls from header (all children moved to footer) */
+  .landscape-controls {
     display: none !important;
   }
 
-  /* Wider max-width for song-navigation since fewer controls in header */
+  /* Show portrait chord toggle in header-left flex flow instead */
+  .hide-chord-btn-portrait {
+    display: flex !important;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  /* Constrain song-navigation for narrow landscape */
   .song-navigation {
-    max-width: calc(100% - 200px);
+    max-width: calc(100% - 160px);
   }
 
   /* Show footer transpose controls (override landscape hide) */
