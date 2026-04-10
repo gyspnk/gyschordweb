@@ -1065,6 +1065,12 @@ body.measure-layout .landscape-controls {
   }
 }
 
+@media (max-width: 760px) and (orientation: landscape) {
+  .song-navigation {
+    max-width: calc(100% - 200px);
+  }
+}
+
 .zoom-controls, .page-navigation, .page-navigation-landscape, .zoom-controls-landscape { display: flex; align-items: center; }
 .page-indicator, .zoom-level-indicator {
   font-size: 0.9rem; font-weight: 500; color: var(--md-sys-color-on-surface-variant);

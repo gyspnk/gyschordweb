@@ -24,6 +24,17 @@ function onLayoutResize() {
 function checkLayoutCollisions() {
   if (!document.body.classList.contains('viewer-active')) return;
 
+  const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+  const isNarrowLandscape = window.matchMedia('(max-width: 1100px) and (orientation: landscape)').matches;
+
+  // In narrow landscape we intentionally use footer mode and collapsed MIDI toggle.
+  // Forcing non-expanded mode avoids inline MIDI overlap on scaled/mobile browsers.
+  if (isNarrowLandscape) {
+    document.body.classList.remove('measure-layout');
+    document.body.classList.remove('is-expanded-layout');
+    return;
+  }
+
   // Add the measure class to temporarily force expanded state
   document.body.classList.add('measure-layout');
   document.body.classList.remove('is-expanded-layout');
@@ -65,7 +76,10 @@ function checkLayoutCollisions() {
     const headerGap = parseFloat(headerStyle.gap || headerStyle.columnGap || 0);
     fixedWidth += headerGap * 2;
 
-    if (header.clientWidth < (fixedWidth + buffer)) {
+    // Use visual width (getBoundingClientRect) so transformed/scaled headers
+    // (e.g. chrome-android mode) are evaluated against real on-screen space.
+    const visualHeaderWidth = header.getBoundingClientRect().width || header.clientWidth;
+    if (visualHeaderWidth < (fixedWidth + buffer)) {
       layoutFits = false;
     }
   }
@@ -90,7 +104,8 @@ function checkLayoutCollisions() {
     const footerGap = parseFloat(footerStyle.gap || footerStyle.columnGap || 0);
     footerRequiredWidth += footerGap * 2;
 
-    if (footer.clientWidth < (footerRequiredWidth + buffer)) {
+    const visualFooterWidth = footer.getBoundingClientRect().width || footer.clientWidth;
+    if (visualFooterWidth < (footerRequiredWidth + buffer)) {
       layoutFits = false;
     }
   }
@@ -99,7 +114,7 @@ function checkLayoutCollisions() {
 
   // Only use expanded layout in landscape — in portrait, landscape-controls are hidden
   // so there's nowhere to show the inline MIDI or transpose controls.
-  if (layoutFits && window.matchMedia('(orientation: landscape)').matches) {
+  if (layoutFits && isLandscape) {
     document.body.classList.add('is-expanded-layout');
   } else {
     document.body.classList.remove('is-expanded-layout');
