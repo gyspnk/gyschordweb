@@ -392,7 +392,7 @@
   // ─── Bootstrap ───────────────────────────────────────────────────────────────
   // DOMContentLoaded fires after all deferred scripts + init() have run.
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function initMediaSessionBridge() {
     _setupActionHandlers();
     _observeTitleChanges();
     _patchToggleMidi();
@@ -414,6 +414,12 @@
 
     document.body.addEventListener('click', _warmUpSilentAudio, { once: true, capture: true });
     document.body.addEventListener('touchstart', _warmUpSilentAudio, { once: true, capture: true });
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMediaSessionBridge, { once: true });
+  } else {
+    initMediaSessionBridge();
+  }
 
 })();

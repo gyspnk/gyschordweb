@@ -52,7 +52,7 @@ Codebase ini disusun modular agar styling, runtime, dan aset lebih mudah dipelih
 
 ```text
 docs/
-  ├── index.html                    # Frame Skeleton HTML & DOM mark-up utama
+  ├── index.html                    # Output entry React production
   ├── sw.js                         # Service Worker (PWA caching)
   ├── assets-list.json              # Database Manifest Mapping PDF (daftar lagu)
   ├── chord-assets-list.json        # Database Manifest Mapping Chord TXT
@@ -83,6 +83,10 @@ docs/
   │   ├── midi-render-worker.min.js # Worker MIDI runtime minified
   │   └── app.bundle.min.js         # Output build JS app runtime (minified)
   │
+  ├── web/                          # Output chunk React (hashed, optimized)
+  │   ├── index-*.js
+  │   └── react-*.js
+  │
   ├── assets/                       # Folder penyimpanan seluruh aset
   │   ├── pdf/                      # File Partitur PDF
   │   ├── chord/                    # File Chord TXT (format JSON, per lagu)
@@ -94,6 +98,17 @@ scripts/
   └── build/
       ├── css.mjs                   # Builder CSS (Tailwind layer + legacy CSS -> tailwind.css)
       └── js.mjs                    # Builder JS (merge sources + minify app/worker/sw)
+
+src/
+  ├── App.jsx                       # React host yang merender shell aplikasi
+  ├── main.jsx                      # React entrypoint
+  ├── legacy/
+  │   └── bootstrapLegacyRuntime.js # Loader runtime legacy + SW bootstrap
+  └── templates/
+      └── app-shell.html            # Shell DOM penuh untuk kompatibilitas fitur
+
+index.html                          # Source entry React untuk Vite
+vite.config.mjs                     # Konfigurasi bundling React (outDir ke docs/)
 
 archive/
   ├── scripts_archive/              # Arsip script patch/fix lama
@@ -116,6 +131,8 @@ tailwind.config.cjs                 # Tailwind configuration
 ## 🚀 Pengoperasian & Instalasi Lokal (Developer Workflow)
 Aplikasi *GysChordWeb* berjalan berbasis *client-side rendering* tanpa backend kompleks, tetapi wajib diakses via `http/https` agar aset PDF.js dan file static bekerja tanpa blokir CORS.
 
+Catatan migrasi React bertahap tersedia di `docs/react-migration-evaluation.md`.
+
 **Langkah 1: Selaraskan indeks aset (PDF/Chord)**
 ```bash
 python docs/generate_assets_list.py
@@ -127,11 +144,18 @@ npm install
 npm run build
 ```
 
+Untuk mode development React:
+```bash
+npm run dev
+```
+
 Perintah `npm run build` menghasilkan:
 - `docs/css/tailwind.css` (CSS production minified)
 - `docs/js/app.bundle.min.js` (JS runtime minified)
 - `docs/js/midi-render-worker.min.js` (worker runtime minified)
 - `docs/sw.min.js` (service worker runtime minified)
+- `docs/index.html` (entry React production)
+- `docs/web/*.js` (chunk React teroptimasi)
 
 **Langkah 3: Jalankan server lokal**
 - Gunakan extension **Live Server** pada folder `docs/`, atau

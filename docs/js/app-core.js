@@ -1324,6 +1324,14 @@ function navigateTo(page) {
 
   const miniPlayerContainer = document.getElementById('mini-player');
   const appContent = document.getElementById('main-content');
+  const shouldResetMainContentScroll = ["pujian", "playlist", "report-bug", "about-project", "pengaturan"].includes(page);
+  const resetMainContentScroll = () => {
+    if (!mainContent) return;
+    mainContent.scrollTop = 0;
+    if (typeof mainContent.scrollTo === "function") {
+      mainContent.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+  };
   if (page === "pengaturan" || page === "report-bug" || page === "about-project") {
     if (miniPlayerContainer) {
       miniPlayerContainer.classList.add('is-hidden');
@@ -1345,17 +1353,19 @@ function navigateTo(page) {
     pengaturanBtn.classList.add("selected");
     searchContainer.style.display = "none";
     renderReportBugPage();
-    mainContent.scrollTop = 0;
   } else if (page === "about-project") {
     pengaturanBtn.classList.add("selected");
     searchContainer.style.display = "none";
     renderAboutProjectPage();
-    mainContent.scrollTop = 0;
   } else if (page === "pengaturan") {
     pengaturanBtn.classList.add("selected");
     searchContainer.style.display = "none";
     renderSettings();
-    mainContent.scrollTop = 0;
+  }
+
+  if (shouldResetMainContentScroll) {
+    resetMainContentScroll();
+    requestAnimationFrame(resetMainContentScroll);
   }
 }
 

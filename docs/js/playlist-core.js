@@ -213,7 +213,7 @@ let currentPlaylistView = 'list'; // 'list' | 'detail'
 let currentViewingPlaylistId = null;
 
 // -- Run on load
-document.addEventListener('DOMContentLoaded', () => {
+function initPlaylistUiBindings() {
   const playlistBtn = document.getElementById('playlist-btn');
   if (playlistBtn) {
     playlistBtn.addEventListener('click', () => {
@@ -540,7 +540,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initPlaylistUiBindings, { once: true });
+} else {
+  initPlaylistUiBindings();
+}
 
 function syncAutoNextMenu() {
   const mode = typeof _resolveEffectiveAutoNextMode === 'function'
