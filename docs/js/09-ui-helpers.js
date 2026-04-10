@@ -143,6 +143,10 @@ function syncTransposeCollapseState() {
 }
 
 function isCollapsibleLayout() {
+  // In narrow landscape (≤1100px), footer navbar is visible with collapsible transpose
+  if (window.matchMedia('(max-width: 1100px) and (orientation: landscape)').matches) {
+    return true;
+  }
   return !document.body.classList.contains('is-expanded-layout');
 }
 

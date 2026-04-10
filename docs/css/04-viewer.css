@@ -960,6 +960,107 @@ body.measure-layout .landscape-controls {
   gap: 0.68rem;
 }
 
+/* ─── Narrow landscape: move overflow header controls to footer navbar ─── */
+@media (max-width: 1100px) and (orientation: landscape) {
+  /* Show footer bar */
+  .pdf-viewer-footer {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-shrink: 0;
+    height: 48px;
+    min-height: 48px;
+    background: var(--viewer-chrome-surface);
+    border-top: 1px solid var(--viewer-chrome-border);
+    padding: 0 0.5rem;
+    box-sizing: border-box;
+    overflow: visible;
+    position: relative;
+  }
+
+  /* Show view-mode/scroll-mode container in footer */
+  #controls-portrait {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Account for footer height in content area */
+  .pdf-viewer-overlay {
+    --viewer-footer-height: 48px;
+  }
+
+  /* Hide overflow controls from header landscape-controls */
+  .landscape-controls .transpose-collapse,
+  .landscape-controls .page-navigation-landscape,
+  .landscape-controls .zoom-controls-landscape,
+  .landscape-controls .pdf-viewer-controls-main {
+    display: none !important;
+  }
+
+  /* Wider max-width for song-navigation since fewer controls in header */
+  .song-navigation {
+    max-width: calc(100% - 200px);
+  }
+
+  /* Show footer transpose controls (override landscape hide) */
+  .pdf-viewer-footer .transpose-controls-footer {
+    display: flex !important;
+  }
+
+  /* Transpose popover: opens upward from footer */
+  .pdf-viewer-footer .transpose-collapse .transpose-controls-footer {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 0.4rem);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px) scale(0.96);
+    transform-origin: left bottom;
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+    box-shadow: var(--shadow-2);
+    backdrop-filter: blur(4px);
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 16px;
+    padding: 6px 8px;
+    z-index: 950;
+    white-space: nowrap;
+  }
+
+  .pdf-viewer-footer .transpose-collapse.is-open .transpose-controls-footer {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .pdf-viewer-footer .transpose-collapse .transpose-toggle-btn {
+    display: flex !important;
+  }
+
+  /* Single-page: show transpose inline, hide toggle */
+  .pdf-viewer-footer.no-view-controls .transpose-collapse .transpose-toggle-btn {
+    display: none !important;
+  }
+
+  .pdf-viewer-footer.no-view-controls .transpose-controls-footer {
+    position: static !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    pointer-events: auto !important;
+    box-shadow: none;
+    backdrop-filter: none;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+  }
+}
+
 .zoom-controls, .page-navigation, .page-navigation-landscape, .zoom-controls-landscape { display: flex; align-items: center; }
 .page-indicator, .zoom-level-indicator {
   font-size: 0.9rem; font-weight: 500; color: var(--md-sys-color-on-surface-variant);
