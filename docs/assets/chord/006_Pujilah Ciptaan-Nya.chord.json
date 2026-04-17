@@ -1,0 +1,132 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 1,
+        "chord": "F#"
+      },
+      {
+        "noteIdx": 5,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 9,
+        "chord": "D#m"
+      },
+      {
+        "noteIdx": 13,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 18,
+        "chord": "G#m"
+      },
+      {
+        "noteIdx": 22,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 26,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 30,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 131,
+        "chord": "F#"
+      },
+      {
+        "noteIdx": 135,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 139,
+        "chord": "D#m"
+      },
+      {
+        "noteIdx": 143,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 148,
+        "chord": "G#m"
+      },
+      {
+        "noteIdx": 152,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 156,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 160,
+        "chord": "F#"
+      },
+      {
+        "noteIdx": 261,
+        "chord": "F#"
+      },
+      {
+        "noteIdx": 265,
+        "chord": "D#m"
+      },
+      {
+        "noteIdx": 269,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 273,
+        "chord": "F#"
+      },
+      {
+        "noteIdx": 281,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 285,
+        "chord": "F#"
+      },
+      {
+        "noteIdx": 289,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 389,
+        "chord": "F#"
+      },
+      {
+        "noteIdx": 393,
+        "chord": "D#m"
+      },
+      {
+        "noteIdx": 397,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 401,
+        "chord": "F#"
+      },
+      {
+        "noteIdx": 409,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 413,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 415,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 417,
+        "chord": "F#"
+      }
+    ]
+  }
+}
