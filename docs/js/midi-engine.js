@@ -142,7 +142,7 @@ var MidiEngine = (function () {
       }
 
       try {
-        var workerUrl = 'js/midi-render-worker.min.js?v=2';
+        var workerUrl = 'js/midi-render-worker.min.js?v=3';
         _worker = new Worker(workerUrl);
       } catch (err) {
         fail(new Error('Failed to create MIDI render worker: ' + err.message));

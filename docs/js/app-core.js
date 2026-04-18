@@ -565,6 +565,61 @@ function formatMidiTime(seconds) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+function getMidiTempoDisplayRate() {
+  if (typeof MidiEngine !== "undefined" && typeof MidiEngine.getTempoRate === "function") {
+    const rate = Number(MidiEngine.getTempoRate());
+    if (Number.isFinite(rate) && rate > 0) return rate;
+  }
+
+  const base = Number(currentSongDefaultTempoBpm);
+  const current = Number(currentTempoBpm);
+  if (Number.isFinite(base) && base > 0 && Number.isFinite(current) && current > 0) {
+    const fallbackRate = current / base;
+    if (Number.isFinite(fallbackRate) && fallbackRate > 0) return fallbackRate;
+  }
+
+  return 1;
+}
+
+function toMidiDisplaySeconds(sourceSeconds) {
+  const source = Number(sourceSeconds);
+  if (!Number.isFinite(source) || source <= 0) return 0;
+  return source / getMidiTempoDisplayRate();
+}
+
+function applyInstrumentLabelPresentation(titleText) {
+  const fallbackTitle =
+    (typeof customInstrumentSelect !== "undefined" && customInstrumentSelect && customInstrumentSelect.title) ||
+    document.getElementById("mini-instrument-select")?.title ||
+    "Memuat Instrumen...";
+  const resolvedTitle = String(titleText || fallbackTitle || "Memuat Instrumen...").trim() || "Memuat Instrumen...";
+  const labelLength = resolvedTitle.length;
+
+  document.querySelectorAll("#cis-label, #mini-cis-label").forEach((el) => {
+    el.textContent = resolvedTitle;
+    el.classList.remove(
+      "instrument-label-long",
+      "instrument-label-very-long",
+      "instrument-label-ultra-long",
+    );
+
+    if (labelLength >= 34) {
+      el.classList.add("instrument-label-ultra-long");
+    } else if (labelLength >= 26) {
+      el.classList.add("instrument-label-very-long");
+    } else if (labelLength >= 18) {
+      el.classList.add("instrument-label-long");
+    }
+
+    if (typeof autoFitTextSingleLine === "function" && el.offsetParent !== null) {
+      autoFitTextSingleLine(el, { maxPx: 13, minPx: 9 });
+    }
+  });
+
+  return resolvedTitle;
+}
+window.applyInstrumentLabelPresentation = applyInstrumentLabelPresentation;
+
 function clampMidiTempoBpm(value, fallback = MIDI_TEMPO_FALLBACK_BPM) {
   const fallbackNum = Number(fallback);
   const safeFallback = Number.isFinite(fallbackNum) ? fallbackNum : MIDI_TEMPO_FALLBACK_BPM;
@@ -587,7 +642,9 @@ function syncTempoControlsUI() {
   [customTempoInput, miniTempoInput].filter(Boolean).forEach((input) => {
     input.min = String(MIDI_TEMPO_MIN_BPM);
     input.max = String(MIDI_TEMPO_MAX_BPM);
-    input.value = String(currentTempoBpm);
+    if (document.activeElement !== input && input.dataset.tempoEditing !== "1") {
+      input.value = String(currentTempoBpm);
+    }
   });
 
   const labelText = `${currentTempoBpm} BPM`;
@@ -646,6 +703,25 @@ function setMidiTempoBpm(nextBpm) {
 
   syncTempoControlsUI();
   return currentTempoBpm;
+}
+
+function commitMidiTempoInputValue(inputEl) {
+  if (!inputEl) return;
+  inputEl.dataset.tempoEditing = "0";
+
+  const raw = String(inputEl.value || "").trim();
+  if (!raw) {
+    syncTempoControlsUI();
+    return;
+  }
+
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) {
+    syncTempoControlsUI();
+    return;
+  }
+
+  setMidiTempoBpm(parsed);
 }
 
 window.setCurrentSongTempo = setCurrentSongTempo;
@@ -1078,14 +1154,9 @@ function setupEventListeners() {
           el.textContent = getMidiInstrumentIcon(val, titleText);
       });
 
-      document
-        .querySelectorAll("#cis-label, #mini-cis-label")
-        .forEach((el) => {
-          let labelText = titleText;
-          if (labelText.length > 20)
-            labelText = labelText.substring(0, 20) + "...";
-          el.textContent = labelText;
-        });
+      if (typeof applyInstrumentLabelPresentation === "function") {
+        applyInstrumentLabelPresentation(titleText);
+      }
 
       if (typeof prefs !== "undefined") {
         const activeSf = (typeof normalizeSoundfontKey === "function")
@@ -1141,30 +1212,27 @@ function setupEventListeners() {
     });
 
     [customTempoInput, miniTempoInput].filter(Boolean).forEach((input) => {
-      input.addEventListener("input", (e) => {
-        const raw = String(e.target.value || "").trim();
-        if (!raw) return;
-        const parsed = Number(raw);
-        if (!Number.isFinite(parsed)) return;
-        setMidiTempoBpm(parsed);
+      input.addEventListener("input", () => {
+        input.dataset.tempoEditing = "1";
       });
 
-      input.addEventListener("change", (e) => {
-        const raw = String(e.target.value || "").trim();
-        if (!raw) {
-          syncTempoControlsUI();
-          return;
-        }
-        setMidiTempoBpm(raw);
+      input.addEventListener("change", () => {
+        commitMidiTempoInputValue(input);
       });
 
       input.addEventListener("blur", () => {
-        syncTempoControlsUI();
+        commitMidiTempoInputValue(input);
       });
 
       input.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
+          commitMidiTempoInputValue(input);
+          input.blur();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          input.dataset.tempoEditing = "0";
+          syncTempoControlsUI();
           input.blur();
         }
       });
@@ -1292,16 +1360,7 @@ function setupEventListeners() {
         isDraggingSeekbar = true;
         const dur = (typeof MidiEngine !== 'undefined' ? MidiEngine.getDuration() : 0) || window._midiKnownDuration || 0;
         const val = parseFloat(e.target.value);
-        if (customTimeDisplay)
-          customTimeDisplay.textContent = `${formatMidiTime(val)} / ${dur > 0 ? formatMidiTime(dur) : "0:00"}`;
-        const miniTimeDisplay = document.getElementById("mini-time-display");
-        if (miniTimeDisplay)
-          miniTimeDisplay.textContent = `${formatMidiTime(val)} / ${dur > 0 ? formatMidiTime(dur) : "0:00"}`;
-
-        const fill = document.getElementById("custom-seekbar-fill");
-        if (fill && dur > 0) fill.style.width = (val / dur) * 100 + "%";
-        const miniFill = document.getElementById("mini-seekbar-fill");
-        if (miniFill && dur > 0) miniFill.style.width = (val / dur) * 100 + "%";
+        syncSeekbarUI(val, dur);
       });
 
       bar.addEventListener("change", (e) => {

@@ -24,9 +24,9 @@ function fail(msg) {
 }
 
 async function collectLayoutState(page, openPanel) {
-  return await page.evaluate(async (shouldOpenPanel) => {
+  return await page.evaluate(async ({ shouldOpenPanel, songIndex, chooseLongestInstrument }) => {
     if (typeof openPdfViewer === 'function') {
-      openPdfViewer(0);
+      openPdfViewer(songIndex);
       await new Promise((r) => setTimeout(r, 900));
     }
 
@@ -58,6 +58,33 @@ async function collectLayoutState(page, openPanel) {
       await new Promise((r) => setTimeout(r, 120));
     }
 
+    if (chooseLongestInstrument) {
+      const instrumentBtn = document.querySelector('#custom-midi-player .midi-instrument-action .instrument-capsule-btn');
+      if (instrumentBtn) {
+        instrumentBtn.click();
+        await new Promise((r) => setTimeout(r, 140));
+
+        const openWrapper =
+          instrumentBtn.closest('.instrument-selector-wrapper.is-open') ||
+          document.querySelector('.instrument-selector-wrapper.is-open');
+
+        if (openWrapper) {
+          const options = Array.from(openWrapper.querySelectorAll('.cis-option'));
+          if (options.length) {
+            const longest = options.reduce((best, opt) => {
+              const label = (opt.getAttribute('title') || opt.textContent || '').trim();
+              if (!best) return { opt, len: label.length };
+              return label.length > best.len ? { opt, len: label.length } : best;
+            }, null);
+            if (longest && longest.opt) {
+              longest.opt.click();
+              await new Promise((r) => setTimeout(r, 160));
+            }
+          }
+        }
+      }
+    }
+
     const rect = (el) => {
       const r = el.getBoundingClientRect();
       return {
@@ -80,6 +107,34 @@ async function collectLayoutState(page, openPanel) {
     const panelRect = rect(panel);
     const headerRect = rect(header);
     const navRect = rect(nav);
+    const midiCollapseRect = rect(document.getElementById('midi-collapse'));
+    const actions = document.querySelector('#custom-midi-player .custom-player-actions');
+    const actionChildren = actions
+      ? Array.from(actions.children).filter((el) => {
+          const style = getComputedStyle(el);
+          return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
+        })
+      : [];
+    const rowBands = [];
+    actionChildren.forEach((el) => {
+      const top = el.getBoundingClientRect().top;
+      const hasBand = rowBands.some((bandTop) => Math.abs(bandTop - top) <= 8);
+      if (!hasBand) rowBands.push(top);
+    });
+    const actionRows = rowBands.length;
+    let actionsOverflow = false;
+    if (actions && actionChildren.length) {
+      const actionsRect = actions.getBoundingClientRect();
+      const minLeft = Math.min(...actionChildren.map((el) => el.getBoundingClientRect().left));
+      const maxRight = Math.max(...actionChildren.map((el) => el.getBoundingClientRect().right));
+      actionsOverflow = minLeft < actionsRect.left - 1 || maxRight > actionsRect.right + 1;
+    }
+    const instrumentBtn = document.querySelector('#custom-midi-player .midi-instrument-action .instrument-capsule-btn');
+    const instrumentWrap = document.querySelector('#custom-midi-player .midi-instrument-action');
+    const labelEl = document.querySelector('#custom-midi-player #cis-label');
+    const hideBtn =
+      document.querySelector('.hide-chord-btn-landscape') ||
+      document.querySelector('.hide-chord-btn-portrait');
 
     return {
       missing: false,
@@ -93,8 +148,186 @@ async function collectLayoutState(page, openPanel) {
       panelOverlapsHeader: areaOverlap(panelRect, headerRect),
       panelOverlapsBtn: areaOverlap(panelRect, btnRect),
       navOverlapsBtn: areaOverlap(navRect, btnRect),
+      navOverlapsMidi: areaOverlap(navRect, midiCollapseRect),
+      navOverlapsHide: hideBtn ? areaOverlap(navRect, rect(hideBtn)) : 0,
+      actionRows,
+      actionsOverflow,
+      instrumentBtnWidth: instrumentBtn ? Math.round(instrumentBtn.getBoundingClientRect().width) : 0,
+      instrumentWrapWidth: instrumentWrap ? Math.round(instrumentWrap.getBoundingClientRect().width) : 0,
+      instrumentLabel: labelEl ? labelEl.textContent.trim() : '',
     };
-  }, openPanel);
+  }, {
+    shouldOpenPanel: !!openPanel,
+    songIndex: 0,
+    chooseLongestInstrument: false,
+  });
+}
+
+async function getShortLongSongIndices(page) {
+  return await page.evaluate(() => {
+    const songs = Array.from(document.querySelectorAll('.pujian-item'))
+      .map((el, idx) => ({
+        idx,
+        title: (el.querySelector('.pujian-title')?.textContent || '').trim(),
+      }))
+      .filter((s) => s.title)
+      .map((s) => ({ ...s, len: s.title.length }));
+
+    if (!songs.length) return null;
+    songs.sort((a, b) => a.len - b.len);
+    return {
+      short: songs[0],
+      long: songs[songs.length - 1],
+    };
+  });
+}
+
+async function collectSongLayoutState(page, options) {
+  return await page.evaluate(async ({ songIndex, shouldOpenPanel, chooseLongestInstrument }) => {
+    if (typeof openPdfViewer === 'function') {
+      openPdfViewer(songIndex);
+      await new Promise((r) => setTimeout(r, 950));
+    }
+
+    const banner = document.querySelector('.update-banner');
+    if (banner) banner.style.display = 'none';
+
+    const btn = document.getElementById('midi-toggle-btn');
+    const panel = document.querySelector('#midi-collapse .midi-panel');
+    const header = document.querySelector('.pdf-viewer-header');
+    const nav = document.querySelector('.song-navigation');
+    const midiCollapse = document.getElementById('midi-collapse');
+    const hideBtn =
+      document.querySelector('.hide-chord-btn-landscape') ||
+      document.querySelector('.hide-chord-btn-portrait');
+
+    if (!btn || !panel || !header || !nav || !midiCollapse) {
+      return {
+        missing: true,
+        hasBtn: !!btn,
+        hasPanel: !!panel,
+        hasHeader: !!header,
+        hasNav: !!nav,
+        hasMidiCollapse: !!midiCollapse,
+      };
+    }
+
+    const btnVisible = (() => {
+      const style = getComputedStyle(btn);
+      return style.display !== 'none' && style.visibility !== 'hidden' && btn.offsetParent !== null;
+    })();
+
+    if (btnVisible && shouldOpenPanel) {
+      if (btn.getAttribute('aria-expanded') !== 'true') {
+        btn.click();
+        await new Promise((r) => setTimeout(r, 140));
+      }
+    } else if (btnVisible && btn.getAttribute('aria-expanded') === 'true') {
+      btn.click();
+      await new Promise((r) => setTimeout(r, 140));
+    }
+
+    if (chooseLongestInstrument) {
+      const instrumentBtn = document.querySelector('#custom-midi-player .midi-instrument-action .instrument-capsule-btn');
+      if (instrumentBtn) {
+        instrumentBtn.click();
+        await new Promise((r) => setTimeout(r, 150));
+
+        const openWrapper =
+          instrumentBtn.closest('.instrument-selector-wrapper.is-open') ||
+          document.querySelector('.instrument-selector-wrapper.is-open');
+
+        if (openWrapper) {
+          const options = Array.from(openWrapper.querySelectorAll('.cis-option'));
+          if (options.length) {
+            const longest = options.reduce((best, opt) => {
+              const label = (opt.getAttribute('title') || opt.textContent || '').trim();
+              if (!best) return { opt, len: label.length };
+              return label.length > best.len ? { opt, len: label.length } : best;
+            }, null);
+
+            if (longest && longest.opt) {
+              longest.opt.click();
+              await new Promise((r) => setTimeout(r, 170));
+            }
+          }
+        }
+      }
+
+      document.querySelectorAll('.instrument-selector-wrapper.is-open').forEach((wrapper) => {
+        wrapper.classList.remove('is-open');
+        const trigger = wrapper.querySelector('.instrument-capsule-btn, .tempo-popover-toggle');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+      });
+      await new Promise((r) => setTimeout(r, 60));
+      if (typeof checkLayoutCollisions === 'function') {
+        checkLayoutCollisions();
+      }
+      await new Promise((r) => setTimeout(r, 60));
+    }
+
+    const rect = (el) => {
+      const r = el.getBoundingClientRect();
+      return {
+        left: Math.round(r.left),
+        right: Math.round(r.right),
+        top: Math.round(r.top),
+        bottom: Math.round(r.bottom),
+        width: Math.round(r.width),
+        height: Math.round(r.height),
+      };
+    };
+
+    const areaOverlap = (a, b) => {
+      const w = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+      const h = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+      return w * h;
+    };
+
+    const actions = document.querySelector('#custom-midi-player .custom-player-actions');
+    const actionChildren = actions
+      ? Array.from(actions.children).filter((el) => {
+          const style = getComputedStyle(el);
+          return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
+        })
+      : [];
+    const rowBands = [];
+    actionChildren.forEach((el) => {
+      const top = el.getBoundingClientRect().top;
+      const hasBand = rowBands.some((bandTop) => Math.abs(bandTop - top) <= 8);
+      if (!hasBand) rowBands.push(top);
+    });
+    const actionRows = rowBands.length;
+
+    let actionsOverflow = false;
+    if (actions && actionChildren.length) {
+      const actionsRect = actions.getBoundingClientRect();
+      const minLeft = Math.min(...actionChildren.map((el) => el.getBoundingClientRect().left));
+      const maxRight = Math.max(...actionChildren.map((el) => el.getBoundingClientRect().right));
+      actionsOverflow = minLeft < actionsRect.left - 1 || maxRight > actionsRect.right + 1;
+    }
+
+    const instrumentBtn = document.querySelector('#custom-midi-player .midi-instrument-action .instrument-capsule-btn');
+    const instrumentWrap = document.querySelector('#custom-midi-player .midi-instrument-action');
+
+    return {
+      missing: false,
+      bodyClass: document.body.className,
+      isExpanded: document.body.classList.contains('is-expanded-layout'),
+      btnDisplay: getComputedStyle(btn).display,
+      panelPosition: getComputedStyle(panel).position,
+      navOverlapsMidi: areaOverlap(rect(nav), rect(midiCollapse)),
+      navOverlapsHide: hideBtn ? areaOverlap(rect(nav), rect(hideBtn)) : 0,
+      actionRows,
+      actionsOverflow,
+      instrumentBtnWidth: instrumentBtn ? Math.round(instrumentBtn.getBoundingClientRect().width) : 0,
+      instrumentWrapWidth: instrumentWrap ? Math.round(instrumentWrap.getBoundingClientRect().width) : 0,
+    };
+  }, {
+    songIndex: options.songIndex,
+    shouldOpenPanel: !!options.openPanel,
+    chooseLongestInstrument: !!options.chooseLongestInstrument,
+  });
 }
 
 const browser = await chromium.launch({ headless: true });
@@ -158,6 +391,110 @@ for (const vp of androidViewports) {
     fail(`desktop 1300x700 expected expanded inline mode, got isExpanded=${state.isExpanded}, btnDisplay=${state.btnDisplay}, panelPosition=${state.panelPosition}`);
   } else {
     pass('desktop 1300x700 expanded inline mode preserved');
+  }
+
+  await context.close();
+}
+
+// Desktop edge control: collapsible mode should keep controls on a single row with long instrument names.
+{
+  const context = await browser.newContext({
+    viewport: { width: 1100, height: 700 },
+    isMobile: false,
+    hasTouch: false,
+    deviceScaleFactor: 1,
+  });
+
+  const page = await context.newPage();
+  await page.goto(`${BASE}/?midi-detection-check=desktop-collapsible-${Date.now()}`, { waitUntil: 'networkidle' });
+
+  const songCases = await getShortLongSongIndices(page);
+  if (!songCases) {
+    fail('desktop 1100x700 unable to resolve short/long song cases');
+  } else {
+    for (const key of ['short', 'long']) {
+      const song = songCases[key];
+      const state = await collectSongLayoutState(page, {
+        songIndex: song.idx,
+        openPanel: true,
+        chooseLongestInstrument: true,
+      });
+
+      if (state.missing) {
+        fail(`desktop 1100x700 (${key}) missing elements`);
+        continue;
+      }
+
+      const collapsedOK =
+        state.isExpanded === false &&
+        state.btnDisplay !== 'none' &&
+        state.panelPosition === 'absolute';
+      const controlsOK =
+        state.actionRows <= 1 &&
+        state.actionsOverflow === false &&
+        state.navOverlapsMidi === 0 &&
+        state.navOverlapsHide === 0;
+
+      if (!collapsedOK) {
+        fail(`desktop 1100x700 (${key}) expected collapsed mode, got isExpanded=${state.isExpanded}, btnDisplay=${state.btnDisplay}, panelPosition=${state.panelPosition}`);
+      } else if (!controlsOK) {
+        fail(`desktop 1100x700 (${key}) expected single-row non-overflow controls and no overlap, got rows=${state.actionRows}, overflow=${state.actionsOverflow}, navMidi=${state.navOverlapsMidi}, navHide=${state.navOverlapsHide}`);
+      } else {
+        pass(`desktop 1100x700 (${key}) collapsed controls remain single-row without overlap`);
+      }
+    }
+  }
+
+  await context.close();
+}
+
+// Desktop spacious control: expanded inline header should stay overlap-free for short and long titles.
+{
+  const context = await browser.newContext({
+    viewport: { width: 1920, height: 900 },
+    isMobile: false,
+    hasTouch: false,
+    deviceScaleFactor: 1,
+  });
+
+  const page = await context.newPage();
+  await page.goto(`${BASE}/?midi-detection-check=desktop-expanded-${Date.now()}`, { waitUntil: 'networkidle' });
+
+  const songCases = await getShortLongSongIndices(page);
+  if (!songCases) {
+    fail('desktop 1920x900 unable to resolve short/long song cases');
+  } else {
+    for (const key of ['short', 'long']) {
+      const song = songCases[key];
+      const state = await collectSongLayoutState(page, {
+        songIndex: song.idx,
+        openPanel: false,
+        chooseLongestInstrument: true,
+      });
+
+      if (state.missing) {
+        fail(`desktop 1920x900 (${key}) missing elements`);
+        continue;
+      }
+
+      const expandedOK =
+        state.isExpanded === true &&
+        state.btnDisplay === 'none' &&
+        state.panelPosition === 'static';
+      const controlsOK =
+        state.actionRows <= 1 &&
+        state.actionsOverflow === false &&
+        state.navOverlapsMidi === 0 &&
+        state.navOverlapsHide === 0;
+
+      if (!expandedOK) {
+        fail(`desktop 1920x900 (${key}) expected expanded inline mode, got isExpanded=${state.isExpanded}, btnDisplay=${state.btnDisplay}, panelPosition=${state.panelPosition}`);
+      } else if (!controlsOK) {
+        fail(`desktop 1920x900 (${key}) expected single-row non-overflow controls and no overlap, got rows=${state.actionRows}, overflow=${state.actionsOverflow}, navMidi=${state.navOverlapsMidi}, navHide=${state.navOverlapsHide}`);
+      } else {
+        pass(`desktop 1920x900 (${key}) expanded header remains overlap-free`);
+      }
+    }
   }
 
   await context.close();

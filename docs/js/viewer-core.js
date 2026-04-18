@@ -251,14 +251,17 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         var titleText = (typeof getSoundfontInstrumentLabel === 'function')
           ? getSoundfontInstrumentLabel(prefs.midiInstrument, activeSf)
           : 'Pilih Alat Musik';
-        var labelText = titleText.length > 20 ? titleText.substring(0, 20) + '...' : titleText;
 
         document
           .querySelectorAll("#cis-icon, #mini-cis-icon")
           .forEach((el) => (el.textContent = getMidiInstrumentIcon(prefs.midiInstrument, titleText)));
-        document
-          .querySelectorAll("#cis-label, #mini-cis-label")
-          .forEach((el) => (el.textContent = labelText));
+        if (typeof applyInstrumentLabelPresentation === 'function') {
+          applyInstrumentLabelPresentation(titleText);
+        } else {
+          document
+            .querySelectorAll("#cis-label, #mini-cis-label")
+            .forEach((el) => (el.textContent = titleText));
+        }
 
         var options = document.querySelectorAll(
           `.instrument-selector-wrapper .cis-option[data-val="${prefs.midiInstrument}"]`,
@@ -1518,6 +1521,14 @@ function syncSeekbarUI(time, duration) {
   const dur = duration || 0;
   const t = Math.max(0, time || 0);
   const pct = dur > 0 ? (t / dur) * 100 + "%" : "0%";
+  const toDisplaySeconds =
+    typeof toMidiDisplaySeconds === "function"
+      ? toMidiDisplaySeconds
+      : function (seconds) {
+          return Math.max(0, Number(seconds) || 0);
+        };
+  const displayDur = toDisplaySeconds(dur);
+  const displayTime = Math.min(displayDur || 0, toDisplaySeconds(t));
 
   if (typeof customSeekbar !== "undefined" && customSeekbar) {
     if (dur > 0 && customSeekbar.max != dur) customSeekbar.max = dur;
@@ -1526,7 +1537,7 @@ function syncSeekbarUI(time, duration) {
     if (fill) fill.style.width = pct;
   }
   if (typeof customTimeDisplay !== "undefined" && customTimeDisplay) {
-    customTimeDisplay.textContent = `${formatMidiTime(t)} / ${dur > 0 ? formatMidiTime(dur) : "0:00"}`;
+    customTimeDisplay.textContent = `${formatMidiTime(displayTime)} / ${displayDur > 0 ? formatMidiTime(displayDur) : "0:00"}`;
   }
 
   // Mini player UI sync
@@ -1539,7 +1550,7 @@ function syncSeekbarUI(time, duration) {
   }
   const miniTimeDisplay = document.getElementById("mini-time-display");
   if (miniTimeDisplay) {
-    miniTimeDisplay.textContent = `${formatMidiTime(t)} / ${dur > 0 ? formatMidiTime(dur) : "0:00"}`;
+    miniTimeDisplay.textContent = `${formatMidiTime(displayTime)} / ${displayDur > 0 ? formatMidiTime(displayDur) : "0:00"}`;
   }
 }
 ;

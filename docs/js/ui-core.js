@@ -202,14 +202,21 @@ function onLayoutResize() {
     syncTransposeCollapseState();
     fitViewerTitle();
     fitListTitles();
+    if (typeof applyInstrumentLabelPresentation === 'function') {
+      applyInstrumentLabelPresentation();
+    }
   }, 100);
 }
 
 function checkLayoutCollisions() {
   if (!document.body.classList.contains('viewer-active')) return;
 
+  const wasExpanded = document.body.classList.contains('is-expanded-layout');
   const isLandscape = window.matchMedia('(orientation: landscape)').matches;
   const isNarrowLandscape = window.matchMedia('(max-width: 1100px) and (orientation: landscape)').matches;
+  const expandSlackPx = 34;
+  const keepExpandedSlackPx = 10;
+  const requiredSlackPx = wasExpanded ? keepExpandedSlackPx : expandSlackPx;
 
   // In narrow landscape we intentionally use footer mode and collapsed MIDI toggle.
   // Forcing non-expanded mode avoids inline MIDI overlap on scaled/mobile browsers.
@@ -224,7 +231,7 @@ function checkLayoutCollisions() {
   document.body.classList.remove('is-expanded-layout');
 
   let layoutFits = true;
-  const buffer = 24; // minimal buffer for safety margin
+  const buffer = 24; // baseline padding around measured clusters
 
   // Check Header
   const header = document.querySelector('.pdf-viewer-header');
@@ -239,7 +246,8 @@ function checkLayoutCollisions() {
     [left, right].forEach(el => {
       if (el && el.offsetParent !== null) {
         const style = getComputedStyle(el);
-        fixedWidth += el.scrollWidth +
+        const visualWidth = el.getBoundingClientRect().width || el.clientWidth || el.scrollWidth;
+        fixedWidth += visualWidth +
           parseFloat(style.marginLeft || 0) + parseFloat(style.marginRight || 0);
       }
     });
@@ -263,7 +271,8 @@ function checkLayoutCollisions() {
     // Use visual width (getBoundingClientRect) so transformed/scaled headers
     // (e.g. chrome-android mode) are evaluated against real on-screen space.
     const visualHeaderWidth = header.getBoundingClientRect().width || header.clientWidth;
-    if (visualHeaderWidth < (fixedWidth + buffer)) {
+    const headerSlack = visualHeaderWidth - (fixedWidth + buffer);
+    if (headerSlack < requiredSlackPx) {
       layoutFits = false;
     }
   }
@@ -289,7 +298,8 @@ function checkLayoutCollisions() {
     footerRequiredWidth += footerGap * 2;
 
     const visualFooterWidth = footer.getBoundingClientRect().width || footer.clientWidth;
-    if (visualFooterWidth < (footerRequiredWidth + buffer)) {
+    const footerSlack = visualFooterWidth - (footerRequiredWidth + buffer);
+    if (footerSlack < requiredSlackPx) {
       layoutFits = false;
     }
   }
@@ -556,7 +566,6 @@ function rebuildInstrumentSelectors(sfUrl) {
   });
 
   var titleText = built.activeLabel || 'Memuat Instrumen...';
-  var labelText = titleText.length > 20 ? titleText.substring(0, 20) + '...' : titleText;
   var iconText = (typeof getMidiInstrumentIcon === 'function')
     ? getMidiInstrumentIcon(currentVal, titleText)
     : 'music_note';
@@ -565,9 +574,13 @@ function rebuildInstrumentSelectors(sfUrl) {
     el.textContent = iconText;
   });
 
-  document.querySelectorAll('#cis-label, #mini-cis-label').forEach(function (el) {
-    el.textContent = labelText;
-  });
+  if (typeof applyInstrumentLabelPresentation === 'function') {
+    applyInstrumentLabelPresentation(titleText);
+  } else {
+    document.querySelectorAll('#cis-label, #mini-cis-label').forEach(function (el) {
+      el.textContent = titleText;
+    });
+  }
 
   var mainBtn = document.getElementById('custom-instrument-select');
   var miniBtn = document.getElementById('mini-instrument-select');

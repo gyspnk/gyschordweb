@@ -2623,6 +2623,7 @@ body.is-expanded-layout .custom-player-controls,
 body.measure-layout .custom-player-controls {
   display: flex;
   flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
 }
@@ -3064,6 +3065,7 @@ body.is-expanded-layout .custom-player-controls,
 body.measure-layout .custom-player-controls {
   display: flex;
   flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
 }
@@ -3261,6 +3263,56 @@ body.measure-layout .custom-midi-player .player-time {
   body.measure-layout .custom-midi-player .player-time {
     padding: 0.08rem 0.35rem;
     font-size: 0.58rem !important;
+  }
+}
+
+/* Keep collapsible header MIDI controls on one row and prevent instrument button growth. */
+body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
+  flex-wrap: nowrap;
+}
+
+body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
+body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.instrument-capsule-btn {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (min-width: 1101px) and (orientation: landscape) {
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn .cis-label {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    line-height: 1.05;
+    font-size: 0.82rem;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn .cis-label.instrument-label-long {
+    font-size: 0.76rem;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn .cis-label.instrument-label-very-long {
+    font-size: 0.71rem;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn .cis-label.instrument-label-ultra-long {
+    font-size: 0.66rem;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn .cis-chevron {
+    display: inline-flex;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.instrument-capsule-btn {
+    padding: 0 10px;
   }
 }
 
