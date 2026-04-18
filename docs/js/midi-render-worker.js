@@ -7,7 +7,7 @@
  * Messages IN:
  *   { type: 'init' }                          — Wait for WASM ready
  *   { type: 'loadSoundFont', id, buffer }     — Cache SF2/SF3 ArrayBuffer
- *   { type: 'render', id, midiBuffer, sampleRate, transpose, instrument }
+ *   { type: 'render', id, midiBuffer, sampleRate, transpose, instrument, tempoRate }
  *
  * Messages OUT:
  *   { type: 'ready' }
@@ -110,6 +110,160 @@ self.onmessage = function (e) {
   }
 };
 
+function _readVarLen(data, offset, limit) {
+  var value = 0;
+  var pos = offset;
+  var count = 0;
+  while (pos < limit && count < 4) {
+    var b = data[pos++];
+    value = (value << 7) | (b & 0x7F);
+    count += 1;
+    if ((b & 0x80) === 0) {
+      return { value: value, nextOffset: pos };
+    }
+  }
+  return null;
+}
+
+function _readUint32BE(data, offset) {
+  return (data[offset] << 24) | (data[offset + 1] << 16) | (data[offset + 2] << 8) | data[offset + 3];
+}
+
+function _scaleMidiTempo(midiBuffer, tempoRate) {
+  var rate = Number(tempoRate);
+  if (!Number.isFinite(rate) || rate <= 0 || Math.abs(rate - 1) < 0.000001) return midiBuffer;
+
+  var input = new Uint8Array(midiBuffer);
+  if (input.length < 14) return midiBuffer;
+
+  // "MThd"
+  if (input[0] !== 0x4D || input[1] !== 0x54 || input[2] !== 0x68 || input[3] !== 0x64) {
+    return midiBuffer;
+  }
+
+  var headerLength = _readUint32BE(input, 4) >>> 0;
+  if (headerLength < 6) return midiBuffer;
+
+  var trackCount = ((input[10] << 8) | input[11]) >>> 0;
+  var offset = 8 + headerLength;
+  if (offset > input.length) return midiBuffer;
+
+  var output = new Uint8Array(input);
+  var tempoEventCount = 0;
+
+  for (var trackIndex = 0; trackIndex < trackCount; trackIndex++) {
+    if (offset + 8 > input.length) break;
+
+    // "MTrk"
+    if (input[offset] !== 0x4D || input[offset + 1] !== 0x54 || input[offset + 2] !== 0x72 || input[offset + 3] !== 0x6B) {
+      break;
+    }
+
+    var trackLength = _readUint32BE(input, offset + 4) >>> 0;
+    var trackStart = offset + 8;
+    var trackEnd = trackStart + trackLength;
+    if (trackEnd > input.length) break;
+
+    var pos = trackStart;
+    var runningStatus = 0;
+
+    while (pos < trackEnd) {
+      var deltaInfo = _readVarLen(input, pos, trackEnd);
+      if (!deltaInfo) break;
+      pos = deltaInfo.nextOffset;
+      if (pos >= trackEnd) break;
+
+      var statusByte = input[pos];
+      var usingRunningStatus = false;
+
+      if (statusByte < 0x80) {
+        if (runningStatus === 0) break;
+        statusByte = runningStatus;
+        usingRunningStatus = true;
+      } else {
+        pos += 1;
+        if (statusByte < 0xF0) {
+          runningStatus = statusByte;
+        } else {
+          runningStatus = 0;
+        }
+      }
+
+      if (statusByte === 0xFF) {
+        if (pos >= trackEnd) break;
+        var metaType = input[pos++];
+        var metaLenInfo = _readVarLen(input, pos, trackEnd);
+        if (!metaLenInfo) break;
+        var metaLength = metaLenInfo.value;
+        pos = metaLenInfo.nextOffset;
+        if (pos + metaLength > trackEnd) break;
+
+        if (metaType === 0x51 && metaLength === 3) {
+          var mpqn = (input[pos] << 16) | (input[pos + 1] << 8) | input[pos + 2];
+          if (mpqn > 0) {
+            var scaledMpqn = Math.round(mpqn / rate);
+            if (scaledMpqn < 1) scaledMpqn = 1;
+            if (scaledMpqn > 0xFFFFFF) scaledMpqn = 0xFFFFFF;
+            output[pos] = (scaledMpqn >> 16) & 0xFF;
+            output[pos + 1] = (scaledMpqn >> 8) & 0xFF;
+            output[pos + 2] = scaledMpqn & 0xFF;
+            tempoEventCount += 1;
+          }
+        }
+
+        pos += metaLength;
+        if (metaType === 0x2F) break;
+        continue;
+      }
+
+      if (statusByte === 0xF0 || statusByte === 0xF7) {
+        var sysexLenInfo = _readVarLen(input, pos, trackEnd);
+        if (!sysexLenInfo) break;
+        pos = sysexLenInfo.nextOffset + sysexLenInfo.value;
+        if (pos > trackEnd) break;
+        continue;
+      }
+
+      var dataLen = 0;
+      if (statusByte >= 0xF0) {
+        switch (statusByte) {
+          case 0xF1:
+          case 0xF3:
+            dataLen = 1;
+            break;
+          case 0xF2:
+            dataLen = 2;
+            break;
+          default:
+            dataLen = 0;
+            break;
+        }
+      } else {
+        var statusClass = statusByte & 0xF0;
+        dataLen = (statusClass === 0xC0 || statusClass === 0xD0) ? 1 : 2;
+      }
+
+      // When using running status, `pos` already points to the first data byte.
+      // For explicit status bytes, `pos` also points to first data byte (after increment above).
+      pos += dataLen;
+      if (usingRunningStatus && dataLen === 0) {
+        // Should not happen in standard MIDI channel events, but guard anyway.
+        break;
+      }
+      if (pos > trackEnd) break;
+    }
+
+    offset = trackEnd;
+  }
+
+  if (tempoEventCount === 0) {
+    // Keep source untouched when no explicit tempo events are present.
+    return midiBuffer;
+  }
+
+  return output.buffer;
+}
+
 /**
  * Render a MIDI file to stereo Float32Array using FluidSynth.
  */
@@ -121,8 +275,13 @@ function renderMidi(msg) {
     var sampleRate = msg.sampleRate || 44100;
     // Clamp to FluidSynth valid range (8000-96000)
     sampleRate = Math.max(8000, Math.min(96000, sampleRate));
+    var tempoRate = Number(msg.tempoRate);
+    if (!Number.isFinite(tempoRate) || tempoRate <= 0) tempoRate = 1;
     var transpose = msg.transpose || 0;
     var instrument = (msg.instrument != null && msg.instrument >= 0) ? msg.instrument : -1;
+    var midiData = (Math.abs(tempoRate - 1) > 0.0001)
+      ? _scaleMidiTempo(msg.midiBuffer, tempoRate)
+      : msg.midiBuffer;
 
     var synth = new JSSynth.Synthesizer();
     synth.init(sampleRate, {
@@ -168,7 +327,7 @@ function renderMidi(msg) {
         });
       }
 
-      return synth.addSMFDataToPlayer(msg.midiBuffer);
+      return synth.addSMFDataToPlayer(midiData);
     }).then(function () {
       return synth.playPlayer();
     }).then(function () {

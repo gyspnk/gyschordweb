@@ -683,10 +683,13 @@ function setCurrentSongTempo(defaultBpm, options = {}) {
     if (typeof MidiEngine.setTempoBaseBpm === "function") {
       MidiEngine.setTempoBaseBpm(currentSongDefaultTempoBpm, {
         keepCurrentTempo: !shouldResetCurrent,
+        skipApply: true,
       });
     }
     if (typeof MidiEngine.setTempoBpm === "function") {
-      MidiEngine.setTempoBpm(currentTempoBpm);
+      MidiEngine.setTempoBpm(currentTempoBpm, {
+        skipApply: false,
+      });
     }
   }
 

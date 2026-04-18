@@ -57,11 +57,13 @@ var MidiEngine = (function () {
   var _currentInstrument = -1;  // -1 = use original
   var _currentSourceLabel = '';
 
-  // Tempo control (BPM-based UI mapped to playbackRate)
+  // Tempo control (BPM-based UI mapped to render-time tempo scaling)
   var _DEFAULT_TEMPO_BPM = 76;
   var _tempoBaseBpm = _DEFAULT_TEMPO_BPM;
   var _tempoBpm = _DEFAULT_TEMPO_BPM;
   var _tempoRate = 1.0;
+  var _tempoApplyTimer = null;
+  var _tempoApplyDebounceMs = 140;
 
   // Preload cache (supports multiple pre-rendered buffers)
   var _preloadCache = {};        // key → { buffer, transpose, instrument }
@@ -326,6 +328,9 @@ var MidiEngine = (function () {
 
   function _rememberCurrentSongForBackNavigation(excludeKey) {
     if (!_currentBuffer || !_currentMidiUrl) return;
+    // Buffers rendered with non-default tempo are song-state specific.
+    // Keep preload cache tempo-neutral to avoid stale-tempo reuse.
+    if (Math.abs(_tempoRate - 1) > 0.0001) return;
 
     var prevKey = _preloadKey(_currentMidiUrl, _renderedTranspose, _currentInstrument);
     if (excludeKey && prevKey === excludeKey) return;
@@ -364,7 +369,7 @@ var MidiEngine = (function () {
   /**
    * Render a MIDI file to AudioBuffer via the worker.
    * @param {ArrayBuffer} midiBuffer - Raw MIDI file data
-   * @param {object} opts - { transpose, instrument, sampleRate }
+   * @param {object} opts - { transpose, instrument, sampleRate, tempoRate }
    * @returns {Promise<AudioBuffer>}
    */
   function _renderToBuffer(midiBuffer, opts) {
@@ -374,6 +379,8 @@ var MidiEngine = (function () {
     // play back at much higher sample rates.
     var preferredRate = _ctx ? _ctx.sampleRate : 48000;
     var sampleRate = opts.sampleRate || Math.max(48000, Math.min(96000, preferredRate));
+    var tempoRate = Number(opts.tempoRate);
+    if (!Number.isFinite(tempoRate) || tempoRate <= 0) tempoRate = 1;
     // Apply optional global transpose offset from config.
     var globalOffset = (typeof MIDI_GLOBAL_TRANSPOSE_OFFSET !== 'undefined') ? MIDI_GLOBAL_TRANSPOSE_OFFSET : 0;
 
@@ -382,7 +389,8 @@ var MidiEngine = (function () {
       midiBuffer: midiBuffer,
       sampleRate: sampleRate,
       transpose: (opts.transpose || 0) + globalOffset,
-      instrument: opts.instrument != null ? opts.instrument : -1
+      instrument: opts.instrument != null ? opts.instrument : -1,
+      tempoRate: tempoRate
     }).then(function (result) {
       // Create AudioContext lazily — by the time rendering completes the user
       // has already interacted with the page (clicking a song to open it).
@@ -416,33 +424,35 @@ var MidiEngine = (function () {
     return ratio;
   }
 
-  function _applyTempoRateToDeck(deck, rampSeconds) {
-    if (!deck || !deck.source || !deck.source.playbackRate) return;
-
-    var rate = _computeTempoRate();
-    deck.playbackRate = rate;
-
-    var hasCtx = !!_ctx;
-    var now = hasCtx ? _ctx.currentTime : 0;
-
-    try {
-      deck.source.playbackRate.cancelScheduledValues(now);
-      if (rampSeconds && hasCtx && deck.startCtxTime > 0) {
-        deck.source.playbackRate.setTargetAtTime(rate, now, rampSeconds);
-      } else {
-        deck.source.playbackRate.setValueAtTime(rate, now);
-      }
-    } catch (_e) {
-      try {
-        deck.source.playbackRate.value = rate;
-      } catch (_e2) {}
+  function _clearPendingTempoApply() {
+    if (_tempoApplyTimer !== null) {
+      clearTimeout(_tempoApplyTimer);
+      _tempoApplyTimer = null;
     }
   }
 
-  function _applyTempoRateToActiveDecks(rampSeconds) {
-    _tempoRate = _computeTempoRate();
-    _applyTempoRateToDeck(_deckA, rampSeconds);
-    _applyTempoRateToDeck(_deckB, rampSeconds);
+  function _applyTempoToCurrentSong() {
+    if (!_currentMidiBuffer) return Promise.resolve();
+    return _renderAndSwap(_currentMidiBuffer, {
+      transpose: _currentTranspose,
+      instrument: _currentInstrument,
+      tempoRate: _tempoRate
+    });
+  }
+
+  function _scheduleTempoApply() {
+    if (!_currentMidiBuffer) return;
+
+    _clearPendingTempoApply();
+    if (_playing) {
+      _tempoApplyTimer = setTimeout(function () {
+        _tempoApplyTimer = null;
+        _applyTempoToCurrentSong();
+      }, _tempoApplyDebounceMs);
+      return;
+    }
+
+    _applyTempoToCurrentSong();
   }
 
   function _createDeck(buffer, startOffset) {
@@ -452,7 +462,7 @@ var MidiEngine = (function () {
 
     var source = ctx.createBufferSource();
     source.buffer = buffer;
-    source.playbackRate.value = _tempoRate;
+    source.playbackRate.value = 1;
     source.connect(gain);
 
     return {
@@ -461,15 +471,13 @@ var MidiEngine = (function () {
       buffer: buffer,
       startOffset: startOffset || 0,
       startCtxTime: 0,   // Set when actually started
-      ended: false,
-      playbackRate: _tempoRate
+      ended: false
     };
   }
 
   function _startDeck(deck, fadeInMs) {
     var ctx = _ensureContext();
     deck.startCtxTime = ctx.currentTime;
-    _applyTempoRateToDeck(deck, 0);
 
     if (fadeInMs > 0) {
       deck.gain.gain.setValueAtTime(0, ctx.currentTime);
@@ -519,9 +527,7 @@ var MidiEngine = (function () {
     if (!deck) return 0;
     var ctx = _ensureContext();
     var elapsed = Math.max(0, ctx.currentTime - deck.startCtxTime);
-    var rate = Number.isFinite(deck.playbackRate) ? deck.playbackRate : _tempoRate;
-    if (!isFinite(rate) || rate <= 0) rate = 1;
-    return deck.startOffset + (elapsed * rate);
+    return deck.startOffset + elapsed;
   }
 
   // ─── Public API ───────────────────────────────────────────────────
@@ -553,7 +559,8 @@ var MidiEngine = (function () {
       if (_currentMidiBuffer) {
         return _renderAndSwap(_currentMidiBuffer, {
           transpose: _currentTranspose,
-          instrument: _currentInstrument
+          instrument: _currentInstrument,
+          tempoRate: _tempoRate
         });
       }
     });
@@ -585,10 +592,12 @@ var MidiEngine = (function () {
     _renderedTranspose = _currentTranspose; // Will be rendered at this transpose
     _currentInstrument = targetInstrument;
     _currentSourceLabel = targetSourceLabel;
+    _tempoRate = _computeTempoRate();
+    var useTempoNeutralCache = Math.abs(_tempoRate - 1) < 0.0001;
 
     // Check if we have a preloaded buffer for this exact URL+transpose+instrument
     var cached = _preloadCache[cacheKey];
-    if (cached && cached.buffer) {
+    if (useTempoNeutralCache && cached && cached.buffer) {
       console.log('[Preload] Cache HIT for', url,
         'key=' + cacheKey,
         'source=' + (cached.source || 'unknown'),
@@ -600,7 +609,7 @@ var MidiEngine = (function () {
       if (progressCb) progressCb(100);
       return _activatePreloaded(opts.autoplay, thisGen);
     }
-    if (_preloadedBuffer && _preloadedMidiUrl === url &&
+    if (useTempoNeutralCache && _preloadedBuffer && _preloadedMidiUrl === url &&
         _preloadedTranspose === _currentTranspose &&
         _preloadedInstrument === _currentInstrument) {
       console.log('[Preload] Legacy buffer HIT for', url);
@@ -630,7 +639,8 @@ var MidiEngine = (function () {
       if (progressCb) progressCb(30);
       return _renderToBuffer(buf, {
         transpose: _currentTranspose,
-        instrument: _currentInstrument
+        instrument: _currentInstrument,
+        tempoRate: _tempoRate
       });
     }).then(function (audioBuffer) {
       if (_loadGeneration !== thisGen) throw new Error('cancelled');
@@ -927,7 +937,8 @@ var MidiEngine = (function () {
     if (!_currentMidiBuffer) return Promise.resolve();
     return _renderAndSwap(_currentMidiBuffer, {
       transpose: step,
-      instrument: _currentInstrument
+      instrument: _currentInstrument,
+      tempoRate: _tempoRate
     }).then(function () {
       // After swap, the new deck has the correct pitch — reset detune offset
       _renderedTranspose = step;
@@ -941,13 +952,15 @@ var MidiEngine = (function () {
     if (!_currentMidiBuffer) return Promise.resolve();
     return _renderAndSwap(_currentMidiBuffer, {
       transpose: _currentTranspose,
-      instrument: program
+      instrument: program,
+      tempoRate: _tempoRate
     });
   }
 
   function setTempoBaseBpm(baseBpm, opts) {
     opts = opts || {};
     var keepCurrent = opts.keepCurrentTempo === true;
+    var skipApply = opts.skipApply === true;
 
     _tempoBaseBpm = _clampTempoBpm(baseBpm, _tempoBaseBpm);
     if (keepCurrent) {
@@ -956,13 +969,16 @@ var MidiEngine = (function () {
       _tempoBpm = _tempoBaseBpm;
     }
 
-    _applyTempoRateToActiveDecks(0.02);
+    _tempoRate = _computeTempoRate();
+    if (!skipApply) _scheduleTempoApply();
     return _tempoBaseBpm;
   }
 
-  function setTempoBpm(tempoBpm) {
+  function setTempoBpm(tempoBpm, opts) {
+    opts = opts || {};
     _tempoBpm = _clampTempoBpm(tempoBpm, _tempoBpm);
-    _applyTempoRateToActiveDecks(0.02);
+    _tempoRate = _computeTempoRate();
+    if (!opts.skipApply) _scheduleTempoApply();
     return _tempoBpm;
   }
 
@@ -1046,7 +1062,8 @@ var MidiEngine = (function () {
       console.log('[Preload] Fetched', item.url, '(' + (buf.byteLength / 1024).toFixed(1) + 'KB), rendering...');
       return _renderToBuffer(buf, {
         transpose: item.transpose,
-        instrument: item.instrument
+        instrument: item.instrument,
+        tempoRate: 1
       });
     }).then(function (audioBuffer) {
       _preloadCache[key] = {
@@ -1227,6 +1244,8 @@ var MidiEngine = (function () {
   // ─── Cleanup ──────────────────────────────────────────────────────
 
   function destroy() {
+    _clearPendingTempoApply();
+
     if (_deckA) { try { _deckA.source.stop(); } catch (_e) {} }
     if (_deckB) { try { _deckB.source.stop(); } catch (_e) {} }
     if (_worker) _worker.terminate();
@@ -1269,6 +1288,8 @@ var MidiEngine = (function () {
    * Reset playback state without destroying engine.
    */
   function reset() {
+    _clearPendingTempoApply();
+
     if (_deckA) { try { _deckA.source.stop(); } catch (_e) {} try { _deckA.gain.disconnect(); } catch (_e2) {} }
     _deckA = null;
     _playing = false;
