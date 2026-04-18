@@ -90,6 +90,14 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   const isSameSong = window._midiCurrentlyLoadedRawUrl === rawUrl;
 
   if (!isSameSong) {
+    let songTempoForLoad = _getSongTargetTempoBpm(song);
+    if (!_canReuseDoc && loadingTask) {
+      songTempoForLoad = await _resolveSongTempoForLoad(song, loadingTask);
+    }
+    if (typeof setCurrentSongTempo === "function") {
+      setCurrentSongTempo(songTempoForLoad, { resetCurrent: true });
+    }
+
     chordConfig = createDefaultChordConfig();
     noteChordConfig = createDefaultNoteChordConfig();
     pageNotesCache = {};
@@ -297,6 +305,14 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         const page1 = await pdfDoc.getPage(1);
         const textContent = await page1.getTextContent();
         const pdfText = textContent.items.map((item) => item.str).join(" ");
+        const detectedTempo = _extractPdfTempoFromText(pdfText);
+
+        if (song && song.fileHref) {
+          _tempoByPdfHref.set(song.fileHref, detectedTempo);
+        }
+        if (!isSameSong && typeof setCurrentSongTempo === "function") {
+          setCurrentSongTempo(detectedTempo, { resetCurrent: true });
+        }
 
         const keyMatch = pdfText.match(
           /(?:(?:do|la)\s*={1,2}\s*|[23469]\s*[\/|]\s*[248]\s+)([A-G](?:es|is|s|#|b)?(?:m)?)\b/i,
@@ -1199,6 +1215,7 @@ function _getNeighborSongs(count) {
 // Cache computed default preload transpose per PDF URL.
 // Value: -1 or 0, based on detected PDF key and current preference.
 const _preloadTransposeByPdfHref = new Map();
+const _tempoByPdfHref = new Map();
 
 function _extractPdfKeyFromText(pdfText) {
   if (!pdfText) return null;
@@ -1206,6 +1223,56 @@ function _extractPdfKeyFromText(pdfText) {
     /(?:(?:do|la)\s*={1,2}\s*|[23469]\s*[\/|]\s*[248]\s+)([A-G](?:es|is|s|#|b)?(?:m)?)\b/i,
   );
   return keyMatch ? keyMatch[1] : null;
+}
+
+function _normalizeDetectedTempoBpm(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return MIDI_TEMPO_FALLBACK_BPM;
+  const rounded = Math.round(parsed);
+  return Math.max(MIDI_TEMPO_MIN_BPM, Math.min(MIDI_TEMPO_MAX_BPM, rounded));
+}
+
+function _extractPdfTempoFromText(pdfText) {
+  if (!pdfText) return MIDI_TEMPO_FALLBACK_BPM;
+  const normalized = String(pdfText).replace(/\s+/g, " ").trim();
+
+  const symbolMatch = normalized.match(/(?:^|[\s(])(?:J|j|Q|q|♩|♪|𝅘𝅥|𝅘𝅥𝅮)\s*[:=]\s*(\d{2,3})(?=\D|$)/);
+  if (symbolMatch) return _normalizeDetectedTempoBpm(symbolMatch[1]);
+
+  const bpmLabelMatch = normalized.match(/(?:tempo|tempi|bpm)\s*[:=]?\s*(\d{2,3})\b/i);
+  if (bpmLabelMatch) return _normalizeDetectedTempoBpm(bpmLabelMatch[1]);
+
+  const looseTempoMatch = normalized.match(/(?:^|[^0-9A-Za-z])=\s*(\d{2,3})\b/);
+  if (looseTempoMatch) return _normalizeDetectedTempoBpm(looseTempoMatch[1]);
+
+  return MIDI_TEMPO_FALLBACK_BPM;
+}
+
+function _getSongTargetTempoBpm(song) {
+  if (!song || !song.fileHref) return MIDI_TEMPO_FALLBACK_BPM;
+  return _tempoByPdfHref.get(song.fileHref) || MIDI_TEMPO_FALLBACK_BPM;
+}
+
+async function _resolveSongTempoForLoad(song, loadingTask) {
+  if (!song || !song.fileHref) return MIDI_TEMPO_FALLBACK_BPM;
+
+  const cachedTempo = _tempoByPdfHref.get(song.fileHref);
+  if (Number.isFinite(cachedTempo)) return cachedTempo;
+
+  if (!loadingTask) return MIDI_TEMPO_FALLBACK_BPM;
+
+  try {
+    const doc = await loadingTask.promise;
+    const page1 = await doc.getPage(1);
+    const textContent = await page1.getTextContent();
+    const pdfText = textContent.items.map(function (item) { return item.str; }).join(" ");
+    const detectedTempo = _extractPdfTempoFromText(pdfText);
+    _tempoByPdfHref.set(song.fileHref, detectedTempo);
+    return detectedTempo;
+  } catch (_err) {
+    _tempoByPdfHref.set(song.fileHref, MIDI_TEMPO_FALLBACK_BPM);
+    return MIDI_TEMPO_FALLBACK_BPM;
+  }
 }
 
 function _isBlackKeySemitone(semi) {
@@ -1237,6 +1304,8 @@ async function _inferSongDefaultPreloadTranspose(song) {
     const page1 = await doc.getPage(1);
     const textContent = await page1.getTextContent();
     const pdfText = textContent.items.map(function (item) { return item.str; }).join(" ");
+
+    _tempoByPdfHref.set(pdfHref, _extractPdfTempoFromText(pdfText));
 
     const pdfKey = _extractPdfKeyFromText(pdfText);
     if (!pdfKey || typeof parsePdfKeyToSemitone !== 'function') {

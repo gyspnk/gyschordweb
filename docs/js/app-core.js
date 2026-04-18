@@ -505,6 +505,9 @@ function buildSoundfontInstrumentOptionsHtml(sfUrl, selectedProgram) {
 
 const MIDI_END_THRESHOLD_S = 0.8; // Threshold in seconds for detecting song end
 const MIDI_PRELOAD_NEXT_S = 3; // Seconds before end to preload next song
+const MIDI_TEMPO_FALLBACK_BPM = 76;
+const MIDI_TEMPO_MIN_BPM = 30;
+const MIDI_TEMPO_MAX_BPM = 220;
 
 // --- Note-Aligned Chord Editor Constants ---
 const NOTE_CHORD_Y_OFFSET_PCT = 2.5; // Chord vertical offset above note (% of page height)
@@ -562,6 +565,98 @@ function formatMidiTime(seconds) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+function clampMidiTempoBpm(value, fallback = MIDI_TEMPO_FALLBACK_BPM) {
+  const fallbackNum = Number(fallback);
+  const safeFallback = Number.isFinite(fallbackNum) ? fallbackNum : MIDI_TEMPO_FALLBACK_BPM;
+  const parsed = Number(value);
+  const candidate = Number.isFinite(parsed) ? parsed : safeFallback;
+  const rounded = Math.round(candidate);
+  return Math.max(MIDI_TEMPO_MIN_BPM, Math.min(MIDI_TEMPO_MAX_BPM, rounded));
+}
+
+function syncTempoControlsUI() {
+  currentSongDefaultTempoBpm = clampMidiTempoBpm(currentSongDefaultTempoBpm, MIDI_TEMPO_FALLBACK_BPM);
+  currentTempoBpm = clampMidiTempoBpm(currentTempoBpm, currentSongDefaultTempoBpm);
+
+  [customTempoSlider, miniTempoSlider].filter(Boolean).forEach((slider) => {
+    slider.min = String(MIDI_TEMPO_MIN_BPM);
+    slider.max = String(MIDI_TEMPO_MAX_BPM);
+    slider.value = String(currentTempoBpm);
+  });
+
+  [customTempoInput, miniTempoInput].filter(Boolean).forEach((input) => {
+    input.min = String(MIDI_TEMPO_MIN_BPM);
+    input.max = String(MIDI_TEMPO_MAX_BPM);
+    input.value = String(currentTempoBpm);
+  });
+
+  const labelText = `${currentTempoBpm} BPM`;
+
+  if (miniTempoToggleValue) {
+    miniTempoToggleValue.textContent = String(currentTempoBpm);
+  } else {
+    const miniTempoLabel = document.getElementById("mini-tempo-toggle-label");
+    if (miniTempoLabel) miniTempoLabel.textContent = labelText;
+  }
+
+  if (customTempoToggleValue) {
+    customTempoToggleValue.textContent = String(currentTempoBpm);
+  } else {
+    const customTempoLabel = document.getElementById("custom-tempo-toggle-label");
+    if (customTempoLabel) customTempoLabel.textContent = labelText;
+  }
+
+  const ratioPct = Math.round((currentTempoBpm / currentSongDefaultTempoBpm) * 100);
+  [customTempoToggleBtn, miniTempoToggleBtn].filter(Boolean).forEach((btn) => {
+    btn.title = `Tempo ${labelText} (${ratioPct}% dari default ${currentSongDefaultTempoBpm} BPM)`;
+    btn.setAttribute("aria-label", `Tempo saat ini ${labelText}`);
+  });
+}
+
+function setCurrentSongTempo(defaultBpm, options = {}) {
+  const shouldResetCurrent = options.resetCurrent !== false;
+  currentSongDefaultTempoBpm = clampMidiTempoBpm(defaultBpm, currentSongDefaultTempoBpm);
+  if (shouldResetCurrent) {
+    currentTempoBpm = currentSongDefaultTempoBpm;
+  } else {
+    currentTempoBpm = clampMidiTempoBpm(currentTempoBpm, currentSongDefaultTempoBpm);
+  }
+
+  if (typeof MidiEngine !== "undefined") {
+    if (typeof MidiEngine.setTempoBaseBpm === "function") {
+      MidiEngine.setTempoBaseBpm(currentSongDefaultTempoBpm, {
+        keepCurrentTempo: !shouldResetCurrent,
+      });
+    }
+    if (typeof MidiEngine.setTempoBpm === "function") {
+      MidiEngine.setTempoBpm(currentTempoBpm);
+    }
+  }
+
+  syncTempoControlsUI();
+  return currentSongDefaultTempoBpm;
+}
+
+function setMidiTempoBpm(nextBpm) {
+  currentTempoBpm = clampMidiTempoBpm(nextBpm, currentTempoBpm);
+
+  if (typeof MidiEngine !== "undefined" && typeof MidiEngine.setTempoBpm === "function") {
+    MidiEngine.setTempoBpm(currentTempoBpm);
+  }
+
+  syncTempoControlsUI();
+  return currentTempoBpm;
+}
+
+window.setCurrentSongTempo = setCurrentSongTempo;
+window.setMidiTempoBpm = setMidiTempoBpm;
+window.getCurrentSongTempoBpm = function getCurrentSongTempoBpm() {
+  return currentTempoBpm;
+};
+window.getCurrentSongDefaultTempoBpm = function getCurrentSongDefaultTempoBpm() {
+  return currentSongDefaultTempoBpm;
+};
+
 /**
  * Reset all MIDI state to defaults. Called when closing viewer or switching songs.
  */
@@ -618,6 +713,14 @@ const customPlayBtn = document.getElementById("custom-play-btn");
 const customPlayIcon = document.getElementById("custom-play-icon");
 const customTimeDisplay = document.getElementById("custom-time-display");
 const customSeekbar = document.getElementById("custom-seekbar");
+const customTempoToggleBtn = document.getElementById("custom-tempo-toggle-btn");
+const customTempoToggleValue = document.getElementById("custom-tempo-toggle-value");
+const customTempoSlider = document.getElementById("custom-tempo-slider");
+const customTempoInput = document.getElementById("custom-tempo-input");
+const miniTempoToggleBtn = document.getElementById("mini-tempo-toggle-btn");
+const miniTempoToggleValue = document.getElementById("mini-tempo-toggle-value");
+const miniTempoSlider = document.getElementById("mini-tempo-slider");
+const miniTempoInput = document.getElementById("mini-tempo-input");
 
 const pageNavigationPortrait = document.querySelector(".pdf-viewer-footer .page-navigation");
 const pageNavigationLandscape = document.querySelector(".landscape-controls .page-navigation-landscape");
@@ -722,6 +825,8 @@ let baseTransposeOffset = 0;
 let titleTapCount = 0;
 let titleTapTimer = null;
 let transposeStep = 0;
+let currentSongDefaultTempoBpm = MIDI_TEMPO_FALLBACK_BPM;
+let currentTempoBpm = MIDI_TEMPO_FALLBACK_BPM;
 let accidentalMode = localStorage.getItem(CHORD_ACCIDENTAL_STORAGE_KEY) === "flat" ? "flat" : "sharp";
 let swipeStartPoint = null;
 let isMouseDragging = false;
@@ -844,7 +949,7 @@ function setupEventListeners() {
               if (openWrapper !== uiWrapper) {
                 openWrapper.classList.remove("is-open");
                 const capBtn = openWrapper.querySelector(
-                  ".instrument-capsule-btn",
+                  ".instrument-capsule-btn, .tempo-popover-toggle",
                 );
                 if (capBtn) capBtn.setAttribute("aria-expanded", "false");
               }
@@ -873,7 +978,9 @@ function setupEventListeners() {
         .forEach((uiWrapper) => {
           if (!uiWrapper.contains(e.target)) {
             uiWrapper.classList.remove("is-open");
-            const capBtn = uiWrapper.querySelector(".instrument-capsule-btn");
+            const capBtn = uiWrapper.querySelector(
+              ".instrument-capsule-btn, .tempo-popover-toggle",
+            );
             if (capBtn) capBtn.setAttribute("aria-expanded", "false");
           }
         });
@@ -907,7 +1014,9 @@ function setupEventListeners() {
       const uiWrapper = e.target.closest(".instrument-selector-wrapper");
       if (uiWrapper) {
         uiWrapper.classList.remove("is-open");
-        const capBtn = uiWrapper.querySelector(".instrument-capsule-btn");
+        const capBtn = uiWrapper.querySelector(
+          ".instrument-capsule-btn, .tempo-popover-toggle",
+        );
         if (capBtn) capBtn.setAttribute("aria-expanded", "false");
       }
 
@@ -916,7 +1025,9 @@ function setupEventListeners() {
         .querySelectorAll(".instrument-selector-wrapper.is-open")
         .forEach((openWrapper) => {
           openWrapper.classList.remove("is-open");
-          const capBtn = openWrapper.querySelector(".instrument-capsule-btn");
+          const capBtn = openWrapper.querySelector(
+            ".instrument-capsule-btn, .tempo-popover-toggle",
+          );
           if (capBtn) capBtn.setAttribute("aria-expanded", "false");
         });
 
@@ -994,6 +1105,72 @@ function setupEventListeners() {
         changeInstrument();
       }
     });
+
+    [customTempoToggleBtn, miniTempoToggleBtn].filter(Boolean).forEach((btnNode) => {
+      btnNode.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const uiWrapper = btnNode.closest(".instrument-selector-wrapper");
+        if (!uiWrapper) return;
+
+        const willOpen = !uiWrapper.classList.contains("is-open");
+        document
+          .querySelectorAll(".instrument-selector-wrapper.is-open")
+          .forEach((openWrapper) => {
+            if (openWrapper !== uiWrapper) {
+              openWrapper.classList.remove("is-open");
+              const triggerBtn = openWrapper.querySelector(
+                ".instrument-capsule-btn, .tempo-popover-toggle",
+              );
+              if (triggerBtn) triggerBtn.setAttribute("aria-expanded", "false");
+            }
+          });
+
+        uiWrapper.classList.toggle("is-open", willOpen);
+        btnNode.setAttribute("aria-expanded", willOpen ? "true" : "false");
+      });
+    });
+
+    [customTempoSlider, miniTempoSlider].filter(Boolean).forEach((slider) => {
+      slider.addEventListener("input", (e) => {
+        setMidiTempoBpm(e.target.value);
+      });
+
+      slider.addEventListener("change", (e) => {
+        setMidiTempoBpm(e.target.value);
+      });
+    });
+
+    [customTempoInput, miniTempoInput].filter(Boolean).forEach((input) => {
+      input.addEventListener("input", (e) => {
+        const raw = String(e.target.value || "").trim();
+        if (!raw) return;
+        const parsed = Number(raw);
+        if (!Number.isFinite(parsed)) return;
+        setMidiTempoBpm(parsed);
+      });
+
+      input.addEventListener("change", (e) => {
+        const raw = String(e.target.value || "").trim();
+        if (!raw) {
+          syncTempoControlsUI();
+          return;
+        }
+        setMidiTempoBpm(raw);
+      });
+
+      input.addEventListener("blur", () => {
+        syncTempoControlsUI();
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          input.blur();
+        }
+      });
+    });
+
+    syncTempoControlsUI();
 
     // Play/Pause — named function so mini player can call directly (real user gesture)
     async function toggleMidiPlayback() {
@@ -1142,6 +1319,8 @@ function setupEventListeners() {
       });
     });
   }
+
+  syncTempoControlsUI();
 
   prevSongBtn.addEventListener("click", onPrevSong);
 

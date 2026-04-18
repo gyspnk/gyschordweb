@@ -2304,6 +2304,180 @@ body.measure-layout .midi-collapse .custom-midi-player::after {
   flex: 1 1 220px;
 }
 
+.midi-tempo-action {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.midi-tempo-toggle-btn {
+  min-width: 106px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 52%, transparent);
+  background: color-mix(in srgb, var(--md-sys-color-surface) 84%, var(--md-sys-color-surface-container-high));
+  color: var(--md-sys-color-on-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  transition: background-color var(--duration-short) var(--ease-standard), border-color var(--duration-short) var(--ease-standard), transform var(--duration-short) var(--ease-spring), box-shadow var(--duration-short) var(--ease-standard);
+}
+
+.midi-tempo-toggle-btn:hover {
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 34%, var(--md-sys-color-surface));
+  border-color: color-mix(in srgb, var(--md-sys-color-primary) 28%, var(--md-sys-color-outline-variant));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  transform: translateY(-1px);
+}
+
+.midi-tempo-toggle-btn:active {
+  transform: scale(0.96);
+}
+
+.midi-tempo-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.midi-tempo-readout {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.midi-tempo-toggle-label {
+  display: inline-flex;
+}
+
+.midi-tempo-toggle-value {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.midi-tempo-toggle-unit {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: color-mix(in srgb, var(--md-sys-color-on-surface-variant) 88%, transparent);
+}
+
+.midi-tempo-chevron {
+  font-size: 1.15rem;
+  opacity: 0.78;
+  line-height: 1;
+  transition: transform var(--duration-short) var(--ease-standard);
+}
+
+.instrument-selector-wrapper.is-open .midi-tempo-chevron {
+  transform: rotate(180deg);
+}
+
+.midi-tempo-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: auto;
+  min-width: 250px;
+  width: min(320px, calc(100vw - 24px));
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 52%, transparent);
+  background: color-mix(in srgb, var(--md-sys-color-surface) 96%, transparent);
+  box-shadow: 0 24px 38px -26px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(20px) saturate(1.05);
+  -webkit-backdrop-filter: blur(20px) saturate(1.05);
+  padding: 12px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.96);
+  transform-origin: top left;
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.2, 0, 0, 1), visibility 0.2s;
+  z-index: 1203;
+}
+
+.instrument-selector-wrapper.is-open .midi-tempo-popover {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.midi-tempo-popover-header {
+  margin-bottom: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.midi-tempo-popover-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.midi-tempo-slider {
+  width: 100%;
+  accent-color: var(--md-sys-color-primary);
+}
+
+.midi-tempo-number-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 64%, transparent);
+  background: color-mix(in srgb, var(--md-sys-color-surface-container-high) 88%, transparent);
+}
+
+.midi-tempo-input {
+  width: 48px;
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  text-align: right;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1;
+  font-family: inherit;
+}
+
+.midi-tempo-input:focus {
+  outline: none;
+}
+
+.midi-tempo-input::-webkit-outer-spin-button,
+.midi-tempo-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.midi-tempo-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.midi-tempo-unit {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
 .midi-action-btn.instrument-capsule-btn {
   width: 100%;
   min-width: 0;
@@ -2806,6 +2980,37 @@ body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.
   padding: 0 6px;
 }
 
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggle-btn {
+  width: auto;
+  min-width: 58px;
+  height: 30px;
+  padding: 0 7px;
+  border-radius: 10px;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-chevron {
+  display: none;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-icon {
+  font-size: 0.95rem;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggle-value {
+  font-size: 0.72rem;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggle-unit {
+  font-size: 0.54rem;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-popover {
+  left: 0;
+  right: auto;
+  min-width: 220px;
+  width: min(280px, calc(100vw - 16px));
+}
+
 body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-play.player-btn,
 body:not(.is-expanded-layout):not(.measure-layout) .midi-panel #custom-play-btn {
   width: 34px;
@@ -2914,6 +3119,46 @@ body.measure-layout .midi-icon-btn.instrument-capsule-btn {
   color: var(--md-sys-color-on-surface-variant);
 }
 
+body.is-expanded-layout .midi-tempo-toggle-btn,
+body.measure-layout .midi-tempo-toggle-btn {
+  width: auto;
+  min-width: 54px;
+  height: 36px;
+  padding: 0 6px;
+  border-radius: 12px;
+  border-color: color-mix(in srgb, var(--viewer-chrome-border) 72%, transparent);
+  background: color-mix(in srgb, var(--viewer-chrome-surface) 74%, var(--md-sys-color-surface-container-high));
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+body.is-expanded-layout .midi-tempo-chevron,
+body.measure-layout .midi-tempo-chevron {
+  display: none;
+}
+
+body.is-expanded-layout .midi-tempo-icon,
+body.measure-layout .midi-tempo-icon {
+  display: none;
+}
+
+body.is-expanded-layout .midi-tempo-toggle-value,
+body.measure-layout .midi-tempo-toggle-value {
+  font-size: 0.68rem;
+}
+
+body.is-expanded-layout .midi-tempo-toggle-unit,
+body.measure-layout .midi-tempo-toggle-unit {
+  display: none;
+}
+
+body.is-expanded-layout .midi-tempo-popover,
+body.measure-layout .midi-tempo-popover {
+  left: auto;
+  right: 0;
+  min-width: 220px;
+  width: min(270px, calc(100vw - 20px));
+}
+
 body.is-expanded-layout .custom-midi-player .player-time,
 body.measure-layout .custom-midi-player .player-time {
   padding: 0.12rem 0.45rem;
@@ -2935,6 +3180,28 @@ body.measure-layout .custom-midi-player .player-time {
     width: 28px;
     min-width: 28px;
     height: 28px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggle-btn {
+    width: auto;
+    min-width: 46px;
+    height: 28px;
+    padding: 0 5px;
+    border-radius: 9px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-icon,
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggle-unit {
+    display: none;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggle-value {
+    font-size: 0.66rem;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-popover {
+    width: min(260px, calc(100vw - 12px));
+    min-width: 200px;
   }
 }
 

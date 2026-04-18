@@ -152,6 +152,52 @@
           </button>
         </div>
 
+        <div class="instrument-selector-wrapper mini-tempo-action">
+          <button
+            id="mini-tempo-toggle-btn"
+            class="mini-tempo-toggle-btn tempo-popover-toggle"
+            type="button"
+            aria-haspopup="dialog"
+            aria-expanded="false"
+            title="Atur tempo MIDI"
+          >
+            <span class="material-symbols-outlined mini-tempo-icon">speed</span>
+            <span class="mini-tempo-readout" id="mini-tempo-toggle-label">
+              <span class="mini-tempo-toggle-value" id="mini-tempo-toggle-value">76</span>
+              <span class="mini-tempo-toggle-unit">BPM</span>
+            </span>
+          </button>
+          <div class="mini-tempo-popover" id="mini-tempo-popover" role="dialog" aria-label="Kontrol tempo mini player">
+            <div class="mini-tempo-popover-header">Tempo MIDI</div>
+            <div class="mini-tempo-popover-body">
+              <input
+                id="mini-tempo-slider"
+                class="mini-tempo-slider"
+                type="range"
+                min="30"
+                max="220"
+                step="1"
+                value="76"
+                aria-label="Tempo mini player"
+              />
+              <label class="mini-tempo-number-wrap" for="mini-tempo-input">
+                <input
+                  id="mini-tempo-input"
+                  class="mini-tempo-input"
+                  type="number"
+                  min="30"
+                  max="220"
+                  step="1"
+                  value="76"
+                  inputmode="numeric"
+                  aria-label="Input tempo mini player"
+                />
+                <span class="mini-tempo-unit">BPM</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
         <!-- Mini Instrument Selector -->
         <div class="instrument-selector-wrapper">
           <button
@@ -315,6 +361,54 @@
                   </div>
 
                   <div class="custom-player-actions">
+                    <div class="instrument-selector-wrapper flex-shrink-0 midi-action midi-tempo-action">
+                      <button
+                        class="midi-tempo-toggle-btn tempo-popover-toggle"
+                        id="custom-tempo-toggle-btn"
+                        type="button"
+                        aria-haspopup="dialog"
+                        aria-expanded="false"
+                        title="Atur tempo MIDI"
+                        aria-label="Atur tempo MIDI"
+                      >
+                        <span class="material-symbols-outlined midi-tempo-icon">speed</span>
+                        <span class="midi-tempo-readout" id="custom-tempo-toggle-label">
+                          <span class="midi-tempo-toggle-value" id="custom-tempo-toggle-value">76</span>
+                          <span class="midi-tempo-toggle-unit">BPM</span>
+                        </span>
+                        <span class="material-symbols-outlined midi-tempo-chevron">expand_more</span>
+                      </button>
+                      <div class="midi-tempo-popover" id="custom-tempo-popover" role="dialog" aria-label="Kontrol tempo MIDI player">
+                        <div class="midi-tempo-popover-header">Tempo MIDI</div>
+                        <div class="midi-tempo-popover-body">
+                          <input
+                            id="custom-tempo-slider"
+                            class="midi-tempo-slider"
+                            type="range"
+                            min="30"
+                            max="220"
+                            step="1"
+                            value="76"
+                            aria-label="Tempo MIDI player"
+                          />
+                          <label class="midi-tempo-number-wrap" for="custom-tempo-input">
+                            <input
+                              id="custom-tempo-input"
+                              class="midi-tempo-input"
+                              type="number"
+                              min="30"
+                              max="220"
+                              step="1"
+                              value="76"
+                              inputmode="numeric"
+                              aria-label="Input tempo MIDI player"
+                            />
+                            <span class="midi-tempo-unit">BPM</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
                     <!-- Responsive/Adaptive Dropdown Trigger -->
                     <div class="instrument-selector-wrapper flex-shrink-0 midi-action midi-instrument-action">
                       <button

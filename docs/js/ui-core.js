@@ -1824,7 +1824,7 @@ function handleSettingsChange(e) {
       .querySelectorAll(".instrument-selector-wrapper.is-open")
       .forEach(function (wrapper) {
         wrapper.classList.remove("is-open");
-        var capBtn = wrapper.querySelector(".instrument-capsule-btn");
+        var capBtn = wrapper.querySelector(".instrument-capsule-btn, .tempo-popover-toggle");
         if (capBtn) capBtn.setAttribute("aria-expanded", "false");
       });
 
