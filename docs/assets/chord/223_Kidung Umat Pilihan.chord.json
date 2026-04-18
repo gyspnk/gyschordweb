@@ -1,0 +1,132 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 0,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 8,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 12,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 14,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 17,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 21,
+        "chord": "Bm"
+      },
+      {
+        "noteIdx": 24,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 100,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 104,
+        "chord": "C#m"
+      },
+      {
+        "noteIdx": 108,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 111,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 113,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 117,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 120,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 124,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 202,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 205,
+        "chord": "C#m"
+      },
+      {
+        "noteIdx": 209,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 212,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 214,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 219,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 224,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 226,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 304,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 307,
+        "chord": "C#m"
+      },
+      {
+        "noteIdx": 311,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 314,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 316,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 320,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 326,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 328,
+        "chord": "A"
+      }
+    ]
+  }
+}
