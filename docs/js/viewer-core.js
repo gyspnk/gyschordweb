@@ -1046,13 +1046,9 @@ function updateViewerUI() {
 }
 
 /**
- * Gapless transpose: instantly shifts pitch via Web Audio detune, then
- * debounces the background re-render so rapid button taps don't each spawn
- * a full FluidSynth render.
- *
- * @param {number} step - Transpose step (-11 to +11)
+ * Transpose requests are processed with latest-wins behavior in MidiEngine.
+ * Rapid repeated changes are allowed and stale renders are discarded.
  */
-let _transposeDebounceTimer = null;
 
 // ─── Shuffle Predetermination ─────────────────────────────────────────────────
 /**
@@ -1460,22 +1456,13 @@ function _prefetchPdf(url) {
 async function swapTranspose(step) {
   if (typeof MidiEngine === 'undefined' || !MidiEngine.getCurrentMidiUrl()) return;
 
-  // Web Audio detune changes speed along with pitch, so we skip it entirely
-  // and rely on the full re-render which preserves original tempo.
-
-  // Debounce the full re-render: only re-render 300 ms after the last press
-  // so rapid +/+/+/+ taps produce a single render at the final pitch.
-  if (_transposeDebounceTimer) clearTimeout(_transposeDebounceTimer);
-  _transposeDebounceTimer = setTimeout(async function () {
-    _transposeDebounceTimer = null;
-    try {
-      await MidiEngine.setTranspose(step);
-    } catch (err) {
-      console.warn('Failed to swap transpose:', err);
-    }
-    syncSeekbarUI(MidiEngine.getTime(), MidiEngine.getDuration());
-    window._midiLastSeekValue = -1;
-  }, 300);
+  try {
+    await MidiEngine.setTranspose(step);
+  } catch (err) {
+    console.warn('Failed to swap transpose:', err);
+  }
+  syncSeekbarUI(MidiEngine.getTime(), MidiEngine.getDuration());
+  window._midiLastSeekValue = -1;
 }
 
 /**
@@ -1811,7 +1798,6 @@ function updateFamilyChordUI() {
          opt.classList.add('selected');
       }
       opt.onclick = () => {
-         if (typeof MidiEngine !== 'undefined' && MidiEngine.isLoading()) return;
          if (!originalFamilyChord) return;
          const parsedObj = parseChordToken(originalFamilyChord);
          if (!parsedObj) return;
@@ -2118,7 +2104,6 @@ function onTranspose(step) {
 }
 
 function resetTranspose() {
-  if (typeof MidiEngine !== 'undefined' && MidiEngine.isLoading()) return;
   if (transposeStep !== 0) {
     transposeStep = 0;
     updateTransposeUI();

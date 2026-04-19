@@ -72,6 +72,129 @@ async function setTempoThroughControl(page, selector, value) {
   await page.waitForTimeout(250);
 }
 
+async function setTempoInputOnly(page, selector, value) {
+  await page.evaluate(({ selector, value }) => {
+    const input = document.querySelector(selector);
+    if (!input) throw new Error(`Control not found: ${selector}`);
+
+    input.value = String(value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }, { selector, value });
+  await page.waitForTimeout(250);
+}
+
+async function commitTempoControl(page, selector) {
+  await page.evaluate((selectorValue) => {
+    const input = document.querySelector(selectorValue);
+    if (!input) throw new Error(`Control not found: ${selectorValue}`);
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }, selector);
+  await page.waitForTimeout(250);
+}
+
+async function probeCurrentSongPdfTempo(page) {
+  return await page.evaluate(async () => {
+    const clampTempo = (value) => {
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed)) return 76;
+      const rounded = Math.round(parsed);
+      return Math.max(30, Math.min(220, rounded));
+    };
+
+    const detectTempo = (pdfText) => {
+      const normalized = String(pdfText || '').replace(/\s+/g, ' ').trim();
+
+      const symbolMatch = normalized.match(/(?:^|[\s(])(?:J|j|Q|q|♩|♪|𝅘𝅥|𝅘𝅥𝅮)\s*[:=]\s*(\d{2,3})(?=\D|$)/);
+      if (symbolMatch) {
+        return { detectedTempo: clampTempo(symbolMatch[1]), matchType: 'symbol' };
+      }
+
+      const bpmLabelMatch = normalized.match(/(?:tempo|tempi|bpm)\s*[:=]?\s*(\d{2,3})\b/i);
+      if (bpmLabelMatch) {
+        return { detectedTempo: clampTempo(bpmLabelMatch[1]), matchType: 'label' };
+      }
+
+      const looseTempoMatch = normalized.match(/(?:^|[^0-9A-Za-z])=\s*(\d{2,3})\b/);
+      if (looseTempoMatch) {
+        return { detectedTempo: clampTempo(looseTempoMatch[1]), matchType: 'loose' };
+      }
+
+      return { detectedTempo: 76, matchType: 'fallback' };
+    };
+
+    let songTitle = '';
+    let pdfHref = '';
+    if (Array.isArray(pujianItems) && Number.isFinite(currentSongIndex) && pujianItems[currentSongIndex]) {
+      const currentSong = pujianItems[currentSongIndex];
+      songTitle = String(currentSong.judul || '');
+      pdfHref = String(currentSong.fileHref || '');
+    }
+
+    if (!pdfHref && typeof window._midiCurrentlyLoadedRawUrl === 'string') {
+      pdfHref = window._midiCurrentlyLoadedRawUrl
+        .replace(/\/midi\//i, '/pdf/')
+        .replace(/\.mid$/i, '.pdf');
+    }
+
+    if (!pdfHref) {
+      throw new Error('Unable to resolve current song PDF URL');
+    }
+
+    if (typeof pdfjsLib === 'undefined' || typeof pdfjsLib.getDocument !== 'function') {
+      throw new Error('pdfjsLib runtime unavailable');
+    }
+
+    const loadingTask = pdfjsLib.getDocument({
+      url: pdfHref,
+      standardFontDataUrl: 'https://mozilla.github.io/pdf.js/standard_fonts/',
+    });
+    const doc = await loadingTask.promise;
+    const page1 = await doc.getPage(1);
+    const textContent = await page1.getTextContent();
+    const pdfText = textContent.items.map((item) => item.str).join(' ');
+    const detection = detectTempo(pdfText);
+
+    const defaultTempo = typeof getCurrentSongDefaultTempoBpm === 'function'
+      ? getCurrentSongDefaultTempoBpm()
+      : null;
+    const currentTempo = typeof getCurrentSongTempoBpm === 'function'
+      ? getCurrentSongTempoBpm()
+      : null;
+    const engineBaseTempo = (typeof MidiEngine !== 'undefined' && typeof MidiEngine.getTempoBaseBpm === 'function')
+      ? MidiEngine.getTempoBaseBpm()
+      : null;
+
+    return {
+      songTitle,
+      pdfHref,
+      detectedTempo: detection.detectedTempo,
+      matchType: detection.matchType,
+      defaultTempo,
+      currentTempo,
+      engineBaseTempo,
+    };
+  });
+}
+
+async function findSongWithExplicitPdfTempo(page, maxTransitions = 18) {
+  for (let i = 0; i <= maxTransitions; i += 1) {
+    const probe = await probeCurrentSongPdfTempo(page);
+    if (probe.matchType !== 'fallback') {
+      return probe;
+    }
+
+    if (i < maxTransitions) {
+      await page.evaluate(() => {
+        if (typeof onNextSong === 'function') onNextSong();
+      });
+      await page.waitForTimeout(2600);
+    }
+  }
+
+  throw new Error(`No explicit PDF tempo marker found after ${maxTransitions + 1} songs`);
+}
+
 async function openTempoPopover(page, toggleSelector) {
   const toggle = page.locator(toggleSelector);
   await toggle.click();
@@ -110,6 +233,15 @@ async function getTempoState(page) {
     };
     return state;
   });
+}
+
+function normalizeKeyLabel(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function applyTransposeStepRule(current, step) {
+  const next = Number(current) + Number(step);
+  return next > 11 || next < -11 ? 0 : next;
 }
 
 async function setPageZoom(page, zoomScale) {
@@ -263,6 +395,14 @@ try {
     assert(state.defaultTempo === 76, `expected 76, got ${state.defaultTempo}`);
   });
 
+  await test('PDF-written tempo is applied to song default and MIDI engine base tempo', async () => {
+    const probe = await findSongWithExplicitPdfTempo(page, 18);
+    assert(Number.isFinite(probe.detectedTempo), `detected tempo is invalid for ${probe.songTitle}`);
+    assert(probe.defaultTempo === probe.detectedTempo, `default tempo mismatch for ${probe.songTitle}: detected=${probe.detectedTempo}, default=${probe.defaultTempo}, matchType=${probe.matchType}`);
+    assert(probe.engineBaseTempo === probe.detectedTempo, `MidiEngine base tempo mismatch for ${probe.songTitle}: detected=${probe.detectedTempo}, engineBase=${probe.engineBaseTempo}`);
+    assert(probe.currentTempo === probe.detectedTempo, `current tempo mismatch for ${probe.songTitle}: detected=${probe.detectedTempo}, current=${probe.currentTempo}`);
+  });
+
   await test('Full player slider updates tempo state and mirrored controls', async () => {
     await setTempoThroughControl(page, '#custom-tempo-slider', 92);
     const state = await getTempoState(page);
@@ -274,6 +414,43 @@ try {
     assert(state.miniValue === 92, `mini readout mismatch: ${state.miniValue}`);
     assert(/92\s*BPM/i.test(String(state.customLabel).replace(/\s+/g, ' ')), `custom label mismatch: ${state.customLabel}`);
     assert(/92\s*BPM/i.test(String(state.miniLabel).replace(/\s+/g, ' ')), `mini label mismatch: ${state.miniLabel}`);
+  });
+
+  await test('Slider input does not apply tempo until release/change', async () => {
+    await setTempoThroughControl(page, '#custom-tempo-slider', 96);
+
+    await setTempoInputOnly(page, '#custom-tempo-slider', 128);
+    const duringDrag = await getTempoState(page);
+    assert(duringDrag.currentTempo === 96, `tempo changed before release: ${duringDrag.currentTempo}`);
+
+    await commitTempoControl(page, '#custom-tempo-slider');
+    const afterRelease = await getTempoState(page);
+    assert(afterRelease.currentTempo === 128, `tempo not applied after release: ${afterRelease.currentTempo}`);
+    assert(afterRelease.miniSlider === 128, `mini slider not mirrored after release: ${afterRelease.miniSlider}`);
+    assert(afterRelease.miniInput === 128, `mini input not mirrored after release: ${afterRelease.miniInput}`);
+  });
+
+  await test('Rapid repeated tempo changes discard stale renders and keep latest value', async () => {
+    const targetTempo = 116;
+
+    await page.evaluate(() => {
+      if (typeof setMidiTempoBpm !== 'function') throw new Error('setMidiTempoBpm is unavailable');
+      setMidiTempoBpm(108);
+      setMidiTempoBpm(132);
+      setMidiTempoBpm(116);
+    });
+
+    await page.waitForFunction((target) => {
+      if (typeof MidiEngine === 'undefined') return false;
+      if (typeof MidiEngine.getTempoBpm !== 'function') return false;
+      if (typeof MidiEngine.isLoading === 'function' && MidiEngine.isLoading()) return false;
+      return MidiEngine.getTempoBpm() === target;
+    }, targetTempo, { timeout: 12000 });
+
+    const state = await getTempoState(page);
+    assert(state.currentTempo === targetTempo, `current tempo mismatch after rapid updates: ${state.currentTempo}`);
+    assert(state.customSlider === targetTempo, `custom slider mismatch after rapid updates: ${state.customSlider}`);
+    assert(state.miniSlider === targetTempo, `mini slider mismatch after rapid updates: ${state.miniSlider}`);
   });
 
   await test('Full player numeric input updates tempo state', async () => {
@@ -391,6 +568,101 @@ try {
       assert(after.time >= 8, `time reset too close to start after transpose: ${after.time}`);
       assert(Math.abs(after.time - before.time) <= 6, `seek position drift too large after transpose: before=${before.time}, after=${after.time}`);
     }
+  });
+
+  await test('Rapid repeated transpose changes discard stale renders and keep latest step', async () => {
+    const before = await page.evaluate(() => {
+      const current = Number(typeof transposeStep === 'number' ? transposeStep : 0);
+      return {
+        step: current,
+        engineStep: (typeof MidiEngine !== 'undefined' && typeof MidiEngine.getTranspose === 'function')
+          ? Number(MidiEngine.getTranspose())
+          : null,
+      };
+    });
+
+    const expected = applyTransposeStepRule(applyTransposeStepRule(applyTransposeStepRule(before.step, 1), 1), -1);
+
+    await page.evaluate(() => {
+      if (typeof onTranspose !== 'function') throw new Error('onTranspose is unavailable');
+      onTranspose(1);
+      onTranspose(1);
+      onTranspose(-1);
+    });
+
+    await page.waitForFunction((targetStep) => {
+      if (typeof transposeStep !== 'number') return false;
+      if (transposeStep !== targetStep) return false;
+      if (typeof MidiEngine === 'undefined') return false;
+      if (typeof MidiEngine.isLoading === 'function' && MidiEngine.isLoading()) return false;
+      if (typeof MidiEngine.getRenderedTranspose !== 'function') return false;
+      return Number(MidiEngine.getRenderedTranspose()) === targetStep;
+    }, expected, { timeout: 15000 });
+
+    const after = await page.evaluate(() => {
+      return {
+        step: Number(typeof transposeStep === 'number' ? transposeStep : NaN),
+        engineStep: (typeof MidiEngine !== 'undefined' && typeof MidiEngine.getTranspose === 'function')
+          ? Number(MidiEngine.getTranspose())
+          : null,
+        renderedStep: (typeof MidiEngine !== 'undefined' && typeof MidiEngine.getRenderedTranspose === 'function')
+          ? Number(MidiEngine.getRenderedTranspose())
+          : null,
+      };
+    });
+
+    assert(after.step === expected, `transposeStep mismatch after rapid updates: ${after.step}, expected=${expected}`);
+    assert(after.engineStep === expected, `MidiEngine transpose mismatch after rapid updates: ${after.engineStep}, expected=${expected}`);
+    assert(after.renderedStep === expected, `rendered transpose mismatch after rapid updates: ${after.renderedStep}, expected=${expected}`);
+  });
+
+  await test('Notation transpose selector accepts a new selection while previous selection is still loading', async () => {
+    const selection = await page.evaluate(() => {
+      const visibleBtn = Array.from(document.querySelectorAll('.family-chord-btn')).find((btn) => {
+        const style = getComputedStyle(btn);
+        return style.display !== 'none' && style.visibility !== 'hidden' && btn.offsetWidth > 0 && btn.offsetHeight > 0;
+      });
+      if (!visibleBtn) throw new Error('No visible family chord button found');
+
+      const dropdown = visibleBtn.parentElement?.querySelector('.family-chord-dropdown')
+        || document.querySelector('.family-chord-dropdown');
+      if (!dropdown) throw new Error('Family chord dropdown not found');
+
+      const options = Array.from(dropdown.querySelectorAll('.family-chord-option'));
+      if (options.length < 2) throw new Error('Not enough family chord options');
+
+      const currentLabel = String(visibleBtn.textContent || '').replace(/\s+/g, ' ').trim();
+      const candidates = options.filter((opt) => String(opt.textContent || '').replace(/\s+/g, ' ').trim() !== currentLabel);
+      if (candidates.length < 2) throw new Error('Need at least two candidate transpose options');
+
+      const first = candidates[0];
+      const second = candidates[1];
+      const secondLabel = String(second.textContent || '').replace(/\s+/g, ' ').trim();
+
+      first.click();
+      second.click();
+
+      return { secondLabel };
+    });
+
+    await page.waitForFunction(() => {
+      if (typeof MidiEngine === 'undefined') return true;
+      if (typeof MidiEngine.isLoading !== 'function') return true;
+      return !MidiEngine.isLoading();
+    }, undefined, { timeout: 15000 });
+
+    const finalLabel = await page.evaluate(() => {
+      const visibleBtn = Array.from(document.querySelectorAll('.family-chord-btn')).find((btn) => {
+        const style = getComputedStyle(btn);
+        return style.display !== 'none' && style.visibility !== 'hidden' && btn.offsetWidth > 0 && btn.offsetHeight > 0;
+      });
+      return visibleBtn ? String(visibleBtn.textContent || '').replace(/\s+/g, ' ').trim() : '';
+    });
+
+    assert(
+      normalizeKeyLabel(finalLabel) === normalizeKeyLabel(selection.secondLabel),
+      `final notation key mismatch after rapid selection: final=${finalLabel}, expected=${selection.secondLabel}`,
+    );
   });
 
   await test('Switching songs resets tempo to new song default', async () => {

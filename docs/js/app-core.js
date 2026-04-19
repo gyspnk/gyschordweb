@@ -1205,10 +1205,6 @@ function setupEventListeners() {
     });
 
     [customTempoSlider, miniTempoSlider].filter(Boolean).forEach((slider) => {
-      slider.addEventListener("input", (e) => {
-        setMidiTempoBpm(e.target.value);
-      });
-
       slider.addEventListener("change", (e) => {
         setMidiTempoBpm(e.target.value);
       });

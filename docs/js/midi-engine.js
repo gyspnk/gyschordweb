@@ -63,7 +63,6 @@ var MidiEngine = (function () {
   var _tempoBpm = _DEFAULT_TEMPO_BPM;
   var _tempoRate = 1.0;
   var _tempoApplyTimer = null;
-  var _tempoApplyDebounceMs = 140;
 
   // Preload cache (supports multiple pre-rendered buffers)
   var _preloadCache = {};        // key → { buffer, transpose, instrument }
@@ -443,15 +442,10 @@ var MidiEngine = (function () {
   function _scheduleTempoApply() {
     if (!_currentMidiBuffer) return;
 
+    // Latest-wins behavior: apply immediately so repeated tempo changes
+    // always start a fresh render right away and stale renders are discarded
+    // by _loadGeneration checks inside _renderAndSwap.
     _clearPendingTempoApply();
-    if (_playing) {
-      _tempoApplyTimer = setTimeout(function () {
-        _tempoApplyTimer = null;
-        _applyTempoToCurrentSong();
-      }, _tempoApplyDebounceMs);
-      return;
-    }
-
     _applyTempoToCurrentSong();
   }
 
@@ -778,7 +772,7 @@ var MidiEngine = (function () {
     _isLoading = true;
 
     return _renderToBuffer(midiBuffer, opts).then(function (audioBuffer) {
-      if (_loadGeneration !== thisGen) return;
+      if (_loadGeneration !== thisGen) return false;
 
       _currentBuffer = audioBuffer;
       _duration = audioBuffer.duration;
@@ -805,6 +799,7 @@ var MidiEngine = (function () {
           _stopDeck(oldDeck, fadeMs);
 
           if (_onStateChange) _onStateChange(true, startAt, _duration);
+          return true;
         });
       } else {
         // Not playing — just update buffer
@@ -812,9 +807,11 @@ var MidiEngine = (function () {
         _deckA = null;
         _currentTime = Math.min(pausedTime, _duration);
         if (_onStateChange) _onStateChange(false, _currentTime, _duration);
+        return true;
       }
     }).catch(function () {
       _isLoading = false;
+      return false;
     });
   }
 
@@ -939,9 +936,11 @@ var MidiEngine = (function () {
       transpose: step,
       instrument: _currentInstrument,
       tempoRate: _tempoRate
-    }).then(function () {
-      // After swap, the new deck has the correct pitch — reset detune offset
-      _renderedTranspose = step;
+    }).then(function (applied) {
+      // Only update rendered transpose for the latest winning request.
+      if (applied && _currentTranspose === step) {
+        _renderedTranspose = step;
+      }
     });
   }
 
