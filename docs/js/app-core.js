@@ -672,6 +672,7 @@ function syncTempoControlsUI() {
 
 function setCurrentSongTempo(defaultBpm, options = {}) {
   const shouldResetCurrent = options.resetCurrent !== false;
+  const shouldSkipApply = options.skipApply === true;
   currentSongDefaultTempoBpm = clampMidiTempoBpm(defaultBpm, currentSongDefaultTempoBpm);
   if (shouldResetCurrent) {
     currentTempoBpm = currentSongDefaultTempoBpm;
@@ -688,7 +689,7 @@ function setCurrentSongTempo(defaultBpm, options = {}) {
     }
     if (typeof MidiEngine.setTempoBpm === "function") {
       MidiEngine.setTempoBpm(currentTempoBpm, {
-        skipApply: false,
+        skipApply: shouldSkipApply,
       });
     }
   }

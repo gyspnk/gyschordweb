@@ -1,0 +1,3286 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic "Hymns of Praise, Kidung Rohani" [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: Hymns of Praise
+        - heading "Kidung Rohani" [level=1] [ref=e6]
+      - img "Hymns of Praise logo" [ref=e7]
+  - generic [ref=e8]:
+    - generic [ref=e9]: search
+    - textbox "Cari judul atau nomor..." [ref=e10]
+  - main [ref=e11]:
+    - list [ref=e12]:
+      - listitem [ref=e13] [cursor=pointer]:
+        - generic [ref=e14]: "001"
+        - link "Pujilah Allah Yang Maha Esa":
+          - /url: assets/pdf/001_Pujilah Allah Yang Maha Esa.pdf
+        - button "Tambah ke Playlist" [ref=e15]:
+          - generic [ref=e16]: playlist_add
+      - listitem [ref=e17] [cursor=pointer]:
+        - generic [ref=e18]: "002"
+        - link "Pujilah Allah Yang Mahakudus":
+          - /url: assets/pdf/002_Pujilah Allah Yang Mahakudus.pdf
+        - button "Tambah ke Playlist" [ref=e19]:
+          - generic [ref=e20]: playlist_add
+      - listitem [ref=e21] [cursor=pointer]:
+        - generic [ref=e22]: "003"
+        - link "Pujilah Allah Yang Benar":
+          - /url: assets/pdf/003_Pujilah Allah Yang Benar.pdf
+        - button "Tambah ke Playlist" [ref=e23]:
+          - generic [ref=e24]: playlist_add
+      - listitem [ref=e25] [cursor=pointer]:
+        - generic [ref=e26]: "004"
+        - link "Pujilah Bapa Yang di Surga":
+          - /url: assets/pdf/004_Pujilah Bapa Yang di Surga.pdf
+        - button "Tambah ke Playlist" [ref=e27]:
+          - generic [ref=e28]: playlist_add
+      - listitem [ref=e29] [cursor=pointer]:
+        - generic [ref=e30]: "005"
+        - link "Segala Sesuatu Memuji Allah":
+          - /url: assets/pdf/005_Segala Sesuatu Memuji Allah.pdf
+        - button "Tambah ke Playlist" [ref=e31]:
+          - generic [ref=e32]: playlist_add
+      - listitem [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: "006"
+        - link "Pujilah Ciptaan-Nya":
+          - /url: assets/pdf/006_Pujilah Ciptaan-Nya.pdf
+        - button "Tambah ke Playlist" [ref=e35]:
+          - generic [ref=e36]: playlist_add
+      - listitem [ref=e37] [cursor=pointer]:
+        - generic [ref=e38]: "007"
+        - link "Segala Sesuatu Memuji Tuhan":
+          - /url: assets/pdf/007_Segala Sesuatu Memuji Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e39]:
+          - generic [ref=e40]: playlist_add
+      - listitem [ref=e41] [cursor=pointer]:
+        - generic [ref=e42]: "008"
+        - link "Pujilah Allah":
+          - /url: assets/pdf/008_Pujilah Allah.pdf
+        - button "Tambah ke Playlist" [ref=e43]:
+          - generic [ref=e44]: playlist_add
+      - listitem [ref=e45] [cursor=pointer]:
+        - generic [ref=e46]: "009"
+        - link "Bersorak Bagi Tuhan":
+          - /url: assets/pdf/009_Bersorak Bagi Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e47]:
+          - generic [ref=e48]: playlist_add
+      - listitem [ref=e49] [cursor=pointer]:
+        - generic [ref=e50]: "010"
+        - link "Muliakanlah Yesus":
+          - /url: assets/pdf/010_Muliakanlah Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e51]:
+          - generic [ref=e52]: playlist_add
+      - listitem [ref=e53] [cursor=pointer]:
+        - generic [ref=e54]: "011"
+        - link "Gembira di Dalam Tuhan":
+          - /url: assets/pdf/011_Gembira di Dalam Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e55]:
+          - generic [ref=e56]: playlist_add
+      - listitem [ref=e57] [cursor=pointer]:
+        - generic [ref=e58]: "012"
+        - link "Mulia Nama Yesus":
+          - /url: assets/pdf/012_Mulia Nama Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e59]:
+          - generic [ref=e60]: playlist_add
+      - listitem [ref=e61] [cursor=pointer]:
+        - generic [ref=e62]: "013"
+        - link "Tiada yang Seperti Yesus":
+          - /url: assets/pdf/013_Tiada yang Seperti Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e63]:
+          - generic [ref=e64]: playlist_add
+      - listitem [ref=e65] [cursor=pointer]:
+        - generic [ref=e66]: "014"
+        - link "Kristus Maharaja":
+          - /url: assets/pdf/014_Kristus Maharaja.pdf
+        - button "Tambah ke Playlist" [ref=e67]:
+          - generic [ref=e68]: playlist_add
+      - listitem [ref=e69] [cursor=pointer]:
+        - generic [ref=e70]: "015"
+        - link "Pujilah Yesus":
+          - /url: assets/pdf/015_Pujilah Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e71]:
+          - generic [ref=e72]: playlist_add
+      - listitem [ref=e73] [cursor=pointer]:
+        - generic [ref=e74]: "016"
+        - link "Sembahlah Tuhan Langit dan Bumi":
+          - /url: assets/pdf/016_Sembahlah Tuhan Langit dan Bumi.pdf
+        - button "Tambah ke Playlist" [ref=e75]:
+          - generic [ref=e76]: playlist_add
+      - listitem [ref=e77] [cursor=pointer]:
+        - generic [ref=e78]: "017"
+        - link "Pujilah Kasih Tuhan":
+          - /url: assets/pdf/017_Pujilah Kasih Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e79]:
+          - generic [ref=e80]: playlist_add
+      - listitem [ref=e81] [cursor=pointer]:
+        - generic [ref=e82]: "018"
+        - link "Pujilah Anugerah Tuhan":
+          - /url: assets/pdf/018_Pujilah Anugerah Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e83]:
+          - generic [ref=e84]: playlist_add
+      - listitem [ref=e85] [cursor=pointer]:
+        - generic [ref=e86]: "019"
+        - link "Hosana":
+          - /url: assets/pdf/019_Hosana.pdf
+        - button "Tambah ke Playlist" [ref=e87]:
+          - generic [ref=e88]: playlist_add
+      - listitem [ref=e89] [cursor=pointer]:
+        - generic [ref=e90]: "020"
+        - link "Pujilah Tuhan Sang Raja":
+          - /url: assets/pdf/020_Pujilah Tuhan Sang Raja.pdf
+        - button "Tambah ke Playlist" [ref=e91]:
+          - generic [ref=e92]: playlist_add
+      - listitem [ref=e93] [cursor=pointer]:
+        - generic [ref=e94]: "021"
+        - link "Yesus Terelok":
+          - /url: assets/pdf/021_Yesus Terelok.pdf
+        - button "Tambah ke Playlist" [ref=e95]:
+          - generic [ref=e96]: playlist_add
+      - listitem [ref=e97] [cursor=pointer]:
+        - generic [ref=e98]: "022"
+        - link "Pujilah Alkitab":
+          - /url: assets/pdf/022_Pujilah Alkitab.pdf
+        - button "Tambah ke Playlist" [ref=e99]:
+          - generic [ref=e100]: playlist_add
+      - listitem [ref=e101] [cursor=pointer]:
+        - generic [ref=e102]: "023"
+        - link "Firman Tuhan Sungguh Indah":
+          - /url: assets/pdf/023_Firman Tuhan Sungguh Indah.pdf
+        - button "Tambah ke Playlist" [ref=e103]:
+          - generic [ref=e104]: playlist_add
+      - listitem [ref=e105] [cursor=pointer]:
+        - generic [ref=e106]: "024"
+        - link "Firman Kehidupan":
+          - /url: assets/pdf/024_Firman Kehidupan.pdf
+        - button "Tambah ke Playlist" [ref=e107]:
+          - generic [ref=e108]: playlist_add
+      - listitem [ref=e109] [cursor=pointer]:
+        - generic [ref=e110]: "025"
+        - link "Firman Allah Murni":
+          - /url: assets/pdf/025_Firman Allah Murni.pdf
+        - button "Tambah ke Playlist" [ref=e111]:
+          - generic [ref=e112]: playlist_add
+      - listitem [ref=e113] [cursor=pointer]:
+        - generic [ref=e114]: "026"
+        - link "Tuhan! Berfirmanlah Padaku":
+          - /url: assets/pdf/026_Tuhan! Berfirmanlah Padaku.pdf
+        - button "Tambah ke Playlist" [ref=e115]:
+          - generic [ref=e116]: playlist_add
+      - listitem [ref=e117] [cursor=pointer]:
+        - generic [ref=e118]: "027"
+        - link "Yesus Cintaku":
+          - /url: assets/pdf/027_Yesus Cintaku.pdf
+        - button "Tambah ke Playlist" [ref=e119]:
+          - generic [ref=e120]: playlist_add
+      - listitem [ref=e121] [cursor=pointer]:
+        - generic [ref=e122]: "028"
+        - link "Yesus Pengasih":
+          - /url: assets/pdf/028_Yesus Pengasih.pdf
+        - button "Tambah ke Playlist" [ref=e123]:
+          - generic [ref=e124]: playlist_add
+      - listitem [ref=e125] [cursor=pointer]:
+        - generic [ref=e126]: "029"
+        - link "Tuhan Mencari Domba yang Hilang":
+          - /url: assets/pdf/029_Tuhan Mencari Domba yang Hilang.pdf
+        - button "Tambah ke Playlist" [ref=e127]:
+          - generic [ref=e128]: playlist_add
+      - listitem [ref=e129] [cursor=pointer]:
+        - generic [ref=e130]: "030"
+        - link "Kasih Tuhan Mencariku":
+          - /url: assets/pdf/030_Kasih Tuhan Mencariku.pdf
+        - button "Tambah ke Playlist" [ref=e131]:
+          - generic [ref=e132]: playlist_add
+      - listitem [ref=e133] [cursor=pointer]:
+        - generic [ref=e134]: "031"
+        - link "Semuanya Demiku":
+          - /url: assets/pdf/031_Semuanya Demiku.pdf
+        - button "Tambah ke Playlist" [ref=e135]:
+          - generic [ref=e136]: playlist_add
+      - listitem [ref=e137] [cursor=pointer]:
+        - generic [ref=e138]: "032"
+        - link "Yesus Menerima Orang Berdosa":
+          - /url: assets/pdf/032_Yesus Menerima Orang Berdosa.pdf
+        - button "Tambah ke Playlist" [ref=e139]:
+          - generic [ref=e140]: playlist_add
+      - listitem [ref=e141] [cursor=pointer]:
+        - generic [ref=e142]: "033"
+        - link "Ke Yerusalem Baru":
+          - /url: assets/pdf/033_Ke Yerusalem Baru.pdf
+        - button "Tambah ke Playlist" [ref=e143]:
+          - generic [ref=e144]: playlist_add
+      - listitem [ref=e145] [cursor=pointer]:
+        - generic [ref=e146]: "034"
+        - link "Yesus Memanggilmu":
+          - /url: assets/pdf/034_Yesus Memanggilmu.pdf
+        - button "Tambah ke Playlist" [ref=e147]:
+          - generic [ref=e148]: playlist_add
+      - listitem [ref=e149] [cursor=pointer]:
+        - generic [ref=e150]: "035"
+        - link "Hujan Malam Berlalu, Terbitlah Terang":
+          - /url: assets/pdf/035_Hujan Malam Berlalu, Terbitlah Terang.pdf
+        - button "Tambah ke Playlist" [ref=e151]:
+          - generic [ref=e152]: playlist_add
+      - listitem [ref=e153] [cursor=pointer]:
+        - generic [ref=e154]: "036"
+        - link "Suara Pengharapan":
+          - /url: assets/pdf/036_Suara Pengharapan.pdf
+        - button "Tambah ke Playlist" [ref=e155]:
+          - generic [ref=e156]: playlist_add
+      - listitem [ref=e157] [cursor=pointer]:
+        - generic [ref=e158]: "037"
+        - link "Dosa di Putihkan Seperti Salju":
+          - /url: assets/pdf/037_Dosa di Putihkan Seperti Salju.pdf
+        - button "Tambah ke Playlist" [ref=e159]:
+          - generic [ref=e160]: playlist_add
+      - listitem [ref=e161] [cursor=pointer]:
+        - generic [ref=e162]: "038"
+        - link "Aku Mendengar Suara Yesus":
+          - /url: assets/pdf/038_Aku Mendengar Suara Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e163]:
+          - generic [ref=e164]: playlist_add
+      - listitem [ref=e165] [cursor=pointer]:
+        - generic [ref=e166]: "039"
+        - link "Hanya Darah-Nya Yang Berkuasa":
+          - /url: assets/pdf/039_Hanya Darah-Nya Yang Berkuasa.pdf
+        - button "Tambah ke Playlist" [ref=e167]:
+          - generic [ref=e168]: playlist_add
+      - listitem [ref=e169] [cursor=pointer]:
+        - generic [ref=e170]: "040"
+        - link "Darah Yesus":
+          - /url: assets/pdf/040_Darah Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e171]:
+          - generic [ref=e172]: playlist_add
+      - listitem [ref=e173] [cursor=pointer]:
+        - generic [ref=e174]: "041"
+        - link "Darah Tuhan Berkuasa":
+          - /url: assets/pdf/041_Darah Tuhan Berkuasa.pdf
+        - button "Tambah ke Playlist" [ref=e175]:
+          - generic [ref=e176]: playlist_add
+      - listitem [ref=e177] [cursor=pointer]:
+        - generic [ref=e178]: "042"
+        - link "Darah Anak Domba":
+          - /url: assets/pdf/042_Darah Anak Domba.pdf
+        - button "Tambah ke Playlist" [ref=e179]:
+          - generic [ref=e180]: playlist_add
+      - listitem [ref=e181] [cursor=pointer]:
+        - generic [ref=e182]: "043"
+        - link "DarahNya Membersihkan":
+          - /url: assets/pdf/043_DarahNya Membersihkan.pdf
+        - button "Tambah ke Playlist" [ref=e183]:
+          - generic [ref=e184]: playlist_add
+      - listitem [ref=e185] [cursor=pointer]:
+        - generic [ref=e186]: "044"
+        - link "Hanya Tuhan Penolongku":
+          - /url: assets/pdf/044_Hanya Tuhan Penolongku.pdf
+        - button "Tambah ke Playlist" [ref=e187]:
+          - generic [ref=e188]: playlist_add
+      - listitem [ref=e189] [cursor=pointer]:
+        - generic [ref=e190]: "045"
+        - link "Menyelamatkan Orang Berdosa":
+          - /url: assets/pdf/045_Menyelamatkan Orang Berdosa.pdf
+        - button "Tambah ke Playlist" [ref=e191]:
+          - generic [ref=e192]: playlist_add
+      - listitem [ref=e193] [cursor=pointer]:
+        - generic [ref=e194]: "046"
+        - link "Tuhan Buka Mata Hatiku":
+          - /url: assets/pdf/046_Tuhan Buka Mata Hatiku.pdf
+        - button "Tambah ke Playlist" [ref=e195]:
+          - generic [ref=e196]: playlist_add
+      - listitem [ref=e197] [cursor=pointer]:
+        - generic [ref=e198]: "047"
+        - link "Yesus Telah Tolongku":
+          - /url: assets/pdf/047_Yesus Telah Tolongku.pdf
+        - button "Tambah ke Playlist" [ref=e199]:
+          - generic [ref=e200]: playlist_add
+      - listitem [ref=e201] [cursor=pointer]:
+        - generic [ref=e202]: "048"
+        - link "Anugerah di Atas Salib":
+          - /url: assets/pdf/048_Anugerah di Atas Salib.pdf
+        - button "Tambah ke Playlist" [ref=e203]:
+          - generic [ref=e204]: playlist_add
+      - listitem [ref=e205] [cursor=pointer]:
+        - generic [ref=e206]: "049"
+        - link "Tuhan Selamatkanku":
+          - /url: assets/pdf/049_Tuhan Selamatkanku.pdf
+        - button "Tambah ke Playlist" [ref=e207]:
+          - generic [ref=e208]: playlist_add
+      - listitem [ref=e209] [cursor=pointer]:
+        - generic [ref=e210]: "050"
+        - link "Hanya Yesus":
+          - /url: assets/pdf/050_Hanya Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e211]:
+          - generic [ref=e212]: playlist_add
+      - listitem [ref=e213] [cursor=pointer]:
+        - generic [ref=e214]: 051A
+        - link "Batu Zaman":
+          - /url: assets/pdf/051A_Batu Zaman.pdf
+        - button "Tambah ke Playlist" [ref=e215]:
+          - generic [ref=e216]: playlist_add
+      - listitem [ref=e217] [cursor=pointer]:
+        - generic [ref=e218]: 051B
+        - link "Batu Zaman":
+          - /url: assets/pdf/051B_Batu Zaman.pdf
+        - button "Tambah ke Playlist" [ref=e219]:
+          - generic [ref=e220]: playlist_add
+      - listitem [ref=e221] [cursor=pointer]:
+        - generic [ref=e222]: "052"
+        - link "Ku Dengar Suara Yesus":
+          - /url: assets/pdf/052_Ku Dengar Suara Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e223]:
+          - generic [ref=e224]: playlist_add
+      - listitem [ref=e225] [cursor=pointer]:
+        - generic [ref=e226]: "053"
+        - link "Allah Bapa Pengasih":
+          - /url: assets/pdf/053_Allah Bapa Pengasih.pdf
+        - button "Tambah ke Playlist" [ref=e227]:
+          - generic [ref=e228]: playlist_add
+      - listitem [ref=e229] [cursor=pointer]:
+        - generic [ref=e230]: "054"
+        - link "Bebas Dari Gelap Menuju Terang":
+          - /url: assets/pdf/054_Bebas Dari Gelap Menuju Terang.pdf
+        - button "Tambah ke Playlist" [ref=e231]:
+          - generic [ref=e232]: playlist_add
+      - listitem [ref=e233] [cursor=pointer]:
+        - generic [ref=e234]: "055"
+        - link "Tuhan Bebaskan":
+          - /url: assets/pdf/055_Tuhan Bebaskan.pdf
+        - button "Tambah ke Playlist" [ref=e235]:
+          - generic [ref=e236]: playlist_add
+      - listitem [ref=e237] [cursor=pointer]:
+        - generic [ref=e238]: "056"
+        - link "Tahun Yobel Sudah Tiba":
+          - /url: assets/pdf/056_Tahun Yobel Sudah Tiba.pdf
+        - button "Tambah ke Playlist" [ref=e239]:
+          - generic [ref=e240]: playlist_add
+      - listitem [ref=e241] [cursor=pointer]:
+        - generic [ref=e242]: "057"
+        - link "Dosaku Amat Berat":
+          - /url: assets/pdf/057_Dosaku Amat Berat.pdf
+        - button "Tambah ke Playlist" [ref=e243]:
+          - generic [ref=e244]: playlist_add
+      - listitem [ref=e245] [cursor=pointer]:
+        - generic [ref=e246]: "058"
+        - link "Yesus Pimpin":
+          - /url: assets/pdf/058_Yesus Pimpin.pdf
+        - button "Tambah ke Playlist" [ref=e247]:
+          - generic [ref=e248]: playlist_add
+      - listitem [ref=e249] [cursor=pointer]:
+        - generic [ref=e250]: "059"
+        - link "Mohon Pimpinan Tuhan":
+          - /url: assets/pdf/059_Mohon Pimpinan Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e251]:
+          - generic [ref=e252]: playlist_add
+      - listitem [ref=e253] [cursor=pointer]:
+        - generic [ref=e254]: "060"
+        - link "Menempuh Jalan Surga":
+          - /url: assets/pdf/060_Menempuh Jalan Surga.pdf
+        - button "Tambah ke Playlist" [ref=e255]:
+          - generic [ref=e256]: playlist_add
+      - listitem [ref=e257] [cursor=pointer]:
+        - generic [ref=e258]: "061"
+        - link "Tuhan Pimpin Jalanku":
+          - /url: assets/pdf/061_Tuhan Pimpin Jalanku.pdf
+        - button "Tambah ke Playlist" [ref=e259]:
+          - generic [ref=e260]: playlist_add
+      - listitem [ref=e261] [cursor=pointer]:
+        - generic [ref=e262]: "062"
+        - link "Semoga Tuhan Menyertai":
+          - /url: assets/pdf/062_Semoga Tuhan Menyertai.pdf
+        - button "Tambah ke Playlist" [ref=e263]:
+          - generic [ref=e264]: playlist_add
+      - listitem [ref=e265] [cursor=pointer]:
+        - generic [ref=e266]: "063"
+        - link "Semoga Tuhan Pimpin":
+          - /url: assets/pdf/063_Semoga Tuhan Pimpin.pdf
+        - button "Tambah ke Playlist" [ref=e267]:
+          - generic [ref=e268]: playlist_add
+      - listitem [ref=e269] [cursor=pointer]:
+        - generic [ref=e270]: "064"
+        - link "Terang Tuhan Memimpin":
+          - /url: assets/pdf/064_Terang Tuhan Memimpin.pdf
+        - button "Tambah ke Playlist" [ref=e271]:
+          - generic [ref=e272]: playlist_add
+      - listitem [ref=e273] [cursor=pointer]:
+        - generic [ref=e274]: "065"
+        - link "Dekat Pada Tuhan":
+          - /url: assets/pdf/065_Dekat Pada Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e275]:
+          - generic [ref=e276]: playlist_add
+      - listitem [ref=e277] [cursor=pointer]:
+        - generic [ref=e278]: "066"
+        - link "Tuhan, Aku Menantikan Engkau":
+          - /url: assets/pdf/066_Tuhan, Aku Menantikan Engkau.pdf
+        - button "Tambah ke Playlist" [ref=e279]:
+          - generic [ref=e280]: playlist_add
+      - listitem [ref=e281] [cursor=pointer]:
+        - generic [ref=e282]: "067"
+        - link "Tuhan Tuntunlah Aku":
+          - /url: assets/pdf/067_Tuhan Tuntunlah Aku.pdf
+        - button "Tambah ke Playlist" [ref=e283]:
+          - generic [ref=e284]: playlist_add
+      - listitem [ref=e285] [cursor=pointer]:
+        - generic [ref=e286]: "068"
+        - link "Tuhan, Pegangilah Tanganku":
+          - /url: assets/pdf/068_Tuhan, Pegangilah Tanganku.pdf
+        - button "Tambah ke Playlist" [ref=e287]:
+          - generic [ref=e288]: playlist_add
+      - listitem [ref=e289] [cursor=pointer]:
+        - generic [ref=e290]: "069"
+        - link "Yesus Jurumudiku":
+          - /url: assets/pdf/069_Yesus Jurumudiku.pdf
+        - button "Tambah ke Playlist" [ref=e291]:
+          - generic [ref=e292]: playlist_add
+      - listitem [ref=e293] [cursor=pointer]:
+        - generic [ref=e294]: "070"
+        - link "Tuhan Sumber Segala Berkat":
+          - /url: assets/pdf/070_Tuhan Sumber Segala Berkat.pdf
+        - button "Tambah ke Playlist" [ref=e295]:
+          - generic [ref=e296]: playlist_add
+      - listitem [ref=e297] [cursor=pointer]:
+        - generic [ref=e298]: "071"
+        - link "Yesus Tuhanku":
+          - /url: assets/pdf/071_Yesus Tuhanku.pdf
+        - button "Tambah ke Playlist" [ref=e299]:
+          - generic [ref=e300]: playlist_add
+      - listitem [ref=e301] [cursor=pointer]:
+        - generic [ref=e302]: "072"
+        - link "Tuhan Segala Berkat":
+          - /url: assets/pdf/072_Tuhan Segala Berkat.pdf
+        - button "Tambah ke Playlist" [ref=e303]:
+          - generic [ref=e304]: playlist_add
+      - listitem [ref=e305] [cursor=pointer]:
+        - generic [ref=e306]: "073"
+        - link "Yesus Pemberi Berkat":
+          - /url: assets/pdf/073_Yesus Pemberi Berkat.pdf
+        - button "Tambah ke Playlist" [ref=e307]:
+          - generic [ref=e308]: playlist_add
+      - listitem [ref=e309] [cursor=pointer]:
+        - generic [ref=e310]: "074"
+        - link "Dosa di Putihkan Seperti Salju":
+          - /url: assets/pdf/074_Dosa di Putihkan Seperti Salju.pdf
+        - button "Tambah ke Playlist" [ref=e311]:
+          - generic [ref=e312]: playlist_add
+      - listitem [ref=e313] [cursor=pointer]:
+        - generic [ref=e314]: "075"
+        - link "Kristus Lahir":
+          - /url: assets/pdf/075_Kristus Lahir.pdf
+        - button "Tambah ke Playlist" [ref=e315]:
+          - generic [ref=e316]: playlist_add
+      - listitem [ref=e317] [cursor=pointer]:
+        - generic [ref=e318]: "076"
+        - link "Yesus Disalib":
+          - /url: assets/pdf/076_Yesus Disalib.pdf
+        - button "Tambah ke Playlist" [ref=e319]:
+          - generic [ref=e320]: playlist_add
+      - listitem [ref=e321] [cursor=pointer]:
+        - generic [ref=e322]: "077"
+        - link "Junjung Tinggi Salib Tuhan":
+          - /url: assets/pdf/077_Junjung Tinggi Salib Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e323]:
+          - generic [ref=e324]: playlist_add
+      - listitem [ref=e325] [cursor=pointer]:
+        - generic [ref=e326]: "078"
+        - link "Tuhan Bangkit":
+          - /url: assets/pdf/078_Tuhan Bangkit.pdf
+        - button "Tambah ke Playlist" [ref=e327]:
+          - generic [ref=e328]: playlist_add
+      - listitem [ref=e329] [cursor=pointer]:
+        - generic [ref=e330]: "079"
+        - link "Puji Kebangkitan Yesus":
+          - /url: assets/pdf/079_Puji Kebangkitan Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e331]:
+          - generic [ref=e332]: playlist_add
+      - listitem [ref=e333] [cursor=pointer]:
+        - generic [ref=e334]: "080"
+        - link "Tuhan Telah Kalahkan Maut":
+          - /url: assets/pdf/080_Tuhan Telah Kalahkan Maut.pdf
+        - button "Tambah ke Playlist" [ref=e335]:
+          - generic [ref=e336]: playlist_add
+      - listitem [ref=e337] [cursor=pointer]:
+        - generic [ref=e338]: "081"
+        - link "Yesus Datang Kembali":
+          - /url: assets/pdf/081_Yesus Datang Kembali.pdf
+        - button "Tambah ke Playlist" [ref=e339]:
+          - generic [ref=e340]: playlist_add
+      - listitem [ref=e341] [cursor=pointer]:
+        - generic [ref=e342]: "082"
+        - link "Bersiap dan Berjaga":
+          - /url: assets/pdf/082_Bersiap dan Berjaga.pdf
+        - button "Tambah ke Playlist" [ref=e343]:
+          - generic [ref=e344]: playlist_add
+      - listitem [ref=e345] [cursor=pointer]:
+        - generic [ref=e346]: "083"
+        - link "Ketika Yesus Datang":
+          - /url: assets/pdf/083_Ketika Yesus Datang.pdf
+        - button "Tambah ke Playlist" [ref=e347]:
+          - generic [ref=e348]: playlist_add
+      - listitem [ref=e349] [cursor=pointer]:
+        - generic [ref=e350]: "084"
+        - link "Menyambut Rajaku":
+          - /url: assets/pdf/084_Menyambut Rajaku.pdf
+        - button "Tambah ke Playlist" [ref=e351]:
+          - generic [ref=e352]: playlist_add
+      - listitem [ref=e353] [cursor=pointer]:
+        - generic [ref=e354]: "085"
+        - link "Tuhan Segera Datang":
+          - /url: assets/pdf/085_Tuhan Segera Datang.pdf
+        - button "Tambah ke Playlist" [ref=e355]:
+          - generic [ref=e356]: playlist_add
+      - listitem [ref=e357] [cursor=pointer]:
+        - generic [ref=e358]: "086"
+        - link "Baik dan Jahat Dibalas":
+          - /url: assets/pdf/086_Baik dan Jahat Dibalas.pdf
+        - button "Tambah ke Playlist" [ref=e359]:
+          - generic [ref=e360]: playlist_add
+      - listitem [ref=e361] [cursor=pointer]:
+        - generic [ref=e362]: "087"
+        - link "Hari Penghakiman":
+          - /url: assets/pdf/087_Hari Penghakiman.pdf
+        - button "Tambah ke Playlist" [ref=e363]:
+          - generic [ref=e364]: playlist_add
+      - listitem [ref=e365] [cursor=pointer]:
+        - generic [ref=e366]: "088"
+        - link "Anugerah Juruselamat":
+          - /url: assets/pdf/088_Anugerah Juruselamat.pdf
+        - button "Tambah ke Playlist" [ref=e367]:
+          - generic [ref=e368]: playlist_add
+      - listitem [ref=e369] [cursor=pointer]:
+        - generic [ref=e370]: "089"
+        - link "AnugerahNya Berlimpah":
+          - /url: assets/pdf/089_AnugerahNya Berlimpah.pdf
+        - button "Tambah ke Playlist" [ref=e371]:
+          - generic [ref=e372]: playlist_add
+      - listitem [ref=e373] [cursor=pointer]:
+        - generic [ref=e374]: "090"
+        - link "Hitunglah BerkatNya":
+          - /url: assets/pdf/090_Hitunglah BerkatNya.pdf
+        - button "Tambah ke Playlist" [ref=e375]:
+          - generic [ref=e376]: playlist_add
+      - listitem [ref=e377] [cursor=pointer]:
+        - generic [ref=e378]: "091"
+        - link "Tuhan Pimpin Jalanku":
+          - /url: assets/pdf/091_Tuhan Pimpin Jalanku.pdf
+        - button "Tambah ke Playlist" [ref=e379]:
+          - generic [ref=e380]: playlist_add
+      - listitem [ref=e381] [cursor=pointer]:
+        - generic [ref=e382]: "092"
+        - link "Bersyukur Atas Kesembuhan":
+          - /url: assets/pdf/092_Bersyukur Atas Kesembuhan.pdf
+        - button "Tambah ke Playlist" [ref=e383]:
+          - generic [ref=e384]: playlist_add
+      - listitem [ref=e385] [cursor=pointer]:
+        - generic [ref=e386]: "093"
+        - link "Bersyukur Atas Pembaharuan":
+          - /url: assets/pdf/093_Bersyukur Atas Pembaharuan.pdf
+        - button "Tambah ke Playlist" [ref=e387]:
+          - generic [ref=e388]: playlist_add
+      - listitem [ref=e389] [cursor=pointer]:
+        - generic [ref=e390]: "094"
+        - link "Anugerah Tuhan Kekal":
+          - /url: assets/pdf/094_Anugerah Tuhan Kekal.pdf
+        - button "Tambah ke Playlist" [ref=e391]:
+          - generic [ref=e392]: playlist_add
+      - listitem [ref=e393] [cursor=pointer]:
+        - generic [ref=e394]: "095"
+        - link "Raja yang Diurapi":
+          - /url: assets/pdf/095_Raja yang Diurapi.pdf
+        - button "Tambah ke Playlist" [ref=e395]:
+          - generic [ref=e396]: playlist_add
+      - listitem [ref=e397] [cursor=pointer]:
+        - generic [ref=e398]: "096"
+        - link "Anugerah yang Mengherankan":
+          - /url: assets/pdf/096_Anugerah yang Mengherankan.pdf
+        - button "Tambah ke Playlist" [ref=e399]:
+          - generic [ref=e400]: playlist_add
+      - listitem [ref=e401] [cursor=pointer]:
+        - generic [ref=e402]: "097"
+        - link "Tuhan Tinggalkan Maligai Gading":
+          - /url: assets/pdf/097_Tuhan Tinggalkan Maligai Gading.pdf
+        - button "Tambah ke Playlist" [ref=e403]:
+          - generic [ref=e404]: playlist_add
+      - listitem [ref=e405] [cursor=pointer]:
+        - generic [ref=e406]: "098"
+        - link "Kala Kukenang Salib":
+          - /url: assets/pdf/098_Kala Kukenang Salib.pdf
+        - button "Tambah ke Playlist" [ref=e407]:
+          - generic [ref=e408]: playlist_add
+      - listitem [ref=e409] [cursor=pointer]:
+        - generic [ref=e410]: "099"
+        - link "Mencintai Tuhan Lebih Dalam":
+          - /url: assets/pdf/099_Mencintai Tuhan Lebih Dalam.pdf
+        - button "Tambah ke Playlist" [ref=e411]:
+          - generic [ref=e412]: playlist_add
+      - listitem [ref=e413] [cursor=pointer]:
+        - generic [ref=e414]: "100"
+        - link "Hanya Darah-Nya Yang Berkuasa":
+          - /url: assets/pdf/100_Hanya Darah-Nya Yang Berkuasa.pdf
+        - button "Tambah ke Playlist" [ref=e415]:
+          - generic [ref=e416]: playlist_add
+      - listitem [ref=e417] [cursor=pointer]:
+        - generic [ref=e418]: "101"
+        - link "Hanya Cinta Yesus":
+          - /url: assets/pdf/101_Hanya Cinta Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e419]:
+          - generic [ref=e420]: playlist_add
+      - listitem [ref=e421] [cursor=pointer]:
+        - generic [ref=e422]: "102"
+        - link "Hidup Untuk Tuhan":
+          - /url: assets/pdf/102_Hidup Untuk Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e423]:
+          - generic [ref=e424]: playlist_add
+      - listitem [ref=e425] [cursor=pointer]:
+        - generic [ref=e426]: "103"
+        - link "Lebih Baik Ada Yesus":
+          - /url: assets/pdf/103_Lebih Baik Ada Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e427]:
+          - generic [ref=e428]: playlist_add
+      - listitem [ref=e429] [cursor=pointer]:
+        - generic [ref=e430]: "104"
+        - link "Aku Amat Cinta Yesus":
+          - /url: assets/pdf/104_Aku Amat Cinta Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e431]:
+          - generic [ref=e432]: playlist_add
+      - listitem [ref=e433] [cursor=pointer]:
+        - generic [ref=e434]: "105"
+        - link "Mati Untuk Tuhan":
+          - /url: assets/pdf/105_Mati Untuk Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e435]:
+          - generic [ref=e436]: playlist_add
+      - listitem [ref=e437] [cursor=pointer]:
+        - generic [ref=e438]: "106"
+        - link "Aku Murid Yesus":
+          - /url: assets/pdf/106_Aku Murid Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e439]:
+          - generic [ref=e440]: playlist_add
+      - listitem [ref=e441] [cursor=pointer]:
+        - generic [ref=e442]: "107"
+        - link "Ikut Yesus":
+          - /url: assets/pdf/107_Ikut Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e443]:
+          - generic [ref=e444]: playlist_add
+      - listitem [ref=e445] [cursor=pointer]:
+        - generic [ref=e446]: "108"
+        - link "Ikut Almasih":
+          - /url: assets/pdf/108_Ikut Almasih.pdf
+        - button "Tambah ke Playlist" [ref=e447]:
+          - generic [ref=e448]: playlist_add
+      - listitem [ref=e449] [cursor=pointer]:
+        - generic [ref=e450]: "109"
+        - link "Turut Jejak Tuhan":
+          - /url: assets/pdf/109_Turut Jejak Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e451]:
+          - generic [ref=e452]: playlist_add
+      - listitem [ref=e453] [cursor=pointer]:
+        - generic [ref=e454]: "110"
+        - link "Tinggalkan Segalanya Ikut Tuhan":
+          - /url: assets/pdf/110_Tinggalkan Segalanya Ikut Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e455]:
+          - generic [ref=e456]: playlist_add
+      - listitem [ref=e457] [cursor=pointer]:
+        - generic [ref=e458]: "111"
+        - link "Ikut Juruselamat":
+          - /url: assets/pdf/111_Ikut Juruselamat.pdf
+        - button "Tambah ke Playlist" [ref=e459]:
+          - generic [ref=e460]: playlist_add
+      - listitem [ref=e461] [cursor=pointer]:
+        - generic [ref=e462]: "112"
+        - link "Aku Mau Ikut Tuhan":
+          - /url: assets/pdf/112_Aku Mau Ikut Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e463]:
+          - generic [ref=e464]: playlist_add
+      - listitem [ref=e465] [cursor=pointer]:
+        - generic [ref=e466]: "113"
+        - link "Pentahbisan Gedung Gereja":
+          - /url: assets/pdf/113_Pentahbisan Gedung Gereja.pdf
+        - button "Tambah ke Playlist" [ref=e467]:
+          - generic [ref=e468]: playlist_add
+      - listitem [ref=e469] [cursor=pointer]:
+        - generic [ref=e470]: "114"
+        - link "Persembahan Syukur":
+          - /url: assets/pdf/114_Persembahan Syukur.pdf
+        - button "Tambah ke Playlist" [ref=e471]:
+          - generic [ref=e472]: playlist_add
+      - listitem [ref=e473] [cursor=pointer]:
+        - generic [ref=e474]: "115"
+        - link "Gedung Gereja Terbangun":
+          - /url: assets/pdf/115_Gedung Gereja Terbangun.pdf
+        - button "Tambah ke Playlist" [ref=e475]:
+          - generic [ref=e476]: playlist_add
+      - listitem [ref=e477] [cursor=pointer]:
+        - generic [ref=e478]: "116"
+        - link "Persembahkan Jiwa Raga":
+          - /url: assets/pdf/116_Persembahkan Jiwa Raga.pdf
+        - button "Tambah ke Playlist" [ref=e479]:
+          - generic [ref=e480]: playlist_add
+      - listitem [ref=e481] [cursor=pointer]:
+        - generic [ref=e482]: "117"
+        - link "Terimalah Persembahanku":
+          - /url: assets/pdf/117_Terimalah Persembahanku.pdf
+        - button "Tambah ke Playlist" [ref=e483]:
+          - generic [ref=e484]: playlist_add
+      - listitem [ref=e485] [cursor=pointer]:
+        - generic [ref=e486]: "118"
+        - link "Persembahkan Seluruh Hidupku":
+          - /url: assets/pdf/118_Persembahkan Seluruh Hidupku.pdf
+        - button "Tambah ke Playlist" [ref=e487]:
+          - generic [ref=e488]: playlist_add
+      - listitem [ref=e489] [cursor=pointer]:
+        - generic [ref=e490]: "119"
+        - link "Semuanya Bagi Yesus":
+          - /url: assets/pdf/119_Semuanya Bagi Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e491]:
+          - generic [ref=e492]: playlist_add
+      - listitem [ref=e493] [cursor=pointer]:
+        - generic [ref=e494]: "120"
+        - link "Mempersembahkan Semua":
+          - /url: assets/pdf/120_Mempersembahkan Semua.pdf
+        - button "Tambah ke Playlist" [ref=e495]:
+          - generic [ref=e496]: playlist_add
+      - listitem [ref=e497] [cursor=pointer]:
+        - generic [ref=e498]: "121"
+        - link "Apa Yang Kupersembahkan":
+          - /url: assets/pdf/121_Apa Yang Kupersembahkan.pdf
+        - button "Tambah ke Playlist" [ref=e499]:
+          - generic [ref=e500]: playlist_add
+      - listitem [ref=e501] [cursor=pointer]:
+        - generic [ref=e502]: "122"
+        - link "Saling Mengasihi":
+          - /url: assets/pdf/122_Saling Mengasihi.pdf
+        - button "Tambah ke Playlist" [ref=e503]:
+          - generic [ref=e504]: playlist_add
+      - listitem [ref=e505] [cursor=pointer]:
+        - generic [ref=e506]: "123"
+        - link "Sampai Bertemu Lagi":
+          - /url: assets/pdf/123_Sampai Bertemu Lagi.pdf
+        - button "Tambah ke Playlist" [ref=e507]:
+          - generic [ref=e508]: playlist_add
+      - listitem [ref=e509] [cursor=pointer]:
+        - generic [ref=e510]: 124A
+        - link "Melaksanakan Kasih":
+          - /url: assets/pdf/124A_Melaksanakan Kasih.pdf
+        - button "Tambah ke Playlist" [ref=e511]:
+          - generic [ref=e512]: playlist_add
+      - listitem [ref=e513] [cursor=pointer]:
+        - generic [ref=e514]: 124B
+        - link "Melaksanakan Kasih":
+          - /url: assets/pdf/124B_Melaksanakan Kasih.pdf
+        - button "Tambah ke Playlist" [ref=e515]:
+          - generic [ref=e516]: playlist_add
+      - listitem [ref=e517] [cursor=pointer]:
+        - generic [ref=e518]: "125"
+        - link "Kidung Perpisahan":
+          - /url: assets/pdf/125_Kidung Perpisahan.pdf
+        - button "Tambah ke Playlist" [ref=e519]:
+          - generic [ref=e520]: playlist_add
+      - listitem [ref=e521] [cursor=pointer]:
+        - generic [ref=e522]: "126"
+        - link "Mengasihi Sesama Saudara":
+          - /url: assets/pdf/126_Mengasihi Sesama Saudara.pdf
+        - button "Tambah ke Playlist" [ref=e523]:
+          - generic [ref=e524]: playlist_add
+      - listitem [ref=e525] [cursor=pointer]:
+        - generic [ref=e526]: "127"
+        - link "Saling Mengasihi Dengan Sungguh":
+          - /url: assets/pdf/127_Saling Mengasihi Dengan Sungguh.pdf
+        - button "Tambah ke Playlist" [ref=e527]:
+          - generic [ref=e528]: playlist_add
+      - listitem [ref=e529] [cursor=pointer]:
+        - generic [ref=e530]: "128"
+        - link "Hari Kudus Nan Bahagia":
+          - /url: assets/pdf/128_Hari Kudus Nan Bahagia.pdf
+        - button "Tambah ke Playlist" [ref=e531]:
+          - generic [ref=e532]: playlist_add
+      - listitem [ref=e533] [cursor=pointer]:
+        - generic [ref=e534]: "129"
+        - link "Peringati Hari Kudus":
+          - /url: assets/pdf/129_Peringati Hari Kudus.pdf
+        - button "Tambah ke Playlist" [ref=e535]:
+          - generic [ref=e536]: playlist_add
+      - listitem [ref=e537] [cursor=pointer]:
+        - generic [ref=e538]: "130"
+        - link "Sabat Kudus":
+          - /url: assets/pdf/130_Sabat Kudus.pdf
+        - button "Tambah ke Playlist" [ref=e539]:
+          - generic [ref=e540]: playlist_add
+      - listitem [ref=e541] [cursor=pointer]:
+        - generic [ref=e542]: "131"
+        - link "Girang Berhari Sabat":
+          - /url: assets/pdf/131_Girang Berhari Sabat.pdf
+        - button "Tambah ke Playlist" [ref=e543]:
+          - generic [ref=e544]: playlist_add
+      - listitem [ref=e545] [cursor=pointer]:
+        - generic [ref=e546]: 132A
+        - link "Mohon Tuhan Lindungi":
+          - /url: assets/pdf/132A_Mohon Tuhan Lindungi.pdf
+        - button "Tambah ke Playlist" [ref=e547]:
+          - generic [ref=e548]: playlist_add
+      - listitem [ref=e549] [cursor=pointer]:
+        - generic [ref=e550]: 132B
+        - link "Mohon Tuhan Lindungi":
+          - /url: assets/pdf/132B_Mohon Tuhan Lindungi.pdf
+        - button "Tambah ke Playlist" [ref=e551]:
+          - generic [ref=e552]: playlist_add
+      - listitem [ref=e553] [cursor=pointer]:
+        - generic [ref=e554]: "133"
+        - link "Yesus Takkan Berubah":
+          - /url: assets/pdf/133_Yesus Takkan Berubah.pdf
+        - button "Tambah ke Playlist" [ref=e555]:
+          - generic [ref=e556]: playlist_add
+      - listitem [ref=e557] [cursor=pointer]:
+        - generic [ref=e558]: "134"
+        - link "Pandanglah Tuhan":
+          - /url: assets/pdf/134_Pandanglah Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e559]:
+          - generic [ref=e560]: playlist_add
+      - listitem [ref=e561] [cursor=pointer]:
+        - generic [ref=e562]: "135"
+        - link "Mengapa Sibuk":
+          - /url: assets/pdf/135_Mengapa Sibuk _.pdf
+        - button "Tambah ke Playlist" [ref=e563]:
+          - generic [ref=e564]: playlist_add
+      - listitem [ref=e565] [cursor=pointer]:
+        - generic [ref=e566]: "136"
+        - link "Aku Tahu Siapa yang Kupercaya":
+          - /url: assets/pdf/136_Aku Tahu Siapa yang Kupercaya.pdf
+        - button "Tambah ke Playlist" [ref=e567]:
+          - generic [ref=e568]: playlist_add
+      - listitem [ref=e569] [cursor=pointer]:
+        - generic [ref=e570]: "137"
+        - link "Yesus Sahabatku":
+          - /url: assets/pdf/137_Yesus Sahabatku.pdf
+        - button "Tambah ke Playlist" [ref=e571]:
+          - generic [ref=e572]: playlist_add
+      - listitem [ref=e573] [cursor=pointer]:
+        - generic [ref=e574]: "138"
+        - link "Bila Menolak Almasih":
+          - /url: assets/pdf/138_Bila Menolak Almasih.pdf
+        - button "Tambah ke Playlist" [ref=e575]:
+          - generic [ref=e576]: playlist_add
+      - listitem [ref=e577] [cursor=pointer]:
+        - generic [ref=e578]: "139"
+        - link "Mendengar Yesus Lewat":
+          - /url: assets/pdf/139_Mendengar Yesus Lewat.pdf
+        - button "Tambah ke Playlist" [ref=e579]:
+          - generic [ref=e580]: playlist_add
+      - listitem [ref=e581] [cursor=pointer]:
+        - generic [ref=e582]: "140"
+        - link "Almasih Tahu Dukamu":
+          - /url: assets/pdf/140_Almasih Tahu Dukamu.pdf
+        - button "Tambah ke Playlist" [ref=e583]:
+          - generic [ref=e584]: playlist_add
+      - listitem [ref=e585] [cursor=pointer]:
+        - generic [ref=e586]: "141"
+        - link "Bahagia Kekal atau Sengsara Kekal":
+          - /url: assets/pdf/141_Bahagia Kekal atau Sengsara Kekal_.pdf
+        - button "Tambah ke Playlist" [ref=e587]:
+          - generic [ref=e588]: playlist_add
+      - listitem [ref=e589] [cursor=pointer]:
+        - generic [ref=e590]: "142"
+        - link "Sandar Tuhan Hapuskan Duka":
+          - /url: assets/pdf/142_Sandar Tuhan Hapuskan Duka.pdf
+        - button "Tambah ke Playlist" [ref=e591]:
+          - generic [ref=e592]: playlist_add
+      - listitem [ref=e593] [cursor=pointer]:
+        - generic [ref=e594]: "143"
+        - link "Aku Mau Sandar Tuhan":
+          - /url: assets/pdf/143_Aku Mau Sandar Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e595]:
+          - generic [ref=e596]: playlist_add
+      - listitem [ref=e597] [cursor=pointer]:
+        - generic [ref=e598]: "144"
+        - link "Percayalah Tuhan Dengan Sungguh":
+          - /url: assets/pdf/144_Percayalah Tuhan Dengan Sungguh.pdf
+        - button "Tambah ke Playlist" [ref=e599]:
+          - generic [ref=e600]: playlist_add
+      - listitem [ref=e601] [cursor=pointer]:
+        - generic [ref=e602]: "145"
+        - link "Bersandar Pada Yesus":
+          - /url: assets/pdf/145_Bersandar Pada Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e603]:
+          - generic [ref=e604]: playlist_add
+      - listitem [ref=e605] [cursor=pointer]:
+        - generic [ref=e606]: "146"
+        - link "Sandar Tuhan Setiap Waktu":
+          - /url: assets/pdf/146_Sandar Tuhan Setiap Waktu.pdf
+        - button "Tambah ke Playlist" [ref=e607]:
+          - generic [ref=e608]: playlist_add
+      - listitem [ref=e609] [cursor=pointer]:
+        - generic [ref=e610]: "147"
+        - link "Carilah Dahulu Kerajaan Allah":
+          - /url: assets/pdf/147_Carilah Dahulu Kerajaan Allah.pdf
+        - button "Tambah ke Playlist" [ref=e611]:
+          - generic [ref=e612]: playlist_add
+      - listitem [ref=e613] [cursor=pointer]:
+        - generic [ref=e614]: "148"
+        - link "Yesus Gembalaku":
+          - /url: assets/pdf/148_Yesus Gembalaku.pdf
+        - button "Tambah ke Playlist" [ref=e615]:
+          - generic [ref=e616]: playlist_add
+      - listitem [ref=e617] [cursor=pointer]:
+        - generic [ref=e618]: "149"
+        - link "Tenteram di Bawah Lengan Tuhan":
+          - /url: assets/pdf/149_Tenteram di Bawah Lengan Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e619]:
+          - generic [ref=e620]: playlist_add
+      - listitem [ref=e621] [cursor=pointer]:
+        - generic [ref=e622]: "150"
+        - link "Gembala yang Baik Menjaga":
+          - /url: assets/pdf/150_Gembala yang Baik Menjaga.pdf
+        - button "Tambah ke Playlist" [ref=e623]:
+          - generic [ref=e624]: playlist_add
+      - listitem [ref=e625] [cursor=pointer]:
+        - generic [ref=e626]: "151"
+        - link "Tuhan Menjagamu":
+          - /url: assets/pdf/151_Tuhan Menjagamu.pdf
+        - button "Tambah ke Playlist" [ref=e627]:
+          - generic [ref=e628]: playlist_add
+      - listitem [ref=e629] [cursor=pointer]:
+        - generic [ref=e630]: "152"
+        - link "Tuhan Menyediakan":
+          - /url: assets/pdf/152_Tuhan Menyediakan.pdf
+        - button "Tambah ke Playlist" [ref=e631]:
+          - generic [ref=e632]: playlist_add
+      - listitem [ref=e633] [cursor=pointer]:
+        - generic [ref=e634]: "153"
+        - link "Setiap Waktu Berserah Pada Tuhan":
+          - /url: assets/pdf/153_Setiap Waktu Berserah Pada Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e635]:
+          - generic [ref=e636]: playlist_add
+      - listitem [ref=e637] [cursor=pointer]:
+        - generic [ref=e638]: "154"
+        - link "Yesus Bentengku yang Kokoh":
+          - /url: assets/pdf/154_Yesus Bentengku yang Kokoh.pdf
+        - button "Tambah ke Playlist" [ref=e639]:
+          - generic [ref=e640]: playlist_add
+      - listitem [ref=e641] [cursor=pointer]:
+        - generic [ref=e642]: "155"
+        - link "Tuhan Selalu Menjagaku":
+          - /url: assets/pdf/155_Tuhan Selalu Menjagaku.pdf
+        - button "Tambah ke Playlist" [ref=e643]:
+          - generic [ref=e644]: playlist_add
+      - listitem [ref=e645] [cursor=pointer]:
+        - generic [ref=e646]: "156"
+        - link "Jalan Bersama Tuhan":
+          - /url: assets/pdf/156_Jalan Bersama Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e647]:
+          - generic [ref=e648]: playlist_add
+      - listitem [ref=e649] [cursor=pointer]:
+        - generic [ref=e650]: "157"
+        - link "Surga di Dalam Hati":
+          - /url: assets/pdf/157_Surga di Dalam Hati.pdf
+        - button "Tambah ke Playlist" [ref=e651]:
+          - generic [ref=e652]: playlist_add
+      - listitem [ref=e653] [cursor=pointer]:
+        - generic [ref=e654]: "158"
+        - link "Berjalan di Jalan Tuhan":
+          - /url: assets/pdf/158_Berjalan di Jalan Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e655]:
+          - generic [ref=e656]: playlist_add
+      - listitem [ref=e657] [cursor=pointer]:
+        - generic [ref=e658]: "159"
+        - link "Tuhan Beri Sejahtera":
+          - /url: assets/pdf/159_Tuhan Beri Sejahtera.pdf
+        - button "Tambah ke Playlist" [ref=e659]:
+          - generic [ref=e660]: playlist_add
+      - listitem [ref=e661] [cursor=pointer]:
+        - generic [ref=e662]: "160"
+        - link "Terang Sejati di Hati":
+          - /url: assets/pdf/160_Terang Sejati di Hati.pdf
+        - button "Tambah ke Playlist" [ref=e663]:
+          - generic [ref=e664]: playlist_add
+      - listitem [ref=e665] [cursor=pointer]:
+        - generic [ref=e666]: "161"
+        - link "Di Bawah Naungan Tuhan":
+          - /url: assets/pdf/161_Di Bawah Naungan Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e667]:
+          - generic [ref=e668]: playlist_add
+      - listitem [ref=e669] [cursor=pointer]:
+        - generic [ref=e670]: "162"
+        - link "Tuhan Pikul Bebanku":
+          - /url: assets/pdf/162_Tuhan Pikul Bebanku.pdf
+        - button "Tambah ke Playlist" [ref=e671]:
+          - generic [ref=e672]: playlist_add
+      - listitem [ref=e673] [cursor=pointer]:
+        - generic [ref=e674]: "163"
+        - link "Giranglah Jiwaku":
+          - /url: assets/pdf/163_Giranglah Jiwaku.pdf
+        - button "Tambah ke Playlist" [ref=e675]:
+          - generic [ref=e676]: playlist_add
+      - listitem [ref=e677] [cursor=pointer]:
+        - generic [ref=e678]: "164"
+        - link "Cukuplah Kasih Karunia Tuhan":
+          - /url: assets/pdf/164_Cukuplah Kasih Karunia Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e679]:
+          - generic [ref=e680]: playlist_add
+      - listitem [ref=e681] [cursor=pointer]:
+        - generic [ref=e682]: "165"
+        - link "Yesus Memeluk Aku":
+          - /url: assets/pdf/165_Yesus Memeluk Aku.pdf
+        - button "Tambah ke Playlist" [ref=e683]:
+          - generic [ref=e684]: playlist_add
+      - listitem [ref=e685] [cursor=pointer]:
+        - generic [ref=e686]: "166"
+        - link "Di Bawah Naungan Tuhan":
+          - /url: assets/pdf/166_Di Bawah Naungan Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e687]:
+          - generic [ref=e688]: playlist_add
+      - listitem [ref=e689] [cursor=pointer]:
+        - generic [ref=e690]: "167"
+        - link "Laskar Salib":
+          - /url: assets/pdf/167_Laskar Salib.pdf
+        - button "Tambah ke Playlist" [ref=e691]:
+          - generic [ref=e692]: playlist_add
+      - listitem [ref=e693] [cursor=pointer]:
+        - generic [ref=e694]: "168"
+        - link "Laskar Kristus Maju":
+          - /url: assets/pdf/168_Laskar Kristus Maju.pdf
+        - button "Tambah ke Playlist" [ref=e695]:
+          - generic [ref=e696]: playlist_add
+      - listitem [ref=e697] [cursor=pointer]:
+        - generic [ref=e698]: "169"
+        - link "Baik dan Jahat Berlawanan":
+          - /url: assets/pdf/169_Baik dan Jahat Berlawanan.pdf
+        - button "Tambah ke Playlist" [ref=e699]:
+          - generic [ref=e700]: playlist_add
+      - listitem [ref=e701] [cursor=pointer]:
+        - generic [ref=e702]: "170"
+        - link "Maju Untuk Tuhan":
+          - /url: assets/pdf/170_Maju Untuk Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e703]:
+          - generic [ref=e704]: playlist_add
+      - listitem [ref=e705] [cursor=pointer]:
+        - generic [ref=e706]: "171"
+        - link "Gereja Yesus Sejati":
+          - /url: assets/pdf/171_Gereja Yesus Sejati.pdf
+        - button "Tambah ke Playlist" [ref=e707]:
+          - generic [ref=e708]: playlist_add
+      - listitem [ref=e709] [cursor=pointer]:
+        - generic [ref=e710]: "172"
+        - link "Kau Pasti Menang":
+          - /url: assets/pdf/172_Kau Pasti Menang.pdf
+        - button "Tambah ke Playlist" [ref=e711]:
+          - generic [ref=e712]: playlist_add
+      - listitem [ref=e713] [cursor=pointer]:
+        - generic [ref=e714]: "173"
+        - link "Panji Salib":
+          - /url: assets/pdf/173_Panji Salib.pdf
+        - button "Tambah ke Playlist" [ref=e715]:
+          - generic [ref=e716]: playlist_add
+      - listitem [ref=e717] [cursor=pointer]:
+        - generic [ref=e718]: "174"
+        - link "GerejaNya Pasti Maju":
+          - /url: assets/pdf/174_GerejaNya Pasti Maju.pdf
+        - button "Tambah ke Playlist" [ref=e719]:
+          - generic [ref=e720]: playlist_add
+      - listitem [ref=e721] [cursor=pointer]:
+        - generic [ref=e722]: "175"
+        - link "Pantang Mundur":
+          - /url: assets/pdf/175_Pantang Mundur.pdf
+        - button "Tambah ke Playlist" [ref=e723]:
+          - generic [ref=e724]: playlist_add
+      - listitem [ref=e725] [cursor=pointer]:
+        - generic [ref=e726]: "176"
+        - link "Pastilah Menang":
+          - /url: assets/pdf/176_Pastilah Menang.pdf
+        - button "Tambah ke Playlist" [ref=e727]:
+          - generic [ref=e728]: playlist_add
+      - listitem [ref=e729] [cursor=pointer]:
+        - generic [ref=e730]: "177"
+        - link "Jangan Turut Bujukan":
+          - /url: assets/pdf/177_Jangan Turut Bujukan.pdf
+        - button "Tambah ke Playlist" [ref=e731]:
+          - generic [ref=e732]: playlist_add
+      - listitem [ref=e733] [cursor=pointer]:
+        - generic [ref=e734]: "178"
+        - link "Menuju Ke Surga":
+          - /url: assets/pdf/178_Menuju Ke Surga.pdf
+        - button "Tambah ke Playlist" [ref=e735]:
+          - generic [ref=e736]: playlist_add
+      - listitem [ref=e737] [cursor=pointer]:
+        - generic [ref=e738]: "179"
+        - link "Bersiap Masuk Surga":
+          - /url: assets/pdf/179_Bersiap Masuk Surga.pdf
+        - button "Tambah ke Playlist" [ref=e739]:
+          - generic [ref=e740]: playlist_add
+      - listitem [ref=e741] [cursor=pointer]:
+        - generic [ref=e742]: "180"
+        - link "Jalan Hidup Kekal":
+          - /url: assets/pdf/180_Jalan Hidup Kekal.pdf
+        - button "Tambah ke Playlist" [ref=e743]:
+          - generic [ref=e744]: playlist_add
+      - listitem [ref=e745] [cursor=pointer]:
+        - generic [ref=e746]: "181"
+        - link "Ku Harus Maju":
+          - /url: assets/pdf/181_Ku Harus Maju.pdf
+        - button "Tambah ke Playlist" [ref=e747]:
+          - generic [ref=e748]: playlist_add
+      - listitem [ref=e749] [cursor=pointer]:
+        - generic [ref=e750]: "182"
+        - link "Maju Terus":
+          - /url: assets/pdf/182_Maju Terus.pdf
+        - button "Tambah ke Playlist" [ref=e751]:
+          - generic [ref=e752]: playlist_add
+      - listitem [ref=e753] [cursor=pointer]:
+        - generic [ref=e754]: "183"
+        - link "Maju Tak Gentar":
+          - /url: assets/pdf/183_Maju Tak Gentar.pdf
+        - button "Tambah ke Playlist" [ref=e755]:
+          - generic [ref=e756]: playlist_add
+      - listitem [ref=e757] [cursor=pointer]:
+        - generic [ref=e758]: "184"
+        - link "Berjalan di Atas Jalan Surgawi":
+          - /url: assets/pdf/184_Berjalan di Atas Jalan Surgawi.pdf
+        - button "Tambah ke Playlist" [ref=e759]:
+          - generic [ref=e760]: playlist_add
+      - listitem [ref=e761] [cursor=pointer]:
+        - generic [ref=e762]: "185"
+        - link "Rindu Rumah di Surga":
+          - /url: assets/pdf/185_Rindu Rumah di Surga.pdf
+        - button "Tambah ke Playlist" [ref=e763]:
+          - generic [ref=e764]: playlist_add
+      - listitem [ref=e765] [cursor=pointer]:
+        - generic [ref=e766]: "186"
+        - link "Surga Rumahku":
+          - /url: assets/pdf/186_Surga Rumahku.pdf
+        - button "Tambah ke Playlist" [ref=e767]:
+          - generic [ref=e768]: playlist_add
+      - listitem [ref=e769] [cursor=pointer]:
+        - generic [ref=e770]: "187"
+        - link "Datang ke Tempat nan Indah":
+          - /url: assets/pdf/187_Datang ke Tempat nan Indah.pdf
+        - button "Tambah ke Playlist" [ref=e771]:
+          - generic [ref=e772]: playlist_add
+      - listitem [ref=e773] [cursor=pointer]:
+        - generic [ref=e774]: "188"
+        - link "Kembali ke surga Mulia":
+          - /url: assets/pdf/188_Kembali ke surga Mulia.pdf
+        - button "Tambah ke Playlist" [ref=e775]:
+          - generic [ref=e776]: playlist_add
+      - listitem [ref=e777] [cursor=pointer]:
+        - generic [ref=e778]: "189"
+        - link "Surga Indah":
+          - /url: assets/pdf/189_Surga Indah.pdf
+        - button "Tambah ke Playlist" [ref=e779]:
+          - generic [ref=e780]: playlist_add
+      - listitem [ref=e781] [cursor=pointer]:
+        - generic [ref=e782]: "190"
+        - link "Umat Surga":
+          - /url: assets/pdf/190_Umat Surga.pdf
+        - button "Tambah ke Playlist" [ref=e783]:
+          - generic [ref=e784]: playlist_add
+      - listitem [ref=e785] [cursor=pointer]:
+        - generic [ref=e786]: "191"
+        - link "Rumahku di Surga":
+          - /url: assets/pdf/191_Rumahku di Surga.pdf
+        - button "Tambah ke Playlist" [ref=e787]:
+          - generic [ref=e788]: playlist_add
+      - listitem [ref=e789] [cursor=pointer]:
+        - generic [ref=e790]: "192"
+        - link "Salib Pimpin Jalanku":
+          - /url: assets/pdf/192_Salib Pimpin Jalanku.pdf
+        - button "Tambah ke Playlist" [ref=e791]:
+          - generic [ref=e792]: playlist_add
+      - listitem [ref=e793] [cursor=pointer]:
+        - generic [ref=e794]: "193"
+        - link "Surga Yang Mulia":
+          - /url: assets/pdf/193_Surga Yang Mulia.pdf
+        - button "Tambah ke Playlist" [ref=e795]:
+          - generic [ref=e796]: playlist_add
+      - listitem [ref=e797] [cursor=pointer]:
+        - generic [ref=e798]: "194"
+        - link "Perhentian di Surga":
+          - /url: assets/pdf/194_Perhentian di Surga.pdf
+        - button "Tambah ke Playlist" [ref=e799]:
+          - generic [ref=e800]: playlist_add
+      - listitem [ref=e801] [cursor=pointer]:
+        - generic [ref=e802]: "195"
+        - link "Rindu Tempat Bahagia":
+          - /url: assets/pdf/195_Rindu Tempat Bahagia.pdf
+        - button "Tambah ke Playlist" [ref=e803]:
+          - generic [ref=e804]: playlist_add
+      - listitem [ref=e805] [cursor=pointer]:
+        - generic [ref=e806]: "196"
+        - link "Surga Indah":
+          - /url: assets/pdf/196_Surga Indah.pdf
+        - button "Tambah ke Playlist" [ref=e807]:
+          - generic [ref=e808]: playlist_add
+      - listitem [ref=e809] [cursor=pointer]:
+        - generic [ref=e810]: "197"
+        - link "Pulang ke Rumah":
+          - /url: assets/pdf/197_Pulang ke Rumah.pdf
+        - button "Tambah ke Playlist" [ref=e811]:
+          - generic [ref=e812]: playlist_add
+      - listitem [ref=e813] [cursor=pointer]:
+        - generic [ref=e814]: "198"
+        - link "Sandar Tuhan ke Surga":
+          - /url: assets/pdf/198_Sandar Tuhan ke Surga.pdf
+        - button "Tambah ke Playlist" [ref=e815]:
+          - generic [ref=e816]: playlist_add
+      - listitem [ref=e817] [cursor=pointer]:
+        - generic [ref=e818]: "199"
+        - link "Rumahku Yang di Surga":
+          - /url: assets/pdf/199_Rumahku Yang di Surga.pdf
+        - button "Tambah ke Playlist" [ref=e819]:
+          - generic [ref=e820]: playlist_add
+      - listitem [ref=e821] [cursor=pointer]:
+        - generic [ref=e822]: "200"
+        - link "Merindukan Rumah di Surga":
+          - /url: assets/pdf/200_Merindukan Rumah di Surga.pdf
+        - button "Tambah ke Playlist" [ref=e823]:
+          - generic [ref=e824]: playlist_add
+      - listitem [ref=e825] [cursor=pointer]:
+        - generic [ref=e826]: "201"
+        - link "Kemuliaan Kekal":
+          - /url: assets/pdf/201_Kemuliaan Kekal.pdf
+        - button "Tambah ke Playlist" [ref=e827]:
+          - generic [ref=e828]: playlist_add
+      - listitem [ref=e829] [cursor=pointer]:
+        - generic [ref=e830]: "202"
+        - link "Surga Tempat Bahagia":
+          - /url: assets/pdf/202_Surga Tempat Bahagia.pdf
+        - button "Tambah ke Playlist" [ref=e831]:
+          - generic [ref=e832]: playlist_add
+      - listitem [ref=e833] [cursor=pointer]:
+        - generic [ref=e834]: "203"
+        - link "Bunga Bakung":
+          - /url: assets/pdf/203_Bunga Bakung.pdf
+        - button "Tambah ke Playlist" [ref=e835]:
+          - generic [ref=e836]: playlist_add
+      - listitem [ref=e837] [cursor=pointer]:
+        - generic [ref=e838]: "204"
+        - link "Berpengharapan Karena Iman":
+          - /url: assets/pdf/204_Berpengharapan Karena Iman.pdf
+        - button "Tambah ke Playlist" [ref=e839]:
+          - generic [ref=e840]: playlist_add
+      - listitem [ref=e841] [cursor=pointer]:
+        - generic [ref=e842]: "205"
+        - link "Di Dalam Kristus Pasti Bangkit":
+          - /url: assets/pdf/205_Di Dalam Kristus Pasti Bangkit.pdf
+        - button "Tambah ke Playlist" [ref=e843]:
+          - generic [ref=e844]: playlist_add
+      - listitem [ref=e845] [cursor=pointer]:
+        - generic [ref=e846]: "206"
+        - link "Aku Pasti Berjumpa Dengan Tuhan":
+          - /url: assets/pdf/206_Aku Pasti Berjumpa Dengan Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e847]:
+          - generic [ref=e848]: playlist_add
+      - listitem [ref=e849] [cursor=pointer]:
+        - generic [ref=e850]: "207"
+        - link "Merindukan Kedatangan Tuhan":
+          - /url: assets/pdf/207_Merindukan Kedatangan Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e851]:
+          - generic [ref=e852]: playlist_add
+      - listitem [ref=e853] [cursor=pointer]:
+        - generic [ref=e854]: "208"
+        - link "Umat Kudus Diangkat":
+          - /url: assets/pdf/208_Umat Kudus Diangkat.pdf
+        - button "Tambah ke Playlist" [ref=e855]:
+          - generic [ref=e856]: playlist_add
+      - listitem [ref=e857] [cursor=pointer]:
+        - generic [ref=e858]: "209"
+        - link "Aku Akan Melihat Tuhan":
+          - /url: assets/pdf/209_Aku Akan Melihat Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e859]:
+          - generic [ref=e860]: playlist_add
+      - listitem [ref=e861] [cursor=pointer]:
+        - generic [ref=e862]: "210"
+        - link "Di Kala Hidup Ini Berakhir":
+          - /url: assets/pdf/210_Di Kala Hidup Ini Berakhir.pdf
+        - button "Tambah ke Playlist" [ref=e863]:
+          - generic [ref=e864]: playlist_add
+      - listitem [ref=e865] [cursor=pointer]:
+        - generic [ref=e866]: "211"
+        - link "Allah Mengawasi":
+          - /url: assets/pdf/211_Allah Mengawasi.pdf
+        - button "Tambah ke Playlist" [ref=e867]:
+          - generic [ref=e868]: playlist_add
+      - listitem [ref=e869] [cursor=pointer]:
+        - generic [ref=e870]: "212"
+        - link "Bersinar Bagi Tuhan":
+          - /url: assets/pdf/212_Bersinar Bagi Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e871]:
+          - generic [ref=e872]: playlist_add
+      - listitem [ref=e873] [cursor=pointer]:
+        - generic [ref=e874]: "213"
+        - link "Walau Sedikit Namun Berarti":
+          - /url: assets/pdf/213_Walau Sedikit Namun Berarti.pdf
+        - button "Tambah ke Playlist" [ref=e875]:
+          - generic [ref=e876]: playlist_add
+      - listitem [ref=e877] [cursor=pointer]:
+        - generic [ref=e878]: "214"
+        - link "Delapan Kebahagiaan":
+          - /url: assets/pdf/214_Delapan Kebahagiaan.pdf
+        - button "Tambah ke Playlist" [ref=e879]:
+          - generic [ref=e880]: playlist_add
+      - listitem [ref=e881] [cursor=pointer]:
+        - generic [ref=e882]: "215"
+        - link "Akhlak Gereja Benar":
+          - /url: assets/pdf/215_Akhlak Gereja Benar.pdf
+        - button "Tambah ke Playlist" [ref=e883]:
+          - generic [ref=e884]: playlist_add
+      - listitem [ref=e885] [cursor=pointer]:
+        - generic [ref=e886]: "216"
+        - link "Budi Pekerti Umat Suci":
+          - /url: assets/pdf/216_Budi Pekerti Umat Suci.pdf
+        - button "Tambah ke Playlist" [ref=e887]:
+          - generic [ref=e888]: playlist_add
+      - listitem [ref=e889] [cursor=pointer]:
+        - generic [ref=e890]: "217"
+        - link "Melakukan Firman Tuhan":
+          - /url: assets/pdf/217_Melakukan Firman Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e891]:
+          - generic [ref=e892]: playlist_add
+      - listitem [ref=e893] [cursor=pointer]:
+        - generic [ref=e894]: "218"
+        - link "Buah Roh Kudus":
+          - /url: assets/pdf/218_Buah Roh Kudus.pdf
+        - button "Tambah ke Playlist" [ref=e895]:
+          - generic [ref=e896]: playlist_add
+      - listitem [ref=e897] [cursor=pointer]:
+        - generic [ref=e898]: "219"
+        - link "Di mana Saja Bersinar":
+          - /url: assets/pdf/219_Di mana Saja Bersinar.pdf
+        - button "Tambah ke Playlist" [ref=e899]:
+          - generic [ref=e900]: playlist_add
+      - listitem [ref=e901] [cursor=pointer]:
+        - generic [ref=e902]: "220"
+        - link "Api Pengujian":
+          - /url: assets/pdf/220_Api Pengujian.pdf
+        - button "Tambah ke Playlist" [ref=e903]:
+          - generic [ref=e904]: playlist_add
+      - listitem [ref=e905] [cursor=pointer]:
+        - generic [ref=e906]: "221"
+        - link "Taklukkan Keinginan Daging":
+          - /url: assets/pdf/221_Taklukkan Keinginan Daging.pdf
+        - button "Tambah ke Playlist" [ref=e907]:
+          - generic [ref=e908]: playlist_add
+      - listitem [ref=e909] [cursor=pointer]:
+        - generic [ref=e910]: "222"
+        - link "Berbahagialah Yang Suci Hatinya":
+          - /url: assets/pdf/222_Berbahagialah Yang Suci Hatinya.pdf
+        - button "Tambah ke Playlist" [ref=e911]:
+          - generic [ref=e912]: playlist_add
+      - listitem [ref=e913] [cursor=pointer]:
+        - generic [ref=e914]: "223"
+        - link "Kidung Umat Pilihan":
+          - /url: assets/pdf/223_Kidung Umat Pilihan.pdf
+        - button "Tambah ke Playlist" [ref=e915]:
+          - generic [ref=e916]: playlist_add
+      - listitem [ref=e917] [cursor=pointer]:
+        - generic [ref=e918]: "224"
+        - link "Mohon Tuhan Selidiki":
+          - /url: assets/pdf/224_Mohon Tuhan Selidiki.pdf
+        - button "Tambah ke Playlist" [ref=e919]:
+          - generic [ref=e920]: playlist_add
+      - listitem [ref=e921] [cursor=pointer]:
+        - generic [ref=e922]: "225"
+        - link "Turut Roh Kudus":
+          - /url: assets/pdf/225_Turut Roh Kudus.pdf
+        - button "Tambah ke Playlist" [ref=e923]:
+          - generic [ref=e924]: playlist_add
+      - listitem [ref=e925] [cursor=pointer]:
+        - generic [ref=e926]: "226"
+        - link "Jadilah Kehendak Tuhan":
+          - /url: assets/pdf/226_Jadilah Kehendak Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e927]:
+          - generic [ref=e928]: playlist_add
+      - listitem [ref=e929] [cursor=pointer]:
+        - generic [ref=e930]: "227"
+        - link "Berbahagialah Yang Mendengar PerintahNya":
+          - /url: assets/pdf/227_Berbahagialah Yang Mendengar PerintahNya.pdf
+        - button "Tambah ke Playlist" [ref=e931]:
+          - generic [ref=e932]: playlist_add
+      - listitem [ref=e933] [cursor=pointer]:
+        - generic [ref=e934]: "228"
+        - link "Berbahagialah Yang Turut PerintahNya":
+          - /url: assets/pdf/228_Berbahagialah Yang Turut PerintahNya.pdf
+        - button "Tambah ke Playlist" [ref=e935]:
+          - generic [ref=e936]: playlist_add
+      - listitem [ref=e937] [cursor=pointer]:
+        - generic [ref=e938]: "229"
+        - link "Sepuluh Perintah Allah":
+          - /url: assets/pdf/229_Sepuluh Perintah Allah.pdf
+        - button "Tambah ke Playlist" [ref=e939]:
+          - generic [ref=e940]: playlist_add
+      - listitem [ref=e941] [cursor=pointer]:
+        - generic [ref=e942]: "230"
+        - link "Berbahagialah Orang yang Benar":
+          - /url: assets/pdf/230_Berbahagialah Orang yang Benar.pdf
+        - button "Tambah ke Playlist" [ref=e943]:
+          - generic [ref=e944]: playlist_add
+      - listitem [ref=e945] [cursor=pointer]:
+        - generic [ref=e946]: "231"
+        - link "Jadilah Seperti Kehendak-Mu":
+          - /url: assets/pdf/231_Jadilah Seperti Kehendak-Mu.pdf
+        - button "Tambah ke Playlist" [ref=e947]:
+          - generic [ref=e948]: playlist_add
+      - listitem [ref=e949] [cursor=pointer]:
+        - generic [ref=e950]: "232"
+        - link "Seperti Yesus":
+          - /url: assets/pdf/232_Seperti Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e951]:
+          - generic [ref=e952]: playlist_add
+      - listitem [ref=e953] [cursor=pointer]:
+        - generic [ref=e954]: "233"
+        - link "Milik Yesus":
+          - /url: assets/pdf/233_Milik Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e955]:
+          - generic [ref=e956]: playlist_add
+      - listitem [ref=e957] [cursor=pointer]:
+        - generic [ref=e958]: "234"
+        - link "Ingin Lebih Dekat Tuhan":
+          - /url: assets/pdf/234_Ingin Lebih Dekat Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e959]:
+          - generic [ref=e960]: playlist_add
+      - listitem [ref=e961] [cursor=pointer]:
+        - generic [ref=e962]: "235"
+        - link "Tuhan dan Aku Satu Tubuh":
+          - /url: assets/pdf/235_Tuhan dan Aku Satu Tubuh.pdf
+        - button "Tambah ke Playlist" [ref=e963]:
+          - generic [ref=e964]: playlist_add
+      - listitem [ref=e965] [cursor=pointer]:
+        - generic [ref=e966]: "236"
+        - link "Aku Milik Yesus":
+          - /url: assets/pdf/236_Aku Milik Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e967]:
+          - generic [ref=e968]: playlist_add
+      - listitem [ref=e969] [cursor=pointer]:
+        - generic [ref=e970]: "237"
+        - link "Sejak Yesus di Hatiku":
+          - /url: assets/pdf/237_Sejak Yesus di Hatiku.pdf
+        - button "Tambah ke Playlist" [ref=e971]:
+          - generic [ref=e972]: playlist_add
+      - listitem [ref=e973] [cursor=pointer]:
+        - generic [ref=e974]: "238"
+        - link "Yesus, Tinggallah di Hatiku":
+          - /url: assets/pdf/238_Yesus, Tinggallah di Hatiku.pdf
+        - button "Tambah ke Playlist" [ref=e975]:
+          - generic [ref=e976]: playlist_add
+      - listitem [ref=e977] [cursor=pointer]:
+        - generic [ref=e978]: "239"
+        - link "Tuhan, Tinggallah Bersamaku":
+          - /url: assets/pdf/239_Tuhan, Tinggallah Bersamaku.pdf
+        - button "Tambah ke Playlist" [ref=e979]:
+          - generic [ref=e980]: playlist_add
+      - listitem [ref=e981] [cursor=pointer]:
+        - generic [ref=e982]: "240"
+        - link "Girang Bersama Tuhan":
+          - /url: assets/pdf/240_Girang Bersama Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e983]:
+          - generic [ref=e984]: playlist_add
+      - listitem [ref=e985] [cursor=pointer]:
+        - generic [ref=e986]: "241"
+        - link "Raja Jiwaku":
+          - /url: assets/pdf/241_Raja Jiwaku.pdf
+        - button "Tambah ke Playlist" [ref=e987]:
+          - generic [ref=e988]: playlist_add
+      - listitem [ref=e989] [cursor=pointer]:
+        - generic [ref=e990]: "242"
+        - link "Tuhan Menanti di Luar Pintu":
+          - /url: assets/pdf/242_Tuhan Menanti di Luar Pintu.pdf
+        - button "Tambah ke Playlist" [ref=e991]:
+          - generic [ref=e992]: playlist_add
+      - listitem [ref=e993] [cursor=pointer]:
+        - generic [ref=e994]: "243"
+        - link "Dekatkanlah Aku PadaMu":
+          - /url: assets/pdf/243_Dekatkanlah Aku PadaMu.pdf
+        - button "Tambah ke Playlist" [ref=e995]:
+          - generic [ref=e996]: playlist_add
+      - listitem [ref=e997] [cursor=pointer]:
+        - generic [ref=e998]: "244"
+        - link "Tuhan, Aku Mau Seperti-Mu":
+          - /url: assets/pdf/244_Tuhan, Aku Mau Seperti-Mu.pdf
+        - button "Tambah ke Playlist" [ref=e999]:
+          - generic [ref=e1000]: playlist_add
+      - listitem [ref=e1001] [cursor=pointer]:
+        - generic [ref=e1002]: "245"
+        - link "Tinggal Bersama Tuhan":
+          - /url: assets/pdf/245_Tinggal Bersama Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1003]:
+          - generic [ref=e1004]: playlist_add
+      - listitem [ref=e1005] [cursor=pointer]:
+        - generic [ref=e1006]: "246"
+        - link "Memohon Roh Kudus":
+          - /url: assets/pdf/246_Memohon Roh Kudus.pdf
+        - button "Tambah ke Playlist" [ref=e1007]:
+          - generic [ref=e1008]: playlist_add
+      - listitem [ref=e1009] [cursor=pointer]:
+        - generic [ref=e1010]: "247"
+        - link "Kuasa Roh Kudus":
+          - /url: assets/pdf/247_Kuasa Roh Kudus.pdf
+        - button "Tambah ke Playlist" [ref=e1011]:
+          - generic [ref=e1012]: playlist_add
+      - listitem [ref=e1013] [cursor=pointer]:
+        - generic [ref=e1014]: "248"
+        - link "Mohon Roh Kudus":
+          - /url: assets/pdf/248_Mohon Roh Kudus.pdf
+        - button "Tambah ke Playlist" [ref=e1015]:
+          - generic [ref=e1016]: playlist_add
+      - listitem [ref=e1017] [cursor=pointer]:
+        - generic [ref=e1018]: "249"
+        - link "Roh Kudus Baptis Semua":
+          - /url: assets/pdf/249_Roh Kudus Baptis Semua.pdf
+        - button "Tambah ke Playlist" [ref=e1019]:
+          - generic [ref=e1020]: playlist_add
+      - listitem [ref=e1021] [cursor=pointer]:
+        - generic [ref=e1022]: "250"
+        - link "Mendapat Kekuatan Baru":
+          - /url: assets/pdf/250_Mendapat Kekuatan Baru.pdf
+        - button "Tambah ke Playlist" [ref=e1023]:
+          - generic [ref=e1024]: playlist_add
+      - listitem [ref=e1025] [cursor=pointer]:
+        - generic [ref=e1026]: "251"
+        - link "Baptisan Roh Kudus":
+          - /url: assets/pdf/251_Baptisan Roh Kudus.pdf
+        - button "Tambah ke Playlist" [ref=e1027]:
+          - generic [ref=e1028]: playlist_add
+      - listitem [ref=e1029] [cursor=pointer]:
+        - generic [ref=e1030]: "252"
+        - link "Rindu Kepenuhan Roh Kudus":
+          - /url: assets/pdf/252_Rindu Kepenuhan Roh Kudus.pdf
+        - button "Tambah ke Playlist" [ref=e1031]:
+          - generic [ref=e1032]: playlist_add
+      - listitem [ref=e1033] [cursor=pointer]:
+        - generic [ref=e1034]: "253"
+        - link "Roh Kudus Telah Datang":
+          - /url: assets/pdf/253_Roh Kudus Telah Datang.pdf
+        - button "Tambah ke Playlist" [ref=e1035]:
+          - generic [ref=e1036]: playlist_add
+      - listitem [ref=e1037] [cursor=pointer]:
+        - generic [ref=e1038]: "254"
+        - link "Berbahasa Roh Sangat Penting":
+          - /url: assets/pdf/254_Berbahasa Roh Sangat Penting.pdf
+        - button "Tambah ke Playlist" [ref=e1039]:
+          - generic [ref=e1040]: playlist_add
+      - listitem [ref=e1041] [cursor=pointer]:
+        - generic [ref=e1042]: "255"
+        - link "Kebaktian Kebangunan Rohani":
+          - /url: assets/pdf/255_Kebaktian Kebangunan Rohani.pdf
+        - button "Tambah ke Playlist" [ref=e1043]:
+          - generic [ref=e1044]: playlist_add
+      - listitem [ref=e1045] [cursor=pointer]:
+        - generic [ref=e1046]: "256"
+        - link "Hujan Yang Membawa Berkat":
+          - /url: assets/pdf/256_Hujan Yang Membawa Berkat.pdf
+        - button "Tambah ke Playlist" [ref=e1047]:
+          - generic [ref=e1048]: playlist_add
+      - listitem [ref=e1049] [cursor=pointer]:
+        - generic [ref=e1050]: "257"
+        - link "Berjaga-jaga dan Berdoa":
+          - /url: assets/pdf/257_Berjaga-jaga dan Berdoa.pdf
+        - button "Tambah ke Playlist" [ref=e1051]:
+          - generic [ref=e1052]: playlist_add
+      - listitem [ref=e1053] [cursor=pointer]:
+        - generic [ref=e1054]: "258"
+        - link "Berdoa dan Berpuasa":
+          - /url: assets/pdf/258_Berdoa dan Berpuasa.pdf
+        - button "Tambah ke Playlist" [ref=e1055]:
+          - generic [ref=e1056]: playlist_add
+      - listitem [ref=e1057] [cursor=pointer]:
+        - generic [ref=e1058]: "259"
+        - link "Tekun Berdoa":
+          - /url: assets/pdf/259_Tekun Berdoa.pdf
+        - button "Tambah ke Playlist" [ref=e1059]:
+          - generic [ref=e1060]: playlist_add
+      - listitem [ref=e1061] [cursor=pointer]:
+        - generic [ref=e1062]: "260"
+        - link "Pujian di Pagi Hari":
+          - /url: assets/pdf/260_Pujian di Pagi Hari.pdf
+        - button "Tambah ke Playlist" [ref=e1063]:
+          - generic [ref=e1064]: playlist_add
+      - listitem [ref=e1065] [cursor=pointer]:
+        - generic [ref=e1066]: "261"
+        - link "Doa di Malam Hari":
+          - /url: assets/pdf/261_Doa di Malam Hari.pdf
+        - button "Tambah ke Playlist" [ref=e1067]:
+          - generic [ref=e1068]: playlist_add
+      - listitem [ref=e1069] [cursor=pointer]:
+        - generic [ref=e1070]: "262"
+        - link "Bersekutu Dalam Roh Dengan Tuhan":
+          - /url: assets/pdf/262_Bersekutu Dalam Roh Dengan Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1071]:
+          - generic [ref=e1072]: playlist_add
+      - listitem [ref=e1073] [cursor=pointer]:
+        - generic [ref=e1074]: "263"
+        - link "Yesus Sahabat Yang Baik":
+          - /url: assets/pdf/263_Yesus Sahabat Yang Baik.pdf
+        - button "Tambah ke Playlist" [ref=e1075]:
+          - generic [ref=e1076]: playlist_add
+      - listitem [ref=e1077] [cursor=pointer]:
+        - generic [ref=e1078]: "264"
+        - link "Tuhan, Dengarlah Doaku":
+          - /url: assets/pdf/264_Tuhan, Dengarlah Doaku.pdf
+        - button "Tambah ke Playlist" [ref=e1079]:
+          - generic [ref=e1080]: playlist_add
+      - listitem [ref=e1081] [cursor=pointer]:
+        - generic [ref=e1082]: "265"
+        - link "Lekas Beritahu Yesus":
+          - /url: assets/pdf/265_Lekas Beritahu Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1083]:
+          - generic [ref=e1084]: playlist_add
+      - listitem [ref=e1085] [cursor=pointer]:
+        - generic [ref=e1086]: "266"
+        - link "Memberitakan Injil":
+          - /url: assets/pdf/266_Memberitakan Injil.pdf
+        - button "Tambah ke Playlist" [ref=e1087]:
+          - generic [ref=e1088]: playlist_add
+      - listitem [ref=e1089] [cursor=pointer]:
+        - generic [ref=e1090]: "267"
+        - link "Menuruti Pengutusan Tuhan":
+          - /url: assets/pdf/267_Menuruti Pengutusan Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1091]:
+          - generic [ref=e1092]: playlist_add
+      - listitem [ref=e1093] [cursor=pointer]:
+        - generic [ref=e1094]: "268"
+        - link "Turut Panggilan Tuhan":
+          - /url: assets/pdf/268_Turut Panggilan Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1095]:
+          - generic [ref=e1096]: playlist_add
+      - listitem [ref=e1097] [cursor=pointer]:
+        - generic [ref=e1098]: "269"
+        - link "Dengar Tuhan Memanggilku":
+          - /url: assets/pdf/269_Dengar Tuhan Memanggilku.pdf
+        - button "Tambah ke Playlist" [ref=e1099]:
+          - generic [ref=e1100]: playlist_add
+      - listitem [ref=e1101] [cursor=pointer]:
+        - generic [ref=e1102]: "270"
+        - link "Ke Tempat Nan Jauh":
+          - /url: assets/pdf/270_Ke Tempat Nan Jauh.pdf
+        - button "Tambah ke Playlist" [ref=e1103]:
+          - generic [ref=e1104]: playlist_add
+      - listitem [ref=e1105] [cursor=pointer]:
+        - generic [ref=e1106]: "271"
+        - link "Jangan Takut":
+          - /url: assets/pdf/271_Jangan Takut.pdf
+        - button "Tambah ke Playlist" [ref=e1107]:
+          - generic [ref=e1108]: playlist_add
+      - listitem [ref=e1109] [cursor=pointer]:
+        - generic [ref=e1110]: "272"
+        - link "Roh Penghibur Datang":
+          - /url: assets/pdf/272_Roh Penghibur Datang.pdf
+        - button "Tambah ke Playlist" [ref=e1111]:
+          - generic [ref=e1112]: playlist_add
+      - listitem [ref=e1113] [cursor=pointer]:
+        - generic [ref=e1114]: "273"
+        - link "Kabar Gembira":
+          - /url: assets/pdf/273_Kabar Gembira.pdf
+        - button "Tambah ke Playlist" [ref=e1115]:
+          - generic [ref=e1116]: playlist_add
+      - listitem [ref=e1117] [cursor=pointer]:
+        - generic [ref=e1118]: "274"
+        - link "Hujan Akhir Turun":
+          - /url: assets/pdf/274_Hujan Akhir Turun.pdf
+        - button "Tambah ke Playlist" [ref=e1119]:
+          - generic [ref=e1120]: playlist_add
+      - listitem [ref=e1121] [cursor=pointer]:
+        - generic [ref=e1122]: "275"
+        - link "Bawa Berkas ke Rumah":
+          - /url: assets/pdf/275_Bawa Berkas ke Rumah.pdf
+        - button "Tambah ke Playlist" [ref=e1123]:
+          - generic [ref=e1124]: playlist_add
+      - listitem [ref=e1125] [cursor=pointer]:
+        - generic [ref=e1126]: "276"
+        - link "Dengarlah InjilNya":
+          - /url: assets/pdf/276_Dengarlah InjilNya.pdf
+        - button "Tambah ke Playlist" [ref=e1127]:
+          - generic [ref=e1128]: playlist_add
+      - listitem [ref=e1129] [cursor=pointer]:
+        - generic [ref=e1130]: "277"
+        - link "Girang Memberitakan Injil":
+          - /url: assets/pdf/277_Girang Memberitakan Injil.pdf
+        - button "Tambah ke Playlist" [ref=e1131]:
+          - generic [ref=e1132]: playlist_add
+      - listitem [ref=e1133] [cursor=pointer]:
+        - generic [ref=e1134]: "278"
+        - link "Tuhan Tolong":
+          - /url: assets/pdf/278_Tuhan Tolong.pdf
+        - button "Tambah ke Playlist" [ref=e1135]:
+          - generic [ref=e1136]: playlist_add
+      - listitem [ref=e1137] [cursor=pointer]:
+        - generic [ref=e1138]: "279"
+        - link "Pintu Anugerah Terbuka":
+          - /url: assets/pdf/279_Pintu Anugerah Terbuka.pdf
+        - button "Tambah ke Playlist" [ref=e1139]:
+          - generic [ref=e1140]: playlist_add
+      - listitem [ref=e1141] [cursor=pointer]:
+        - generic [ref=e1142]: "280"
+        - link "Beritakan Injil":
+          - /url: assets/pdf/280_Beritakan Injil.pdf
+        - button "Tambah ke Playlist" [ref=e1143]:
+          - generic [ref=e1144]: playlist_add
+      - listitem [ref=e1145] [cursor=pointer]:
+        - generic [ref=e1146]: "281"
+        - link "Keluhan Jiwa":
+          - /url: assets/pdf/281_Keluhan Jiwa.pdf
+        - button "Tambah ke Playlist" [ref=e1147]:
+          - generic [ref=e1148]: playlist_add
+      - listitem [ref=e1149] [cursor=pointer]:
+        - generic [ref=e1150]: "282"
+        - link "Giatlah Bekerja":
+          - /url: assets/pdf/282_Giatlah Bekerja.pdf
+        - button "Tambah ke Playlist" [ref=e1151]:
+          - generic [ref=e1152]: playlist_add
+      - listitem [ref=e1153] [cursor=pointer]:
+        - generic [ref=e1154]: "283"
+        - link "Menuai Untuk Tuhan":
+          - /url: assets/pdf/283_Menuai Untuk Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1155]:
+          - generic [ref=e1156]: playlist_add
+      - listitem [ref=e1157] [cursor=pointer]:
+        - generic [ref=e1158]: "284"
+        - link "Bersinarkan Terang Injil":
+          - /url: assets/pdf/284_Bersinarkan Terang Injil.pdf
+        - button "Tambah ke Playlist" [ref=e1159]:
+          - generic [ref=e1160]: playlist_add
+      - listitem [ref=e1161] [cursor=pointer]:
+        - generic [ref=e1162]: "285"
+        - link "Bertolak Ke Lautan Dalam":
+          - /url: assets/pdf/285_Bertolak Ke Lautan Dalam.pdf
+        - button "Tambah ke Playlist" [ref=e1163]:
+          - generic [ref=e1164]: playlist_add
+      - listitem [ref=e1165] [cursor=pointer]:
+        - generic [ref=e1166]: "286"
+        - link "Beritakan Anugerah Keselamatan":
+          - /url: assets/pdf/286_Beritakan Anugerah Keselamatan.pdf
+        - button "Tambah ke Playlist" [ref=e1167]:
+          - generic [ref=e1168]: playlist_add
+      - listitem [ref=e1169] [cursor=pointer]:
+        - generic [ref=e1170]: "287"
+        - link "Bekerja Untuk Yesus":
+          - /url: assets/pdf/287_Bekerja Untuk Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1171]:
+          - generic [ref=e1172]: playlist_add
+      - listitem [ref=e1173] [cursor=pointer]:
+        - generic [ref=e1174]: "288"
+        - link "Lekas Bekerja":
+          - /url: assets/pdf/288_Lekas Bekerja.pdf
+        - button "Tambah ke Playlist" [ref=e1175]:
+          - generic [ref=e1176]: playlist_add
+      - listitem [ref=e1177] [cursor=pointer]:
+        - generic [ref=e1178]: "289"
+        - link "Mengutus Pekerja Kudus":
+          - /url: assets/pdf/289_Mengutus Pekerja Kudus.pdf
+        - button "Tambah ke Playlist" [ref=e1179]:
+          - generic [ref=e1180]: playlist_add
+      - listitem [ref=e1181] [cursor=pointer]:
+        - generic [ref=e1182]: "290"
+        - link "Upacara Pentahbisan":
+          - /url: assets/pdf/290_Upacara Pentahbisan.pdf
+        - button "Tambah ke Playlist" [ref=e1183]:
+          - generic [ref=e1184]: playlist_add
+      - listitem [ref=e1185] [cursor=pointer]:
+        - generic [ref=e1186]: "291"
+        - link "Sumber Penghapus Dosa":
+          - /url: assets/pdf/291_Sumber Penghapus Dosa.pdf
+        - button "Tambah ke Playlist" [ref=e1187]:
+          - generic [ref=e1188]: playlist_add
+      - listitem [ref=e1189] [cursor=pointer]:
+        - generic [ref=e1190]: "292"
+        - link "Anugerah Penebusan Dosa":
+          - /url: assets/pdf/292_Anugerah Penebusan Dosa.pdf
+        - button "Tambah ke Playlist" [ref=e1191]:
+          - generic [ref=e1192]: playlist_add
+      - listitem [ref=e1193] [cursor=pointer]:
+        - generic [ref=e1194]: "293"
+        - link "Dosa Dibersihkan":
+          - /url: assets/pdf/293_Dosa Dibersihkan.pdf
+        - button "Tambah ke Playlist" [ref=e1195]:
+          - generic [ref=e1196]: playlist_add
+      - listitem [ref=e1197] [cursor=pointer]:
+        - generic [ref=e1198]: "294"
+        - link "Aku Menghampiri Mu":
+          - /url: assets/pdf/294_Aku Menghampiri Mu.pdf
+        - button "Tambah ke Playlist" [ref=e1199]:
+          - generic [ref=e1200]: playlist_add
+      - listitem [ref=e1201] [cursor=pointer]:
+        - generic [ref=e1202]: "295"
+        - link "Sakramen Pembasuhan Kaki":
+          - /url: assets/pdf/295_Sakramen Pembasuhan Kaki.pdf
+        - button "Tambah ke Playlist" [ref=e1203]:
+          - generic [ref=e1204]: playlist_add
+      - listitem [ref=e1205] [cursor=pointer]:
+        - generic [ref=e1206]: "296"
+        - link "Memperingati Kematian Tuhan":
+          - /url: assets/pdf/296_Memperingati Kematian Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1207]:
+          - generic [ref=e1208]: playlist_add
+      - listitem [ref=e1209] [cursor=pointer]:
+        - generic [ref=e1210]: "297"
+        - link "Apakah Tekadku Untuk Tuhan":
+          - /url: assets/pdf/297_Apakah Tekadku Untuk Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1211]:
+          - generic [ref=e1212]: playlist_add
+      - listitem [ref=e1213] [cursor=pointer]:
+        - generic [ref=e1214]: "298"
+        - link "Upacara Pernikahan Umat Suci":
+          - /url: assets/pdf/298_Upacara Pernikahan Umat Suci.pdf
+        - button "Tambah ke Playlist" [ref=e1215]:
+          - generic [ref=e1216]: playlist_add
+      - listitem [ref=e1217] [cursor=pointer]:
+        - generic [ref=e1218]: "299"
+        - link "Pemberkatan Nikah":
+          - /url: assets/pdf/299_Pemberkatan Nikah.pdf
+        - button "Tambah ke Playlist" [ref=e1219]:
+          - generic [ref=e1220]: playlist_add
+      - listitem [ref=e1221] [cursor=pointer]:
+        - generic [ref=e1222]: "300"
+        - link "Ucapan Selamat Berbahagia":
+          - /url: assets/pdf/300_Ucapan Selamat Berbahagia.pdf
+        - button "Tambah ke Playlist" [ref=e1223]:
+          - generic [ref=e1224]: playlist_add
+      - listitem [ref=e1225] [cursor=pointer]:
+        - generic [ref=e1226]: "301"
+        - link "Hidup Manusia Tidak Lama":
+          - /url: assets/pdf/301_Hidup Manusia Tidak Lama.pdf
+        - button "Tambah ke Playlist" [ref=e1227]:
+          - generic [ref=e1228]: playlist_add
+      - listitem [ref=e1229] [cursor=pointer]:
+        - generic [ref=e1230]: "302"
+        - link "Pemakaman":
+          - /url: assets/pdf/302_Pemakaman.pdf
+        - button "Tambah ke Playlist" [ref=e1231]:
+          - generic [ref=e1232]: playlist_add
+      - listitem [ref=e1233] [cursor=pointer]:
+        - generic [ref=e1234]: "303"
+        - link "Surga Telah Datang":
+          - /url: assets/pdf/303_Surga Telah Datang.pdf
+        - button "Tambah ke Playlist" [ref=e1235]:
+          - generic [ref=e1236]: playlist_add
+      - listitem [ref=e1237] [cursor=pointer]:
+        - generic [ref=e1238]: "304"
+        - link "Anak Hilang Telah Kembali":
+          - /url: assets/pdf/304_Anak Hilang Telah Kembali.pdf
+        - button "Tambah ke Playlist" [ref=e1239]:
+          - generic [ref=e1240]: playlist_add
+      - listitem [ref=e1241] [cursor=pointer]:
+        - generic [ref=e1242]: "305"
+        - link "Mawas Diri":
+          - /url: assets/pdf/305_Mawas Diri.pdf
+        - button "Tambah ke Playlist" [ref=e1243]:
+          - generic [ref=e1244]: playlist_add
+      - listitem [ref=e1245] [cursor=pointer]:
+        - generic [ref=e1246]: "306"
+        - link "Bertobat dan Lahir Kembali":
+          - /url: assets/pdf/306_Bertobat dan Lahir Kembali.pdf
+        - button "Tambah ke Playlist" [ref=e1247]:
+          - generic [ref=e1248]: playlist_add
+      - listitem [ref=e1249] [cursor=pointer]:
+        - generic [ref=e1250]: "307"
+        - link "Pulanglah !":
+          - /url: assets/pdf/307_Pulanglah !.pdf
+        - button "Tambah ke Playlist" [ref=e1251]:
+          - generic [ref=e1252]: playlist_add
+      - listitem [ref=e1253] [cursor=pointer]:
+        - generic [ref=e1254]: "308"
+        - link "Tuhan Teman Orang Berdosa":
+          - /url: assets/pdf/308_Tuhan Teman Orang Berdosa.pdf
+        - button "Tambah ke Playlist" [ref=e1255]:
+          - generic [ref=e1256]: playlist_add
+      - listitem [ref=e1257] [cursor=pointer]:
+        - generic [ref=e1258]: "309"
+        - link "Pengharapan di Tahun Baru":
+          - /url: assets/pdf/309_Pengharapan di Tahun Baru.pdf
+        - button "Tambah ke Playlist" [ref=e1259]:
+          - generic [ref=e1260]: playlist_add
+      - listitem [ref=e1261] [cursor=pointer]:
+        - generic [ref=e1262]: "310"
+        - link "Ucapan Syukur di Akhir Tahun":
+          - /url: assets/pdf/310_Ucapan Syukur di Akhir Tahun.pdf
+        - button "Tambah ke Playlist" [ref=e1263]:
+          - generic [ref=e1264]: playlist_add
+      - listitem [ref=e1265] [cursor=pointer]:
+        - generic [ref=e1266]: "311"
+        - link "Segala Ciptaan Tuhan":
+          - /url: assets/pdf/311_Segala Ciptaan Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1267]:
+          - generic [ref=e1268]: playlist_add
+      - listitem [ref=e1269] [cursor=pointer]:
+        - generic [ref=e1270]: "312"
+        - link "Mari Berkumpul MenyembahNya":
+          - /url: assets/pdf/312_Mari Berkumpul MenyembahNya.pdf
+        - button "Tambah ke Playlist" [ref=e1271]:
+          - generic [ref=e1272]: playlist_add
+      - listitem [ref=e1273] [cursor=pointer]:
+        - generic [ref=e1274]: "313"
+        - link "Besar KesetiaanMu":
+          - /url: assets/pdf/313_Besar KesetiaanMu.pdf
+        - button "Tambah ke Playlist" [ref=e1275]:
+          - generic [ref=e1276]: playlist_add
+      - listitem [ref=e1277] [cursor=pointer]:
+        - generic [ref=e1278]: "314"
+        - link "Sungguh Besar Allahku":
+          - /url: assets/pdf/314_Sungguh Besar Allahku.pdf
+        - button "Tambah ke Playlist" [ref=e1279]:
+          - generic [ref=e1280]: playlist_add
+      - listitem [ref=e1281] [cursor=pointer]:
+        - generic [ref=e1282]: "315"
+        - link "Allah yang Esa, Kekal dan tak Nampak":
+          - /url: assets/pdf/315_Allah yang Esa, Kekal dan tak Nampak.pdf
+        - button "Tambah ke Playlist" [ref=e1283]:
+          - generic [ref=e1284]: playlist_add
+      - listitem [ref=e1285] [cursor=pointer]:
+        - generic [ref=e1286]: "316"
+        - link "Sembahlah Sang Raja":
+          - /url: assets/pdf/316_Sembahlah Sang Raja.pdf
+        - button "Tambah ke Playlist" [ref=e1287]:
+          - generic [ref=e1288]: playlist_add
+      - listitem [ref=e1289] [cursor=pointer]:
+        - generic [ref=e1290]: "317"
+        - link "Tuhan Telah Datang":
+          - /url: assets/pdf/317_Tuhan Telah Datang.pdf
+        - button "Tambah ke Playlist" [ref=e1291]:
+          - generic [ref=e1292]: playlist_add
+      - listitem [ref=e1293] [cursor=pointer]:
+        - generic [ref=e1294]: "318"
+        - link "Pelabuhan Jiwa":
+          - /url: assets/pdf/318_Pelabuhan Jiwa.pdf
+        - button "Tambah ke Playlist" [ref=e1295]:
+          - generic [ref=e1296]: playlist_add
+      - listitem [ref=e1297] [cursor=pointer]:
+        - generic [ref=e1298]: "319"
+        - link "Malaikat dari Tempat Mulia":
+          - /url: assets/pdf/319_Malaikat dari Tempat Mulia.pdf
+        - button "Tambah ke Playlist" [ref=e1299]:
+          - generic [ref=e1300]: playlist_add
+      - listitem [ref=e1301] [cursor=pointer]:
+        - generic [ref=e1302]: "320"
+        - link "Kemuliaan Bagi Allah":
+          - /url: assets/pdf/320_Kemuliaan Bagi Allah.pdf
+        - button "Tambah ke Playlist" [ref=e1303]:
+          - generic [ref=e1304]: playlist_add
+      - listitem [ref=e1305] [cursor=pointer]:
+        - generic [ref=e1306]: "321"
+        - link "Marilah Memuji":
+          - /url: assets/pdf/321_Marilah Memuji.pdf
+        - button "Tambah ke Playlist" [ref=e1307]:
+          - generic [ref=e1308]: playlist_add
+      - listitem [ref=e1309] [cursor=pointer]:
+        - generic [ref=e1310]: "322"
+        - link "Kemuliaan Untuk Tuhan":
+          - /url: assets/pdf/322_Kemuliaan Untuk Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1311]:
+          - generic [ref=e1312]: playlist_add
+      - listitem [ref=e1313] [cursor=pointer]:
+        - generic [ref=e1314]: "323"
+        - link "Muliakanlah Yesus":
+          - /url: assets/pdf/323_Muliakanlah Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1315]:
+          - generic [ref=e1316]: playlist_add
+      - listitem [ref=e1317] [cursor=pointer]:
+        - generic [ref=e1318]: "324"
+        - link "Mulialah NamaMu":
+          - /url: assets/pdf/324_Mulialah NamaMu.pdf
+        - button "Tambah ke Playlist" [ref=e1319]:
+          - generic [ref=e1320]: playlist_add
+      - listitem [ref=e1321] [cursor=pointer]:
+        - generic [ref=e1322]: "325"
+        - link "Yesus Amatlah Berharga":
+          - /url: assets/pdf/325_Yesus Amatlah Berharga.pdf
+        - button "Tambah ke Playlist" [ref=e1323]:
+          - generic [ref=e1324]: playlist_add
+      - listitem [ref=e1325] [cursor=pointer]:
+        - generic [ref=e1326]: "326"
+        - link "Dia Membuat Ku Selalu Bernyanyi":
+          - /url: assets/pdf/326_Dia Membuat Ku Selalu Bernyanyi.pdf
+        - button "Tambah ke Playlist" [ref=e1327]:
+          - generic [ref=e1328]: playlist_add
+      - listitem [ref=e1329] [cursor=pointer]:
+        - generic [ref=e1330]: "327"
+        - link "Lebih Mengenal Yesus":
+          - /url: assets/pdf/327_Lebih Mengenal Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1331]:
+          - generic [ref=e1332]: playlist_add
+      - listitem [ref=e1333] [cursor=pointer]:
+        - generic [ref=e1334]: "328"
+        - link "Puji Tuhan Yang Maha Kuasa":
+          - /url: assets/pdf/328_Puji Tuhan Yang Maha Kuasa.pdf
+        - button "Tambah ke Playlist" [ref=e1335]:
+          - generic [ref=e1336]: playlist_add
+      - listitem [ref=e1337] [cursor=pointer]:
+        - generic [ref=e1338]: "329"
+        - link "Allah Abraham, Ishak dan Yakub":
+          - /url: assets/pdf/329_Allah Abraham, Ishak dan Yakub.pdf
+        - button "Tambah ke Playlist" [ref=e1339]:
+          - generic [ref=e1340]: playlist_add
+      - listitem [ref=e1341] [cursor=pointer]:
+        - generic [ref=e1342]: "330"
+        - link "Damai, Anugerah Tuhan":
+          - /url: assets/pdf/330_Damai, Anugerah Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1343]:
+          - generic [ref=e1344]: playlist_add
+      - listitem [ref=e1345] [cursor=pointer]:
+        - generic [ref=e1346]: "331"
+        - link "Kasih Setia dan Rahmat":
+          - /url: assets/pdf/331_Kasih Setia dan Rahmat.pdf
+        - button "Tambah ke Playlist" [ref=e1347]:
+          - generic [ref=e1348]: playlist_add
+      - listitem [ref=e1349] [cursor=pointer]:
+        - generic [ref=e1350]: "332"
+        - link "Kasih Allah":
+          - /url: assets/pdf/332_Kasih Allah.pdf
+        - button "Tambah ke Playlist" [ref=e1351]:
+          - generic [ref=e1352]: playlist_add
+      - listitem [ref=e1353] [cursor=pointer]:
+        - generic [ref=e1354]: "333"
+        - link "Tiap Minggu DijagaNya":
+          - /url: assets/pdf/333_Tiap Minggu DijagaNya.pdf
+        - button "Tambah ke Playlist" [ref=e1355]:
+          - generic [ref=e1356]: playlist_add
+      - listitem [ref=e1357] [cursor=pointer]:
+        - generic [ref=e1358]: "334"
+        - link "Yesus Mawar Saron":
+          - /url: assets/pdf/334_Yesus Mawar Saron.pdf
+        - button "Tambah ke Playlist" [ref=e1359]:
+          - generic [ref=e1360]: playlist_add
+      - listitem [ref=e1361] [cursor=pointer]:
+        - generic [ref=e1362]: "335"
+        - link "Yesus Datang":
+          - /url: assets/pdf/335_Yesus Datang.pdf
+        - button "Tambah ke Playlist" [ref=e1363]:
+          - generic [ref=e1364]: playlist_add
+      - listitem [ref=e1365] [cursor=pointer]:
+        - generic [ref=e1366]: "336"
+        - link "Apakah Yesus Memperhatikan":
+          - /url: assets/pdf/336_Apakah Yesus Memperhatikan _.pdf
+        - button "Tambah ke Playlist" [ref=e1367]:
+          - generic [ref=e1368]: playlist_add
+      - listitem [ref=e1369] [cursor=pointer]:
+        - generic [ref=e1370]: "337"
+        - link "Sebab Dia Hidup":
+          - /url: assets/pdf/337_Sebab Dia Hidup.pdf
+        - button "Tambah ke Playlist" [ref=e1371]:
+          - generic [ref=e1372]: playlist_add
+      - listitem [ref=e1373] [cursor=pointer]:
+        - generic [ref=e1374]: "338"
+        - link "Dia Mengangkatku":
+          - /url: assets/pdf/338_Dia Mengangkatku.pdf
+        - button "Tambah ke Playlist" [ref=e1375]:
+          - generic [ref=e1376]: playlist_add
+      - listitem [ref=e1377] [cursor=pointer]:
+        - generic [ref=e1378]: "339"
+        - link "Yesus Segalanya Bagiku":
+          - /url: assets/pdf/339_Yesus Segalanya Bagiku.pdf
+        - button "Tambah ke Playlist" [ref=e1379]:
+          - generic [ref=e1380]: playlist_add
+      - listitem [ref=e1381] [cursor=pointer]:
+        - generic [ref=e1382]: "340"
+        - link "Juruselamat Kita Yang Agung":
+          - /url: assets/pdf/340_Juruselamat Kita Yang Agung.pdf
+        - button "Tambah ke Playlist" [ref=e1383]:
+          - generic [ref=e1384]: playlist_add
+      - listitem [ref=e1385] [cursor=pointer]:
+        - generic [ref=e1386]: "341"
+        - link "Undanglah Yesus ke Hatimu":
+          - /url: assets/pdf/341_Undanglah Yesus ke Hatimu.pdf
+        - button "Tambah ke Playlist" [ref=e1387]:
+          - generic [ref=e1388]: playlist_add
+      - listitem [ref=e1389] [cursor=pointer]:
+        - generic [ref=e1390]: "342"
+        - link "Pelita Kecil, Berkobarlah!":
+          - /url: assets/pdf/342_Pelita Kecil, Berkobarlah!.pdf
+        - button "Tambah ke Playlist" [ref=e1391]:
+          - generic [ref=e1392]: playlist_add
+      - listitem [ref=e1393] [cursor=pointer]:
+        - generic [ref=e1394]: "343"
+        - link "KasihNya Mengangkatku":
+          - /url: assets/pdf/343_KasihNya Mengangkatku.pdf
+        - button "Tambah ke Playlist" [ref=e1395]:
+          - generic [ref=e1396]: playlist_add
+      - listitem [ref=e1397] [cursor=pointer]:
+        - generic [ref=e1398]: "344"
+        - link "Betapa Dia Mengasihi Kau dan Aku":
+          - /url: assets/pdf/344_Betapa Dia Mengasihi Kau dan Aku.pdf
+        - button "Tambah ke Playlist" [ref=e1399]:
+          - generic [ref=e1400]: playlist_add
+      - listitem [ref=e1401] [cursor=pointer]:
+        - generic [ref=e1402]: "345"
+        - link "Sungguh Dalam Kasih Yesus":
+          - /url: assets/pdf/345_Sungguh Dalam Kasih Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1403]:
+          - generic [ref=e1404]: playlist_add
+      - listitem [ref=e1405] [cursor=pointer]:
+        - generic [ref=e1406]: "346"
+        - link "Lemah Lembut PanggilanNya":
+          - /url: assets/pdf/346_Lemah Lembut PanggilanNya.pdf
+        - button "Tambah ke Playlist" [ref=e1407]:
+          - generic [ref=e1408]: playlist_add
+      - listitem [ref=e1409] [cursor=pointer]:
+        - generic [ref=e1410]: "347"
+        - link "Batu Karang yang Kokoh":
+          - /url: assets/pdf/347_Batu Karang yang Kokoh.pdf
+        - button "Tambah ke Playlist" [ref=e1411]:
+          - generic [ref=e1412]: playlist_add
+      - listitem [ref=e1413] [cursor=pointer]:
+        - generic [ref=e1414]: "348"
+        - link "Anugerah Yesus yang Ajaib":
+          - /url: assets/pdf/348_Anugerah Yesus yang Ajaib.pdf
+        - button "Tambah ke Playlist" [ref=e1415]:
+          - generic [ref=e1416]: playlist_add
+      - listitem [ref=e1417] [cursor=pointer]:
+        - generic [ref=e1418]: "349"
+        - link "Ajaib, Ajaiblah Yesus":
+          - /url: assets/pdf/349_Ajaib, Ajaiblah Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1419]:
+          - generic [ref=e1420]: playlist_add
+      - listitem [ref=e1421] [cursor=pointer]:
+        - generic [ref=e1422]: "350"
+        - link "Hadirkah Kau":
+          - /url: assets/pdf/350_Hadirkah Kau_.pdf
+        - button "Tambah ke Playlist" [ref=e1423]:
+          - generic [ref=e1424]: playlist_add
+      - listitem [ref=e1425] [cursor=pointer]:
+        - generic [ref=e1426]: "351"
+        - link "Dia Hidup":
+          - /url: assets/pdf/351_Dia Hidup.pdf
+        - button "Tambah ke Playlist" [ref=e1427]:
+          - generic [ref=e1428]: playlist_add
+      - listitem [ref=e1429] [cursor=pointer]:
+        - generic [ref=e1430]: "352"
+        - link "Dia Menaungi Jiwaku":
+          - /url: assets/pdf/352_Dia Menaungi Jiwaku.pdf
+        - button "Tambah ke Playlist" [ref=e1431]:
+          - generic [ref=e1432]: playlist_add
+      - listitem [ref=e1433] [cursor=pointer]:
+        - generic [ref=e1434]: "353"
+        - link "Di bawah Salib Yesus":
+          - /url: assets/pdf/353_Di bawah Salib Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1435]:
+          - generic [ref=e1436]: playlist_add
+      - listitem [ref=e1437] [cursor=pointer]:
+        - generic [ref=e1438]: "354"
+        - link "Kemenangan Dalam Yesus":
+          - /url: assets/pdf/354_Kemenangan Dalam Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1439]:
+          - generic [ref=e1440]: playlist_add
+      - listitem [ref=e1441] [cursor=pointer]:
+        - generic [ref=e1442]: "355"
+        - link "Kekal di Hatiku":
+          - /url: assets/pdf/355_Kekal di Hatiku.pdf
+        - button "Tambah ke Playlist" [ref=e1443]:
+          - generic [ref=e1444]: playlist_add
+      - listitem [ref=e1445] [cursor=pointer]:
+        - generic [ref=e1446]: "356"
+        - link "Imanlah Kemenangan":
+          - /url: assets/pdf/356_Imanlah Kemenangan.pdf
+        - button "Tambah ke Playlist" [ref=e1447]:
+          - generic [ref=e1448]: playlist_add
+      - listitem [ref=e1449] [cursor=pointer]:
+        - generic [ref=e1450]: "357"
+        - link "Tuhan adalah Gembalaku":
+          - /url: assets/pdf/357_Tuhan adalah Gembalaku.pdf
+        - button "Tambah ke Playlist" [ref=e1451]:
+          - generic [ref=e1452]: playlist_add
+      - listitem [ref=e1453] [cursor=pointer]:
+        - generic [ref=e1454]: "358"
+        - link "Roh Kudus, Penuhilah Aku":
+          - /url: assets/pdf/358_Roh Kudus, Penuhilah Aku.pdf
+        - button "Tambah ke Playlist" [ref=e1455]:
+          - generic [ref=e1456]: playlist_add
+      - listitem [ref=e1457] [cursor=pointer]:
+        - generic [ref=e1458]: "359"
+        - link "Kita Berjalan ke Sion":
+          - /url: assets/pdf/359_Kita Berjalan ke Sion.pdf
+        - button "Tambah ke Playlist" [ref=e1459]:
+          - generic [ref=e1460]: playlist_add
+      - listitem [ref=e1461] [cursor=pointer]:
+        - generic [ref=e1462]: "360"
+        - link "Adakah Tempat Bagi Yesus":
+          - /url: assets/pdf/360_Adakah Tempat Bagi Yesus_.pdf
+        - button "Tambah ke Playlist" [ref=e1463]:
+          - generic [ref=e1464]: playlist_add
+      - listitem [ref=e1465] [cursor=pointer]:
+        - generic [ref=e1466]: "361"
+        - link "Haruskah Yesus Memikul Salib Sendiri":
+          - /url: assets/pdf/361_Haruskah Yesus Memikul Salib Sendiri_.pdf
+        - button "Tambah ke Playlist" [ref=e1467]:
+          - generic [ref=e1468]: playlist_add
+      - listitem [ref=e1469] [cursor=pointer]:
+        - generic [ref=e1470]: "362"
+        - link "Tuhan Roti Hidup":
+          - /url: assets/pdf/362_Tuhan Roti Hidup.pdf
+        - button "Tambah ke Playlist" [ref=e1471]:
+          - generic [ref=e1472]: playlist_add
+      - listitem [ref=e1473] [cursor=pointer]:
+        - generic [ref=e1474]: "363"
+        - link "Berpegang Pada JanjiNya":
+          - /url: assets/pdf/363_Berpegang Pada JanjiNya.pdf
+        - button "Tambah ke Playlist" [ref=e1475]:
+          - generic [ref=e1476]: playlist_add
+      - listitem [ref=e1477] [cursor=pointer]:
+        - generic [ref=e1478]: "364"
+        - link "Hatiku Simpan FirmanMu":
+          - /url: assets/pdf/364_Hatiku Simpan FirmanMu.pdf
+        - button "Tambah ke Playlist" [ref=e1479]:
+          - generic [ref=e1480]: playlist_add
+      - listitem [ref=e1481] [cursor=pointer]:
+        - generic [ref=e1482]: "365"
+        - link "Kepala Tuhan Kini Terluka":
+          - /url: assets/pdf/365_Kepala Tuhan Kini Terluka.pdf
+        - button "Tambah ke Playlist" [ref=e1483]:
+          - generic [ref=e1484]: playlist_add
+      - listitem [ref=e1485] [cursor=pointer]:
+        - generic [ref=e1486]: "366"
+        - link "Berimanlah Kepada Tuhan":
+          - /url: assets/pdf/366_Berimanlah Kepada Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1487]:
+          - generic [ref=e1488]: playlist_add
+      - listitem [ref=e1489] [cursor=pointer]:
+        - generic [ref=e1490]: "367"
+        - link "Burung Pipit Dia Jaga":
+          - /url: assets/pdf/367_Burung Pipit Dia Jaga.pdf
+        - button "Tambah ke Playlist" [ref=e1491]:
+          - generic [ref=e1492]: playlist_add
+      - listitem [ref=e1493] [cursor=pointer]:
+        - generic [ref=e1494]: "368"
+        - link "Ku Tahu Siapa Pegang Hari Esok":
+          - /url: assets/pdf/368_Ku Tahu Siapa Pegang Hari Esok.pdf
+        - button "Tambah ke Playlist" [ref=e1495]:
+          - generic [ref=e1496]: playlist_add
+      - listitem [ref=e1497] [cursor=pointer]:
+        - generic [ref=e1498]: "369"
+        - link "Perlu Yesus":
+          - /url: assets/pdf/369_Perlu Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1499]:
+          - generic [ref=e1500]: playlist_add
+      - listitem [ref=e1501] [cursor=pointer]:
+        - generic [ref=e1502]: "370"
+        - link "Bila Tuhan Beserta Kita":
+          - /url: assets/pdf/370_Bila Tuhan Beserta Kita.pdf
+        - button "Tambah ke Playlist" [ref=e1503]:
+          - generic [ref=e1504]: playlist_add
+      - listitem [ref=e1505] [cursor=pointer]:
+        - generic [ref=e1506]: "371"
+        - link "Dalam Pencobaan":
+          - /url: assets/pdf/371_Dalam Pencobaan.pdf
+        - button "Tambah ke Playlist" [ref=e1507]:
+          - generic [ref=e1508]: playlist_add
+      - listitem [ref=e1509] [cursor=pointer]:
+        - generic [ref=e1510]: "372"
+        - link "Saat Ini":
+          - /url: assets/pdf/372_Saat Ini.pdf
+        - button "Tambah ke Playlist" [ref=e1511]:
+          - generic [ref=e1512]: playlist_add
+      - listitem [ref=e1513] [cursor=pointer]:
+        - generic [ref=e1514]: "373"
+        - link "Percayalah":
+          - /url: assets/pdf/373_Percayalah.pdf
+        - button "Tambah ke Playlist" [ref=e1515]:
+          - generic [ref=e1516]: playlist_add
+      - listitem [ref=e1517] [cursor=pointer]:
+        - generic [ref=e1518]: "374"
+        - link "Raja kekal, Pimpinlah":
+          - /url: assets/pdf/374_Raja kekal, Pimpinlah.pdf
+        - button "Tambah ke Playlist" [ref=e1519]:
+          - generic [ref=e1520]: playlist_add
+      - listitem [ref=e1521] [cursor=pointer]:
+        - generic [ref=e1522]: "375"
+        - link "Bekas Paku di TanganNya":
+          - /url: assets/pdf/375_Bekas Paku di TanganNya.pdf
+        - button "Tambah ke Playlist" [ref=e1523]:
+          - generic [ref=e1524]: playlist_add
+      - listitem [ref=e1525] [cursor=pointer]:
+        - generic [ref=e1526]: "376"
+        - link "Batu Karang":
+          - /url: assets/pdf/376_Batu Karang.pdf
+        - button "Tambah ke Playlist" [ref=e1527]:
+          - generic [ref=e1528]: playlist_add
+      - listitem [ref=e1529] [cursor=pointer]:
+        - generic [ref=e1530]: "377"
+        - link "Tuhan Kau Mengingatku":
+          - /url: assets/pdf/377_Tuhan Kau Mengingatku.pdf
+        - button "Tambah ke Playlist" [ref=e1531]:
+          - generic [ref=e1532]: playlist_add
+      - listitem [ref=e1533] [cursor=pointer]:
+        - generic [ref=e1534]: "378"
+        - link "Percaya dan Taat":
+          - /url: assets/pdf/378_Percaya dan Taat.pdf
+        - button "Tambah ke Playlist" [ref=e1535]:
+          - generic [ref=e1536]: playlist_add
+      - listitem [ref=e1537] [cursor=pointer]:
+        - generic [ref=e1538]: "379"
+        - link "Pandanglah Pada Yesus":
+          - /url: assets/pdf/379_Pandanglah Pada Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1539]:
+          - generic [ref=e1540]: playlist_add
+      - listitem [ref=e1541] [cursor=pointer]:
+        - generic [ref=e1542]: "380"
+        - link "Yesus Segalanya Bagiku":
+          - /url: assets/pdf/380_Yesus Segalanya Bagiku.pdf
+        - button "Tambah ke Playlist" [ref=e1543]:
+          - generic [ref=e1544]: playlist_add
+      - listitem [ref=e1545] [cursor=pointer]:
+        - generic [ref=e1546]: "381"
+        - link "Betapa Aku Mengasihi Yesus":
+          - /url: assets/pdf/381_Betapa Aku Mengasihi Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1547]:
+          - generic [ref=e1548]: playlist_add
+      - listitem [ref=e1549] [cursor=pointer]:
+        - generic [ref=e1550]: "382"
+        - link "Di Hatiku Ada Melodi Kasih":
+          - /url: assets/pdf/382_Di Hatiku Ada Melodi Kasih.pdf
+        - button "Tambah ke Playlist" [ref=e1551]:
+          - generic [ref=e1552]: playlist_add
+      - listitem [ref=e1553] [cursor=pointer]:
+        - generic [ref=e1554]: "383"
+        - link "Suatu Hari Nanti":
+          - /url: assets/pdf/383_Suatu Hari Nanti.pdf
+        - button "Tambah ke Playlist" [ref=e1555]:
+          - generic [ref=e1556]: playlist_add
+      - listitem [ref=e1557] [cursor=pointer]:
+        - generic [ref=e1558]: "384"
+        - link "Cepat Atau Lambat":
+          - /url: assets/pdf/384_Cepat Atau Lambat.pdf
+        - button "Tambah ke Playlist" [ref=e1559]:
+          - generic [ref=e1560]: playlist_add
+      - listitem [ref=e1561] [cursor=pointer]:
+        - generic [ref=e1562]: "385"
+        - link "Di Tepi Yordan":
+          - /url: assets/pdf/385_Di Tepi Yordan.pdf
+        - button "Tambah ke Playlist" [ref=e1563]:
+          - generic [ref=e1564]: playlist_add
+      - listitem [ref=e1565] [cursor=pointer]:
+        - generic [ref=e1566]: "386"
+        - link "Aku Menemukan Sobat Setia":
+          - /url: assets/pdf/386_Aku Menemukan Sobat Setia.pdf
+        - button "Tambah ke Playlist" [ref=e1567]:
+          - generic [ref=e1568]: playlist_add
+      - listitem [ref=e1569] [cursor=pointer]:
+        - generic [ref=e1570]: "387"
+        - link "Tuhan, Bersabdalah Padaku":
+          - /url: assets/pdf/387_Tuhan, Bersabdalah Padaku.pdf
+        - button "Tambah ke Playlist" [ref=e1571]:
+          - generic [ref=e1572]: playlist_add
+      - listitem [ref=e1573] [cursor=pointer]:
+        - generic [ref=e1574]: "388"
+        - link "Dekat Dengan Tuhanku":
+          - /url: assets/pdf/388_Dekat Dengan Tuhanku.pdf
+        - button "Tambah ke Playlist" [ref=e1575]:
+          - generic [ref=e1576]: playlist_add
+      - listitem [ref=e1577] [cursor=pointer]:
+        - generic [ref=e1578]: "389"
+        - link "Lebih Dekat Kepada Tuhan":
+          - /url: assets/pdf/389_Lebih Dekat Kepada Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1579]:
+          - generic [ref=e1580]: playlist_add
+      - listitem [ref=e1581] [cursor=pointer]:
+        - generic [ref=e1582]: "390"
+        - link "Lebih Dekat PadaMu":
+          - /url: assets/pdf/390_Lebih Dekat PadaMu.pdf
+        - button "Tambah ke Playlist" [ref=e1583]:
+          - generic [ref=e1584]: playlist_add
+      - listitem [ref=e1585] [cursor=pointer]:
+        - generic [ref=e1586]: "391"
+        - link "Ku Tak Akan Pernah Sendiri":
+          - /url: assets/pdf/391_Ku Tak Akan Pernah Sendiri.pdf
+        - button "Tambah ke Playlist" [ref=e1587]:
+          - generic [ref=e1588]: playlist_add
+      - listitem [ref=e1589] [cursor=pointer]:
+        - generic [ref=e1590]: "392"
+        - link "Aku Akan Pergi ke Mana Engkau Mengutusku":
+          - /url: assets/pdf/392_Aku Akan Pergi ke Mana Engkau Mengutusku.pdf
+        - button "Tambah ke Playlist" [ref=e1591]:
+          - generic [ref=e1592]: playlist_add
+      - listitem [ref=e1593] [cursor=pointer]:
+        - generic [ref=e1594]: "393"
+        - link "Terima Kasih, Tuhan":
+          - /url: assets/pdf/393_Terima Kasih, Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1595]:
+          - generic [ref=e1596]: playlist_add
+      - listitem [ref=e1597] [cursor=pointer]:
+        - generic [ref=e1598]: "394"
+        - link "Terima Kasih Pada Tuhan":
+          - /url: assets/pdf/394_Terima Kasih Pada Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1599]:
+          - generic [ref=e1600]: playlist_add
+      - listitem [ref=e1601] [cursor=pointer]:
+        - generic [ref=e1602]: "395"
+        - link "Di Tempat yang Lebih Tinggi":
+          - /url: assets/pdf/395_Di Tempat yang Lebih Tinggi.pdf
+        - button "Tambah ke Playlist" [ref=e1603]:
+          - generic [ref=e1604]: playlist_add
+      - listitem [ref=e1605] [cursor=pointer]:
+        - generic [ref=e1606]: "396"
+        - link "Aku Akan Setia":
+          - /url: assets/pdf/396_Aku Akan Setia.pdf
+        - button "Tambah ke Playlist" [ref=e1607]:
+          - generic [ref=e1608]: playlist_add
+      - listitem [ref=e1609] [cursor=pointer]:
+        - generic [ref=e1610]: "397"
+        - link "Nyatakan Yesus Dalammu":
+          - /url: assets/pdf/397_Nyatakan Yesus Dalammu.pdf
+        - button "Tambah ke Playlist" [ref=e1611]:
+          - generic [ref=e1612]: playlist_add
+      - listitem [ref=e1613] [cursor=pointer]:
+        - generic [ref=e1614]: "398"
+        - link "Hidup Untuk Yesus":
+          - /url: assets/pdf/398_Hidup Untuk Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1615]:
+          - generic [ref=e1616]: playlist_add
+      - listitem [ref=e1617] [cursor=pointer]:
+        - generic [ref=e1618]: "399"
+        - link "Tuhan, Ku Mau Menjadi Kristen":
+          - /url: assets/pdf/399_Tuhan, Ku Mau Menjadi Kristen.pdf
+        - button "Tambah ke Playlist" [ref=e1619]:
+          - generic [ref=e1620]: playlist_add
+      - listitem [ref=e1621] [cursor=pointer]:
+        - generic [ref=e1622]: "400"
+        - link "Aku Mau Seperti Yesus":
+          - /url: assets/pdf/400_Aku Mau Seperti Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1623]:
+          - generic [ref=e1624]: playlist_add
+      - listitem [ref=e1625] [cursor=pointer]:
+        - generic [ref=e1626]: "401"
+        - link "Kuduskan Dirimu":
+          - /url: assets/pdf/401_Kuduskan Dirimu.pdf
+        - button "Tambah ke Playlist" [ref=e1627]:
+          - generic [ref=e1628]: playlist_add
+      - listitem [ref=e1629] [cursor=pointer]:
+        - generic [ref=e1630]: "402"
+        - link "Jalan Tuhan":
+          - /url: assets/pdf/402_Jalan Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1631]:
+          - generic [ref=e1632]: playlist_add
+      - listitem [ref=e1633] [cursor=pointer]:
+        - generic [ref=e1634]: "403"
+        - link "Tuhan, Jadilah KehendakMu":
+          - /url: assets/pdf/403_Tuhan, Jadilah KehendakMu.pdf
+        - button "Tambah ke Playlist" [ref=e1635]:
+          - generic [ref=e1636]: playlist_add
+      - listitem [ref=e1637] [cursor=pointer]:
+        - generic [ref=e1638]: "404"
+        - link "Tuhan Memberkatimu":
+          - /url: assets/pdf/404_Tuhan Memberkatimu.pdf
+        - button "Tambah ke Playlist" [ref=e1639]:
+          - generic [ref=e1640]: playlist_add
+      - listitem [ref=e1641] [cursor=pointer]:
+        - generic [ref=e1642]: "405"
+        - link "Berdoakah Engkau":
+          - /url: assets/pdf/405_Berdoakah Engkau_.pdf
+        - button "Tambah ke Playlist" [ref=e1643]:
+          - generic [ref=e1644]: playlist_add
+      - listitem [ref=e1645] [cursor=pointer]:
+        - generic [ref=e1646]: "406"
+        - link "Aku Harus Memberitahu Yesus":
+          - /url: assets/pdf/406_Aku Harus Memberitahu Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1647]:
+          - generic [ref=e1648]: playlist_add
+      - listitem [ref=e1649] [cursor=pointer]:
+        - generic [ref=e1650]: "407"
+        - link "Dalam Taman":
+          - /url: assets/pdf/407_Dalam Taman.pdf
+        - button "Tambah ke Playlist" [ref=e1651]:
+          - generic [ref=e1652]: playlist_add
+      - listitem [ref=e1653] [cursor=pointer]:
+        - generic [ref=e1654]: "408"
+        - link "Masuklah Dalam Hatiku":
+          - /url: assets/pdf/408_Masuklah Dalam Hatiku.pdf
+        - button "Tambah ke Playlist" [ref=e1655]:
+          - generic [ref=e1656]: playlist_add
+      - listitem [ref=e1657] [cursor=pointer]:
+        - generic [ref=e1658]: "409"
+        - link "Jadikan Aku Saluran Berkat":
+          - /url: assets/pdf/409_Jadikan Aku Saluran Berkat.pdf
+        - button "Tambah ke Playlist" [ref=e1659]:
+          - generic [ref=e1660]: playlist_add
+      - listitem [ref=e1661] [cursor=pointer]:
+        - generic [ref=e1662]: "410"
+        - link "Ajarlah Aku Berdoa":
+          - /url: assets/pdf/410_Ajarlah Aku Berdoa.pdf
+        - button "Tambah ke Playlist" [ref=e1663]:
+          - generic [ref=e1664]: playlist_add
+      - listitem [ref=e1665] [cursor=pointer]:
+        - generic [ref=e1666]: "411"
+        - link "Taman Doa Nan indah":
+          - /url: assets/pdf/411_Taman Doa Nan indah.pdf
+        - button "Tambah ke Playlist" [ref=e1667]:
+          - generic [ref=e1668]: playlist_add
+      - listitem [ref=e1669] [cursor=pointer]:
+        - generic [ref=e1670]: "412"
+        - link "Indahnya Saat Berdoa":
+          - /url: assets/pdf/412_Indahnya Saat Berdoa.pdf
+        - button "Tambah ke Playlist" [ref=e1671]:
+          - generic [ref=e1672]: playlist_add
+      - listitem [ref=e1673] [cursor=pointer]:
+        - generic [ref=e1674]: "413"
+        - link "Layanilah Tuhan Dengan Sukacita":
+          - /url: assets/pdf/413_Layanilah Tuhan Dengan Sukacita.pdf
+        - button "Tambah ke Playlist" [ref=e1675]:
+          - generic [ref=e1676]: playlist_add
+      - listitem [ref=e1677] [cursor=pointer]:
+        - generic [ref=e1678]: "414"
+        - link "Bila Aku Semakin Melayani Dia":
+          - /url: assets/pdf/414_Bila Aku Semakin Melayani Dia.pdf
+        - button "Tambah ke Playlist" [ref=e1679]:
+          - generic [ref=e1680]: playlist_add
+      - listitem [ref=e1681] [cursor=pointer]:
+        - generic [ref=e1682]: "415"
+        - link "Serahkan Yang Terbaik PadaNya":
+          - /url: assets/pdf/415_Serahkan Yang Terbaik PadaNya.pdf
+        - button "Tambah ke Playlist" [ref=e1683]:
+          - generic [ref=e1684]: playlist_add
+      - listitem [ref=e1685] [cursor=pointer]:
+        - generic [ref=e1686]: "417"
+        - link "Mengikut Yesus":
+          - /url: assets/pdf/417_Mengikut Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1687]:
+          - generic [ref=e1688]: playlist_add
+      - listitem [ref=e1689] [cursor=pointer]:
+        - generic [ref=e1690]: "418"
+        - link "Sudahkah Kau Persembahkan Semua":
+          - /url: assets/pdf/418_Sudahkah Kau Persembahkan Semua_.pdf
+        - button "Tambah ke Playlist" [ref=e1691]:
+          - generic [ref=e1692]: playlist_add
+      - listitem [ref=e1693] [cursor=pointer]:
+        - generic [ref=e1694]: "419"
+        - link "Jadikan Aku Saluran Berkat":
+          - /url: assets/pdf/419_Jadikan Aku Saluran Berkat.pdf
+        - button "Tambah ke Playlist" [ref=e1695]:
+          - generic [ref=e1696]: playlist_add
+      - listitem [ref=e1697] [cursor=pointer]:
+        - generic [ref=e1698]: "420"
+        - link "Persembahan Bagi Tuhan":
+          - /url: assets/pdf/420_Persembahan Bagi Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1699]:
+          - generic [ref=e1700]: playlist_add
+      - listitem [ref=e1701] [cursor=pointer]:
+        - generic [ref=e1702]: "421"
+        - link "Datanglah ke PestaNya":
+          - /url: assets/pdf/421_Datanglah ke PestaNya.pdf
+        - button "Tambah ke Playlist" [ref=e1703]:
+          - generic [ref=e1704]: playlist_add
+      - listitem [ref=e1705] [cursor=pointer]:
+        - generic [ref=e1706]: "422"
+        - link "Beritakan KasihNya":
+          - /url: assets/pdf/422_Beritakan KasihNya.pdf
+        - button "Tambah ke Playlist" [ref=e1707]:
+          - generic [ref=e1708]: playlist_add
+      - listitem [ref=e1709] [cursor=pointer]:
+        - generic [ref=e1710]: "423"
+        - link "Ceritakanlah Tentang Yesus":
+          - /url: assets/pdf/423_Ceritakanlah Tentang Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1711]:
+          - generic [ref=e1712]: playlist_add
+      - listitem [ref=e1713] [cursor=pointer]:
+        - generic [ref=e1714]: "424"
+        - link "Perintah Raja":
+          - /url: assets/pdf/424_Perintah Raja.pdf
+        - button "Tambah ke Playlist" [ref=e1715]:
+          - generic [ref=e1716]: playlist_add
+      - listitem [ref=e1717] [cursor=pointer]:
+        - generic [ref=e1718]: "425"
+        - link "Ulurkan Tali Keselamatan":
+          - /url: assets/pdf/425_Ulurkan Tali Keselamatan.pdf
+        - button "Tambah ke Playlist" [ref=e1719]:
+          - generic [ref=e1720]: playlist_add
+      - listitem [ref=e1721] [cursor=pointer]:
+        - generic [ref=e1722]: "426"
+        - link "Juruselamat Yang Ajaib":
+          - /url: assets/pdf/426_Juruselamat Yang Ajaib.pdf
+        - button "Tambah ke Playlist" [ref=e1723]:
+          - generic [ref=e1724]: playlist_add
+      - listitem [ref=e1725] [cursor=pointer]:
+        - generic [ref=e1726]: "427"
+        - link "Ceritakan Pada Bangsa - Bangsa":
+          - /url: assets/pdf/427_Ceritakan Pada Bangsa - Bangsa.pdf
+        - button "Tambah ke Playlist" [ref=e1727]:
+          - generic [ref=e1728]: playlist_add
+      - listitem [ref=e1729] [cursor=pointer]:
+        - generic [ref=e1730]: "428"
+        - link "Orang Yang Penuh Kesengsaraan":
+          - /url: assets/pdf/428_Orang Yang Penuh Kesengsaraan.pdf
+        - button "Tambah ke Playlist" [ref=e1731]:
+          - generic [ref=e1732]: playlist_add
+      - listitem [ref=e1733] [cursor=pointer]:
+        - generic [ref=e1734]: "429"
+        - link "Aku Telah Melihat KemuliaanNya":
+          - /url: assets/pdf/429_Aku Telah Melihat KemuliaanNya.pdf
+        - button "Tambah ke Playlist" [ref=e1735]:
+          - generic [ref=e1736]: playlist_add
+      - listitem [ref=e1737] [cursor=pointer]:
+        - generic [ref=e1738]: "430"
+        - link "Berhimpunkah di Surga Kehidupan":
+          - /url: assets/pdf/430_Berhimpunkah di Surga Kehidupan_.pdf
+        - button "Tambah ke Playlist" [ref=e1739]:
+          - generic [ref=e1740]: playlist_add
+      - listitem [ref=e1741] [cursor=pointer]:
+        - generic [ref=e1742]: "431"
+        - link "Kasih Sempurna":
+          - /url: assets/pdf/431_Kasih Sempurna.pdf
+        - button "Tambah ke Playlist" [ref=e1743]:
+          - generic [ref=e1744]: playlist_add
+      - listitem [ref=e1745] [cursor=pointer]:
+        - generic [ref=e1746]: "432"
+        - link "Pengertian Yang Mendalam":
+          - /url: assets/pdf/432_Pengertian Yang Mendalam.pdf
+        - button "Tambah ke Playlist" [ref=e1747]:
+          - generic [ref=e1748]: playlist_add
+      - listitem [ref=e1749] [cursor=pointer]:
+        - generic [ref=e1750]: "433"
+        - link "Damai Nan Ajaib":
+          - /url: assets/pdf/433_Damai Nan Ajaib.pdf
+        - button "Tambah ke Playlist" [ref=e1751]:
+          - generic [ref=e1752]: playlist_add
+      - listitem [ref=e1753] [cursor=pointer]:
+        - generic [ref=e1754]: "434"
+        - link "Di Suatu Negeri Yang Mulia":
+          - /url: assets/pdf/434_Di Suatu Negeri Yang Mulia.pdf
+        - button "Tambah ke Playlist" [ref=e1755]:
+          - generic [ref=e1756]: playlist_add
+      - listitem [ref=e1757] [cursor=pointer]:
+        - generic [ref=e1758]: "435"
+        - link "Dia Mengampuni Semua Dosaku":
+          - /url: assets/pdf/435_Dia Mengampuni Semua Dosaku.pdf
+        - button "Tambah ke Playlist" [ref=e1759]:
+          - generic [ref=e1760]: playlist_add
+      - listitem [ref=e1761] [cursor=pointer]:
+        - generic [ref=e1762]: "436"
+        - link "Sepanjang Jalan Tuhan Memimpinku":
+          - /url: assets/pdf/436_Sepanjang Jalan Tuhan Memimpinku.pdf
+        - button "Tambah ke Playlist" [ref=e1763]:
+          - generic [ref=e1764]: playlist_add
+      - listitem [ref=e1765] [cursor=pointer]:
+        - generic [ref=e1766]: "437"
+        - link "Tuhan, Buatlah Hatiku Bersemi":
+          - /url: assets/pdf/437_Tuhan, Buatlah Hatiku Bersemi.pdf
+        - button "Tambah ke Playlist" [ref=e1767]:
+          - generic [ref=e1768]: playlist_add
+      - listitem [ref=e1769] [cursor=pointer]:
+        - generic [ref=e1770]: "438"
+        - link "Untuk Keindahan Bumi":
+          - /url: assets/pdf/438_Untuk Keindahan Bumi.pdf
+        - button "Tambah ke Playlist" [ref=e1771]:
+          - generic [ref=e1772]: playlist_add
+      - listitem [ref=e1773] [cursor=pointer]:
+        - generic [ref=e1774]: "439"
+        - link "Setiap Saat":
+          - /url: assets/pdf/439_Setiap Saat.pdf
+        - button "Tambah ke Playlist" [ref=e1775]:
+          - generic [ref=e1776]: playlist_add
+      - listitem [ref=e1777] [cursor=pointer]:
+        - generic [ref=e1778]: "440"
+        - link "Biarlah Semua Makhluk":
+          - /url: assets/pdf/440_Biarlah Semua Makhluk.pdf
+        - button "Tambah ke Playlist" [ref=e1779]:
+          - generic [ref=e1780]: playlist_add
+      - listitem [ref=e1781] [cursor=pointer]:
+        - generic [ref=e1782]: "441"
+        - link "Bersukacitalah":
+          - /url: assets/pdf/441_Bersukacitalah.pdf
+        - button "Tambah ke Playlist" [ref=e1783]:
+          - generic [ref=e1784]: playlist_add
+      - listitem [ref=e1785] [cursor=pointer]:
+        - generic [ref=e1786]: "442"
+        - link "Tuhan Memimpin Kita":
+          - /url: assets/pdf/442_Tuhan Memimpin Kita.pdf
+        - button "Tambah ke Playlist" [ref=e1787]:
+          - generic [ref=e1788]: playlist_add
+      - listitem [ref=e1789] [cursor=pointer]:
+        - generic [ref=e1790]: "443"
+        - link "Iman Umat-Umat Kudus":
+          - /url: assets/pdf/443_Iman Umat-Umat Kudus.pdf
+        - button "Tambah ke Playlist" [ref=e1791]:
+          - generic [ref=e1792]: playlist_add
+      - listitem [ref=e1793] [cursor=pointer]:
+        - generic [ref=e1794]: "444"
+        - link "Yesuslah Nama Yang Terindah":
+          - /url: assets/pdf/444_Yesuslah Nama Yang Terindah.pdf
+        - button "Tambah ke Playlist" [ref=e1795]:
+          - generic [ref=e1796]: playlist_add
+      - listitem [ref=e1797] [cursor=pointer]:
+        - generic [ref=e1798]: "445"
+        - link "Anugerah Lebih Besar dari Dosa":
+          - /url: assets/pdf/445_Anugerah Lebih Besar dari Dosa.pdf
+        - button "Tambah ke Playlist" [ref=e1799]:
+          - generic [ref=e1800]: playlist_add
+      - listitem [ref=e1801] [cursor=pointer]:
+        - generic [ref=e1802]: "446"
+        - link "Terpujilah Nama Tuhan":
+          - /url: assets/pdf/446_Terpujilah Nama Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e1803]:
+          - generic [ref=e1804]: playlist_add
+      - listitem [ref=e1805] [cursor=pointer]:
+        - generic [ref=e1806]: "447"
+        - link "Imanku Menemukan Tempat Perhentian":
+          - /url: assets/pdf/447_Imanku Menemukan Tempat Perhentian.pdf
+        - button "Tambah ke Playlist" [ref=e1807]:
+          - generic [ref=e1808]: playlist_add
+      - listitem [ref=e1809] [cursor=pointer]:
+        - generic [ref=e1810]: "448"
+        - link "Bersukacitalah, Tuhan Itu Raja":
+          - /url: assets/pdf/448_Bersukacitalah, Tuhan Itu Raja.pdf
+        - button "Tambah ke Playlist" [ref=e1811]:
+          - generic [ref=e1812]: playlist_add
+      - listitem [ref=e1813] [cursor=pointer]:
+        - generic [ref=e1814]: "449"
+        - link "Mungkinkah":
+          - /url: assets/pdf/449_Mungkinkah _.pdf
+        - button "Tambah ke Playlist" [ref=e1815]:
+          - generic [ref=e1816]: playlist_add
+      - listitem [ref=e1817] [cursor=pointer]:
+        - generic [ref=e1818]: "450"
+        - link "Serukanlah Perang":
+          - /url: assets/pdf/450_Serukanlah Perang.pdf
+        - button "Tambah ke Playlist" [ref=e1819]:
+          - generic [ref=e1820]: playlist_add
+      - listitem [ref=e1821] [cursor=pointer]:
+        - generic [ref=e1822]: "451"
+        - link "Serukanlah Dari Puncak Gunung":
+          - /url: assets/pdf/451_Serukanlah Dari Puncak Gunung.pdf
+        - button "Tambah ke Playlist" [ref=e1823]:
+          - generic [ref=e1824]: playlist_add
+      - listitem [ref=e1825] [cursor=pointer]:
+        - generic [ref=e1826]: "452"
+        - link "Jadilah Visiku":
+          - /url: assets/pdf/452_Jadilah Visiku.pdf
+        - button "Tambah ke Playlist" [ref=e1827]:
+          - generic [ref=e1828]: playlist_add
+      - listitem [ref=e1829] [cursor=pointer]:
+        - generic [ref=e1830]: "453"
+        - link "Anak Raja":
+          - /url: assets/pdf/453_Anak Raja.pdf
+        - button "Tambah ke Playlist" [ref=e1831]:
+          - generic [ref=e1832]: playlist_add
+      - listitem [ref=e1833] [cursor=pointer]:
+        - generic [ref=e1834]: "454"
+        - link "Oh Datanglah, Imanuel":
+          - /url: assets/pdf/454_Oh Datanglah, Imanuel.pdf
+        - button "Tambah ke Playlist" [ref=e1835]:
+          - generic [ref=e1836]: playlist_add
+      - listitem [ref=e1837] [cursor=pointer]:
+        - generic [ref=e1838]: "455"
+        - link "Nama Yang Indah":
+          - /url: assets/pdf/455_Nama Yang Indah.pdf
+        - button "Tambah ke Playlist" [ref=e1839]:
+          - generic [ref=e1840]: playlist_add
+      - listitem [ref=e1841] [cursor=pointer]:
+        - generic [ref=e1842]: "456"
+        - link "Yesuslah Terang Dunia":
+          - /url: assets/pdf/456_Yesuslah Terang Dunia.pdf
+        - button "Tambah ke Playlist" [ref=e1843]:
+          - generic [ref=e1844]: playlist_add
+      - listitem [ref=e1845] [cursor=pointer]:
+        - generic [ref=e1846]: "457"
+        - link "Hanyalah JamahanMu":
+          - /url: assets/pdf/457_Hanyalah JamahanMu.pdf
+        - button "Tambah ke Playlist" [ref=e1847]:
+          - generic [ref=e1848]: playlist_add
+      - listitem [ref=e1849] [cursor=pointer]:
+        - generic [ref=e1850]: "458"
+        - link "Janganlah Pergi Tanpa Yesus":
+          - /url: assets/pdf/458_Janganlah Pergi Tanpa Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1851]:
+          - generic [ref=e1852]: playlist_add
+      - listitem [ref=e1853] [cursor=pointer]:
+        - generic [ref=e1854]: "459"
+        - link "Yesuslah Terang Dunia":
+          - /url: assets/pdf/459_Yesuslah Terang Dunia.pdf
+        - button "Tambah ke Playlist" [ref=e1855]:
+          - generic [ref=e1856]: playlist_add
+      - listitem [ref=e1857] [cursor=pointer]:
+        - generic [ref=e1858]: "460"
+        - link "Yesus Paling Mengenalmu":
+          - /url: assets/pdf/460_Yesus Paling Mengenalmu.pdf
+        - button "Tambah ke Playlist" [ref=e1859]:
+          - generic [ref=e1860]: playlist_add
+      - listitem [ref=e1861] [cursor=pointer]:
+        - generic [ref=e1862]: "461"
+        - link "Semua Karena Bukit Golgota":
+          - /url: assets/pdf/461_Semua Karena Bukit Golgota.pdf
+        - button "Tambah ke Playlist" [ref=e1863]:
+          - generic [ref=e1864]: playlist_add
+      - listitem [ref=e1865] [cursor=pointer]:
+        - generic [ref=e1866]: "462"
+        - link "Penebus Agung":
+          - /url: assets/pdf/462_Penebus Agung.pdf
+        - button "Tambah ke Playlist" [ref=e1867]:
+          - generic [ref=e1868]: playlist_add
+      - listitem [ref=e1869] [cursor=pointer]:
+        - generic [ref=e1870]: "463"
+        - link "Roh Kudus, Penolongku":
+          - /url: assets/pdf/463_Roh Kudus, Penolongku.pdf
+        - button "Tambah ke Playlist" [ref=e1871]:
+          - generic [ref=e1872]: playlist_add
+      - listitem [ref=e1873] [cursor=pointer]:
+        - generic [ref=e1874]: "464"
+        - link "Tertegun di HadapanNya":
+          - /url: assets/pdf/464_Tertegun di HadapanNya.pdf
+        - button "Tambah ke Playlist" [ref=e1875]:
+          - generic [ref=e1876]: playlist_add
+      - listitem [ref=e1877] [cursor=pointer]:
+        - generic [ref=e1878]: "465"
+        - link "Yesus Perlindunganku Yang Teguh":
+          - /url: assets/pdf/465_Yesus Perlindunganku Yang Teguh.pdf
+        - button "Tambah ke Playlist" [ref=e1879]:
+          - generic [ref=e1880]: playlist_add
+      - listitem [ref=e1881] [cursor=pointer]:
+        - generic [ref=e1882]: "466"
+        - link "Tiap Hari, Tiap Waktu":
+          - /url: assets/pdf/466_Tiap Hari, Tiap Waktu.pdf
+        - button "Tambah ke Playlist" [ref=e1883]:
+          - generic [ref=e1884]: playlist_add
+      - listitem [ref=e1885] [cursor=pointer]:
+        - generic [ref=e1886]: "467"
+        - link "Percayalah Pada Yesus":
+          - /url: assets/pdf/467_Percayalah Pada Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1887]:
+          - generic [ref=e1888]: playlist_add
+      - listitem [ref=e1889] [cursor=pointer]:
+        - generic [ref=e1890]: "468"
+        - link "Kristus Hidup di Dalam Ku":
+          - /url: assets/pdf/468_Kristus Hidup di Dalam Ku.pdf
+        - button "Tambah ke Playlist" [ref=e1891]:
+          - generic [ref=e1892]: playlist_add
+      - listitem [ref=e1893] [cursor=pointer]:
+        - generic [ref=e1894]: "469"
+        - link "Dia Menuntunmu":
+          - /url: assets/pdf/469_Dia Menuntunmu.pdf
+        - button "Tambah ke Playlist" [ref=e1895]:
+          - generic [ref=e1896]: playlist_add
+      - listitem [ref=e1897] [cursor=pointer]:
+        - generic [ref=e1898]: "470"
+        - link "Hai Sion, Bersegeralah":
+          - /url: assets/pdf/470_Hai Sion, Bersegeralah.pdf
+        - button "Tambah ke Playlist" [ref=e1899]:
+          - generic [ref=e1900]: playlist_add
+      - listitem [ref=e1901] [cursor=pointer]:
+        - generic [ref=e1902]: "471"
+        - link "Di Kalvari":
+          - /url: assets/pdf/471_Di Kalvari.pdf
+        - button "Tambah ke Playlist" [ref=e1903]:
+          - generic [ref=e1904]: playlist_add
+      - listitem [ref=e1905] [cursor=pointer]:
+        - generic [ref=e1906]: "472"
+        - link "Dengarlah Doa Kami, Ya Tuhan!":
+          - /url: assets/pdf/472_Dengarlah Doa Kami, Ya Tuhan!.pdf
+        - button "Tambah ke Playlist" [ref=e1907]:
+          - generic [ref=e1908]: playlist_add
+      - listitem [ref=e1909] [cursor=pointer]:
+        - generic [ref=e1910]: "473"
+        - link "Tuhan, Pakailah Daku":
+          - /url: assets/pdf/473_Tuhan, Pakailah Daku.pdf
+        - button "Tambah ke Playlist" [ref=e1911]:
+          - generic [ref=e1912]: playlist_add
+      - listitem [ref=e1913] [cursor=pointer]:
+        - generic [ref=e1914]: "474"
+        - link "Datanglah dengan Hati yang Hancur":
+          - /url: assets/pdf/474_Datanglah dengan Hati yang Hancur.pdf
+        - button "Tambah ke Playlist" [ref=e1915]:
+          - generic [ref=e1916]: playlist_add
+      - listitem [ref=e1917] [cursor=pointer]:
+        - generic [ref=e1918]: "475"
+        - link "Juruselamat Menantimu":
+          - /url: assets/pdf/475_Juruselamat Menantimu.pdf
+        - button "Tambah ke Playlist" [ref=e1919]:
+          - generic [ref=e1920]: playlist_add
+      - listitem [ref=e1921] [cursor=pointer]:
+        - generic [ref=e1922]: "476"
+        - link "Diamlah Jiwaku":
+          - /url: assets/pdf/476_Diamlah Jiwaku.pdf
+        - button "Tambah ke Playlist" [ref=e1923]:
+          - generic [ref=e1924]: playlist_add
+      - listitem [ref=e1925] [cursor=pointer]:
+        - generic [ref=e1926]: "477"
+        - link "Dunia Berlalu":
+          - /url: assets/pdf/477_Dunia Berlalu.pdf
+        - button "Tambah ke Playlist" [ref=e1927]:
+          - generic [ref=e1928]: playlist_add
+      - listitem [ref=e1929] [cursor=pointer]:
+        - generic [ref=e1930]: "478"
+        - link "Ku Mau Seperti Yesus":
+          - /url: assets/pdf/478_Ku Mau Seperti Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e1931]:
+          - generic [ref=e1932]: playlist_add
+      - listitem [ref=e1933] [cursor=pointer]:
+        - generic [ref=e1934]: "479"
+        - link "Bawalah Mereka":
+          - /url: assets/pdf/479_Bawalah Mereka.pdf
+        - button "Tambah ke Playlist" [ref=e1935]:
+          - generic [ref=e1936]: playlist_add
+      - listitem [ref=e1937] [cursor=pointer]:
+        - generic [ref=e1938]: "480"
+        - link "Mengapa Tidak Sekarang":
+          - /url: assets/pdf/480_Mengapa Tidak Sekarang _.pdf
+        - button "Tambah ke Playlist" [ref=e1939]:
+          - generic [ref=e1940]: playlist_add
+      - listitem [ref=e1941] [cursor=pointer]:
+        - generic [ref=e1942]: "481"
+        - link "Pujilah Dia !":
+          - /url: assets/pdf/481_Pujilah Dia !.pdf
+        - button "Tambah ke Playlist" [ref=e1943]:
+          - generic [ref=e1944]: playlist_add
+      - listitem [ref=e1945] [cursor=pointer]:
+        - generic [ref=e1946]: "482"
+        - link "Surga Datang":
+          - /url: assets/pdf/482_Surga Datang.pdf
+        - button "Tambah ke Playlist" [ref=e1947]:
+          - generic [ref=e1948]: playlist_add
+      - listitem [ref=e1949] [cursor=pointer]:
+        - generic [ref=e1950]: "483"
+        - link "Hanya Satu Rencana":
+          - /url: assets/pdf/483_Hanya Satu Rencana.pdf
+        - button "Tambah ke Playlist" [ref=e1951]:
+          - generic [ref=e1952]: playlist_add
+      - listitem [ref=e1953] [cursor=pointer]:
+        - generic [ref=e1954]: "484"
+        - link "Sang Raja Telah Datang":
+          - /url: assets/pdf/484_Sang Raja Telah Datang.pdf
+        - button "Tambah ke Playlist" [ref=e1955]:
+          - generic [ref=e1956]: playlist_add
+      - listitem [ref=e1957] [cursor=pointer]:
+        - generic [ref=e1958]: "485"
+        - link "Sumber Air Kehidupan":
+          - /url: assets/pdf/485_Sumber Air Kehidupan.pdf
+        - button "Tambah ke Playlist" [ref=e1959]:
+          - generic [ref=e1960]: playlist_add
+      - listitem [ref=e1961] [cursor=pointer]:
+        - generic [ref=e1962]: "486"
+        - link "Tentara Salibkah Aku":
+          - /url: assets/pdf/486_Tentara Salibkah Aku_.pdf
+        - button "Tambah ke Playlist" [ref=e1963]:
+          - generic [ref=e1964]: playlist_add
+      - listitem [ref=e1965] [cursor=pointer]:
+        - generic [ref=e1966]: "487"
+        - link "Sampai ke Seluruh Dunia":
+          - /url: assets/pdf/487_Sampai ke Seluruh Dunia.pdf
+        - button "Tambah ke Playlist" [ref=e1967]:
+          - generic [ref=e1968]: playlist_add
+      - listitem [ref=e1969] [cursor=pointer]:
+        - generic [ref=e1970]: "488"
+        - link "Bawalah Daku, ya Bapa":
+          - /url: assets/pdf/488_Bawalah Daku, ya Bapa.pdf
+        - button "Tambah ke Playlist" [ref=e1971]:
+          - generic [ref=e1972]: playlist_add
+      - listitem [ref=e1973] [cursor=pointer]:
+        - generic [ref=e1974]: "489"
+        - link "Bukan Perak atau Emas":
+          - /url: assets/pdf/489_Bukan Perak atau Emas.pdf
+        - button "Tambah ke Playlist" [ref=e1975]:
+          - generic [ref=e1976]: playlist_add
+      - listitem [ref=e1977] [cursor=pointer]:
+        - generic [ref=e1978]: "490"
+        - link "Saat Fajar Tiba":
+          - /url: assets/pdf/490_Saat Fajar Tiba.pdf
+        - button "Tambah ke Playlist" [ref=e1979]:
+          - generic [ref=e1980]: playlist_add
+      - listitem [ref=e1981] [cursor=pointer]:
+        - generic [ref=e1982]: "491"
+        - link "Aku Memuji Penebusku":
+          - /url: assets/pdf/491_Aku Memuji Penebusku.pdf
+        - button "Tambah ke Playlist" [ref=e1983]:
+          - generic [ref=e1984]: playlist_add
+      - listitem [ref=e1985] [cursor=pointer]:
+        - generic [ref=e1986]: "492"
+        - link "Allahku Yang Ajaib":
+          - /url: assets/pdf/492_Allahku Yang Ajaib.pdf
+        - button "Tambah ke Playlist" [ref=e1987]:
+          - generic [ref=e1988]: playlist_add
+      - listitem [ref=e1989] [cursor=pointer]:
+        - generic [ref=e1990]: "493"
+        - link "Kita Berkumpul Bersama":
+          - /url: assets/pdf/493_Kita Berkumpul Bersama.pdf
+        - button "Tambah ke Playlist" [ref=e1991]:
+          - generic [ref=e1992]: playlist_add
+      - listitem [ref=e1993] [cursor=pointer]:
+        - generic [ref=e1994]: "494"
+        - link "Bersama Mu":
+          - /url: assets/pdf/494_Bersama Mu.pdf
+        - button "Tambah ke Playlist" [ref=e1995]:
+          - generic [ref=e1996]: playlist_add
+      - listitem [ref=e1997] [cursor=pointer]:
+        - generic [ref=e1998]: "495"
+        - link "Datanglah !":
+          - /url: assets/pdf/495_Datanglah !.pdf
+        - button "Tambah ke Playlist" [ref=e1999]:
+          - generic [ref=e2000]: playlist_add
+      - listitem [ref=e2001] [cursor=pointer]:
+        - generic [ref=e2002]: "496"
+        - link "Yesus Menjamahku":
+          - /url: assets/pdf/496_Yesus Menjamahku.pdf
+        - button "Tambah ke Playlist" [ref=e2003]:
+          - generic [ref=e2004]: playlist_add
+      - listitem [ref=e2005] [cursor=pointer]:
+        - generic [ref=e2006]: "497"
+        - link "Janji Tuhan Bagiku":
+          - /url: assets/pdf/497_Janji Tuhan Bagiku.pdf
+        - button "Tambah ke Playlist" [ref=e2007]:
+          - generic [ref=e2008]: playlist_add
+      - listitem [ref=e2009] [cursor=pointer]:
+        - generic [ref=e2010]: "498"
+        - link "Yesus Pimpin Kita Pulang":
+          - /url: assets/pdf/498_Yesus Pimpin Kita Pulang.pdf
+        - button "Tambah ke Playlist" [ref=e2011]:
+          - generic [ref=e2012]: playlist_add
+      - listitem [ref=e2013] [cursor=pointer]:
+        - generic [ref=e2014]: "499"
+        - link "Jamahan Tangan Tuhan":
+          - /url: assets/pdf/499_Jamahan Tangan Tuhan.pdf
+        - button "Tambah ke Playlist" [ref=e2015]:
+          - generic [ref=e2016]: playlist_add
+      - listitem [ref=e2017] [cursor=pointer]:
+        - generic [ref=e2018]: "500"
+        - link "Siapa di Muka Pintuku":
+          - /url: assets/pdf/500_Siapa di Muka Pintuku_.pdf
+        - button "Tambah ke Playlist" [ref=e2019]:
+          - generic [ref=e2020]: playlist_add
+      - listitem [ref=e2021] [cursor=pointer]:
+        - generic [ref=e2022]: "501"
+        - link "Dia Menerimaku":
+          - /url: assets/pdf/501_Dia Menerimaku.pdf
+        - button "Tambah ke Playlist" [ref=e2023]:
+          - generic [ref=e2024]: playlist_add
+      - listitem [ref=e2025] [cursor=pointer]:
+        - generic [ref=e2026]: "502"
+        - link "Yesus Juruselamatku Yang Ajaib":
+          - /url: assets/pdf/502_Yesus Juruselamatku Yang Ajaib.pdf
+        - button "Tambah ke Playlist" [ref=e2027]:
+          - generic [ref=e2028]: playlist_add
+      - listitem [ref=e2029] [cursor=pointer]:
+        - generic [ref=e2030]: "503"
+        - link "Penebus yang Terindah":
+          - /url: assets/pdf/503_Penebus yang Terindah.pdf
+        - button "Tambah ke Playlist" [ref=e2031]:
+          - generic [ref=e2032]: playlist_add
+      - listitem [ref=e2033] [cursor=pointer]:
+        - generic [ref=e2034]: "504"
+        - link "Pimpin ke Kalvari":
+          - /url: assets/pdf/504_Pimpin ke Kalvari.pdf
+        - button "Tambah ke Playlist" [ref=e2035]:
+          - generic [ref=e2036]: playlist_add
+      - listitem [ref=e2037] [cursor=pointer]:
+        - generic [ref=e2038]: "505"
+        - link "Yang Hampir yakin, Percayalah":
+          - /url: assets/pdf/505_Yang Hampir yakin, Percayalah.pdf
+        - button "Tambah ke Playlist" [ref=e2039]:
+          - generic [ref=e2040]: playlist_add
+      - listitem [ref=e2041] [cursor=pointer]:
+        - generic [ref=e2042]: "506"
+        - link "Ku Senang Beritakan Penebusan":
+          - /url: assets/pdf/506_Ku Senang Beritakan Penebusan.pdf
+        - button "Tambah ke Playlist" [ref=e2043]:
+          - generic [ref=e2044]: playlist_add
+      - listitem [ref=e2045] [cursor=pointer]:
+        - generic [ref=e2046]: "507"
+        - link "Beban Terangkat di Kalvari":
+          - /url: assets/pdf/507_Beban Terangkat di Kalvari.pdf
+        - button "Tambah ke Playlist" [ref=e2047]:
+          - generic [ref=e2048]: playlist_add
+      - listitem [ref=e2049] [cursor=pointer]:
+        - generic [ref=e2050]: "508"
+        - link "Sauh Jiwa Kita":
+          - /url: assets/pdf/508_Sauh Jiwa Kita.pdf
+        - button "Tambah ke Playlist" [ref=e2051]:
+          - generic [ref=e2052]: playlist_add
+      - listitem [ref=e2053] [cursor=pointer]:
+        - generic [ref=e2054]: "509"
+        - link "Aku Milik Raja":
+          - /url: assets/pdf/509_Aku Milik Raja.pdf
+        - button "Tambah ke Playlist" [ref=e2055]:
+          - generic [ref=e2056]: playlist_add
+      - listitem [ref=e2057] [cursor=pointer]:
+        - generic [ref=e2058]: "510"
+        - link "Yesus Berjalan Denganku":
+          - /url: assets/pdf/510_Yesus Berjalan Denganku.pdf
+        - button "Tambah ke Playlist" [ref=e2059]:
+          - generic [ref=e2060]: playlist_add
+      - listitem [ref=e2061] [cursor=pointer]:
+        - generic [ref=e2062]: "511"
+        - link "Sekarang Aku Milik Yesus":
+          - /url: assets/pdf/511_Sekarang Aku Milik Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e2063]:
+          - generic [ref=e2064]: playlist_add
+      - listitem [ref=e2065] [cursor=pointer]:
+        - generic [ref=e2066]: "512"
+        - link "Tuhan, Biarkan Ku Berjalan Dengan Mu":
+          - /url: assets/pdf/512_Tuhan, Biarkan Ku Berjalan Dengan Mu.pdf
+        - button "Tambah ke Playlist" [ref=e2067]:
+          - generic [ref=e2068]: playlist_add
+      - listitem [ref=e2069] [cursor=pointer]:
+        - generic [ref=e2070]: "513"
+        - link "Yesus, Hembuskan Berkat Mu":
+          - /url: assets/pdf/513_Yesus, Hembuskan Berkat Mu.pdf
+        - button "Tambah ke Playlist" [ref=e2071]:
+          - generic [ref=e2072]: playlist_add
+      - listitem [ref=e2073] [cursor=pointer]:
+        - generic [ref=e2074]: "514"
+        - link "Dalam Kristus Tiada Timur atau Barat":
+          - /url: assets/pdf/514_Dalam Kristus Tiada Timur atau Barat.pdf
+        - button "Tambah ke Playlist" [ref=e2075]:
+          - generic [ref=e2076]: playlist_add
+      - listitem [ref=e2077] [cursor=pointer]:
+        - generic [ref=e2078]: "515"
+        - link "Kenangan Indah":
+          - /url: assets/pdf/515_Kenangan Indah.pdf
+        - button "Tambah ke Playlist" [ref=e2079]:
+          - generic [ref=e2080]: playlist_add
+      - listitem [ref=e2081] [cursor=pointer]:
+        - generic [ref=e2082]: "516"
+        - link "Aku Bertekad":
+          - /url: assets/pdf/516_Aku Bertekad.pdf
+        - button "Tambah ke Playlist" [ref=e2083]:
+          - generic [ref=e2084]: playlist_add
+      - listitem [ref=e2085] [cursor=pointer]:
+        - generic [ref=e2086]: "517"
+        - link "Allah Abraham":
+          - /url: assets/pdf/517_Allah Abraham.pdf
+        - button "Tambah ke Playlist" [ref=e2087]:
+          - generic [ref=e2088]: playlist_add
+      - listitem [ref=e2089] [cursor=pointer]:
+        - generic [ref=e2090]: "518"
+        - link "Kemuliaan Selamanya Bagi Yesus":
+          - /url: assets/pdf/518_Kemuliaan Selamanya Bagi Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e2091]:
+          - generic [ref=e2092]: playlist_add
+      - listitem [ref=e2093] [cursor=pointer]:
+        - generic [ref=e2094]: "519"
+        - link "Berlindung Pada Batu Karang":
+          - /url: assets/pdf/519_Berlindung Pada Batu Karang.pdf
+        - button "Tambah ke Playlist" [ref=e2095]:
+          - generic [ref=e2096]: playlist_add
+      - listitem [ref=e2097] [cursor=pointer]:
+        - generic [ref=e2098]: "520"
+        - link "Menabur Dengan Air Mata":
+          - /url: assets/pdf/520_Menabur Dengan Air Mata.pdf
+        - button "Tambah ke Playlist" [ref=e2099]:
+          - generic [ref=e2100]: playlist_add
+      - listitem [ref=e2101] [cursor=pointer]:
+        - generic [ref=e2102]: "521"
+        - link "Akulah DombaNya":
+          - /url: assets/pdf/521_Akulah DombaNya.pdf
+        - button "Tambah ke Playlist" [ref=e2103]:
+          - generic [ref=e2104]: playlist_add
+      - listitem [ref=e2105] [cursor=pointer]:
+        - generic [ref=e2106]: "522"
+        - link "Dengan Darah Yesus":
+          - /url: assets/pdf/522_Dengan Darah Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e2107]:
+          - generic [ref=e2108]: playlist_add
+      - listitem [ref=e2109] [cursor=pointer]:
+        - generic [ref=e2110]: "523"
+        - link "Betapa Mulianya Hari Itu":
+          - /url: assets/pdf/523_Betapa Mulianya Hari Itu.pdf
+        - button "Tambah ke Playlist" [ref=e2111]:
+          - generic [ref=e2112]: playlist_add
+      - listitem [ref=e2113] [cursor=pointer]:
+        - generic [ref=e2114]: "524"
+        - link "Bagaimana Bila Sekarang":
+          - /url: assets/pdf/524_Bagaimana Bila Sekarang_.pdf
+        - button "Tambah ke Playlist" [ref=e2115]:
+          - generic [ref=e2116]: playlist_add
+      - listitem [ref=e2117] [cursor=pointer]:
+        - generic [ref=e2118]: "525"
+        - link "Biarlah Jiwamu Bergembira":
+          - /url: assets/pdf/525_Biarlah Jiwamu Bergembira.pdf
+        - button "Tambah ke Playlist" [ref=e2119]:
+          - generic [ref=e2120]: playlist_add
+      - listitem [ref=e2121] [cursor=pointer]:
+        - generic [ref=e2122]: "526"
+        - link "Hosana":
+          - /url: assets/pdf/526_Hosana.pdf
+        - button "Tambah ke Playlist" [ref=e2123]:
+          - generic [ref=e2124]: playlist_add
+      - listitem [ref=e2125] [cursor=pointer]:
+        - generic [ref=e2126]: "527"
+        - link "Gerbang Surga Terbuka Lebar":
+          - /url: assets/pdf/527_Gerbang Surga Terbuka Lebar.pdf
+        - button "Tambah ke Playlist" [ref=e2127]:
+          - generic [ref=e2128]: playlist_add
+      - listitem [ref=e2129] [cursor=pointer]:
+        - generic [ref=e2130]: "528"
+        - link "Dia Segalanya Bagiku":
+          - /url: assets/pdf/528_Dia Segalanya Bagiku.pdf
+        - button "Tambah ke Playlist" [ref=e2131]:
+          - generic [ref=e2132]: playlist_add
+      - listitem [ref=e2133] [cursor=pointer]:
+        - generic [ref=e2134]: "529"
+        - link "Datanglah Pada Yesus":
+          - /url: assets/pdf/529_Datanglah Pada Yesus.pdf
+        - button "Tambah ke Playlist" [ref=e2135]:
+          - generic [ref=e2136]: playlist_add
+      - listitem [ref=e2137] [cursor=pointer]:
+        - generic [ref=e2138]: "530"
+        - link "Doa Bapa Kami":
+          - /url: assets/pdf/530_Doa Bapa Kami.pdf
+        - button "Tambah ke Playlist" [ref=e2139]:
+          - generic [ref=e2140]: playlist_add
+  - generic:
+    - button "Collapse mini player" [expanded]:
+      - generic: expand_more
+    - generic:
+      - generic:
+        - generic:
+          - generic: MIDI Queue
+    - generic:
+      - generic:
+        - generic:
+          - generic: Judul Lagu
+          - generic: "Auto Next: Nomor Berikutnya"
+      - generic:
+        - button "Previous":
+          - generic: skip_previous
+        - button "Play/Pause":
+          - generic: play_arrow
+        - button "Next":
+          - generic: skip_next
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - button "?"
+            - button "remove":
+              - generic: remove
+            - generic: "0"
+            - button "add":
+              - generic: add
+            - button "Switcher accidental (sharp)":
+              - generic: ♯
+          - generic:
+            - button "piano Memuat Instrumen...":
+              - generic: piano
+              - generic: Memuat Instrumen...
+          - button "Loop":
+            - generic: repeat
+        - generic:
+          - generic: 0:00 / 0:00
+          - generic:
+            - slider: "0"
+  - navigation [ref=e2141]:
+    - button "Pujian" [ref=e2142] [cursor=pointer]:
+      - generic [ref=e2144]: music_note
+      - generic [ref=e2145]: Pujian
+    - button "Playlist" [ref=e2146] [cursor=pointer]:
+      - generic [ref=e2148]: queue_music
+      - generic [ref=e2149]: Playlist
+    - button "Pengaturan" [ref=e2150] [cursor=pointer]:
+      - generic [ref=e2152]: settings
+      - generic [ref=e2153]: Pengaturan
+  - banner [ref=e2155]:
+    - generic [ref=e2156]:
+      - button "Kembali" [ref=e2157] [cursor=pointer]:
+        - generic [ref=e2158]: arrow_back
+      - generic:
+        - button "Pujian Sebelumnya" [ref=e2159] [cursor=pointer]:
+          - generic [ref=e2160]: skip_previous
+        - generic [ref=e2161] [cursor=pointer]:
+          - heading "Judul Pujian" [level=2] [ref=e2162]
+          - generic [ref=e2163]: Nomor Pujian
+        - button "Pujian Berikutnya" [ref=e2164] [cursor=pointer]:
+          - generic [ref=e2165]: skip_next
+      - generic [ref=e2166]:
+        - generic [ref=e2167]:
+          - button "Halaman Sebelumnya" [ref=e2168] [cursor=pointer]:
+            - generic [ref=e2169]: chevron_left
+          - generic [ref=e2170]: 0 / 0
+          - button "Halaman Berikutnya" [ref=e2171] [cursor=pointer]:
+            - generic [ref=e2172]: chevron_right
+        - generic [ref=e2173]:
+          - button "Perkecil" [ref=e2174] [cursor=pointer]:
+            - generic [ref=e2175]: zoom_out
+          - generic [ref=e2176]: 100%
+          - button "Perbesar" [ref=e2177] [cursor=pointer]:
+            - generic [ref=e2178]: zoom_in
+        - generic [ref=e2179]:
+          - button "Mode Tampilan" [ref=e2180] [cursor=pointer]:
+            - generic [ref=e2181]: book
+          - button "Mode Gulir" [ref=e2182] [cursor=pointer]:
+            - generic [ref=e2183]: swap_vert

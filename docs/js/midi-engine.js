@@ -72,6 +72,7 @@ var MidiEngine = (function () {
   var _preloadedInstrument = -1;
   var _preloadRenderId = null;
   var _preloadQueue = [];        // URLs queued for preloading
+  var _preloadInFlight = {};     // key → Promise currently rendering
   var _preloadBusy = false;      // True while a preload render is in progress
   var _PRELOAD_CACHE_MAX = 12;   // Max cached buffers
 
@@ -143,7 +144,7 @@ var MidiEngine = (function () {
       }
 
       try {
-        var workerUrl = 'js/midi-render-worker.min.js?v=3';
+        var workerUrl = 'js/midi-render-worker.min.js?v=4';
         _worker = new Worker(workerUrl);
       } catch (err) {
         fail(new Error('Failed to create MIDI render worker: ' + err.message));
@@ -361,6 +362,49 @@ var MidiEngine = (function () {
       });
     }
     return matches;
+  }
+
+  function _findReusableRawMidi(url, instrument) {
+    var inst = instrument != null ? instrument : -1;
+    var suffix = '|' + inst;
+    var keys = Object.keys(_preloadCache);
+
+    for (var i = keys.length - 1; i >= 0; i--) {
+      var key = keys[i];
+      if (key.indexOf(url + '|') !== 0) continue;
+      if (key.slice(-suffix.length) !== suffix) continue;
+
+      var entry = _preloadCache[key];
+      if (!entry || !entry.rawMidi) continue;
+
+      return {
+        key: key,
+        rawMidi: entry.rawMidi,
+        source: entry.source || 'unknown',
+        sourceLabel: entry.sourceLabel || ''
+      };
+    }
+
+    return null;
+  }
+
+  function _findReusableInFlight(url, instrument) {
+    var inst = instrument != null ? instrument : -1;
+    var suffix = '|' + inst;
+    var keys = Object.keys(_preloadInFlight);
+
+    for (var i = keys.length - 1; i >= 0; i--) {
+      var key = keys[i];
+      if (key.indexOf(url + '|') !== 0) continue;
+      if (key.slice(-suffix.length) !== suffix) continue;
+
+      return {
+        key: key,
+        promise: _preloadInFlight[key]
+      };
+    }
+
+    return null;
   }
 
   // ─── Rendering ────────────────────────────────────────────────────
@@ -581,7 +625,6 @@ var MidiEngine = (function () {
     // Keep the outgoing song in cache so back/prev navigation is instant.
     _rememberCurrentSongForBackNavigation(cacheKey);
 
-    _isLoading = true;
     _currentTranspose = targetTranspose;
     _renderedTranspose = _currentTranspose; // Will be rendered at this transpose
     _currentInstrument = targetInstrument;
@@ -611,6 +654,8 @@ var MidiEngine = (function () {
       return _activatePreloaded(opts.autoplay, thisGen);
     }
 
+    _isLoading = true;
+
     console.log('[Preload] Cache MISS for', url, 'key=' + cacheKey,
       'cacheKeys=', Object.keys(_preloadCache),
       'matchingVariants=', _getMatchingCacheEntries(url));
@@ -618,32 +663,28 @@ var MidiEngine = (function () {
     // Stop current playback
     var stopPromise = _playing ? stop(200) : Promise.resolve();
 
-    return _ensureEngineReady().then(function () {
-      return stopPromise;
-    }).then(function () {
-      if (_loadGeneration !== thisGen) throw new Error('cancelled');
-      _currentMidiUrl = url;
-      return fetch(url);
-    }).then(function (resp) {
-      if (!resp.ok) throw new Error('MIDI fetch failed: ' + resp.status);
-      return resp.arrayBuffer();
-    }).then(function (buf) {
-      if (_loadGeneration !== thisGen) throw new Error('cancelled');
-      _currentMidiBuffer = buf;
-      if (progressCb) progressCb(30);
-      return _renderToBuffer(buf, {
-        transpose: _currentTranspose,
-        instrument: _currentInstrument,
-        tempoRate: _tempoRate
-      });
-    }).then(function (audioBuffer) {
+    function _finishLoadError(err) {
+      _isLoading = false;
+      if (err && err.message === 'cancelled') return 0;
+      throw err;
+    }
+
+    function _activateExactPreload(hit) {
+      _preloadedBuffer = hit.buffer;
+      _preloadedMidiUrl = url;
+      _preloadedTranspose = _currentTranspose;
+      _preloadedInstrument = _currentInstrument;
+      if (progressCb) progressCb(100);
+      return _activatePreloaded(opts.autoplay, thisGen);
+    }
+
+    function _finalizeRenderedLoad(audioBuffer) {
       if (_loadGeneration !== thisGen) throw new Error('cancelled');
       if (progressCb) progressCb(100);
 
       _currentBuffer = audioBuffer;
       _duration = audioBuffer.duration;
       _currentTime = 0;
-
       _isLoading = false;
 
       if (opts.autoplay) {
@@ -652,11 +693,106 @@ var MidiEngine = (function () {
 
       if (_onStateChange) _onStateChange(false, 0, _duration);
       return _duration;
-    }).catch(function (err) {
-      _isLoading = false;
-      if (err.message === 'cancelled') return 0;
-      throw err;
-    });
+    }
+
+    function _renderLoadedMidiBuffer(buf) {
+      if (_loadGeneration !== thisGen) throw new Error('cancelled');
+      _currentMidiBuffer = buf;
+      if (progressCb) progressCb(30);
+      return _renderToBuffer(buf, {
+        transpose: _currentTranspose,
+        instrument: _currentInstrument,
+        tempoRate: _tempoRate
+      }).then(_finalizeRenderedLoad);
+    }
+
+    function _loadFromReusableRaw(reusable) {
+      console.log('[Preload] Reusing raw MIDI variant for', url,
+        'target=' + cacheKey,
+        'variant=' + reusable.key,
+        'source=' + (reusable.source || 'unknown'),
+        reusable.sourceLabel ? 'label=' + reusable.sourceLabel : '');
+
+      return _ensureEngineReady().then(function () {
+        return stopPromise;
+      }).then(function () {
+        if (_loadGeneration !== thisGen) throw new Error('cancelled');
+        _currentMidiUrl = url;
+        return _renderLoadedMidiBuffer(reusable.rawMidi);
+      });
+    }
+
+    function _loadFromNetwork() {
+      return _ensureEngineReady().then(function () {
+        return stopPromise;
+      }).then(function () {
+        if (_loadGeneration !== thisGen) throw new Error('cancelled');
+        _currentMidiUrl = url;
+        return fetch(url);
+      }).then(function (resp) {
+        if (!resp.ok) throw new Error('MIDI fetch failed: ' + resp.status);
+        return resp.arrayBuffer();
+      }).then(function (buf) {
+        return _renderLoadedMidiBuffer(buf);
+      });
+    }
+
+    if (useTempoNeutralCache && _preloadInFlight[cacheKey]) {
+      console.log('[Preload] Awaiting in-flight render for', url, 'key=' + cacheKey);
+      if (progressCb) progressCb(15);
+
+      return _preloadInFlight[cacheKey].catch(function () {
+        return null;
+      }).then(function () {
+        if (_loadGeneration !== thisGen) throw new Error('cancelled');
+        var cachedAfterWait = _preloadCache[cacheKey];
+        if (cachedAfterWait && cachedAfterWait.buffer) {
+          console.log('[Preload] Cache HIT after await for', url,
+            'key=' + cacheKey,
+            'source=' + (cachedAfterWait.source || 'unknown'),
+            cachedAfterWait.sourceLabel ? 'label=' + cachedAfterWait.sourceLabel : '');
+          return _activateExactPreload(cachedAfterWait);
+        }
+        return _loadFromNetwork();
+      }).catch(_finishLoadError);
+    }
+
+    var reusableVariant = _findReusableRawMidi(url, _currentInstrument);
+    if (reusableVariant && reusableVariant.rawMidi) {
+      return _loadFromReusableRaw(reusableVariant).catch(_finishLoadError);
+    }
+
+    var reusableInFlight = _findReusableInFlight(url, _currentInstrument);
+    if (reusableInFlight && reusableInFlight.promise) {
+      console.log('[Preload] Awaiting reusable in-flight render for', url,
+        'target=' + cacheKey,
+        'variant=' + reusableInFlight.key);
+      if (progressCb) progressCb(15);
+
+      return reusableInFlight.promise.catch(function () {
+        return null;
+      }).then(function () {
+        if (_loadGeneration !== thisGen) throw new Error('cancelled');
+
+        var cachedAfterWait = _preloadCache[cacheKey];
+        if (useTempoNeutralCache && cachedAfterWait && cachedAfterWait.buffer) {
+          console.log('[Preload] Cache HIT after reusable await for', url,
+            'key=' + cacheKey,
+            'source=' + (cachedAfterWait.source || 'unknown'),
+            cachedAfterWait.sourceLabel ? 'label=' + cachedAfterWait.sourceLabel : '');
+          return _activateExactPreload(cachedAfterWait);
+        }
+
+        var reusableAfterWait = _findReusableRawMidi(url, _currentInstrument);
+        if (reusableAfterWait && reusableAfterWait.rawMidi) {
+          return _loadFromReusableRaw(reusableAfterWait);
+        }
+
+        return _loadFromNetwork();
+      }).catch(_finishLoadError);
+    }
+
+    return _loadFromNetwork().catch(_finishLoadError);
   }
 
   /**
@@ -1048,12 +1184,20 @@ var MidiEngine = (function () {
       return;
     }
 
+    // Already rendering this exact key — skip duplicate work
+    if (_preloadInFlight[key]) {
+      console.log('[Preload] Already rendering, skipping:', key);
+      _preloadBusy = false;
+      _processPreloadQueue();
+      return;
+    }
+
     console.log('[Preload] Starting preload for', item.url,
       'transpose=' + item.transpose, 'instrument=' + item.instrument);
     var startTime = performance.now();
 
     var rawMidiBuf = null;
-    fetch(item.url).then(function (resp) {
+    var preloadPromise = fetch(item.url).then(function (resp) {
       if (!resp.ok) throw new Error('Preload fetch failed: ' + resp.status + ' for ' + item.url);
       return resp.arrayBuffer();
     }).then(function (buf) {
@@ -1085,7 +1229,12 @@ var MidiEngine = (function () {
         'cacheSize=' + Object.keys(_preloadCache).length);
     }).catch(function (err) {
       console.warn('[Preload] FAILED for', item.url + ':', err.message || err);
-    }).then(function () {
+    });
+
+    _preloadInFlight[key] = preloadPromise;
+
+    preloadPromise.then(function () {}, function () {}).then(function () {
+      delete _preloadInFlight[key];
       _preloadBusy = false;
       _processPreloadQueue();
     });
@@ -1105,6 +1254,12 @@ var MidiEngine = (function () {
     // Already cached
     if (_preloadCache[key]) {
       console.log('[Preload] Already cached, skipping preload request:', url);
+      return Promise.resolve();
+    }
+
+    // Already rendering this exact key
+    if (_preloadInFlight[key]) {
+      console.log('[Preload] Already rendering, skipping preload request:', url);
       return Promise.resolve();
     }
 
@@ -1257,6 +1412,9 @@ var MidiEngine = (function () {
     _playing = false;
     _currentBuffer = null;
     _preloadedBuffer = null;
+    _preloadQueue = [];
+    _preloadInFlight = {};
+    _preloadBusy = false;
     _tempoBaseBpm = _DEFAULT_TEMPO_BPM;
     _tempoBpm = _DEFAULT_TEMPO_BPM;
     _tempoRate = 1;

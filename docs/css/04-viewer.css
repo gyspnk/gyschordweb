@@ -3217,7 +3217,9 @@ body.measure-layout .custom-midi-player .player-time {
 }
 /* Popovers inside the MIDI panel must keep their own open/close animation */
 .midi-panel.no-transition .cis-menu-popover,
-.midi-panel.no-midi-transition .cis-menu-popover {
+.midi-panel.no-midi-transition .cis-menu-popover,
+.midi-panel.no-transition .midi-tempo-popover,
+.midi-panel.no-midi-transition .midi-tempo-popover {
   transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.2, 0, 0, 1), visibility 0.2s !important;
 }
 

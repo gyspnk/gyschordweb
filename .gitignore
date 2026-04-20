@@ -21,11 +21,7 @@ __pycache__/
 venv/
 
 # Playwright / browser automation artifacts
-.playwright-mcp/
-playwright-report/
-test-results/
+# (kept tracked for cross-chat debugging references)
 
 # Build/test temporary artifacts
-_test_temp/tailwind-layer.css
-_test_temp/*.tmp
-_test_temp/*.local.*
+# (kept tracked for cross-chat debugging references)

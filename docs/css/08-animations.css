@@ -176,6 +176,14 @@ body.dark-theme .ripple {
   animation: none !important;
 }
 
+/* Keep dropdown/popover fade animations available while panel-level transitions are suppressed */
+.midi-panel.no-transition .cis-menu-popover,
+.midi-panel.no-transition .midi-tempo-popover,
+.midi-panel.no-midi-transition .cis-menu-popover,
+.midi-panel.no-midi-transition .midi-tempo-popover {
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.2, 0, 0, 1), visibility 0.2s !important;
+}
+
 /* PDF close button */
 #pdf-viewer-close:active {
   transform: scale(0.82) translateX(-2px);

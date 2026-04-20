@@ -32,6 +32,20 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   // skip the heavy PDF re-load/render to avoid audio jank during the transition.
   const _canReuseDoc = _earlyIsSameSong && !!pdfDoc;
 
+  // Detect whether the target MIDI is already preloaded with the exact
+  // transpose/instrument profile we are about to load. If yes, avoid blocking
+  // the MIDI activation path on UI delay or PDF tempo parsing.
+  let _earlyTargetIsPreloaded = false;
+  if (!_earlyIsSameSong && _earlyRawUrl && typeof MidiEngine !== "undefined") {
+    let _earlyInstrumentValue = -1;
+    if (prefs && prefs.midiInstrument !== undefined) {
+      _earlyInstrumentValue = parseInt(prefs.midiInstrument, 10);
+    }
+    const _earlyTranspose = _resolveLoadTranspose(song, _earlyRawUrl, _earlyInstrumentValue);
+    const _earlyInstForCheck = _earlyInstrumentValue >= 0 ? _earlyInstrumentValue : -1;
+    _earlyTargetIsPreloaded = MidiEngine.hasPreloaded(_earlyRawUrl, _earlyTranspose, _earlyInstForCheck);
+  }
+
   // Start fetching PDF immediately to overlap network with transition
   // (skipped when we can reuse the existing decoded document)
   const pdfOptions = {
@@ -57,7 +71,10 @@ async function openPdfViewer(songId, backgroundLoad = false) {
     // Animate title/canvas only when actually switching content
     songTitleWrapper.classList.add("is-navigating");
     canvasWrapper.classList.add("is-navigating");
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    const navDelayMs = _earlyTargetIsPreloaded ? 0 : 150;
+    if (navDelayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, navDelayMs));
+    }
 
     // Abort if a newer navigation started during the animation delay.
     // This prevents multiple rapid prev/next presses from concurrently
@@ -91,11 +108,18 @@ async function openPdfViewer(songId, backgroundLoad = false) {
 
   if (!isSameSong) {
     let songTempoForLoad = _getSongTargetTempoBpm(song);
-    if (!_canReuseDoc && loadingTask) {
+    if (!_canReuseDoc && loadingTask && !_earlyTargetIsPreloaded) {
       songTempoForLoad = await _resolveSongTempoForLoad(song, loadingTask);
+    } else if (!_canReuseDoc && loadingTask) {
+      // Warm tempo/transpose caches in the background without delaying the
+      // preloaded MIDI switch path.
+      _resolveSongTempoForLoad(song, loadingTask).catch(function () {});
     }
     if (typeof setCurrentSongTempo === "function") {
-      setCurrentSongTempo(songTempoForLoad, { resetCurrent: true });
+      setCurrentSongTempo(songTempoForLoad, {
+        resetCurrent: true,
+        skipApply: _earlyTargetIsPreloaded,
+      });
     }
 
     chordConfig = createDefaultChordConfig();
@@ -314,7 +338,10 @@ async function openPdfViewer(songId, backgroundLoad = false) {
           _tempoByPdfHref.set(song.fileHref, detectedTempo);
         }
         if (!isSameSong && typeof setCurrentSongTempo === "function") {
-          setCurrentSongTempo(detectedTempo, { resetCurrent: true });
+          setCurrentSongTempo(detectedTempo, {
+            resetCurrent: true,
+            skipApply: _earlyTargetIsPreloaded,
+          });
         }
 
         const keyMatch = pdfText.match(
@@ -1252,24 +1279,45 @@ function _getSongTargetTempoBpm(song) {
   return _tempoByPdfHref.get(song.fileHref) || MIDI_TEMPO_FALLBACK_BPM;
 }
 
+function _detectPreloadTransposeFromPdfText(pdfText) {
+  const pdfKey = _extractPdfKeyFromText(pdfText);
+  if (!pdfKey || typeof parsePdfKeyToSemitone !== 'function') return 0;
+  const pdfSemi = parsePdfKeyToSemitone(pdfKey);
+  return (pdfSemi !== null && _isBlackKeySemitone(pdfSemi)) ? -1 : 0;
+}
+
 async function _resolveSongTempoForLoad(song, loadingTask) {
   if (!song || !song.fileHref) return MIDI_TEMPO_FALLBACK_BPM;
 
   const cachedTempo = _tempoByPdfHref.get(song.fileHref);
-  if (Number.isFinite(cachedTempo)) return cachedTempo;
+  const hasCachedTranspose = _preloadTransposeByPdfHref.has(song.fileHref);
+  if (Number.isFinite(cachedTempo) && hasCachedTranspose) return cachedTempo;
 
-  if (!loadingTask) return MIDI_TEMPO_FALLBACK_BPM;
+  if (!loadingTask) {
+    if (!hasCachedTranspose) {
+      _preloadTransposeByPdfHref.set(song.fileHref, 0);
+    }
+    return Number.isFinite(cachedTempo) ? cachedTempo : MIDI_TEMPO_FALLBACK_BPM;
+  }
 
   try {
     const doc = await loadingTask.promise;
     const page1 = await doc.getPage(1);
     const textContent = await page1.getTextContent();
     const pdfText = textContent.items.map(function (item) { return item.str; }).join(" ");
+
     const detectedTempo = _extractPdfTempoFromText(pdfText);
+    const detectedTranspose = _detectPreloadTransposeFromPdfText(pdfText);
+
     _tempoByPdfHref.set(song.fileHref, detectedTempo);
+    _preloadTransposeByPdfHref.set(song.fileHref, detectedTranspose);
+
     return detectedTempo;
   } catch (_err) {
     _tempoByPdfHref.set(song.fileHref, MIDI_TEMPO_FALLBACK_BPM);
+    if (!_preloadTransposeByPdfHref.has(song.fileHref)) {
+      _preloadTransposeByPdfHref.set(song.fileHref, 0);
+    }
     return MIDI_TEMPO_FALLBACK_BPM;
   }
 }
@@ -1291,8 +1339,10 @@ async function _inferSongDefaultPreloadTranspose(song) {
 
   try {
     if (typeof pdfjsLib === 'undefined' || !pdfjsLib.getDocument) {
-      _preloadTransposeByPdfHref.set(pdfHref, 0);
-      return 0;
+      if (!_preloadTransposeByPdfHref.has(pdfHref)) {
+        _preloadTransposeByPdfHref.set(pdfHref, 0);
+      }
+      return _preloadTransposeByPdfHref.get(pdfHref) || 0;
     }
 
     const loadingTask = pdfjsLib.getDocument({
@@ -1306,19 +1356,14 @@ async function _inferSongDefaultPreloadTranspose(song) {
 
     _tempoByPdfHref.set(pdfHref, _extractPdfTempoFromText(pdfText));
 
-    const pdfKey = _extractPdfKeyFromText(pdfText);
-    if (!pdfKey || typeof parsePdfKeyToSemitone !== 'function') {
-      _preloadTransposeByPdfHref.set(pdfHref, 0);
-      return 0;
-    }
-
-    const pdfSemi = parsePdfKeyToSemitone(pdfKey);
-    const preloadTranspose = (pdfSemi !== null && _isBlackKeySemitone(pdfSemi)) ? -1 : 0;
+    const preloadTranspose = _detectPreloadTransposeFromPdfText(pdfText);
     _preloadTransposeByPdfHref.set(pdfHref, preloadTranspose);
     return preloadTranspose;
   } catch (_err) {
-    _preloadTransposeByPdfHref.set(pdfHref, 0);
-    return 0;
+    if (!_preloadTransposeByPdfHref.has(pdfHref)) {
+      _preloadTransposeByPdfHref.set(pdfHref, 0);
+    }
+    return _preloadTransposeByPdfHref.get(pdfHref) || 0;
   }
 }
 
@@ -1331,19 +1376,8 @@ function _getSongTargetTranspose(song) {
 function _resolveLoadTranspose(song, midiUrl, instrumentValue) {
   var preferred = _getSongTargetTranspose(song);
   if (!prefs || prefs.preferNaturalChords !== true) return 0;
-  if (typeof MidiEngine === 'undefined' || !midiUrl) return preferred;
-
-  var instForCheck = instrumentValue >= 0 ? instrumentValue : -1;
-  if (MidiEngine.hasPreloaded(midiUrl, preferred, instForCheck)) {
-    return preferred;
-  }
-
-  // Fall back to the cached alternate transpose so preload stays effective.
-  var alternate = preferred === 0 ? -1 : 0;
-  if (MidiEngine.hasPreloaded(midiUrl, alternate, instForCheck)) {
-    return alternate;
-  }
-
+  // Always load the song's preferred default profile; preload should match this
+  // exact transpose instead of reusing alternate cached variants.
   return preferred;
 }
 
@@ -1377,8 +1411,7 @@ function _preloadNextSong() {
   console.log('[Preload] Inspecting', allSongs.length, 'neighbors for cache/queue:',
     allSongs.map(function(s) { return s ? s.judul : '?'; }).join(', '));
 
-  // Preload all neighboring MIDIs and PDFs using each song's default transpose profile.
-  allSongs.forEach(function(song) {
+  function queueNeighborSong(song) {
     if (!song) return;
 
     if (song.fileHref) {
@@ -1392,21 +1425,20 @@ function _preloadNextSong() {
       return;
     }
 
-    _inferSongDefaultPreloadTranspose(song).then(function(preloadTranspose) {
-      const instForCheck = instrumentValue >= 0 ? instrumentValue : -1;
+    const instForCheck = instrumentValue >= 0 ? instrumentValue : -1;
+    const hadCachedTranspose = !!(song.fileHref && _preloadTransposeByPdfHref.has(song.fileHref));
+    const initialTranspose = _getSongTargetTranspose(song);
+    const naturalChordsEnabled = !!(prefs && prefs.preferNaturalChords === true);
+
+    function queueWithTranspose(preloadTranspose, logPrefix) {
       if (MidiEngine.hasPreloaded(midiUrl, preloadTranspose, instForCheck)) {
         console.log('[Preload] Neighbor already cached (exact):', song.judul,
           'transpose=' + preloadTranspose,
           'instrument=' + instForCheck);
         return;
       }
-      if (typeof MidiEngine.hasReusablePreload === 'function' && MidiEngine.hasReusablePreload(midiUrl, instForCheck)) {
-        console.log('[Preload] Neighbor already cached (reusable variant) for', song.judul,
-          'instead of rendering another transpose');
-        return;
-      }
 
-      console.log('[Preload] Queue neighbor', song.judul,
+      console.log(logPrefix, song.judul,
         'transpose=' + preloadTranspose,
         'instrument=' + instForCheck);
 
@@ -1416,28 +1448,57 @@ function _preloadNextSong() {
         source: 'neighbor-preload',
         sourceLabel: song.judul
       });
+    }
+
+    // If we already know this song's transpose profile (or natural-chord mode is
+    // disabled), queue immediately with the resolved target.
+    if (hadCachedTranspose || !naturalChordsEnabled) {
+      queueWithTranspose(initialTranspose, '[Preload] Queue neighbor');
+      return;
+    }
+
+    // Unknown transpose profile: register inference first, then queue fallback
+    // on the next microtask. Already-resolved inference wins with a single
+    // exact queue; unresolved inference gets a fast fallback queue.
+    let fallbackQueued = false;
+    let settled = false;
+
+    const inferPromise = _inferSongDefaultPreloadTranspose(song);
+
+    inferPromise.then(function(resolvedTranspose) {
+      settled = true;
+
+      if (!fallbackQueued) {
+        queueWithTranspose(resolvedTranspose, '[Preload] Queue neighbor');
+        return;
+      }
+
+      if (resolvedTranspose !== initialTranspose) {
+        queueWithTranspose(resolvedTranspose, '[Preload] Queue neighbor (resolved transpose)');
+      }
     }).catch(function() {
-      const instForCheck = instrumentValue >= 0 ? instrumentValue : -1;
-      if (MidiEngine.hasPreloaded(midiUrl, 0, instForCheck)) {
-        console.log('[Preload] Neighbor already cached (fallback exact):', song.judul,
-          'transpose=0',
-          'instrument=' + instForCheck);
-        return;
+      settled = true;
+
+      if (!fallbackQueued) {
+        queueWithTranspose(initialTranspose, '[Preload] Queue neighbor (fallback transpose)');
       }
-      if (typeof MidiEngine.hasReusablePreload === 'function' && MidiEngine.hasReusablePreload(midiUrl, instForCheck)) {
-        console.log('[Preload] Neighbor already cached (fallback reusable variant):', song.judul);
-        return;
-      }
-      console.log('[Preload] Queue neighbor (fallback transpose=0)', song.judul,
-        'instrument=' + instForCheck);
-      MidiEngine.preload(midiUrl, {
-        transpose: 0,
-        instrument: instrumentValue >= 0 ? instrumentValue : undefined,
-        source: 'neighbor-preload',
-        sourceLabel: song.judul
-      });
     });
-  });
+
+    Promise.resolve().then(function() {
+      if (settled) return;
+      fallbackQueued = true;
+      queueWithTranspose(initialTranspose, '[Preload] Queue neighbor (fallback pending transpose)');
+    });
+  }
+
+  // Prioritize "after" songs first so next-song navigation gets cache warmed
+  // before less-likely "before" neighbors.
+  for (let i = 0; i < neighbors.after.length; i += 1) {
+    queueNeighborSong(neighbors.after[i]);
+  }
+  for (let i = 0; i < neighbors.before.length; i += 1) {
+    queueNeighborSong(neighbors.before[i]);
+  }
 }
 
 /**
@@ -1498,6 +1559,12 @@ async function changeInstrument() {
 
   syncSeekbarUI(MidiEngine.getTime(), MidiEngine.getDuration());
   window.isMidiSwitching = false;
+
+  // Instrument changes alter preload cache keys (url|transpose|instrument).
+  // Refresh neighbor preloads so next/prev navigation can hit exact-key cache.
+  if (typeof _preloadNextSong === 'function') {
+    _preloadNextSong();
+  }
 }
 
 /**
@@ -1588,10 +1655,26 @@ async function loadChordConfigurationForSong(song) {
   chordConfig = createDefaultChordConfig();
   originalFamilyChord = null;
   const txtUrl = getChordTxtUrl(song);
+  const txtFilename = getChordTxtFilename(song);
+  const noteChordFilename = getNoteChordFilename(song);
 
   try {
+    // Prefer note-aligned chord data when available and skip legacy TXT fetches.
+    const noteChordAssets = await _loadNoteChordAssetSet();
+    if (noteChordAssets.has(noteChordFilename)) {
+      updateTransposeVisibility();
+      return;
+    }
+
+    const chordTxtAssets = await _loadChordTxtAssetSet();
+    if (!chordTxtAssets.has(txtFilename)) {
+      updateTransposeVisibility();
+      return;
+    }
+
     const response = await fetch(txtUrl, { cache: "no-store" });
     if (!response.ok) {
+      if (response.status === 404) chordTxtAssets.delete(txtFilename);
       updateTransposeVisibility();
       return;
     }
@@ -1838,6 +1921,74 @@ function getChordTxtUrl(song) {
 
 function getChordTxtFilename(song) {
   return decodeURIComponent(song.fileHref.split("/").pop() || "chord.txt").replace(/\.pdf$/i, ".txt");
+}
+
+const CHORD_TXT_ASSET_LIST_URL = "chord-assets-list.json";
+const NOTE_CHORD_ASSET_LIST_URL = "note-chord-assets-list.json";
+let _chordTxtAssetSet = null;
+let _chordTxtAssetSetPromise = null;
+let _noteChordAssetSet = null;
+let _noteChordAssetSetPromise = null;
+
+function _buildAssetNameSet(payload, suffix) {
+  if (!Array.isArray(payload)) return new Set();
+
+  const normalized = payload
+    .filter((item) => typeof item === "string")
+    .map((item) => decodeURIComponent(item.trim()))
+    .filter((item) => item.length > 0 && item.toLowerCase().endsWith(suffix));
+
+  return new Set(normalized);
+}
+
+function _loadChordTxtAssetSet() {
+  if (_chordTxtAssetSet) return Promise.resolve(_chordTxtAssetSet);
+  if (_chordTxtAssetSetPromise) return _chordTxtAssetSetPromise;
+
+  _chordTxtAssetSetPromise = fetch(CHORD_TXT_ASSET_LIST_URL, { cache: "no-store" })
+    .then((response) => {
+      if (!response.ok) return [];
+      return response.json();
+    })
+    .then((payload) => {
+      _chordTxtAssetSet = _buildAssetNameSet(payload, ".txt");
+      return _chordTxtAssetSet;
+    })
+    .catch(() => {
+      _chordTxtAssetSet = new Set();
+      return _chordTxtAssetSet;
+    })
+    .then((set) => {
+      _chordTxtAssetSetPromise = null;
+      return set;
+    });
+
+  return _chordTxtAssetSetPromise;
+}
+
+function _loadNoteChordAssetSet() {
+  if (_noteChordAssetSet) return Promise.resolve(_noteChordAssetSet);
+  if (_noteChordAssetSetPromise) return _noteChordAssetSetPromise;
+
+  _noteChordAssetSetPromise = fetch(NOTE_CHORD_ASSET_LIST_URL, { cache: "no-store" })
+    .then((response) => {
+      if (!response.ok) return [];
+      return response.json();
+    })
+    .then((payload) => {
+      _noteChordAssetSet = _buildAssetNameSet(payload, ".chord.json");
+      return _noteChordAssetSet;
+    })
+    .catch(() => {
+      _noteChordAssetSet = new Set();
+      return _noteChordAssetSet;
+    })
+    .then((set) => {
+      _noteChordAssetSetPromise = null;
+      return set;
+    });
+
+  return _noteChordAssetSetPromise;
 }
 
 function createChordLayer(pageNum) {
@@ -2480,10 +2631,18 @@ function getNoteChordFilename(song) {
 async function loadNoteChordConfiguration(song) {
   noteChordConfig = createDefaultNoteChordConfig();
   const url = getNoteChordUrl(song);
+  const filename = getNoteChordFilename(song);
 
   try {
+    const noteChordAssets = await _loadNoteChordAssetSet();
+    if (!noteChordAssets.has(filename)) return;
+
     const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) return;
+    if (!response.ok) {
+      if (response.status === 404) noteChordAssets.delete(filename);
+      return;
+    }
+
     const payload = await response.text();
     const parsed = JSON.parse(payload);
     if (parsed.version === 2 && parsed.type === "note-aligned") {

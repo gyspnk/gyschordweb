@@ -144,7 +144,6 @@ async function probeCurrentSongPdfTempo(page) {
     if (typeof pdfjsLib === 'undefined' || typeof pdfjsLib.getDocument !== 'function') {
       throw new Error('pdfjsLib runtime unavailable');
     }
-
     const loadingTask = pdfjsLib.getDocument({
       url: pdfHref,
       standardFontDataUrl: 'https://mozilla.github.io/pdf.js/standard_fonts/',
@@ -430,6 +429,43 @@ try {
     assert(afterRelease.miniInput === 128, `mini input not mirrored after release: ${afterRelease.miniInput}`);
   });
 
+  await test('Tempo popover keeps fade animation while midi panel no-transition is active', async () => {
+    const probe = await page.evaluate(async () => {
+      const panel = document.getElementById('midi-panel');
+      const button = document.getElementById('custom-tempo-toggle-btn');
+      const popover = document.getElementById('custom-tempo-popover');
+      if (!panel || !button || !popover) throw new Error('Tempo popover controls unavailable');
+
+      const wrapper = button.closest('.instrument-selector-wrapper');
+      panel.classList.add('no-transition');
+      if (!wrapper) throw new Error('Tempo wrapper unavailable');
+
+      wrapper.classList.add('is-open');
+      button.setAttribute('aria-expanded', 'true');
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      const style = getComputedStyle(popover);
+      const result = {
+        transitionProperty: style.transitionProperty || '',
+        transitionDuration: style.transitionDuration || '',
+        visibility: style.visibility || '',
+        opacity: Number(style.opacity || 0),
+      };
+
+      wrapper.classList.remove('is-open');
+      button.setAttribute('aria-expanded', 'false');
+
+      return result;
+    });
+
+    const transitionProperty = String(probe.transitionProperty || '').trim();
+    const transitionDuration = String(probe.transitionDuration || '').trim();
+
+    assert(!/^none$/i.test(transitionProperty), `tempo popover transition disabled: ${transitionProperty}`);
+    assert(/opacity|transform/i.test(transitionProperty), `tempo popover transition property mismatch: ${transitionProperty}`);
+    assert(!/^0s(?:,\s*0s)*$/i.test(transitionDuration), `tempo popover transition duration is zero: ${transitionDuration}`);
+  });
+
   await test('Rapid repeated tempo changes discard stale renders and keep latest value', async () => {
     const targetTempo = 116;
 
@@ -614,6 +650,94 @@ try {
     assert(after.step === expected, `transposeStep mismatch after rapid updates: ${after.step}, expected=${expected}`);
     assert(after.engineStep === expected, `MidiEngine transpose mismatch after rapid updates: ${after.engineStep}, expected=${expected}`);
     assert(after.renderedStep === expected, `rendered transpose mismatch after rapid updates: ${after.renderedStep}, expected=${expected}`);
+  });
+
+  await test('Load transpose always follows each song default profile', async () => {
+    const resolved = await page.evaluate(() => {
+      if (typeof _resolveLoadTranspose !== 'function') throw new Error('_resolveLoadTranspose is unavailable');
+      if (typeof _preloadTransposeByPdfHref === 'undefined') throw new Error('_preloadTransposeByPdfHref cache is unavailable');
+      if (typeof MidiEngine === 'undefined') throw new Error('MidiEngine is unavailable');
+
+      const song = { fileHref: 'assets/pdf/__transpose_profile_probe__.pdf' };
+      _preloadTransposeByPdfHref.set(song.fileHref, -1);
+
+      const originalHasPreloaded = MidiEngine.hasPreloaded;
+      try {
+        // Simulate only alternate transpose being cached.
+        MidiEngine.hasPreloaded = (_url, transpose) => Number(transpose) === 0;
+        return _resolveLoadTranspose(song, 'assets/midi/__transpose_profile_probe__.mid', -1);
+      } finally {
+        MidiEngine.hasPreloaded = originalHasPreloaded;
+        _preloadTransposeByPdfHref.delete(song.fileHref);
+      }
+    });
+
+    assert(resolved === -1, `load transpose did not keep default profile: ${resolved}`);
+  });
+
+  await test('Preload queues each song default transpose even if another variant is reusable', async () => {
+    const queued = await page.evaluate(async () => {
+      if (typeof _preloadNextSong !== 'function') throw new Error('_preloadNextSong is unavailable');
+      if (typeof MidiEngine === 'undefined') throw new Error('MidiEngine is unavailable');
+
+      const originalGetNeighborSongs = _getNeighborSongs;
+      const originalInferTranspose = _inferSongDefaultPreloadTranspose;
+      const originalPrefetchPdf = _prefetchPdf;
+      const originalPrefs = {
+        preloadEnabled: prefs.preloadEnabled,
+        preloadCount: prefs.preloadCount,
+        midiInstrument: prefs.midiInstrument,
+      };
+
+      const originalGetCurrentMidiUrl = MidiEngine.getCurrentMidiUrl;
+      const originalHasPreloaded = MidiEngine.hasPreloaded;
+      const originalHasReusablePreload = MidiEngine.hasReusablePreload;
+      const originalPreload = MidiEngine.preload;
+
+      const queuedCalls = [];
+      try {
+        prefs.preloadEnabled = true;
+        prefs.preloadCount = 1;
+        prefs.midiInstrument = '';
+
+        _getNeighborSongs = () => ({
+          before: [],
+          after: [{ judul: 'Default Profile Probe', fileHref: 'assets/pdf/__default_profile_probe__.pdf' }],
+        });
+        _inferSongDefaultPreloadTranspose = () => Promise.resolve(-1);
+        _prefetchPdf = () => {};
+
+        MidiEngine.getCurrentMidiUrl = () => '';
+        MidiEngine.hasPreloaded = () => false;
+        MidiEngine.hasReusablePreload = () => true;
+        MidiEngine.preload = (url, opts) => {
+          queuedCalls.push({ url, transpose: opts ? opts.transpose : null });
+          return Promise.resolve();
+        };
+
+        _preloadNextSong();
+        await Promise.resolve();
+        await Promise.resolve();
+
+        return queuedCalls;
+      } finally {
+        _getNeighborSongs = originalGetNeighborSongs;
+        _inferSongDefaultPreloadTranspose = originalInferTranspose;
+        _prefetchPdf = originalPrefetchPdf;
+
+        prefs.preloadEnabled = originalPrefs.preloadEnabled;
+        prefs.preloadCount = originalPrefs.preloadCount;
+        prefs.midiInstrument = originalPrefs.midiInstrument;
+
+        MidiEngine.getCurrentMidiUrl = originalGetCurrentMidiUrl;
+        MidiEngine.hasPreloaded = originalHasPreloaded;
+        MidiEngine.hasReusablePreload = originalHasReusablePreload;
+        MidiEngine.preload = originalPreload;
+      }
+    });
+
+    assert(Array.isArray(queued) && queued.length === 1, `unexpected preload queue count: ${JSON.stringify(queued)}`);
+    assert(queued[0].transpose === -1, `preload did not queue default transpose: ${JSON.stringify(queued[0])}`);
   });
 
   await test('Notation transpose selector accepts a new selection while previous selection is still loading', async () => {
