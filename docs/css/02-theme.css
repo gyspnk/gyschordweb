@@ -136,16 +136,18 @@
   --hero-border: color-mix(in srgb, var(--md-sys-color-primary) 22%, var(--md-sys-color-outline-variant));
   --hero-shadow: 0 24px 48px -36px rgba(0, 0, 0, 0.42);
   --settings-card-radius: 24px;
-  --layout-list-width: 700px;
-  --layout-settings-width: 960px;
-  --layout-settings-redesign-width: 1040px;
-  --layout-list-item-padding: 0.875rem 1rem;
-  --layout-list-item-gap: 1rem;
-  --layout-number-size: 3rem;
-  --layout-content-padding-mobile: 1rem;
-  --layout-content-padding-tablet: 1rem 1.5rem;
-  --layout-content-padding-desktop: 1.5rem 3rem;
-  --layout-search-width: 640px;
+  --layout-list-width: min(700px, calc(100vw - 1rem));
+  --layout-settings-width: min(960px, calc(100vw - 1rem));
+  --layout-settings-redesign-width: min(1040px, calc(100vw - 1rem));
+  --layout-list-item-padding: clamp(0.8rem, 0.6rem + 0.6vw, 0.92rem) clamp(0.9rem, 0.65rem + 0.8vw, 1.05rem);
+  --layout-list-item-gap: clamp(0.8rem, 0.55rem + 0.6vw, 1rem);
+  --layout-list-item-margin-bottom: 0.5rem;
+  --layout-number-size: clamp(2.7rem, 2.45rem + 1.2vw, 3rem);
+  --layout-content-padding-mobile: clamp(0.85rem, 0.65rem + 0.9vw, 1rem);
+  --layout-content-padding-tablet: clamp(0.95rem, 0.7rem + 0.7vw, 1.1rem) clamp(1.2rem, 0.7rem + 1.8vw, 1.5rem);
+  --layout-content-padding-desktop: clamp(1.25rem, 0.9rem + 0.9vw, 1.5rem) clamp(1.9rem, 1rem + 2.7vw, 3rem);
+  --layout-search-width: min(640px, calc(100vw - 1rem));
+  --layout-mobile-edge-gap: 0.78rem;
 }
 
 body.dark-theme {
@@ -437,52 +439,76 @@ body[data-ui-font="sans"] {
   --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+html[data-layout-style="balanced"] {
+  --app-header-height: clamp(60px, 5.4vw, 64px);
+  --search-container-top: calc(var(--app-header-height) + 4px);
+  --bottom-nav-height: clamp(68px, 6.4vw, 72px);
+  --layout-list-width: min(700px, calc(100vw - 1rem));
+  --layout-settings-width: min(960px, calc(100vw - 1rem));
+  --layout-settings-redesign-width: min(1040px, calc(100vw - 1rem));
+  --layout-list-item-padding: clamp(0.8rem, 0.6rem + 0.6vw, 0.92rem) clamp(0.9rem, 0.65rem + 0.8vw, 1.05rem);
+  --layout-list-item-gap: clamp(0.8rem, 0.55rem + 0.6vw, 1rem);
+  --layout-list-item-margin-bottom: 0.5rem;
+  --layout-number-size: clamp(2.7rem, 2.45rem + 1.2vw, 3rem);
+  --layout-content-padding-mobile: clamp(0.85rem, 0.65rem + 0.9vw, 1rem);
+  --layout-content-padding-tablet: clamp(0.95rem, 0.7rem + 0.7vw, 1.1rem) clamp(1.2rem, 0.7rem + 1.8vw, 1.5rem);
+  --layout-content-padding-desktop: clamp(1.25rem, 0.9rem + 0.9vw, 1.5rem) clamp(1.9rem, 1rem + 2.7vw, 3rem);
+  --layout-search-width: min(640px, calc(100vw - 1rem));
+  --layout-mobile-edge-gap: 0.78rem;
+}
+
 html[data-layout-style="compact"] {
-  --app-header-height: 60px;
-  --search-container-top: 64px;
-  --bottom-nav-height: 68px;
-  --layout-list-width: 640px;
-  --layout-settings-width: 860px;
-  --layout-settings-redesign-width: 960px;
-  --layout-list-item-padding: 0.72rem 0.8rem;
-  --layout-list-item-gap: 0.75rem;
-  --layout-number-size: 2.7rem;
-  --layout-content-padding-mobile: 0.8rem;
-  --layout-content-padding-tablet: 0.9rem 1.2rem;
-  --layout-content-padding-desktop: 1.15rem 2rem;
-  --layout-search-width: 560px;
+  --app-header-height: clamp(56px, 5.1vw, 60px);
+  --search-container-top: calc(var(--app-header-height) + 4px);
+  --bottom-nav-height: clamp(64px, 6.1vw, 68px);
+  --layout-list-width: min(640px, calc(100vw - 0.85rem));
+  --layout-settings-width: min(860px, calc(100vw - 0.85rem));
+  --layout-settings-redesign-width: min(960px, calc(100vw - 0.85rem));
+  --layout-list-item-padding: clamp(0.66rem, 0.5rem + 0.45vw, 0.78rem) clamp(0.72rem, 0.56rem + 0.55vw, 0.88rem);
+  --layout-list-item-gap: clamp(0.62rem, 0.44rem + 0.45vw, 0.78rem);
+  --layout-list-item-margin-bottom: 0.32rem;
+  --layout-number-size: clamp(2.45rem, 2.2rem + 1vw, 2.7rem);
+  --layout-content-padding-mobile: clamp(0.58rem, 0.42rem + 0.65vw, 0.74rem);
+  --layout-content-padding-tablet: clamp(0.82rem, 0.64rem + 0.55vw, 0.95rem) clamp(1rem, 0.72rem + 0.95vw, 1.2rem);
+  --layout-content-padding-desktop: clamp(1rem, 0.82rem + 0.55vw, 1.15rem) clamp(1.4rem, 0.9rem + 1.3vw, 2rem);
+  --layout-search-width: min(560px, calc(100vw - 0.75rem));
+  --layout-mobile-edge-gap: 0.5rem;
 }
 
 html[data-layout-style="focused"] {
-  --app-header-height: 66px;
-  --search-container-top: 70px;
-  --bottom-nav-height: 72px;
-  --layout-list-width: 680px;
-  --layout-settings-width: 820px;
-  --layout-settings-redesign-width: 920px;
-  --layout-list-item-padding: 0.92rem 1rem;
-  --layout-list-item-gap: 0.95rem;
-  --layout-number-size: 3.1rem;
-  --layout-content-padding-mobile: 1rem;
-  --layout-content-padding-tablet: 1rem 1.35rem;
-  --layout-content-padding-desktop: 1.35rem 2rem;
-  --layout-search-width: 520px;
+  --app-header-height: clamp(62px, 5.8vw, 66px);
+  --search-container-top: calc(var(--app-header-height) + 4px);
+  --bottom-nav-height: clamp(68px, 6.5vw, 72px);
+  --layout-list-width: min(680px, calc(100vw - 1rem));
+  --layout-settings-width: min(820px, calc(100vw - 1rem));
+  --layout-settings-redesign-width: min(920px, calc(100vw - 1rem));
+  --layout-list-item-padding: clamp(0.84rem, 0.62rem + 0.6vw, 0.98rem) clamp(0.92rem, 0.68rem + 0.72vw, 1.06rem);
+  --layout-list-item-gap: clamp(0.84rem, 0.62rem + 0.5vw, 0.98rem);
+  --layout-list-item-margin-bottom: 0.64rem;
+  --layout-number-size: clamp(2.9rem, 2.45rem + 1.25vw, 3.1rem);
+  --layout-content-padding-mobile: clamp(0.98rem, 0.68rem + 0.9vw, 1.12rem);
+  --layout-content-padding-tablet: clamp(0.95rem, 0.7rem + 0.7vw, 1.05rem) clamp(1.2rem, 0.75rem + 1.4vw, 1.35rem);
+  --layout-content-padding-desktop: clamp(1.2rem, 0.85rem + 0.75vw, 1.35rem) clamp(1.6rem, 0.9rem + 1.6vw, 2rem);
+  --layout-search-width: min(520px, calc(100vw - 1rem));
+  --layout-mobile-edge-gap: 0.98rem;
 }
 
 html[data-layout-style="spacious"] {
-  --app-header-height: 68px;
-  --search-container-top: 72px;
-  --bottom-nav-height: 76px;
-  --layout-list-width: 820px;
-  --layout-settings-width: 1040px;
-  --layout-settings-redesign-width: 1160px;
-  --layout-list-item-padding: 1rem 1.2rem;
-  --layout-list-item-gap: 1.2rem;
-  --layout-number-size: 3.2rem;
-  --layout-content-padding-mobile: 1rem;
-  --layout-content-padding-tablet: 1.2rem 1.8rem;
-  --layout-content-padding-desktop: 1.7rem 3.4rem;
-  --layout-search-width: 700px;
+  --app-header-height: clamp(64px, 6.1vw, 68px);
+  --search-container-top: calc(var(--app-header-height) + 4px);
+  --bottom-nav-height: clamp(72px, 7vw, 76px);
+  --layout-list-width: min(820px, calc(100vw - 1.25rem));
+  --layout-settings-width: min(1040px, calc(100vw - 1.25rem));
+  --layout-settings-redesign-width: min(1160px, calc(100vw - 1.25rem));
+  --layout-list-item-padding: clamp(0.94rem, 0.74rem + 0.75vw, 1.08rem) clamp(1.05rem, 0.82rem + 1vw, 1.24rem);
+  --layout-list-item-gap: clamp(1rem, 0.76rem + 0.85vw, 1.24rem);
+  --layout-list-item-margin-bottom: 0.9rem;
+  --layout-number-size: clamp(3rem, 2.65rem + 1.2vw, 3.2rem);
+  --layout-content-padding-mobile: clamp(1.12rem, 0.8rem + 1vw, 1.28rem);
+  --layout-content-padding-tablet: clamp(1.08rem, 0.78rem + 0.9vw, 1.22rem) clamp(1.45rem, 0.9rem + 1.8vw, 1.9rem);
+  --layout-content-padding-desktop: clamp(1.45rem, 1rem + 1.2vw, 1.8rem) clamp(2.2rem, 1.2rem + 2.8vw, 3.6rem);
+  --layout-search-width: min(760px, calc(100vw - 1.25rem));
+  --layout-mobile-edge-gap: 1.28rem;
 }
 
 @media (prefers-color-scheme: dark) {

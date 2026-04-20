@@ -48,7 +48,7 @@
 }
 .pujian-list li {
   position: relative; display: flex; align-items: center; gap: var(--layout-list-item-gap);
-  padding: var(--layout-list-item-padding); margin-bottom: 0.5rem; border-radius: var(--border-radius-lg);
+  padding: var(--layout-list-item-padding); margin-bottom: var(--layout-list-item-margin-bottom); border-radius: var(--border-radius-lg);
   background: var(--panel-surface);
   border: 1px solid var(--panel-border);
   transition: background-color var(--duration-medium) var(--ease-standard), 
@@ -88,8 +88,8 @@
 @media (max-width: 640px) {
   .pujian-list li {
     align-items: center;
-    padding: 0.85rem 0.9rem;
-    margin-bottom: 0.6rem;
+    padding: var(--layout-list-item-padding);
+    margin-bottom: var(--layout-list-item-margin-bottom);
   }
 
   .pujian-nomor {
