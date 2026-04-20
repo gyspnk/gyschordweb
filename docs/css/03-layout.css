@@ -1,5 +1,5 @@
 html { font-synthesis: none; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background-color: var(--md-sys-color-surface); }
-html, body { height: 100vh; height: 100svh; width: 100%; margin: 0; padding: 0; overflow: hidden; }
+html, body { height: 100vh; height: var(--app-viewport-height); width: 100%; margin: 0; padding: 0; overflow: hidden; }
 body {
   font-family: var(--font-body, 'Roboto', sans-serif);
   background: var(--app-shell-background); color: var(--md-sys-color-on-surface);
@@ -39,7 +39,7 @@ body.viewer-active { overflow: hidden; }
 h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.01em; }
 
 .app-header {
-  position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+  position: fixed; top: 0; left: 0; width: 100%; z-index: var(--z-layer-header);
   padding: 0 1.25rem; height: var(--app-header-height); box-sizing: border-box;
   background: var(--app-header-background);
   border-bottom: 1px solid var(--app-header-border);
@@ -253,7 +253,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 }
 
 #search-container {
-  position: fixed; top: var(--search-container-top); left: 1rem; right: 1rem; z-index: 50;
+  position: fixed; top: var(--search-container-top); left: 1rem; right: 1rem; z-index: var(--z-layer-search);
   display: flex; align-items: center; gap: 0.5rem;
   padding: 0.25rem 0.5rem 0.25rem 1rem; border-radius: var(--border-radius-xl);
   background: var(--search-surface);
@@ -313,7 +313,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
   position: fixed; bottom: 0; left: 0; width: 100%; height: var(--bottom-nav-height);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   display: flex; justify-content: space-evenly; align-items: center;
-  background: var(--nav-surface); z-index: 100;
+  background: var(--nav-surface); z-index: var(--z-layer-header);
   border-top: 1px solid var(--nav-border);
   box-sizing: border-box;
   backdrop-filter: blur(var(--chrome-blur));

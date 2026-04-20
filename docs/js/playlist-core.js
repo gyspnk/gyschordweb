@@ -411,8 +411,15 @@ function initPlaylistUiBindings() {
     });
   }
 
-  // Sync Mini Player on interval
-  setInterval(syncMiniPlayerUI, 500);
+  // Keep mini-player state in sync with low idle overhead.
+  setInterval(() => {
+    if (document.hidden) return;
+    syncMiniPlayerUI();
+  }, 1000);
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) syncMiniPlayerUI();
+  });
 
   // Collapsible extras row: auto-collapse when mini-player is narrow
   const miniPlayerContainer = document.getElementById('mini-player');

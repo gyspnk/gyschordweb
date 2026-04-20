@@ -17,6 +17,9 @@
   --app-header-height: 64px;
   --search-container-top: 68px;
   --app-content-top: var(--app-header-height);
+  --app-viewport-height: 100vh;
+  --app-viewport-height: 100svh;
+  --app-viewport-height: 100dvh;
   --border-radius-sm: 4px; --border-radius-md: 8px; --border-radius-lg: 16px; --border-radius-xl: 28px;
   --shadow-1: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-2: 0 4px 8px -2px rgba(0,0,0,0.08), 0 2px 6px -2px rgba(0,0,0,0.06);
@@ -70,6 +73,28 @@
   --pdf-viewer-header-height: 56px;
   --pdf-viewer-footer-height: 72px;
   --mini-player-reserved-height: 142px;
+  --viewer-header-height-active: var(--pdf-viewer-header-height);
+  --viewer-footer-height: var(--pdf-viewer-footer-height);
+  --viewer-midi-expanded-height: 58px;
+  --viewer-midi-popup-width: min(620px, calc(100vw - 20px));
+  --viewer-midi-popup-max-width: calc(100vw - 20px);
+  --viewer-midi-popup-offset: 12px;
+  --viewer-content-height: calc(var(--app-viewport-height) - var(--viewer-header-height-active, var(--pdf-viewer-header-height)) - var(--viewer-footer-height));
+  --viewer-content-height-midi-expanded: calc(var(--viewer-content-height) - var(--viewer-midi-expanded-height));
+  --z-layer-search: 50;
+  --z-layer-dropdown: 60;
+  --z-layer-header: 100;
+  --z-layer-viewer-overlay: 200;
+  --z-layer-viewer-toolbar: 250;
+  --z-layer-mini-player: 900;
+  --z-layer-viewer-popover: 950;
+  --z-layer-popover: 1000;
+  --z-layer-popover-elevated: 1001;
+  --z-layer-toast: 1100;
+  --z-layer-popover-active: 1202;
+  --z-layer-popover-surface: 1203;
+  --z-layer-popover-modal: 1204;
+  --z-layer-banner: 10000;
   --viewer-shell-background:
     radial-gradient(circle at top center, color-mix(in srgb, var(--md-sys-color-primary) 14%, transparent), transparent 32%),
     linear-gradient(180deg, color-mix(in srgb, var(--md-sys-color-surface-container-high) 92%, var(--md-sys-color-primary-container)) 0%, var(--md-sys-color-surface) 62%, color-mix(in srgb, var(--md-sys-color-surface) 84%, var(--md-sys-color-primary-container)) 100%);

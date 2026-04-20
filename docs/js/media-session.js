@@ -366,6 +366,7 @@
   // Also ensures silent audio stays in sync with MIDI playback.
 
   setInterval(() => {
+    if (document.hidden && !_isPlaying()) return;
     if (!_hasSong()) return;
     _updatePositionState();
     _updatePlaybackState();

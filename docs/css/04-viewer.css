@@ -1,5 +1,5 @@
 .pdf-viewer-overlay {
-  position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column;
+  position: fixed; inset: 0; z-index: var(--z-layer-viewer-overlay); display: flex; flex-direction: column;
   background: var(--viewer-shell-background);
   color: var(--md-sys-color-on-surface);
   --viewer-footer-height: var(--pdf-viewer-footer-height);
@@ -119,8 +119,7 @@ body.measure-layout #pdf-viewer-number {
 .pdf-viewer-content {
   position: relative; flex-grow: 1;
   min-height: 0;
-  height: calc(100svh - var(--viewer-header-height-active, var(--pdf-viewer-header-height)) - var(--viewer-footer-height));
-  height: calc(100dvh - var(--viewer-header-height-active, var(--pdf-viewer-header-height)) - var(--viewer-footer-height));
+  height: var(--viewer-content-height);
   overflow: scroll;
   scrollbar-gutter: stable both-edges;
   overscroll-behavior: contain;
@@ -337,7 +336,7 @@ body.measure-layout #pdf-viewer-number {
   box-shadow: var(--shadow-2);
   backdrop-filter: blur(4px);
   padding: 0.25rem;
-  z-index: 250;
+  z-index: var(--z-layer-viewer-toolbar);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -640,7 +639,7 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: 16px;
     padding: 6px 8px;
-    z-index: 950;
+    z-index: var(--z-layer-viewer-popover);
     white-space: nowrap;
   }
   .pdf-viewer-footer:not(.no-view-controls) .transpose-collapse.is-open .transpose-controls-footer {
@@ -1030,7 +1029,7 @@ body.measure-layout .landscape-controls {
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: 16px;
     padding: 6px 8px;
-    z-index: 950;
+    z-index: var(--z-layer-viewer-popover);
     white-space: nowrap;
   }
 
@@ -1102,7 +1101,7 @@ body.measure-layout .zoom-level-indicator {
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  z-index: 50;
+  z-index: var(--z-layer-search);
 }
 
 .loader-container.visible {
@@ -1141,7 +1140,7 @@ body.measure-layout .zoom-level-indicator {
     top: 100%;
     left: 0;
     margin-top: 8px;
-    z-index: 100;
+    z-index: var(--z-layer-header);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -1400,8 +1399,7 @@ body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-con
 
 /* Shrink PDF content area to account for the open MIDI panel so it doesn't overlap */
 body:not(.is-expanded-layout):not(.measure-layout):has(#midi-toggle-btn[aria-expanded="true"]) .pdf-viewer-content {
-  height: calc(100svh - var(--viewer-header-height-active, var(--pdf-viewer-header-height)) - 58px - var(--viewer-footer-height));
-  height: calc(100dvh - var(--viewer-header-height-active, var(--pdf-viewer-header-height)) - 58px - var(--viewer-footer-height));
+  height: var(--viewer-content-height-midi-expanded);
 }
 
 
@@ -1701,7 +1699,7 @@ body:not(.is-expanded-layout):not(.measure-layout):has(#midi-toggle-btn[aria-exp
   border-radius: 16px;
   box-shadow: 0 16px 48px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08);
   border: 1px solid var(--md-sys-color-outline-variant);
-  z-index: 1000;
+  z-index: var(--z-layer-popover);
   overflow-y: auto;
   opacity: 0;
   visibility: hidden;
@@ -2010,9 +2008,9 @@ body:not(.is-expanded-layout):not(.measure-layout) .midi-collapse {
 body:not(.is-expanded-layout):not(.measure-layout) .midi-panel {
   left: 50%;
   right: auto;
-  width: min(620px, calc(100vw - 20px));
-  max-width: calc(100vw - 20px);
-  margin-top: 12px;
+  width: var(--viewer-midi-popup-width);
+  max-width: var(--viewer-midi-popup-max-width);
+  margin-top: var(--viewer-midi-popup-offset);
   transform: translateX(-50%) translateY(-10px) scale(0.98);
   transform-origin: top center;
 }
@@ -2297,7 +2295,7 @@ body.measure-layout .midi-collapse .custom-midi-player::after {
 }
 
 .custom-player-actions .instrument-selector-wrapper.is-open {
-  z-index: 1202;
+  z-index: var(--z-layer-popover-active);
 }
 
 .midi-instrument-action {
@@ -2403,7 +2401,7 @@ body.measure-layout .midi-collapse .custom-midi-player::after {
   transform: translateY(-8px) scale(0.96);
   transform-origin: top left;
   transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.2, 0, 0, 1), visibility 0.2s;
-  z-index: 1203;
+  z-index: var(--z-layer-popover-surface);
 }
 
 .instrument-selector-wrapper.is-open .midi-tempo-popover {
@@ -2537,7 +2535,7 @@ body.measure-layout .midi-collapse .custom-midi-player::after {
   right: auto;
   min-width: 260px;
   max-width: min(360px, calc(100vw - 24px));
-  z-index: 1203;
+  z-index: var(--z-layer-popover-surface);
   border-radius: 18px !important;
   border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 48%, transparent) !important;
   background: color-mix(in srgb, var(--md-sys-color-surface) 96%, transparent) !important;

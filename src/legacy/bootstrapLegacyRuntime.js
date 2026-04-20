@@ -3,28 +3,68 @@ const APP_BUNDLE_URL = './js/app.bundle.min.js?v=4';
 const SERVICE_WORKER_URL = './sw.min.js?v=4';
 
 let bootPromise = null;
+const scriptLoadPromises = new Map();
 
 function loadScriptOnce({ id, src, type = 'text/javascript' }) {
+  const existingPromise = scriptLoadPromises.get(id);
+  if (existingPromise) {
+    return existingPromise;
+  }
+
   const existing = document.getElementById(id);
-  if (existing) {
+  if (existing && existing.dataset.loaded === '1') {
     return Promise.resolve();
   }
 
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
+  const loadPromise = new Promise((resolve, reject) => {
+    const script = existing || document.createElement('script');
     script.id = id;
     script.src = src;
     script.type = type;
 
-    script.addEventListener('load', () => resolve(), { once: true });
+    script.addEventListener(
+      'load',
+      () => {
+        script.dataset.loaded = '1';
+        scriptLoadPromises.delete(id);
+        resolve();
+      },
+      { once: true }
+    );
     script.addEventListener(
       'error',
-      () => reject(new Error(`Failed to load script: ${src}`)),
+      () => {
+        scriptLoadPromises.delete(id);
+        reject(new Error(`Failed to load script: ${src}`));
+      },
       { once: true }
     );
 
-    document.head.appendChild(script);
+    if (!existing) {
+      document.head.appendChild(script);
+    }
   });
+
+  scriptLoadPromises.set(id, loadPromise);
+  return loadPromise;
+}
+
+function preloadOnce({ id, href, rel, as, crossOrigin = false }) {
+  if (document.getElementById(id)) {
+    return;
+  }
+
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = rel;
+  link.href = href;
+  if (as) {
+    link.as = as;
+  }
+  if (crossOrigin) {
+    link.crossOrigin = 'anonymous';
+  }
+  document.head.appendChild(link);
 }
 
 function registerServiceWorker() {
@@ -51,6 +91,20 @@ export async function bootstrapLegacyRuntime() {
   }
 
   bootPromise = (async () => {
+    // Start network fetches early, but keep runtime execution order deterministic.
+    preloadOnce({
+      id: 'pdfjs-runtime-modulepreload',
+      href: PDF_JS_URL,
+      rel: 'modulepreload',
+      crossOrigin: true,
+    });
+    preloadOnce({
+      id: 'legacy-app-runtime-preload',
+      href: APP_BUNDLE_URL,
+      rel: 'preload',
+      as: 'script',
+    });
+
     await loadScriptOnce({
       id: 'pdfjs-runtime-module',
       src: PDF_JS_URL,

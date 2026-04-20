@@ -96,7 +96,9 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   }
 
   // Check header layout collisions once viewer is active
-  if (typeof checkLayoutCollisions === "function") {
+  if (typeof scheduleLayoutCollisionCheck === 'function') {
+    scheduleLayoutCollisionCheck();
+  } else if (typeof checkLayoutCollisions === "function") {
     checkLayoutCollisions();
   }
 
@@ -153,7 +155,11 @@ async function openPdfViewer(songId, backgroundLoad = false) {
 
       midiToggleBtn.style.display = "flex";
       document.getElementById('midi-collapse').classList.add('midi-available');
-      if (typeof checkLayoutCollisions === 'function') checkLayoutCollisions();
+      if (typeof scheduleLayoutCollisionCheck === 'function') {
+        scheduleLayoutCollisionCheck();
+      } else if (typeof checkLayoutCollisions === 'function') {
+        checkLayoutCollisions();
+      }
       if (typeof midiPanel !== "undefined" && midiPanel) {
         // Close panel instantly (no CSS transition) to prevent flicker.
         // no-transition stays on — only removed by the toggle-button click handler
@@ -298,7 +304,11 @@ async function openPdfViewer(songId, backgroundLoad = false) {
 
       midiToggleBtn.style.display = "flex";
       document.getElementById('midi-collapse').classList.add('midi-available');
-      if (typeof checkLayoutCollisions === 'function') checkLayoutCollisions();
+      if (typeof scheduleLayoutCollisionCheck === 'function') {
+        scheduleLayoutCollisionCheck();
+      } else if (typeof checkLayoutCollisions === 'function') {
+        checkLayoutCollisions();
+      }
       if (typeof midiPanel !== "undefined" && midiPanel) {
         // Keep panel suppressed — no-transition persists until user clicks toggle.
         midiPanel.classList.add('no-transition');
@@ -1069,7 +1079,11 @@ function updateViewerUI() {
   updateTransposeUI();
   // Re-check layout collisions whenever button visibility changes so the
   // transpose control correctly collapses/expands in the header.
-  if (typeof checkLayoutCollisions === 'function') checkLayoutCollisions();
+  if (typeof scheduleLayoutCollisionCheck === 'function') {
+    scheduleLayoutCollisionCheck();
+  } else if (typeof checkLayoutCollisions === 'function') {
+    checkLayoutCollisions();
+  }
 }
 
 /**

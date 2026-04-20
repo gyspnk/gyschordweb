@@ -7,7 +7,7 @@
   color: #fff;
   padding: 10px 16px;
   border-radius: var(--border-radius-xl);
-  z-index: 1100; /* above mini player (900) */
+  z-index: var(--z-layer-toast); /* above mini player */
   font-size: 0.9rem;
   font-weight: 500;
   box-shadow: var(--shadow-3);
@@ -137,7 +137,7 @@ body.dark-theme .zoom-toast {
   grid-template-columns: repeat(3, 1fr);
   gap: 4px;
   padding: 8px;
-  z-index: 50;
+  z-index: var(--z-layer-search);
   width: max-content;
   opacity: 0;
   visibility: hidden;
@@ -236,7 +236,7 @@ body:not(.is-expanded-layout):not(.measure-layout) .transpose-controls-header {
   transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
   box-shadow: var(--shadow-2);
   backdrop-filter: blur(4px);
-  z-index: 950;
+  z-index: var(--z-layer-viewer-popover);
 }
 
 /* Because the landscape-controls are flex, the transpose-collapse wrapper must be position relative */
@@ -342,7 +342,7 @@ body.measure-layout .transpose-controls-footer {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 10000;
+  z-index: var(--z-layer-banner);
   transform: translateY(-100%);
   opacity: 0;
   transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease;

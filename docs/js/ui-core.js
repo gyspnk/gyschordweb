@@ -190,15 +190,28 @@ function handleOrientationChange() {
     currentScale = "page-fit";
     animateViewChange(() => renderPage(currentPageNum));
     fitViewerTitle();
+    scheduleLayoutCollisionCheck();
   }, 200);
 }
 
 let _layoutResizeTimer = null;
+let _layoutCollisionBusy = false;
+let _layoutCollisionPending = false;
+let _layoutCollisionRaf = 0;
+
+function scheduleLayoutCollisionCheck() {
+  if (_layoutCollisionRaf) cancelAnimationFrame(_layoutCollisionRaf);
+  _layoutCollisionRaf = requestAnimationFrame(() => {
+    _layoutCollisionRaf = 0;
+    checkLayoutCollisions();
+  });
+}
+
 function onLayoutResize() {
   if (_layoutResizeTimer) clearTimeout(_layoutResizeTimer);
   _layoutResizeTimer = setTimeout(() => {
     checkOrientation();
-    checkLayoutCollisions();
+    scheduleLayoutCollisionCheck();
     syncTransposeCollapseState();
     fitViewerTitle();
     fitListTitles();
@@ -211,107 +224,123 @@ function onLayoutResize() {
 function checkLayoutCollisions() {
   if (!document.body.classList.contains('viewer-active')) return;
 
-  const wasExpanded = document.body.classList.contains('is-expanded-layout');
-  const isLandscape = window.matchMedia('(orientation: landscape)').matches;
-  const isNarrowLandscape = window.matchMedia('(max-width: 1100px) and (orientation: landscape)').matches;
-  const expandSlackPx = 34;
-  const keepExpandedSlackPx = 10;
-  const requiredSlackPx = wasExpanded ? keepExpandedSlackPx : expandSlackPx;
-
-  // In narrow landscape we intentionally use footer mode and collapsed MIDI toggle.
-  // Forcing non-expanded mode avoids inline MIDI overlap on scaled/mobile browsers.
-  if (isNarrowLandscape) {
-    document.body.classList.remove('measure-layout');
-    document.body.classList.remove('is-expanded-layout');
+  if (_layoutCollisionBusy) {
+    _layoutCollisionPending = true;
     return;
   }
 
-  // Add the measure class to temporarily force expanded state
-  document.body.classList.add('measure-layout');
-  document.body.classList.remove('is-expanded-layout');
+  _layoutCollisionBusy = true;
 
-  let layoutFits = true;
-  const buffer = 24; // baseline padding around measured clusters
+  try {
 
-  // Check Header
-  const header = document.querySelector('.pdf-viewer-header');
-  if (header && header.offsetParent !== null) {
-    const left = header.querySelector('.header-left');
-    const center = header.querySelector('.song-navigation');
-    const right = header.querySelector('.landscape-controls');
+    const wasExpanded = document.body.classList.contains('is-expanded-layout');
+    const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+    const isNarrowLandscape = window.matchMedia('(max-width: 1100px) and (orientation: landscape)').matches;
+    const expandSlackPx = 34;
+    const keepExpandedSlackPx = 10;
+    const requiredSlackPx = wasExpanded ? keepExpandedSlackPx : expandSlackPx;
 
-    // In expanded layout, center can shrink, but it still needs room for the
-    // navigation buttons plus a readable title area.
-    let fixedWidth = 0;
-    [left, right].forEach(el => {
-      if (el && el.offsetParent !== null) {
-        const style = getComputedStyle(el);
-        const visualWidth = el.getBoundingClientRect().width || el.clientWidth || el.scrollWidth;
-        fixedWidth += visualWidth +
-          parseFloat(style.marginLeft || 0) + parseFloat(style.marginRight || 0);
-      }
-    });
-
-    if (center && center.offsetParent !== null) {
-      const style = getComputedStyle(center);
-      const navButtons = Array.from(center.querySelectorAll('button')).reduce((sum, button) => {
-        return sum + button.scrollWidth;
-      }, 0);
-      const navGap = parseFloat(style.gap || style.columnGap || 0);
-      const minTitleWidth = window.innerWidth >= 1200 ? 220 : 180;
-      fixedWidth += navButtons + navGap * Math.max(0, center.querySelectorAll('button').length - 1) + minTitleWidth +
-        parseFloat(style.marginLeft || 0) + parseFloat(style.marginRight || 0);
+    // In narrow landscape we intentionally use footer mode and collapsed MIDI toggle.
+    // Forcing non-expanded mode avoids inline MIDI overlap on scaled/mobile browsers.
+    if (isNarrowLandscape) {
+      document.body.classList.remove('measure-layout');
+      document.body.classList.remove('is-expanded-layout');
+      return;
     }
 
-    // Account for header gaps
-    const headerStyle = getComputedStyle(header);
-    const headerGap = parseFloat(headerStyle.gap || headerStyle.columnGap || 0);
-    fixedWidth += headerGap * 2;
-
-    // Use visual width (getBoundingClientRect) so transformed/scaled headers
-    // (e.g. chrome-android mode) are evaluated against real on-screen space.
-    const visualHeaderWidth = header.getBoundingClientRect().width || header.clientWidth;
-    const headerSlack = visualHeaderWidth - (fixedWidth + buffer);
-    if (headerSlack < requiredSlackPx) {
-      layoutFits = false;
-    }
-  }
-
-  // Check Footer (if visible)
-  const footer = document.querySelector('.pdf-viewer-footer');
-  if (layoutFits && footer && footer.offsetParent !== null) {
-    const left = footer.querySelector('.transpose-collapse');
-    const center = footer.querySelector('.zoom-controls');
-    const right = footer.querySelector('.page-navigation');
-
-    let footerRequiredWidth = 0;
-    [left, center, right].forEach(el => {
-      if (el && el.offsetParent !== null) {
-        const style = getComputedStyle(el);
-        footerRequiredWidth += el.scrollWidth +
-          parseFloat(style.marginLeft || 0) + parseFloat(style.marginRight || 0);
-      }
-    });
-
-    const footerStyle = getComputedStyle(footer);
-    const footerGap = parseFloat(footerStyle.gap || footerStyle.columnGap || 0);
-    footerRequiredWidth += footerGap * 2;
-
-    const visualFooterWidth = footer.getBoundingClientRect().width || footer.clientWidth;
-    const footerSlack = visualFooterWidth - (footerRequiredWidth + buffer);
-    if (footerSlack < requiredSlackPx) {
-      layoutFits = false;
-    }
-  }
-
-  document.body.classList.remove('measure-layout');
-
-  // Only use expanded layout in landscape � in portrait, landscape-controls are hidden
-  // so there's nowhere to show the inline MIDI or transpose controls.
-  if (layoutFits && isLandscape) {
-    document.body.classList.add('is-expanded-layout');
-  } else {
+    // Add the measure class to temporarily force expanded state
+    document.body.classList.add('measure-layout');
     document.body.classList.remove('is-expanded-layout');
+
+    let layoutFits = true;
+    const buffer = 24; // baseline padding around measured clusters
+
+    // Check Header
+    const header = document.querySelector('.pdf-viewer-header');
+    if (header && header.offsetParent !== null) {
+      const left = header.querySelector('.header-left');
+      const center = header.querySelector('.song-navigation');
+      const right = header.querySelector('.landscape-controls');
+
+      // In expanded layout, center can shrink, but it still needs room for the
+      // navigation buttons plus a readable title area.
+      let fixedWidth = 0;
+      [left, right].forEach(el => {
+        if (el && el.offsetParent !== null) {
+          const style = getComputedStyle(el);
+          const visualWidth = el.getBoundingClientRect().width || el.clientWidth || el.scrollWidth;
+          fixedWidth += visualWidth +
+            parseFloat(style.marginLeft || 0) + parseFloat(style.marginRight || 0);
+        }
+      });
+
+      if (center && center.offsetParent !== null) {
+        const style = getComputedStyle(center);
+        const navButtons = Array.from(center.querySelectorAll('button')).reduce((sum, button) => {
+          return sum + button.scrollWidth;
+        }, 0);
+        const navGap = parseFloat(style.gap || style.columnGap || 0);
+        const minTitleWidth = window.innerWidth >= 1200 ? 220 : 180;
+        fixedWidth += navButtons + navGap * Math.max(0, center.querySelectorAll('button').length - 1) + minTitleWidth +
+          parseFloat(style.marginLeft || 0) + parseFloat(style.marginRight || 0);
+      }
+
+      // Account for header gaps
+      const headerStyle = getComputedStyle(header);
+      const headerGap = parseFloat(headerStyle.gap || headerStyle.columnGap || 0);
+      fixedWidth += headerGap * 2;
+
+      // Use visual width (getBoundingClientRect) so transformed/scaled headers
+      // (e.g. chrome-android mode) are evaluated against real on-screen space.
+      const visualHeaderWidth = header.getBoundingClientRect().width || header.clientWidth;
+      const headerSlack = visualHeaderWidth - (fixedWidth + buffer);
+      if (headerSlack < requiredSlackPx) {
+        layoutFits = false;
+      }
+    }
+
+    // Check Footer (if visible)
+    const footer = document.querySelector('.pdf-viewer-footer');
+    if (layoutFits && footer && footer.offsetParent !== null) {
+      const left = footer.querySelector('.transpose-collapse');
+      const center = footer.querySelector('.zoom-controls');
+      const right = footer.querySelector('.page-navigation');
+
+      let footerRequiredWidth = 0;
+      [left, center, right].forEach(el => {
+        if (el && el.offsetParent !== null) {
+          const style = getComputedStyle(el);
+          footerRequiredWidth += el.scrollWidth +
+            parseFloat(style.marginLeft || 0) + parseFloat(style.marginRight || 0);
+        }
+      });
+
+      const footerStyle = getComputedStyle(footer);
+      const footerGap = parseFloat(footerStyle.gap || footerStyle.columnGap || 0);
+      footerRequiredWidth += footerGap * 2;
+
+      const visualFooterWidth = footer.getBoundingClientRect().width || footer.clientWidth;
+      const footerSlack = visualFooterWidth - (footerRequiredWidth + buffer);
+      if (footerSlack < requiredSlackPx) {
+        layoutFits = false;
+      }
+    }
+
+    document.body.classList.remove('measure-layout');
+
+    // Only use expanded layout in landscape; in portrait, landscape-controls are hidden
+    // so there's nowhere to show the inline MIDI or transpose controls.
+    if (layoutFits && isLandscape) {
+      document.body.classList.add('is-expanded-layout');
+    } else {
+      document.body.classList.remove('is-expanded-layout');
+    }
+  } finally {
+    _layoutCollisionBusy = false;
+    if (_layoutCollisionPending) {
+      _layoutCollisionPending = false;
+      scheduleLayoutCollisionCheck();
+    }
   }
 }
 
@@ -415,25 +444,60 @@ function fitListTitles() {
   });
 }
 
+const _textFitStateCache = new WeakMap();
+
 function autoFitTextSingleLine(element, { maxPx, minPx }) {
-  if (!element) return;
+  if (!element || element.offsetParent === null) return;
+
+  const width = Math.round(element.clientWidth);
+  if (width <= 0) return;
+
+  const text = element.textContent || "";
+  const previousState = _textFitStateCache.get(element);
+  if (
+    previousState &&
+    previousState.width === width &&
+    previousState.text === text &&
+    previousState.maxPx === maxPx &&
+    previousState.minPx === minPx
+  ) {
+    return;
+  }
 
   // Start at max and check if it fits
   element.style.fontSize = `${maxPx}px`;
-  if (element.scrollWidth <= element.clientWidth + 1) return;
+  if (element.scrollWidth <= width + 1) {
+    _textFitStateCache.set(element, {
+      width,
+      text,
+      maxPx,
+      minPx,
+      appliedPx: maxPx
+    });
+    return;
+  }
 
   // Binary search for the largest font size that fits
   let lo = minPx, hi = maxPx;
   while (hi - lo > 0.5) {
     const mid = (lo + hi) / 2;
     element.style.fontSize = `${mid}px`;
-    if (element.scrollWidth > element.clientWidth + 1) {
+    if (element.scrollWidth > width + 1) {
       hi = mid;
     } else {
       lo = mid;
     }
   }
-  element.style.fontSize = `${lo}px`;
+
+  const appliedPx = Math.max(minPx, lo);
+  element.style.fontSize = `${appliedPx}px`;
+  _textFitStateCache.set(element, {
+    width,
+    text,
+    maxPx,
+    minPx,
+    appliedPx
+  });
 }
 
 function setupRippleEffect() {

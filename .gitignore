@@ -25,3 +25,6 @@ venv/
 
 # Build/test temporary artifacts
 # (kept tracked for cross-chat debugging references)
+_test_temp/test_results.txt
+_test_temp/output.txt
+_test_temp/sweep_out.txt
