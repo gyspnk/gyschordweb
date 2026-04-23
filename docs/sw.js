@@ -40,8 +40,7 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.includes('/midi/') || 
       url.pathname.includes('/pdf/') || 
       url.pathname.includes('/chord/') || 
-      url.pathname.includes('assets-list.json') || 
-      url.pathname.includes('chord-assets-list.json')) {
+      url.pathname.includes('assets-list.json')) {
     event.respondWith(fetch(event.request));
     return;
   }

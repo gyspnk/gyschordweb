@@ -1674,7 +1674,7 @@ async function loadChordConfigurationForSong(song) {
 
   try {
     // Prefer note-aligned chord data when available and skip legacy TXT fetches.
-    const noteChordAssets = await _loadNoteChordAssetSet();
+    const noteChordAssets = _noteChordAssetSet;
     if (noteChordAssets.has(noteChordFilename)) {
       updateTransposeVisibility();
       return;
@@ -1685,10 +1685,9 @@ async function loadChordConfigurationForSong(song) {
       return;
     }
 
-    const chordTxtAssets = await _loadChordTxtAssetSet();
+    const chordTxtAssets = _chordTxtAssetSet;
 
-    // Always attempt dynamic resolution from PDF-derived filename.
-    // This avoids hard dependency on chord-assets-list.json being up to date.
+    // Always resolve from PDF-derived filename.
     const response = await fetch(txtUrl, { cache: "no-store" });
     if (!response.ok) {
       if (response.status === 404) {
@@ -1946,75 +1945,10 @@ function getChordTxtFilename(song) {
   return decodeURIComponent(song.fileHref.split("/").pop() || "chord.txt").replace(/\.pdf$/i, ".txt");
 }
 
-const CHORD_TXT_ASSET_LIST_URL = "chord-assets-list.json";
-const NOTE_CHORD_ASSET_LIST_URL = "note-chord-assets-list.json";
-let _chordTxtAssetSet = null;
-let _chordTxtAssetSetPromise = null;
-let _noteChordAssetSet = null;
-let _noteChordAssetSetPromise = null;
+let _chordTxtAssetSet = new Set();
+let _noteChordAssetSet = new Set();
 let _missingChordTxtAssetSet = new Set();
 let _missingNoteChordAssetSet = new Set();
-
-function _buildAssetNameSet(payload, suffix) {
-  if (!Array.isArray(payload)) return new Set();
-
-  const normalized = payload
-    .filter((item) => typeof item === "string")
-    .map((item) => decodeURIComponent(item.trim()))
-    .filter((item) => item.length > 0 && item.toLowerCase().endsWith(suffix));
-
-  return new Set(normalized);
-}
-
-function _loadChordTxtAssetSet() {
-  if (_chordTxtAssetSet) return Promise.resolve(_chordTxtAssetSet);
-  if (_chordTxtAssetSetPromise) return _chordTxtAssetSetPromise;
-
-  _chordTxtAssetSetPromise = fetch(CHORD_TXT_ASSET_LIST_URL, { cache: "no-store" })
-    .then((response) => {
-      if (!response.ok) return [];
-      return response.json();
-    })
-    .then((payload) => {
-      _chordTxtAssetSet = _buildAssetNameSet(payload, ".txt");
-      return _chordTxtAssetSet;
-    })
-    .catch(() => {
-      _chordTxtAssetSet = new Set();
-      return _chordTxtAssetSet;
-    })
-    .then((set) => {
-      _chordTxtAssetSetPromise = null;
-      return set;
-    });
-
-  return _chordTxtAssetSetPromise;
-}
-
-function _loadNoteChordAssetSet() {
-  if (_noteChordAssetSet) return Promise.resolve(_noteChordAssetSet);
-  if (_noteChordAssetSetPromise) return _noteChordAssetSetPromise;
-
-  _noteChordAssetSetPromise = fetch(NOTE_CHORD_ASSET_LIST_URL, { cache: "no-store" })
-    .then((response) => {
-      if (!response.ok) return [];
-      return response.json();
-    })
-    .then((payload) => {
-      _noteChordAssetSet = _buildAssetNameSet(payload, ".chord.json");
-      return _noteChordAssetSet;
-    })
-    .catch(() => {
-      _noteChordAssetSet = new Set();
-      return _noteChordAssetSet;
-    })
-    .then((set) => {
-      _noteChordAssetSetPromise = null;
-      return set;
-    });
-
-  return _noteChordAssetSetPromise;
-}
 
 function createChordLayer(pageNum) {
   const layer = document.createElement("div");
@@ -2659,13 +2593,11 @@ async function loadNoteChordConfiguration(song) {
   const filename = getNoteChordFilename(song);
 
   try {
-    const noteChordAssets = await _loadNoteChordAssetSet();
+    const noteChordAssets = _noteChordAssetSet;
 
     if (_missingNoteChordAssetSet.has(filename)) return;
 
     // Resolve note-aligned chord files dynamically from the PDF filename.
-    // We still keep the asset set for positive caching, but we don't require
-    // note-chord-assets-list.json to contain the filename.
     const response = await fetch(url, { cache: "no-store" });
     if (!response.ok) {
       if (response.status === 404) {
