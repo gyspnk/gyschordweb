@@ -1680,18 +1680,27 @@ async function loadChordConfigurationForSong(song) {
       return;
     }
 
-    const chordTxtAssets = await _loadChordTxtAssetSet();
-    if (!chordTxtAssets.has(txtFilename)) {
+    if (_missingChordTxtAssetSet.has(txtFilename)) {
       updateTransposeVisibility();
       return;
     }
 
+    const chordTxtAssets = await _loadChordTxtAssetSet();
+
+    // Always attempt dynamic resolution from PDF-derived filename.
+    // This avoids hard dependency on chord-assets-list.json being up to date.
     const response = await fetch(txtUrl, { cache: "no-store" });
     if (!response.ok) {
-      if (response.status === 404) chordTxtAssets.delete(txtFilename);
+      if (response.status === 404) {
+        chordTxtAssets.delete(txtFilename);
+        _missingChordTxtAssetSet.add(txtFilename);
+      }
       updateTransposeVisibility();
       return;
     }
+
+    chordTxtAssets.add(txtFilename);
+    _missingChordTxtAssetSet.delete(txtFilename);
 
     const payload = await response.text();
     const parsed = JSON.parse(payload);
@@ -1943,6 +1952,8 @@ let _chordTxtAssetSet = null;
 let _chordTxtAssetSetPromise = null;
 let _noteChordAssetSet = null;
 let _noteChordAssetSetPromise = null;
+let _missingChordTxtAssetSet = new Set();
+let _missingNoteChordAssetSet = new Set();
 
 function _buildAssetNameSet(payload, suffix) {
   if (!Array.isArray(payload)) return new Set();
@@ -2649,13 +2660,23 @@ async function loadNoteChordConfiguration(song) {
 
   try {
     const noteChordAssets = await _loadNoteChordAssetSet();
-    if (!noteChordAssets.has(filename)) return;
 
+    if (_missingNoteChordAssetSet.has(filename)) return;
+
+    // Resolve note-aligned chord files dynamically from the PDF filename.
+    // We still keep the asset set for positive caching, but we don't require
+    // note-chord-assets-list.json to contain the filename.
     const response = await fetch(url, { cache: "no-store" });
     if (!response.ok) {
-      if (response.status === 404) noteChordAssets.delete(filename);
+      if (response.status === 404) {
+        noteChordAssets.delete(filename);
+        _missingNoteChordAssetSet.add(filename);
+      }
       return;
     }
+
+    noteChordAssets.add(filename);
+    _missingNoteChordAssetSet.delete(filename);
 
     const payload = await response.text();
     const parsed = JSON.parse(payload);
