@@ -1540,7 +1540,7 @@ async function swapTranspose(step) {
   if (typeof MidiEngine === 'undefined' || !MidiEngine.getCurrentMidiUrl()) return;
   // Skip if a new song load has already started — reading _before_ the await
   // captures our generation so we can detect if it changed while we awaited.
-  const swapGen = (window._transposeSwapGeneration = window._transposeSwapGeneration || 0);
+  const swapGen = (window._transposeSwapGeneration || 0);
 
   try {
     await MidiEngine.setTranspose(step);

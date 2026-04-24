@@ -2373,6 +2373,7 @@ body #mini-time-display {
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
 }
 
 body .mini-seekbar-wrapper {
