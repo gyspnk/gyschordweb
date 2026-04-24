@@ -1,0 +1,3319 @@
+.pdf-viewer-overlay {
+  position: fixed; inset: 0; z-index: var(--z-layer-viewer-overlay); display: flex; flex-direction: column;
+  background: var(--viewer-shell-background);
+  color: var(--md-sys-color-on-surface);
+  --viewer-footer-height: var(--pdf-viewer-footer-height);
+  --viewer-header-height-active: var(--pdf-viewer-header-height);
+  transform: translateX(100%); transition: transform 0.45s var(--ease-standard, cubic-bezier(0.2, 0, 0, 1));
+}
+body.viewer-active .pdf-viewer-overlay { transform: translateX(0); }
+
+.pdf-viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0 0.5rem;
+  flex-shrink: 0;
+  background: var(--viewer-chrome-surface);
+  border-bottom: 1px solid var(--viewer-chrome-border);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--md-sys-color-on-surface) 7%, transparent);
+  position: relative;
+  z-index: 20;
+  height: var(--viewer-header-height-active);
+  box-sizing: border-box;
+}
+.header-left {
+  min-height: 100%;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.song-navigation,
+.landscape-controls {
+  min-height: 100%;
+  box-sizing: border-box;
+}
+.song-navigation {
+  position: absolute; left: 104px; right: 104px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.5rem; overflow: visible;
+    transition: left 0.2s, right 0.2s;
+    z-index: 1;
+}
+/* Expanded/measure layout: landscape only — header-left fills full width, landscape-controls pushed right */
+@media (orientation: landscape) {
+  /* Expanded: full-width header-left with MIDI player inline on left */
+  body.is-expanded-layout .header-left {
+    flex: 1 1 auto;
+    max-width: none;
+    min-width: 0;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  /* Measurement pass: constrain header-left for accurate fit detection */
+  body.measure-layout .header-left {
+    flex: 0 0 auto;
+    max-width: min(38vw, 360px);
+    min-width: 0;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+/* Disable all transitions during layout measurement for accurate readings */
+body.measure-layout .pdf-viewer-header *,
+body.measure-layout .pdf-viewer-footer * {
+  transition: none !important;
+}
+.song-title-wrapper {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    min-width: 0; overflow: hidden;
+  padding: 0.1rem 0.6rem 0.15rem;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 26%, transparent);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+    transition: opacity 0.15s ease-out;
+    cursor: pointer;
+}
+
+body.is-expanded-layout .song-title-wrapper,
+body.measure-layout .song-title-wrapper {
+  max-width: clamp(160px, 20vw, 260px);
+  padding: 0.1rem 0.75rem 0.14rem;
+  border-radius: 24px;
+}
+
+body.is-expanded-layout .song-navigation h2,
+body.measure-layout .song-navigation h2 {
+  font-size: clamp(0.95rem, 1.3vw, 1.03rem);
+}
+
+body.is-expanded-layout #pdf-viewer-number,
+body.measure-layout #pdf-viewer-number {
+  font-size: 0.7rem;
+}
+.song-title-wrapper.is-navigating {
+    opacity: 0;
+}
+
+.song-navigation h2 { 
+  margin: 0; font-size: clamp(1rem, 2vw, 1.125rem); font-weight: 600;
+  font-family: var(--font-display);
+  color: var(--viewer-title-accent);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
+  letter-spacing: -0.01em;
+}
+#pdf-viewer-number { font-size: 0.75rem; color: color-mix(in srgb, var(--md-sys-color-primary) 58%, var(--md-sys-color-on-surface-variant)); }
+.pdf-viewer-controls-main { display: flex; align-items: center; gap: 0.25rem; }
+
+.hide-chord-btn-portrait,
+.hide-chord-btn-landscape {
+  flex-shrink: 0;
+}
+
+.pdf-viewer-content {
+  position: relative; flex-grow: 1;
+  min-height: 0;
+  height: var(--viewer-content-height);
+  overflow: scroll;
+  scrollbar-gutter: stable both-edges;
+  overscroll-behavior: contain;
+  display: flex; 
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.pdf-viewer-content.is-overflowing {
+  justify-content: flex-start;
+}
+
+.pdf-viewer-content.vertically-centered {
+  align-items: center;
+}
+
+.canvas-wrapper {
+  display: flex; justify-content: center; align-items: center;
+  gap: 1rem;
+  margin: 1rem;
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+}
+
+.canvas-wrapper.vertical-scroll { flex-direction: column; align-items: center; }
+.canvas-wrapper.is-navigating {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.canvas-wrapper.zoom-animating {
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.canvas-wrapper.wheel-preview {
+  will-change: transform;
+}
+
+.canvas-wrapper.pinch-preview {
+  transition: none !important;
+}
+.canvas-wrapper canvas {
+  box-shadow: var(--shadow-3);
+  border-radius: var(--border-radius-sm);
+}
+
+.pdf-page-container {
+  position: relative;
+  line-height: 0;
+}
+
+.pdf-page-container canvas {
+  display: block;
+}
+
+.chord-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+
+.chord-layer.viewer-mode {
+  pointer-events: none;
+}
+
+.chord-layer.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.chord-layer.editor-mode {
+  cursor: crosshair;
+}
+
+.chord-layer.editor-mode.show-grid {
+  background-image:
+    linear-gradient(to right, rgba(25, 118, 210, 0.2) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(25, 118, 210, 0.2) 1px, transparent 1px);
+  background-size: calc(100% / var(--grid-cols)) calc(100% / var(--grid-rows));
+}
+
+.chord-highlight-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc((var(--row) - 1) * 100% / var(--grid-rows));
+  height: calc(100% / var(--grid-rows));
+  background-image: 
+    linear-gradient(to bottom, rgba(25, 118, 210, 0.75) 2px, transparent 2px),
+    linear-gradient(to top, rgba(25, 118, 210, 0.75) 2px, transparent 2px);
+  background-color: rgba(25, 118, 210, 0.05);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.chord-highlight-col {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc((var(--col) - 1) * 100% / var(--grid-cols));
+  width: calc(100% / var(--grid-cols));
+  background-image:
+    linear-gradient(to right, rgba(25, 118, 210, 0.75) 2px, transparent 2px),
+    linear-gradient(to left, rgba(25, 118, 210, 0.75) 2px, transparent 2px);
+  background-color: rgba(25, 118, 210, 0.05);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.chord-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Roboto', sans-serif;
+  font-size: var(--chord-font-size, 0.65rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  color: #0b4c99;
+  white-space: nowrap;
+  user-select: none;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.92);
+  min-height: 1.2em;
+  padding: calc(var(--chord-fill-padding-scale, 1) * 0.12rem) calc(var(--chord-fill-padding-scale, 1) * 0.26rem);
+  border-radius: 4px;
+}
+
+.chord-marker.chord-theme-blue { color: #0b4c99; }
+.chord-marker.chord-theme-red { color: #9c1616; }
+.chord-marker.chord-theme-green { color: #1b5a20; }
+.chord-marker.chord-theme-yellow { color: #b38200; }
+.chord-marker.chord-theme-purple { color: #59117a; }
+.chord-marker.chord-theme-pink { color: #960e44; }
+.chord-marker.chord-theme-teal { color: #004d43; }
+.chord-marker.chord-theme-orange { color: #b35600; }
+.chord-marker.chord-theme-brown { color: #3e2923; }
+.chord-marker.chord-theme-gray { color: #383838; }
+.chord-marker.chord-theme-indigo { color: #1e2870; }
+.chord-marker.chord-theme-cyan { color: #00646e; }
+.chord-marker.chord-theme-accent { color: color-mix(in srgb, var(--accent) 70%, #000000); }
+
+.chord-marker.chord-fill-none {
+  background: transparent;
+  outline: none;
+  border-radius: 0;
+}
+
+.chord-marker.chord-fill-soft {
+  background-color: color-mix(in srgb, color-mix(in srgb, var(--chord-fill-color, #b9d8ff) 32%, #ffffff) var(--chord-fill-opacity, 70%), transparent);
+  border-radius: 6px;
+}
+
+.chord-marker.chord-fill-solid {
+  background-color: color-mix(in srgb, color-mix(in srgb, var(--chord-fill-color, #b9d8ff) 65%, #ffffff) var(--chord-fill-opacity, 70%), transparent);
+  border-radius: 6px;
+}
+
+.chord-marker.chord-fill-color-blue { --chord-fill-color: #b8dbff; }
+.chord-marker.chord-fill-color-red { --chord-fill-color: #ffc4c4; }
+.chord-marker.chord-fill-color-green { --chord-fill-color: #b8f0bc; }
+.chord-marker.chord-fill-color-yellow { --chord-fill-color: #ffecb3; }
+.chord-marker.chord-fill-color-purple { --chord-fill-color: #e3bdf2; }
+.chord-marker.chord-fill-color-pink { --chord-fill-color: #ffbccf; }
+.chord-marker.chord-fill-color-teal { --chord-fill-color: #a5ede4; }
+.chord-marker.chord-fill-color-orange { --chord-fill-color: #ffcc99; }
+.chord-marker.chord-fill-color-brown { --chord-fill-color: #d6c1ba; }
+.chord-marker.chord-fill-color-gray { --chord-fill-color: #cfcfcf; }
+.chord-marker.chord-fill-color-indigo { --chord-fill-color: #c6d0ff; }
+.chord-marker.chord-fill-color-cyan { --chord-fill-color: #b5f0f7; }
+.chord-marker.chord-fill-color-accent { --chord-fill-color: var(--accent); }
+
+.chord-marker.is-dissolving {
+  animation: chord-dissolve-in 230ms cubic-bezier(0.2, 0.7, 0.25, 1);
+}
+
+.chord-marker.is-dissolving-out {
+  animation: chord-dissolve-out 180ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.chord-marker.is-dissolving-in {
+  animation: chord-dissolve-in 230ms cubic-bezier(0.2, 0.7, 0.25, 1) forwards;
+}
+
+@keyframes chord-dissolve-out {
+  0% { opacity: 1; filter: blur(0) saturate(1); transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0.26; filter: blur(1.2px) saturate(1.08); transform: translate(-50%, -50%) scale(0.975); }
+}
+
+@keyframes chord-dissolve-in {
+  0% { opacity: 0.28; filter: blur(1.1px) saturate(1.12); transform: translate(-50%, -50%) scale(1.03); }
+  100% { opacity: 1; filter: blur(0) saturate(1); transform: translate(-50%, -50%) scale(1); }
+}
+
+.chord-layer.editor-mode .chord-marker {
+  outline: 1px dashed color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
+  pointer-events: auto;
+}
+
+.chord-editor-toolbar {
+  position: absolute;
+  left: 1rem;
+  top: calc(var(--viewer-header-height-active, var(--pdf-viewer-header-height)) + 1rem);
+  display: flex;
+  align-items: center;
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 999px;
+  box-shadow: var(--shadow-2);
+  backdrop-filter: blur(4px);
+  padding: 0.25rem;
+  z-index: var(--z-layer-viewer-toolbar);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chord-editor-toolbar.is-collapsed {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 15%, var(--md-sys-color-surface));
+}
+
+.chord-editor-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  /* removed overflow hidden for shadows */
+  max-width: 300px;
+  opacity: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chord-editor-toolbar.is-collapsed .chord-editor-controls {
+  max-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+body:not(.chord-editor-enabled) .chord-editor-toolbar {
+  display: none !important;
+}
+
+.chord-editor-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--md-sys-color-primary);
+  white-space: nowrap;
+  margin-left: 0.5rem;
+}
+
+#chord-editor-toggle-btn {
+  width: 40px;
+  height: 40px;
+}
+
+.chord-editor-toolbar.is-collapsed #chord-editor-toggle-btn {
+  color: var(--md-sys-color-primary);
+}
+
+/* --- Note-Aligned Chord Editor --- */
+.chord-layer.note-aligned-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.chord-layer.note-aligned-layer.editor-mode {
+  pointer-events: auto;
+  cursor: default;
+}
+
+.note-target {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  color: var(--md-sys-color-primary);
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+  z-index: 5;
+  opacity: 0.7;
+}
+
+.note-target:hover {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 25%, transparent);
+  transform: translate(-50%, -50%) scale(1.25);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent);
+  opacity: 1;
+}
+
+.note-target-sentinel {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--md-sys-color-tertiary, #7c5800) 15%, transparent);
+  border-color: color-mix(in srgb, var(--md-sys-color-tertiary, #7c5800) 45%, transparent);
+  color: var(--md-sys-color-tertiary, #7c5800);
+  font-size: 0.65rem;
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+.note-target-sentinel:hover {
+  background: color-mix(in srgb, var(--md-sys-color-tertiary, #7c5800) 30%, transparent);
+  opacity: 1;
+}
+
+.note-chord-marker {
+  z-index: 10;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.chord-layer.note-aligned-layer.viewer-mode .note-chord-marker {
+  pointer-events: none;
+}
+
+.chord-layer.note-aligned-layer.editor-mode .note-chord-marker {
+  outline: 1px dashed color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
+  pointer-events: auto;
+}
+
+/* Load chord button in editor toolbar */
+#chord-load-btn {
+  width: 40px;
+  height: 40px;
+}
+
+
+/* Tata Letak Kontrol Berdasarkan Orientasi */
+@media (orientation: portrait) {
+  .landscape-controls { display: none; }
+  .hide-chord-btn-portrait { display: flex; margin-left: auto; }
+  .hide-chord-btn-landscape { display: none !important; }
+  .pdf-viewer-header { justify-content: flex-start; }
+  .pdf-viewer-overlay { --viewer-footer-height: var(--pdf-viewer-footer-height); }
+
+  .pdf-viewer-header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    justify-content: unset;
+    align-items: center;
+    column-gap: 0.35rem;
+  }
+  .header-left {
+    grid-row: 1;
+    grid-column: 1;
+    justify-self: start;
+    z-index: 2;
+    flex-shrink: 0;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .hide-chord-btn-portrait {
+    grid-row: 1;
+    grid-column: 3;
+    justify-self: end;
+    z-index: 2;
+    margin-left: 0;
+  }
+  .song-navigation {
+    grid-row: 1;
+    grid-column: 2;
+    justify-self: stretch;
+    position: static;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+    overflow: visible;
+    left: auto;
+    right: auto;
+    transform: none;
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+  }
+  .song-title-wrapper {
+    position: static;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: none;
+    max-width: none;
+    pointer-events: auto;
+    z-index: auto;
+  }
+  #song-prev { flex-shrink: 0; }
+  #song-next { flex-shrink: 0; margin-left: 0; }
+  .header-left .midi-collapse { flex-shrink: 0; }
+  
+  .pdf-viewer-footer {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "transpose zoom controls";
+    column-gap: 0.35rem;
+    row-gap: 0.25rem;
+    flex-shrink: 0;
+    min-height: 76px;
+    height: auto;
+    background: var(--viewer-chrome-surface);
+    border-top: 1px solid var(--viewer-chrome-border);
+    align-items: center;
+    padding: 0.45rem 0.5rem;
+    box-sizing: border-box;
+    overflow: visible;
+  }
+
+  .pdf-viewer-footer.has-page-nav {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "transpose zoom page controls";
+  }
+
+  .transpose-collapse {
+    grid-area: transpose;
+    justify-self: start;
+  }
+
+  .zoom-controls {
+    grid-area: zoom;
+    justify-self: center;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .pdf-viewer-footer.no-view-controls .zoom-controls {
+    justify-self: end;
+  }
+
+  .page-navigation {
+    grid-area: page;
+    justify-self: center;
+    min-width: 0;
+  }
+
+  .pdf-viewer-footer.has-page-nav .page-navigation {
+    justify-self: center;
+  }
+
+  #controls-portrait {
+    grid-area: controls;
+    justify-self: end;
+  }
+
+  /* When view controls (double-page / scroll) are hidden (single page),
+     show transpose inline in footer — no toggle needed */
+  .pdf-viewer-footer.no-view-controls .transpose-collapse .transpose-toggle-btn {
+    display: none;
+  }
+  .pdf-viewer-footer.no-view-controls .transpose-collapse .transpose-controls-footer {
+    display: flex;
+  }
+  /* No view controls = 2 columns: [transpose auto] [zoom 1fr] */
+  .pdf-viewer-footer.no-view-controls {
+    grid-template-columns: auto 1fr;
+  }
+
+  /* Compact the inline transpose so zoom is never cropped */
+  .pdf-viewer-footer.no-view-controls .transpose-controls {
+    gap: 0;
+    padding: 0.1rem 0.2rem;
+  }
+  .pdf-viewer-footer.no-view-controls .transpose-controls .transpose-reset-btn {
+    display: none; /* rarely used inline; still accessible via header popup */
+  }
+  .pdf-viewer-footer.no-view-controls .transpose-controls .icon-button {
+    width: 32px;
+    height: 32px;
+  }
+  .pdf-viewer-footer.no-view-controls .transpose-controls .icon-button .material-symbols-outlined {
+    font-size: 17px;
+  }
+  .pdf-viewer-footer.no-view-controls .transpose-controls .transpose-indicator {
+    min-width: auto;
+    font-size: 0.7rem;
+    padding: 0 0.2rem;
+  }
+  .pdf-viewer-footer.no-view-controls .transpose-controls .family-chord-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+
+  /* When view controls ARE visible (multi-page), transpose becomes a collapsible toggle */
+  .pdf-viewer-footer:not(.no-view-controls) .transpose-collapse .transpose-controls-footer {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 0.4rem);
+    display: flex;
+    margin-right: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px) scale(0.96);
+    transform-origin: left bottom;
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+    box-shadow: var(--shadow-2);
+    backdrop-filter: blur(4px);
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 16px;
+    padding: 6px 8px;
+    z-index: var(--z-layer-viewer-popover);
+    white-space: nowrap;
+  }
+  .pdf-viewer-footer:not(.no-view-controls) .transpose-collapse.is-open .transpose-controls-footer {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+  .pdf-viewer-footer:not(.no-view-controls) .transpose-collapse .transpose-toggle-btn {
+    display: flex;
+  }
+}
+
+@media (max-width: 1024px) and (orientation: portrait) {
+  .pdf-viewer-header {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 0.35rem;
+    padding: 0 0.45rem;
+    align-items: center;
+  }
+
+  .header-left {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .hide-chord-btn-portrait {
+    grid-row: 1;
+    grid-column: 3;
+  }
+
+  .song-navigation {
+    grid-row: 1;
+    grid-column: 2;
+    width: 100%;
+  }
+
+  .song-title-wrapper {
+    padding-inline: 0.35rem;
+  }
+
+  .song-navigation h2 {
+    font-size: 1rem;
+  }
+
+  .pdf-viewer-footer {
+    min-height: 72px;
+    padding: 0.35rem 0.5rem 0.45rem;
+  }
+}
+
+@media (max-width: 767px) and (orientation: portrait) {
+  .pdf-viewer-overlay {
+    --viewer-header-height-active: 54px;
+  }
+
+  .pdf-viewer-header {
+    padding: 0.2rem 0.3rem 0.3rem;
+  }
+
+  .pdf-viewer-header .icon-button,
+  .pdf-viewer-footer .icon-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .pdf-viewer-header .icon-button .material-symbols-outlined,
+  .pdf-viewer-footer .icon-button .material-symbols-outlined {
+    font-size: 18px;
+  }
+
+  .song-navigation {
+    gap: 0;
+  }
+
+  .song-navigation h2 {
+    font-size: 0.92rem;
+  }
+
+  #pdf-viewer-number {
+    font-size: 0.66rem;
+  }
+
+  .pdf-viewer-footer {
+    min-height: 68px;
+    column-gap: 0.2rem;
+    padding: 0.25rem 0.3rem;
+  }
+
+  .page-indicator,
+  .zoom-level-indicator {
+    min-width: 36px;
+    padding: 0 0.15rem;
+    font-size: 0.76rem;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-collapse {
+    position: static;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel {
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: none;
+    margin-top: 0;
+    transform: translateY(-8px) scale(0.98);
+    transform-origin: top center;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) #midi-toggle-btn[aria-expanded="true"] + .midi-panel {
+    transform: translateY(0) scale(1);
+  }
+
+  /* Hide header bottom border when MIDI panel is open — removes the unpolished separator line */
+  body:not(.is-expanded-layout):not(.measure-layout) .pdf-viewer-header:has(#midi-toggle-btn[aria-expanded="true"]) {
+    border-bottom-color: transparent;
+    box-shadow: none;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
+    border-radius: 0 0 16px 16px;
+    padding: 2px 8px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-container {
+    padding: 1px 6px;
+    gap: 1px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-kicker {
+    display: none;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-seekbar-wrapper {
+    height: 14px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-primary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-play.player-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-play .material-symbols-outlined {
+    font-size: 1.2rem !important;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-heading {
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-kicker {
+    display: none;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: nowrap;
+    grid-column: auto;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action {
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.instrument-capsule-btn {
+    height: 28px;
+    border-radius: 9px;
+    padding: 0 6px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-icon-btn.instrument-capsule-btn {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .cis-label {
+    display: none;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .cis-chevron {
+    display: none;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player .player-time {
+    font-size: 0.62rem !important;
+    padding: 0.1rem 0.4rem;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-container {
+    padding: 1px 6px;
+    gap: 1px;
+    border-radius: 10px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-seekbar-wrapper,
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .seekbar-wrapper {
+    height: 14px;
+  }
+
+  /* Mobile: line above MIDI player shorter */
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player::before {
+    inset: 0 12px auto;
+    height: 2px;
+    opacity: 0.6;
+  }
+}
+
+@media (max-width: 420px) and (orientation: portrait) {
+  .header-left {
+    gap: 0.15rem;
+  }
+
+  .song-navigation {
+    gap: 0;
+  }
+
+  .song-navigation h2 {
+    font-size: 0.85rem;
+  }
+
+  .pdf-viewer-footer {
+    min-height: 62px;
+  }
+
+  .page-navigation,
+  .zoom-controls {
+    gap: 0;
+  }
+
+  .pdf-viewer-footer,
+  .pdf-viewer-footer.has-page-nav {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "transpose zoom controls"
+      "page page page";
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-play.player-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
+    flex-wrap: nowrap;
+    gap: 3px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.instrument-capsule-btn,
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-icon-btn.instrument-capsule-btn {
+    width: 26px;
+    min-width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-container {
+    padding: 1px 6px;
+    gap: 1px;
+    border-radius: 10px;
+  }
+}
+
+
+@media (orientation: landscape) {
+  #controls-portrait, .pdf-viewer-footer { display: none; }
+  .hide-chord-btn-portrait { display: none !important; }
+  .hide-chord-btn-landscape { display: flex; }
+  .pdf-viewer-overlay { --viewer-footer-height: 0px; }
+  .song-navigation {
+    right: auto; left: 50%; transform: translateX(-50%);
+    pointer-events: none;
+    max-width: calc(100% - 420px);
+  }
+  .song-navigation > button,
+  .song-title-wrapper {
+    pointer-events: auto;
+  }
+  .landscape-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+  }
+}
+
+body.is-expanded-layout .landscape-controls,
+body.measure-layout .landscape-controls {
+  gap: 0.68rem;
+}
+
+/* ─── Narrow landscape: move overflow header controls to footer navbar ─── */
+@media (max-width: 1100px) and (orientation: landscape) {
+  /* Show footer bar */
+  .pdf-viewer-footer {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-shrink: 0;
+    height: 48px;
+    min-height: 48px;
+    background: var(--viewer-chrome-surface);
+    border-top: 1px solid var(--viewer-chrome-border);
+    padding: 0 0.5rem;
+    box-sizing: border-box;
+    overflow: visible;
+    position: relative;
+  }
+
+  /* Show view-mode/scroll-mode container in footer */
+  #controls-portrait {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Account for footer height in content area */
+  .pdf-viewer-overlay {
+    --viewer-footer-height: 48px;
+  }
+
+  /* Hide entire landscape-controls from header (all children moved to footer) */
+  .landscape-controls {
+    display: none !important;
+  }
+
+  /* Show portrait chord toggle in header-left flex flow instead */
+  .hide-chord-btn-portrait {
+    display: flex !important;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  /* Constrain song-navigation for narrow landscape */
+  .song-navigation {
+    max-width: calc(100% - 160px);
+  }
+
+  /* Show footer transpose controls (override landscape hide) */
+  .pdf-viewer-footer .transpose-controls-footer {
+    display: flex !important;
+  }
+
+  /* Transpose popover: opens upward from footer */
+  .pdf-viewer-footer .transpose-collapse .transpose-controls-footer {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 0.4rem);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px) scale(0.96);
+    transform-origin: left bottom;
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+    box-shadow: var(--shadow-2);
+    backdrop-filter: blur(4px);
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 16px;
+    padding: 6px 8px;
+    z-index: var(--z-layer-viewer-popover);
+    white-space: nowrap;
+  }
+
+  .pdf-viewer-footer .transpose-collapse.is-open .transpose-controls-footer {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .pdf-viewer-footer .transpose-collapse .transpose-toggle-btn {
+    display: flex !important;
+  }
+
+  /* Single-page: show transpose inline, hide toggle */
+  .pdf-viewer-footer.no-view-controls .transpose-collapse .transpose-toggle-btn {
+    display: none !important;
+  }
+
+  .pdf-viewer-footer.no-view-controls .transpose-controls-footer {
+    position: static !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    pointer-events: auto !important;
+    box-shadow: none;
+    backdrop-filter: none;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+  }
+}
+
+@media (max-width: 760px) and (orientation: landscape) {
+  .song-navigation {
+    max-width: calc(100% - 200px);
+  }
+}
+
+.zoom-controls, .page-navigation, .page-navigation-landscape, .zoom-controls-landscape { display: flex; align-items: center; }
+.page-indicator, .zoom-level-indicator {
+  font-size: 0.9rem; font-weight: 500; color: var(--md-sys-color-on-surface-variant);
+  padding: 0 0.5rem; min-width: 50px; text-align: center;
+  transition: all 0.2s;
+}
+
+body.is-expanded-layout .zoom-level-indicator,
+body.measure-layout .zoom-level-indicator {
+  min-width: 42px;
+  padding: 0 0.35rem;
+  font-size: 0.84rem;
+}
+.page-indicator span[id^="page-num"] {
+    color: var(--md-sys-color-primary);
+    font-weight: 700;
+}
+
+.loader-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 6px;
+  background-color: var(--md-sys-color-surface-variant);
+  border-radius: 999px;
+  /* removed overflow hidden for shadows */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: var(--z-layer-search);
+}
+
+.loader-container.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.loader-progress {
+  height: 100%;
+  width: 0%;
+  background-color: var(--md-sys-color-primary);
+  border-radius: 999px;
+  transition: width 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.orientation-warning {
+    position: absolute; inset: 0; background-color: color-mix(in srgb, var(--md-sys-color-scrim) 85%, transparent);
+    backdrop-filter: blur(4px); color: white; display: none; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; z-index: 10;
+}
+.orientation-warning.visible { display: flex; }
+.orientation-warning .material-symbols-outlined {
+    font-size: 4rem; margin-bottom: 1rem; animation: rotate-anim 2s infinite ease-in-out;
+}
+@keyframes rotate-anim { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
+
+/* MIDI Player Styles */
+.midi-collapse {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.midi-panel {
+    /* Made transparent wrapping container to avoid box-in-box look */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 8px;
+    z-index: var(--z-layer-header);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-8px) scale(0.96);
+    transform-origin: top left;
+    transition: opacity 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                visibility 0.25s;
+  }
+#midi-toggle-btn[aria-expanded="true"] + .midi-panel {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+    transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                visibility 0s;
+  }
+
+/* MIDI collapse now lives inside .header-left */
+
+/* Hide toggle button when midi panel is visible (expanded or toggled open) */
+body.is-expanded-layout #midi-toggle-btn,
+body.measure-layout #midi-toggle-btn {
+  display: none !important;
+}
+/* Only hide toggle in expanded/measure layout where the panel is always inline.
+   In portrait popup mode the toggle must stay visible. */
+body.is-expanded-layout .midi-collapse.midi-available #midi-toggle-btn[aria-expanded="true"],
+body.measure-layout .midi-collapse.midi-available #midi-toggle-btn[aria-expanded="true"] {
+  display: none !important;
+}
+
+body.is-expanded-layout .midi-collapse.midi-available .midi-panel,
+body.measure-layout .midi-collapse.midi-available .midi-panel {
+  position: static;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition: none;
+  margin-top: 0;
+}
+
+/* Compact inline player sizing — fits inside the header row */
+body.is-expanded-layout .midi-collapse .custom-midi-player,
+body.measure-layout .midi-collapse .custom-midi-player {
+  min-width: 220px;
+  max-width: 340px;
+  border-radius: var(--border-radius-md, 8px);
+  padding: 2px 8px;
+  box-sizing: border-box;
+  gap: 4px;
+}
+
+body.is-expanded-layout .midi-collapse .player-track-container,
+body.measure-layout .midi-collapse .player-track-container {
+  min-width: 80px;
+}
+
+body.is-expanded-layout .midi-collapse .cis-label,
+body.is-expanded-layout .midi-collapse .cis-chevron,
+body.measure-layout .midi-collapse .cis-label,
+body.measure-layout .midi-collapse .cis-chevron {
+  display: none;
+}
+
+body.is-expanded-layout .midi-collapse .instrument-capsule-btn,
+body.measure-layout .midi-collapse .instrument-capsule-btn {
+  width: auto;
+  min-width: 40px;
+  padding: 0 8px;
+}
+
+
+.midi-controls-wrapper {
+  margin-bottom: 8px;
+}
+.instrument-select {
+  width: 100%;
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 4px;
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+}
+midi-player {
+  --primary-color: var(--md-sys-color-primary, #1976d2);
+  --primary-color-hover: color-mix(in srgb, var(--md-sys-color-primary) 80%, black);
+  --primary-color-active: color-mix(in srgb, var(--md-sys-color-primary) 60%, black);
+  --secondary-color: var(--md-sys-color-outline-variant, #cacaca);
+  --secondary-color-hover: var(--md-sys-color-outline, #a0a0a0);
+  --secondary-color-active: var(--md-sys-color-outline, #a0a0a0);
+  --background-color: var(--md-sys-color-surface, #fdfcff);
+  --time-color: var(--md-sys-color-on-surface, #1a1c1e);
+  border-radius: 8px;
+  max-width: 250px;
+}
+
+
+
+
+.instrument-select:hover {
+  border-color: var(--md-sys-color-primary);
+}
+.instrument-select:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
+}
+.instrument-select optgroup {
+  font-weight: bold;
+  font-style: italic;
+  color: var(--md-sys-color-primary);
+}
+.instrument-select option {
+  font-weight: normal;
+  font-style: normal;
+  color: var(--md-sys-color-on-surface);
+}
+
+.player-btn {
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.player-btn .material-symbols-outlined {
+  font-size: 1.8rem;
+}
+.player-btn:hover { 
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+  color: var(--md-sys-color-on-surface);
+  /* removed box shadow */
+  transform: scale(1.05);
+}
+.player-btn:active { transform: scale(0.95); }
+/* .player-time styling moved below to .player-track-container section for coherence */
+
+
+
+
+/* Collapsible MIDI panel: anchor to header bottom instead of toggle-button position.
+   Setting midi-collapse to static makes .midi-panel position relative to
+   .pdf-viewer-header (which has position: relative), so it appears as a full-width
+   bar flush below the header bar rather than a small popup below the left button. */
+body:not(.is-expanded-layout):not(.measure-layout) .midi-collapse {
+  position: static;
+}
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel {
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 0;
+  border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+  transform-origin: top center;
+  box-sizing: border-box;
+}
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  padding: 4px 10px;
+}
+/* Remove inline margin-left on button wrappers so only gap controls spacing */
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .instrument-selector-wrapper {
+  margin-left: 0 !important;
+}
+/* CIS popover: open rightward from right edge of button to stay on-screen */
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .cis-menu-popover {
+  left: auto !important;
+  right: 0 !important;
+  transform-origin: top right;
+}
+/* Compact popup MIDI player: hide text labels and reduce spacing */
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
+  gap: 8px;
+}
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .cis-label,
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .cis-chevron {
+  display: none;
+}
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .instrument-capsule-btn {
+  width: auto;
+  min-width: 40px;
+  padding: 0 8px;
+}
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-container {
+  min-width: 0;
+}
+
+/* Mobile: compact MIDI player for narrow screens */
+@media (max-width: 479px) {
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
+    padding: 2px 6px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-btn {
+    width: 30px;
+    height: 30px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-btn .material-symbols-outlined {
+    font-size: 1.3rem;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
+    gap: 6px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-time {
+    font-size: 0.62rem;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .instrument-capsule-btn {
+    height: 28px;
+    padding: 0 6px;
+    min-width: 28px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-container {
+    padding: 1px 6px;
+    gap: 1px;
+    border-radius: 10px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-heading {
+    gap: 4px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-kicker {
+    display: none;
+  }
+}
+@media (max-width: 359px) {
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-btn {
+    width: 32px;
+    height: 32px;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-btn .material-symbols-outlined {
+    font-size: 1.2rem;
+  }
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
+    gap: 4px;
+  }
+}
+
+/* Shrink PDF content area to account for the open MIDI panel so it doesn't overlap */
+body:not(.is-expanded-layout):not(.measure-layout):has(#midi-toggle-btn[aria-expanded="true"]) .pdf-viewer-content {
+  height: var(--viewer-content-height-midi-expanded);
+}
+
+
+/* ANIMATIONS & OVERHAULS */
+
+/* Icon Grid */
+
+
+
+
+.cis-header.icon-button:active {
+    transform: scale(0.85);
+}
+
+
+
+
+
+.custom-instrument-dropdown.is-open 
+
+
+
+
+
+
+
+
+
+/* Play Button Animation */
+.player-btn {
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.player-btn:active {
+    transform: scale(0.8);
+}
+
+#custom-play-icon {
+    transition: opacity 0.2s ease-in-out;
+}
+
+#custom-play-icon.fade-out {
+    opacity: 0;
+}
+
+#custom-play-icon.fade-in {
+    opacity: 1;
+}
+
+/* Animated Seekbar */
+
+
+
+
+
+
+/* Removed duplicated or malformed player CSS definitions */
+/* ------------------------------- */
+/* Aesthetic Collapsible MIDI Player */
+/* ------------------------------- */
+.custom-midi-player {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 200px;
+  max-width: calc(100vw - 32px); /* Prevent leaking off screen */
+  position: relative;
+  border-radius: 20px;
+  background: var(--md-sys-color-surface);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  padding: 6px 14px;
+  overflow: visible;
+  transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Horizontal Player Controls */
+
+.seekbar-wrapper {
+  position: relative;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  height: 24px;
+  cursor: pointer;
+}
+
+.player-slider {
+  width: 100%;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  z-index: 2;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Track styling */
+.player-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 8px;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: 4px;
+  border: none;
+}
+.player-slider::-moz-range-track {
+  width: 100%;
+  height: 8px;
+  background: var(--md-sys-color-surface-variant);
+  border-radius: 4px;
+  border: none;
+}
+
+/* Thumb styling */
+.player-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+  margin-top: -4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
+}
+.player-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+  border: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
+}
+
+.player-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+.player-slider:hover::-moz-range-thumb {
+  transform: scale(1.2);
+}
+
+.seekbar-fill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 8px;
+  background: var(--md-sys-color-primary);
+  border-radius: 4px;
+  transform: translateY(-50%);
+  z-index: 1;
+  pointer-events: none;
+  width: 0%;
+}
+
+/* Optional: animate fill when playing */
+.custom-midi-player.playing .seekbar-fill {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 1rem 1rem;
+  animation: seekbar-stripes 1s linear infinite;
+}
+
+@keyframes seekbar-stripes {
+  from { background-position: 1rem 0; }
+  to { background-position: 0 0; }
+}
+
+.custom-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+.player-track-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  min-width: 0;
+}
+
+.player-time {
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.instrument-capsule-btn {
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 20px;
+  height: 40px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  font-weight: 500;
+  width: 160px; /* Fixed width prevents jittering entirely */
+  box-sizing: border-box;
+}
+
+.instrument-capsule-btn:hover {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border-color: color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px color-mix(in srgb, var(--md-sys-color-primary) 10%, transparent);
+}
+
+.instrument-capsule-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.instrument-capsule-btn.active {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border-color: var(--md-sys-color-primary);
+}
+
+.cis-icon {
+  font-size: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  margin-right: 0;
+}
+
+.cis-chevron {
+  font-size: 1.25rem !important;
+  opacity: 0.7;
+  margin-right: -2px;
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.instrument-selector-wrapper.is-open .cis-chevron {
+  transform: rotate(180deg);
+}
+
+
+
+
+
+
+
+
+
+/* Collapsible Menu Grid */
+
+.instrument-selector-wrapper {
+  /* position: relative; removed so dropdown covers full width */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cis-menu-popover {
+  position: absolute;
+  top: calc(100% + 12px);
+
+  left: 0;
+  right: 0;
+  width: auto;
+  min-width: 250px;
+  max-height: 400px;
+  background: color-mix(in srgb, var(--md-sys-color-surface) 90%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  z-index: var(--z-layer-popover);
+  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px) scale(0.95);
+  transform-origin: top center;
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.2, 0, 0, 1), visibility 0.2s;
+}
+
+.instrument-selector-wrapper.is-open .cis-menu-popover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.cis-grid {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 2px;
+}
+
+.cis-option {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  font-size: 0.95rem;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease, margin 0.3s ease;
+  width: 100%;
+  max-height: 60px;
+  overflow: hidden;
+  opacity: 1;
+}
+.cis-option.cis-hidden {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.cis-option:hover {
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+}
+
+.cis-option.selected {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+
+.cis-menu-popover::-webkit-scrollbar {
+  width: 6px;
+}
+.cis-menu-popover::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cis-menu-popover::-webkit-scrollbar-thumb {
+  background: var(--md-sys-color-outline-variant);
+  border-radius: 3px;
+}
+
+/* Animation for seek bar while playing */
+@keyframes seekbar-glow {
+  0% { box-shadow: 0 0 4px var(--md-sys-color-primary); }
+  50% { box-shadow: 0 0 12px var(--md-sys-color-primary); }
+  100% { box-shadow: 0 0 4px var(--md-sys-color-primary); }
+}
+
+.custom-midi-player.playing .player-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+  margin-top: -4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
+}
+.custom-midi-player.playing .player-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+  border: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
+}
+     /* REDESIGN OVERRIDES */
+.custom-midi-player #custom-play-btn {
+
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent);
+  aspect-ratio: 1/1;
+  padding: 0;
+  /* Add smooth transition for standard states */
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s ease, box-shadow 0.3s ease !important;
+  position: relative;
+  /* removed overflow hidden for shadows */
+}
+
+/* Hover and Active squish */
+.custom-midi-player #custom-play-btn:hover {
+
+  transform: scale(1.08) !important;
+  background: color-mix(in srgb, var(--md-sys-color-primary) 85%, black) !important;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent) !important;
+}
+.custom-midi-player #custom-play-btn:active {
+
+  transform: scale(0.85) !important;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--md-sys-color-primary) 50%, transparent) !important;
+}
+
+/* Playing state pulsing - subtle and smooth */
+.custom-midi-player.playing #custom-play-btn {
+
+  animation: smooth-pulse 2s infinite cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes smooth-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent); }
+  50% { box-shadow: 0 0 0 10px rgba(0,0,0,0); }
+  100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+}
+
+/* The play/pause Icon */
+.custom-midi-player .player-btn .material-symbols-outlined {
+
+  font-size: 24px !important;
+  margin: 0 !important;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease !important;
+}
+
+/* Animate the icon when playing (e.g. from play -> pause) */
+.custom-midi-player.playing #custom-play-btn .material-symbols-outlined {
+
+  transform: rotate(180deg) scale(0.9) !important;
+}
+.custom-midi-player:not(.playing) #custom-play-btn .material-symbols-outlined {
+
+  transform: rotate(0deg) scale(1) !important;
+}
+
+.custom-midi-player .custom-player-controls {
+  gap: 12px;
+}
+
+.custom-midi-player .cis-menu-popover {
+  background: var(--md-sys-color-surface) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  border-radius: 12px !important;
+}
+
+.custom-midi-player .player-time {
+  position: static !important;
+  display: block;
+  font-size: 0.70rem;
+}
+
+.player-track-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+/* Smooth elegant seekbar fill */
+.custom-midi-player .seekbar-fill {
+  background: var(--md-sys-color-primary) !important;
+  box-shadow: 0 0 4px color-mix(in srgb, var(--md-sys-color-primary) 50%, transparent) !important;
+  position: absolute;
+  /* removed overflow hidden for shadows */ /* For shimmer */
+}
+
+/* Slight thumb pulse when playing */
+.custom-midi-player.playing .player-slider::-webkit-slider-thumb {
+  animation: thumb-pulse 1.5s infinite alternate ease-in-out !important;
+}
+.custom-midi-player.playing .player-slider::-moz-range-thumb {
+  animation: thumb-pulse 1.5s infinite alternate ease-in-out !important;
+}
+
+@keyframes thumb-pulse {
+  0% { box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 0 0 0 color-mix(in srgb, var(--md-sys-color-primary) 50%, transparent); transform: scale(1); }
+  100% { box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 0 0 6px color-mix(in srgb, var(--md-sys-color-primary) 20%, transparent); transform: scale(1.1); }
+}
+ 
+/* Vibrant pulse for seekbar thumb instead of bar sheen */
+.custom-midi-player.playing .player-slider::-webkit-slider-thumb {
+  animation: none !important;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent) !important;
+  transition: box-shadow 0.2s ease !important;
+}
+.custom-midi-player.playing .player-slider::-moz-range-thumb {
+  animation: none !important;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent) !important;
+  transition: box-shadow 0.2s ease !important;
+}
+
+/* Fluid moving gradient for track when playing */
+.custom-midi-player.playing .seekbar-fill {
+  background: linear-gradient(90deg, var(--md-sys-color-primary) 0%, color-mix(in srgb, var(--md-sys-color-primary) 50%, white) 50%, var(--md-sys-color-primary) 100%) !important;
+  background-size: 200% 100% !important;
+  animation: fluid-seekbar 2s linear infinite !important;
+}
+
+@keyframes fluid-seekbar {
+  0% { background-position: 200% 0; }
+  100% { background-position: 0% 0; }
+}
+
+/* Fix mobile squish layout */
+@media (max-width: 480px) {
+  .custom-midi-player .cis-label {
+    flex-grow: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-align: left;
+    white-space: normal;
+    overflow: hidden;
+    line-height: 1.1;
+}
+  .custom-midi-player .instrument-capsule-btn {
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 20px;
+  height: 40px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  font-weight: 500;
+  width: 160px; /* Fixed width prevents jittering entirely */
+  box-sizing: border-box;
+}
+}
+/* Compact MIDI overrides for small screens moved to portrait media queries */
+ 
+/* Improve dynamic width smoothing */
+.custom-midi-player .cis-label {
+    flex-grow: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-align: left;
+    white-space: normal;
+    overflow: hidden;
+    line-height: 1.1;
+}
+
+
+@media (max-width: 480px) {
+    .custom-midi-player {
+        max-width: calc(100vw - 16px);
+    }
+}
+
+
+.cis-menu-icon {
+    font-size: 1.25rem;
+    margin-right: 8px;
+    opacity: 0.8;
+}
+.cis-icon {
+    font-size: 1.25rem;
+  margin-right: 0;
+}
+#autonext-btn { width: auto !important; min-width: 48px; }
+
+/* 2026-04 MIDI player redesign */
+.midi-panel {
+  margin-top: 10px;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-collapse {
+  position: static;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel {
+  left: 50%;
+  right: auto;
+  width: var(--viewer-midi-popup-width);
+  max-width: var(--viewer-midi-popup-max-width);
+  margin-top: var(--viewer-midi-popup-offset);
+  transform: translateX(-50%) translateY(-10px) scale(0.98);
+  transform-origin: top center;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) #midi-toggle-btn[aria-expanded="true"] + .midi-panel {
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 28px;
+  border: 1px solid var(--viewer-panel-border);
+  background: var(--viewer-panel-surface);
+  box-shadow: var(--viewer-panel-shadow);
+  padding: 12px;
+}
+/* Mobile compact override — must come AFTER the base popup padding above */
+@media (max-width: 767px) and (orientation: portrait) {
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
+    padding: 2px 8px;
+    border-radius: 0 0 16px 16px;
+  }
+}
+@media (max-width: 479px) {
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
+    padding: 2px 6px;
+  }
+}
+
+body.is-expanded-layout .midi-collapse .custom-midi-player,
+body.measure-layout .midi-collapse .custom-midi-player {
+  min-width: 0;
+  max-width: 100%;
+  width: min(100%, 360px);
+  border-radius: 18px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--viewer-chrome-border) 78%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--viewer-chrome-surface) 97%, transparent), color-mix(in srgb, var(--md-sys-color-surface-container-high) 84%, var(--viewer-chrome-surface))),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent), transparent 42%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 24px -22px rgba(0, 0, 0, 0.46);
+}
+
+.custom-midi-player {
+  position: relative;
+  overflow: visible;
+}
+
+.custom-midi-player::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  border-radius: 28px 28px 0 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--md-sys-color-primary) 68%, white), color-mix(in srgb, var(--md-sys-color-primary) 28%, transparent));
+  pointer-events: none;
+}
+
+.custom-midi-player::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 38%);
+  pointer-events: none;
+}
+
+body.is-expanded-layout .midi-collapse .custom-midi-player::before,
+body.measure-layout .midi-collapse .custom-midi-player::before {
+  height: 1px;
+  inset: 0 14px auto;
+  border-radius: 18px 18px 0 0;
+  opacity: 0.55;
+  background: color-mix(in srgb, var(--viewer-title-accent) 42%, transparent);
+}
+
+body.is-expanded-layout .midi-collapse .custom-midi-player::after,
+body.measure-layout .midi-collapse .custom-midi-player::after {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 34%);
+}
+
+.custom-player-controls {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.custom-player-primary {
+  display: contents;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.custom-player-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  grid-column: 1 / -1;
+}
+
+.custom-player-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0.2rem 0.58rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 70%, transparent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.custom-player-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-sys-color-outline) 75%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-sys-color-outline-variant) 32%, transparent);
+  transition: background-color var(--duration-medium) var(--ease-standard), box-shadow var(--duration-medium) var(--ease-standard);
+}
+
+.custom-midi-player.playing .custom-player-status-dot {
+  background: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--md-sys-color-primary) 22%, transparent);
+}
+
+.custom-player-play.player-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--md-sys-color-primary) 88%, white), color-mix(in srgb, var(--md-sys-color-primary) 76%, black));
+  color: var(--md-sys-color-on-primary);
+  box-shadow: 0 14px 22px -14px color-mix(in srgb, var(--md-sys-color-primary) 52%, transparent);
+  transition: transform var(--duration-short) var(--ease-standard), box-shadow var(--duration-medium) var(--ease-standard), filter var(--duration-medium) var(--ease-standard);
+}
+
+.custom-player-play.player-btn::before {
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.custom-player-play.player-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 28px -18px color-mix(in srgb, var(--md-sys-color-primary) 56%, transparent);
+  filter: saturate(1.05);
+}
+
+.custom-player-play.player-btn:active {
+  transform: translateY(0);
+}
+
+.custom-midi-player.playing .custom-player-play.player-btn {
+  animation: none !important;
+}
+
+.custom-player-play .material-symbols-outlined,
+.custom-midi-player .player-btn .material-symbols-outlined {
+  font-size: 1.7rem !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.custom-midi-player.playing #custom-play-btn .material-symbols-outlined,
+.custom-midi-player:not(.playing) #custom-play-btn .material-symbols-outlined {
+  transform: none !important;
+}
+
+.player-track-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+  min-width: 0;
+  margin-top: 0;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--md-sys-color-surface) 72%, var(--md-sys-color-primary-container));
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 14%, transparent);
+  box-sizing: border-box;
+}
+
+.custom-midi-player .player-time {
+  margin: 0;
+  padding: 0.24rem 0.7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 72%, transparent);
+  color: var(--md-sys-color-on-primary-container);
+  font-size: 0.74rem !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.custom-seekbar-wrapper,
+.custom-midi-player .seekbar-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 26px;
+}
+
+.custom-midi-player .player-slider {
+  width: 100%;
+  margin: 0;
+  background: transparent;
+}
+
+.custom-midi-player .player-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-sys-color-outline-variant) 68%, var(--md-sys-color-surface-container-high));
+}
+
+.custom-midi-player .player-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-sys-color-outline-variant) 68%, var(--md-sys-color-surface-container-high));
+}
+
+.custom-midi-player .player-slider::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;
+  border: 2px solid var(--md-sys-color-surface);
+  background: var(--md-sys-color-primary);
+  box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.5);
+}
+
+.custom-midi-player .player-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--md-sys-color-surface);
+  background: var(--md-sys-color-primary);
+  box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.5);
+}
+
+.custom-midi-player .seekbar-fill {
+  height: 6px !important;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--md-sys-color-primary) 88%, white), var(--md-sys-color-primary)) !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.custom-midi-player.playing .seekbar-fill {
+  animation: none !important;
+  background-size: 100% 100% !important;
+}
+
+.custom-midi-player.playing .player-slider::-webkit-slider-thumb,
+.custom-midi-player.playing .player-slider::-moz-range-thumb {
+  animation: none !important;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent) !important;
+}
+
+.custom-player-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  box-sizing: border-box;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+}
+
+.custom-player-actions .instrument-selector-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.custom-player-actions .instrument-selector-wrapper.is-open {
+  z-index: var(--z-layer-popover-active);
+}
+
+.midi-instrument-action {
+  flex: 1 1 220px;
+}
+
+.midi-tempo-action {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.midi-tempo-toggle-btn {
+  min-width: 106px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 52%, transparent);
+  background: color-mix(in srgb, var(--md-sys-color-surface) 84%, var(--md-sys-color-surface-container-high));
+  color: var(--md-sys-color-on-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  transition: background-color var(--duration-short) var(--ease-standard), border-color var(--duration-short) var(--ease-standard), transform var(--duration-short) var(--ease-spring), box-shadow var(--duration-short) var(--ease-standard);
+}
+
+.midi-tempo-toggle-btn:hover {
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 34%, var(--md-sys-color-surface));
+  border-color: color-mix(in srgb, var(--md-sys-color-primary) 28%, var(--md-sys-color-outline-variant));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  transform: translateY(-1px);
+}
+
+.midi-tempo-toggle-btn:active {
+  transform: scale(0.96);
+}
+
+.midi-tempo-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.midi-tempo-readout {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.midi-tempo-toggle-label {
+  display: inline-flex;
+}
+
+.midi-tempo-toggle-value {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.midi-tempo-toggle-unit {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: color-mix(in srgb, var(--md-sys-color-on-surface-variant) 88%, transparent);
+}
+
+.midi-tempo-chevron {
+  font-size: 1.15rem;
+  opacity: 0.78;
+  line-height: 1;
+  transition: transform var(--duration-short) var(--ease-standard);
+}
+
+.instrument-selector-wrapper.is-open .midi-tempo-chevron {
+  transform: rotate(180deg);
+}
+
+.midi-tempo-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: auto;
+  min-width: 250px;
+  width: min(320px, calc(100vw - 24px));
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 52%, transparent);
+  background: color-mix(in srgb, var(--md-sys-color-surface) 96%, transparent);
+  box-shadow: 0 24px 38px -26px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(20px) saturate(1.05);
+  -webkit-backdrop-filter: blur(20px) saturate(1.05);
+  padding: 12px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.96);
+  transform-origin: top left;
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.2, 0, 0, 1), visibility 0.2s;
+  z-index: var(--z-layer-popover-surface);
+}
+
+.instrument-selector-wrapper.is-open .midi-tempo-popover {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.midi-tempo-popover-header {
+  margin-bottom: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.midi-tempo-popover-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.midi-tempo-slider {
+  width: 100%;
+  accent-color: var(--md-sys-color-primary);
+}
+
+.midi-tempo-number-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 64%, transparent);
+  background: color-mix(in srgb, var(--md-sys-color-surface-container-high) 88%, transparent);
+}
+
+.midi-tempo-input {
+  width: 48px;
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  text-align: right;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1;
+  font-family: inherit;
+}
+
+.midi-tempo-input:focus {
+  outline: none;
+}
+
+.midi-tempo-input::-webkit-outer-spin-button,
+.midi-tempo-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.midi-tempo-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.midi-tempo-unit {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.midi-action-btn.instrument-capsule-btn {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 52%, transparent);
+  background: color-mix(in srgb, var(--md-sys-color-surface) 84%, var(--md-sys-color-surface-container-high));
+  color: var(--md-sys-color-on-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  gap: 6px;
+}
+
+.midi-action-btn.instrument-capsule-btn:hover {
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 34%, var(--md-sys-color-surface));
+  border-color: color-mix(in srgb, var(--md-sys-color-primary) 28%, var(--md-sys-color-outline-variant));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26);
+  transform: translateY(-1px);
+}
+
+.midi-action-btn .cis-label {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+  line-height: 1.1;
+}
+
+.midi-action-btn .cis-chevron {
+  display: inline-flex;
+}
+
+.midi-icon-action {
+  flex: 0 0 auto;
+}
+
+.midi-icon-btn.instrument-capsule-btn {
+  width: 38px;
+  min-width: 38px;
+  padding: 0;
+  justify-content: center;
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 66%, transparent);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.custom-midi-player .cis-icon {
+  font-size: 1.15rem;
+  margin-right: 0;
+}
+
+.custom-midi-player .cis-menu-popover {
+  top: calc(100% + 10px);
+  left: 0;
+  right: auto;
+  min-width: 260px;
+  max-width: min(360px, calc(100vw - 24px));
+  z-index: var(--z-layer-popover-surface);
+  border-radius: 18px !important;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 48%, transparent) !important;
+  background: color-mix(in srgb, var(--md-sys-color-surface) 96%, transparent) !important;
+  box-shadow: 0 24px 38px -26px rgba(0, 0, 0, 0.42) !important;
+  backdrop-filter: blur(20px) saturate(1.05) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.05) !important;
+}
+
+.custom-midi-player .cis-grid {
+  gap: 4px;
+  padding: 10px;
+}
+
+.custom-midi-player .cis-option {
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.92rem;
+}
+
+.custom-midi-player .cis-option.selected {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions .cis-label,
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions .cis-chevron {
+  display: inline-flex;
+}
+
+body.is-expanded-layout .custom-player-actions,
+body.measure-layout .custom-player-actions {
+  gap: 6px;
+  flex-wrap: nowrap;
+  flex: 0 0 auto;
+}
+
+body.is-expanded-layout .custom-player-play.player-btn,
+body.measure-layout .custom-player-play.player-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+}
+
+body.is-expanded-layout .midi-action-btn .cis-label,
+body.is-expanded-layout .midi-action-btn .cis-chevron,
+body.measure-layout .midi-action-btn .cis-label,
+body.measure-layout .midi-action-btn .cis-chevron {
+  display: none;
+}
+
+body.is-expanded-layout .midi-instrument-action,
+body.measure-layout .midi-instrument-action {
+  flex: 0 0 auto;
+}
+
+body.is-expanded-layout .midi-action-btn.instrument-capsule-btn,
+body.measure-layout .midi-action-btn.instrument-capsule-btn {
+  width: 38px;
+  min-width: 38px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+body.is-expanded-layout .pdf-viewer-overlay:has(.midi-collapse.midi-available),
+body.measure-layout .pdf-viewer-overlay:has(.midi-collapse.midi-available) {
+  --viewer-header-height-active: 56px;
+}
+
+body.is-expanded-layout .midi-collapse,
+body.measure-layout .midi-collapse {
+  width: min(36vw, 340px);
+  min-width: 0;
+}
+
+body.is-expanded-layout .midi-collapse.midi-available .midi-panel,
+body.measure-layout .midi-collapse.midi-available .midi-panel {
+  width: 100%;
+  min-width: 0;
+}
+
+body.is-expanded-layout .custom-player-controls,
+body.measure-layout .custom-player-controls {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+
+body.is-expanded-layout .custom-player-primary,
+body.measure-layout .custom-player-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+body.is-expanded-layout .player-track-container,
+body.measure-layout .player-track-container {
+  gap: 6px;
+  flex: 1 1 auto;
+}
+
+body.is-expanded-layout .custom-player-heading,
+body.measure-layout .custom-player-heading {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+body.is-expanded-layout .custom-player-kicker,
+body.measure-layout .custom-player-kicker {
+  display: none;
+}
+
+body.is-expanded-layout .custom-midi-player .player-time,
+body.measure-layout .custom-midi-player .player-time {
+  font-size: 0.68rem !important;
+  margin: 0;
+}
+
+body.is-expanded-layout .custom-seekbar-wrapper,
+body.is-expanded-layout .custom-midi-player .seekbar-wrapper,
+body.measure-layout .custom-seekbar-wrapper,
+body.measure-layout .custom-midi-player .seekbar-wrapper {
+  height: 20px;
+}
+
+body.is-expanded-layout .custom-midi-player .player-slider::-webkit-slider-runnable-track,
+body.is-expanded-layout .custom-midi-player .seekbar-fill,
+body.measure-layout .custom-midi-player .player-slider::-webkit-slider-runnable-track,
+body.measure-layout .custom-midi-player .seekbar-fill {
+  height: 5px !important;
+}
+
+body.is-expanded-layout .custom-midi-player .player-slider::-moz-range-track,
+body.measure-layout .custom-midi-player .player-slider::-moz-range-track {
+  height: 5px;
+}
+
+body.is-expanded-layout .custom-midi-player .player-slider::-webkit-slider-thumb,
+body.measure-layout .custom-midi-player .player-slider::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+}
+
+body.is-expanded-layout .custom-midi-player .player-slider::-moz-range-thumb,
+body.measure-layout .custom-midi-player .player-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+}
+
+@media (max-width: 1100px) and (orientation: landscape) {
+  body.measure-layout .header-left {
+    max-width: min(32vw, 300px);
+  }
+
+  body.is-expanded-layout .midi-collapse,
+  body.measure-layout .midi-collapse {
+    width: min(32vw, 300px);
+  }
+
+  body.is-expanded-layout .song-navigation,
+  body.measure-layout .song-navigation {
+    max-width: min(100%, 440px);
+  }
+}
+
+@media (min-width: 1280px) and (orientation: landscape) {
+  .pdf-viewer-header {
+    padding: 0 0.75rem;
+    gap: 0.75rem;
+  }
+
+  body.measure-layout .header-left {
+    max-width: min(32vw, 420px);
+  }
+
+  body.is-expanded-layout .midi-collapse,
+  body.measure-layout .midi-collapse {
+    width: min(29vw, 360px);
+  }
+
+  body.is-expanded-layout .song-navigation,
+  body.measure-layout .song-navigation {
+    max-width: min(100%, 520px);
+  }
+
+  body.is-expanded-layout .midi-collapse .custom-midi-player,
+  body.measure-layout .midi-collapse .custom-midi-player {
+    min-width: 244px;
+    max-width: 364px;
+    padding: 3px 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel {
+    width: calc(100vw - 12px);
+    max-width: calc(100vw - 12px);
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
+    padding: 2px 8px;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .custom-player-primary {
+    gap: 12px;
+  }
+
+  .custom-player-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .custom-midi-player .player-time {
+    font-size: 0.72rem !important;
+  }
+
+  .midi-instrument-action {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .custom-player-primary {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .custom-player-play.player-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 18px;
+  }
+
+  .midi-action-btn.instrument-capsule-btn {
+    height: 40px;
+    border-radius: 14px;
+    padding: 0 12px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel {
+    width: calc(100vw - 8px);
+    max-width: calc(100vw - 8px);
+  }
+}
+
+@media (max-width: 1024px) and (orientation: portrait) {
+  .pdf-viewer-header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .hide-chord-btn-portrait {
+    justify-self: end;
+    align-self: center;
+  }
+
+  .song-navigation {
+    grid-row: 1;
+    grid-column: 2;
+    position: static;
+    left: auto;
+    right: auto;
+    transform: none;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.3rem;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    justify-self: stretch;
+  }
+
+  .song-title-wrapper {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .pdf-viewer-footer {
+    display: grid;
+  }
+}
+
+@media (max-width: 767px) and (orientation: portrait) {
+  .song-navigation {
+    gap: 0.18rem;
+  }
+
+  .song-title-wrapper {
+    padding: 0.1rem 0.38rem 0.14rem;
+  }
+}
+
+@media (max-width: 420px) and (orientation: portrait) {
+  .song-navigation {
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
+  }
+
+  .song-title-wrapper {
+    border-radius: 16px;
+  }
+}
+
+/* Final portrait mobile header overrides: absolutely-center the song-navigation
+   inside header-left (which is position:relative and fills the full header width).
+   Equal left/right margins via --portrait-side-width ensure perfect centering. */
+@media (max-width: 1024px) and (orientation: portrait) {
+  .pdf-viewer-header {
+    --portrait-side-width: 92px;
+    display: flex;
+    padding: 0.25rem 0.35rem 0.4rem;
+  }
+
+  /* header-left is the real layout host — make it the positioning context */
+  .header-left {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 0.35rem;
+    z-index: 1;
+  }
+
+  /* Song navigation centred absolutely inside header-left */
+  .song-navigation {
+    position: absolute !important;
+    left: var(--portrait-side-width) !important;
+    right: var(--portrait-side-width) !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: auto !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .song-navigation > button {
+    pointer-events: auto;
+    flex-shrink: 0;
+  }
+
+  .song-title-wrapper {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 100%;
+    text-align: center;
+    pointer-events: auto;
+  }
+
+  /* Hide-chord button pushed to far right via auto-margin */
+  .hide-chord-btn-portrait {
+    margin-left: auto;
+    flex-shrink: 0;
+    z-index: 2;
+  }
+}
+
+@media (max-width: 767px) and (orientation: portrait) {
+  .pdf-viewer-header {
+    --portrait-side-width: 90px;
+  }
+}
+
+@media (max-width: 420px) and (orientation: portrait) {
+  .pdf-viewer-header {
+    --portrait-side-width: 90px;
+  }
+
+  .song-title-wrapper {
+    border-radius: 16px;
+  }
+}
+
+/* Final MIDI/player and portrait chrome cleanup */
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-primary {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-container {
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 2px;
+  padding: 4px 8px;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-heading {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  align-items: center;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.instrument-capsule-btn {
+  width: auto;
+  min-width: 30px;
+  padding: 0 6px;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggle-btn {
+  width: auto;
+  min-width: 58px;
+  height: 30px;
+  padding: 0 7px;
+  border-radius: 10px;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-chevron {
+  display: none;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-icon {
+  font-size: 0.95rem;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggle-value {
+  font-size: 0.72rem;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggle-unit {
+  font-size: 0.54rem;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-popover {
+  left: 0;
+  right: auto;
+  min-width: 220px;
+  width: min(280px, calc(100vw - 16px));
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-play.player-btn,
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel #custom-play-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  flex-shrink: 0;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-play .material-symbols-outlined {
+  font-size: 1.3rem;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .cis-label,
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .cis-chevron {
+  display: none;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-icon-btn.instrument-capsule-btn {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  padding: 0;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player .player-time {
+  font-size: 0.62rem;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .seekbar-wrapper {
+  height: 18px;
+}
+
+/* ::before line — hidden in popup mode */
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player::before {
+  display: none;
+}
+
+body.is-expanded-layout .pdf-viewer-overlay:has(.midi-collapse.midi-available),
+body.measure-layout .pdf-viewer-overlay:has(.midi-collapse.midi-available) {
+  --viewer-header-height-active: 56px;
+}
+
+body.is-expanded-layout .midi-collapse .custom-midi-player,
+body.measure-layout .midi-collapse .custom-midi-player {
+  min-width: 228px;
+  max-width: 348px;
+  padding: 2px 6px;
+}
+
+body.is-expanded-layout .custom-player-controls,
+body.measure-layout .custom-player-controls {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+
+body.is-expanded-layout .custom-player-primary,
+body.measure-layout .custom-player-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body.is-expanded-layout .player-track-container,
+body.measure-layout .player-track-container {
+  gap: 3px;
+  padding: 6px 9px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--viewer-chrome-border) 62%, transparent);
+  background: color-mix(in srgb, var(--viewer-chrome-surface) 72%, var(--md-sys-color-surface-container));
+}
+
+body.is-expanded-layout .custom-player-heading,
+body.measure-layout .custom-player-heading {
+  gap: 6px;
+}
+
+body.is-expanded-layout .custom-player-play.player-btn,
+body.measure-layout .custom-player-play.player-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 58%, var(--viewer-chrome-surface));
+  color: var(--md-sys-color-on-primary-container);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+body.is-expanded-layout .custom-player-actions,
+body.measure-layout .custom-player-actions {
+  gap: 5px;
+}
+
+body.is-expanded-layout .midi-action-btn.instrument-capsule-btn,
+body.measure-layout .midi-action-btn.instrument-capsule-btn,
+body.is-expanded-layout .midi-icon-btn.instrument-capsule-btn,
+body.measure-layout .midi-icon-btn.instrument-capsule-btn {
+  width: 34px;
+  min-width: 34px;
+  height: 36px;
+  border-radius: 12px;
+  border-color: color-mix(in srgb, var(--viewer-chrome-border) 72%, transparent);
+  background: color-mix(in srgb, var(--viewer-chrome-surface) 74%, var(--md-sys-color-surface-container-high));
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+body.is-expanded-layout .midi-tempo-toggle-btn,
+body.measure-layout .midi-tempo-toggle-btn {
+  width: auto;
+  min-width: 54px;
+  height: 36px;
+  padding: 0 6px;
+  border-radius: 12px;
+  border-color: color-mix(in srgb, var(--viewer-chrome-border) 72%, transparent);
+  background: color-mix(in srgb, var(--viewer-chrome-surface) 74%, var(--md-sys-color-surface-container-high));
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+body.is-expanded-layout .midi-tempo-chevron,
+body.measure-layout .midi-tempo-chevron {
+  display: none;
+}
+
+body.is-expanded-layout .midi-tempo-icon,
+body.measure-layout .midi-tempo-icon {
+  display: none;
+}
+
+body.is-expanded-layout .midi-tempo-toggle-value,
+body.measure-layout .midi-tempo-toggle-value {
+  font-size: 0.68rem;
+}
+
+body.is-expanded-layout .midi-tempo-toggle-unit,
+body.measure-layout .midi-tempo-toggle-unit {
+  display: none;
+}
+
+body.is-expanded-layout .midi-tempo-popover,
+body.measure-layout .midi-tempo-popover {
+  left: auto;
+  right: 0;
+  min-width: 220px;
+  width: min(270px, calc(100vw - 20px));
+}
+
+body.is-expanded-layout .custom-midi-player .player-time,
+body.measure-layout .custom-midi-player .player-time {
+  padding: 0.12rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--viewer-chrome-border) 56%, transparent);
+  background: color-mix(in srgb, var(--viewer-chrome-surface) 60%, var(--md-sys-color-surface-container-high));
+  color: var(--viewer-title-accent);
+  font-size: 0.64rem !important;
+}
+
+@media (max-width: 420px) {
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-play.player-btn,
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel #custom-play-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-icon-btn.instrument-capsule-btn {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggle-btn {
+    width: auto;
+    min-width: 46px;
+    height: 28px;
+    padding: 0 5px;
+    border-radius: 9px;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-icon,
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggle-unit {
+    display: none;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggle-value {
+    font-size: 0.66rem;
+  }
+
+  body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-popover {
+    width: min(260px, calc(100vw - 12px));
+    min-width: 200px;
+  }
+}
+
+/* Suppress MIDI panel transition during page navigation to prevent unwanted animation */
+.midi-panel.no-midi-transition,
+.midi-panel.no-midi-transition *,
+.midi-panel.no-transition,
+.midi-panel.no-transition * {
+  transition: none !important;
+  animation: none !important;
+}
+/* Popovers inside the MIDI panel must keep their own open/close animation */
+.midi-panel.no-transition .cis-menu-popover,
+.midi-panel.no-midi-transition .cis-menu-popover,
+.midi-panel.no-transition .midi-tempo-popover,
+.midi-panel.no-midi-transition .midi-tempo-popover {
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.2, 0, 0, 1), visibility 0.2s !important;
+}
+
+/* Desktop: compact MIDI player for the reduced header height */
+@media (orientation: landscape) {
+  body.is-expanded-layout .custom-player-play.player-btn,
+  body.measure-layout .custom-player-play.player-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+  }
+
+  body.is-expanded-layout .custom-player-play .material-symbols-outlined,
+  body.measure-layout .custom-player-play .material-symbols-outlined {
+    font-size: 1.2rem !important;
+  }
+
+  body.is-expanded-layout .player-track-container,
+  body.measure-layout .player-track-container {
+    padding: 3px 7px;
+    gap: 1px;
+  }
+
+  body.is-expanded-layout .custom-midi-player,
+  body.measure-layout .custom-midi-player {
+    padding: 1px 5px;
+  }
+
+  body.is-expanded-layout .custom-seekbar-wrapper,
+  body.is-expanded-layout .custom-midi-player .seekbar-wrapper,
+  body.measure-layout .custom-seekbar-wrapper,
+  body.measure-layout .custom-midi-player .seekbar-wrapper {
+    height: 14px;
+  }
+
+  body.is-expanded-layout .custom-player-kicker,
+  body.measure-layout .custom-player-kicker {
+    padding: 0.1rem 0.4rem;
+    font-size: 0.58rem;
+  }
+
+  body.is-expanded-layout .custom-midi-player .player-time,
+  body.measure-layout .custom-midi-player .player-time {
+    padding: 0.08rem 0.35rem;
+    font-size: 0.58rem !important;
+  }
+}
+
+/* Keep collapsible header MIDI controls on one row and prevent instrument button growth. */
+body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
+  flex-wrap: nowrap;
+}
+
+body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
+body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.instrument-capsule-btn {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (min-width: 1101px) and (orientation: landscape) {
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn .cis-label {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    line-height: 1.05;
+    font-size: 0.82rem;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn .cis-label.instrument-label-long {
+    font-size: 0.76rem;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn .cis-label.instrument-label-very-long {
+    font-size: 0.71rem;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn .cis-label.instrument-label-ultra-long {
+    font-size: 0.66rem;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn .cis-chevron {
+    display: inline-flex;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.instrument-capsule-btn {
+    padding: 0 10px;
+  }
+}
+
+

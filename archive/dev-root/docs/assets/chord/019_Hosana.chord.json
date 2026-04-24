@@ -1,0 +1,142 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 0,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 9,
+        "chord": "D#m"
+      },
+      {
+        "noteIdx": 13,
+        "chord": "F#"
+      },
+      {
+        "noteIdx": 15,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 72,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 76,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 78,
+        "chord": "A#m"
+      },
+      {
+        "noteIdx": 80,
+        "chord": "Fm"
+      },
+      {
+        "noteIdx": 82,
+        "chord": "D#m"
+      },
+      {
+        "noteIdx": 84,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 87,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 143,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 149,
+        "chord": "Fm"
+      },
+      {
+        "noteIdx": 151,
+        "chord": "A#m"
+      },
+      {
+        "noteIdx": 153,
+        "chord": "F#"
+      },
+      {
+        "noteIdx": 155,
+        "chord": "D#m"
+      },
+      {
+        "noteIdx": 157,
+        "chord": "F"
+      },
+      {
+        "noteIdx": 211,
+        "chord": "A#m"
+      },
+      {
+        "noteIdx": 217,
+        "chord": "D#"
+      },
+      {
+        "noteIdx": 221,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 224,
+        "chord": "D#"
+      },
+      {
+        "noteIdx": 227,
+        "chord": "G#"
+      }
+    ],
+    "2": [
+      {
+        "noteIdx": 0,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 9,
+        "chord": "D#m"
+      },
+      {
+        "noteIdx": 13,
+        "chord": "F#"
+      },
+      {
+        "noteIdx": 15,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 72,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 74,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 78,
+        "chord": "A#m"
+      },
+      {
+        "noteIdx": 80,
+        "chord": "Fm"
+      },
+      {
+        "noteIdx": 82,
+        "chord": "D#m"
+      },
+      {
+        "noteIdx": 84,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 87,
+        "chord": "C#"
+      }
+    ]
+  }
+}

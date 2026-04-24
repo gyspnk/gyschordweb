@@ -1,0 +1,426 @@
+// --- 15. Media Session API + Wake Lock ---
+// Provides OS-level media controls (lock screen, notification shade, hardware keys)
+// and screen wake lock while MIDI audio is playing.
+// Also handles AudioContext resume on page-visibility restore for stable background playback.
+
+(function () {
+  'use strict';
+
+  // ─── Internal state ──────────────────────────────────────────────────────────
+  let _wakeLockSentinel = null;
+  let _lastKnownTitle = '';
+  let _mediaSessionActive = false;
+  let _silentAudio = null;       // HTMLAudioElement bridge for Media Session
+  let _silentAudioReady = false; // True once the audio element is created and can play
+  let _silentAudioPending = false; // Prevents concurrent play attempts
+
+  // ─── Silent audio bridge ─────────────────────────────────────────────────────
+  // Mobile browsers (Android Chrome, iOS Safari) ONLY show media notifications
+  // (lock screen / notification shade controls) when an HTMLMediaElement is
+  // actively playing. The MidiEngine uses the Web Audio API, which doesn't trigger
+  // the browser's media session UI.
+  //
+  // Strategy: create a short silent WAV, loop it via <audio>, and keep it
+  // playing while MIDI is active. The audio element provides the "anchor" that
+  // browsers need to display notification controls.
+
+  /**
+   * Generates a minimal valid WAV data-URI with `seconds` of silence.
+   * Uses 8-bit mono @ 8 kHz to keep memory tiny.
+   */
+  function _generateSilentWavURL(seconds) {
+    const sampleRate = 8000;
+    const numSamples = sampleRate * Math.max(1, Math.ceil(seconds));
+    const headerSize = 44;
+    const dataSize = numSamples;
+    const buffer = new ArrayBuffer(headerSize + dataSize);
+    const view = new DataView(buffer);
+
+    // RIFF header
+    _writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    _writeString(view, 8, 'WAVE');
+    // fmt sub-chunk
+    _writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);        // PCM
+    view.setUint16(22, 1, true);        // mono
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate, true);
+    view.setUint16(32, 1, true);
+    view.setUint16(34, 8, true);
+    // data sub-chunk
+    _writeString(view, 36, 'data');
+    view.setUint32(40, dataSize, true);
+    // 128 = silence for unsigned 8-bit PCM
+    new Uint8Array(buffer, headerSize, dataSize).fill(128);
+
+    const blob = new Blob([buffer], { type: 'audio/wav' });
+    return URL.createObjectURL(blob);
+  }
+
+  function _writeString(view, offset, str) {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i));
+    }
+  }
+
+  function _ensureSilentAudio() {
+    if (_silentAudio) return _silentAudio;
+    const url = _generateSilentWavURL(2); // 2-second loop
+    const audio = new Audio();
+    audio.src = url;
+    audio.loop = true;
+    audio.volume = 0.01; // near-silent but non-zero — browsers skip volume=0
+    audio.setAttribute('playsinline', '');
+    audio.preload = 'auto';
+
+    // Some mobile browsers require the element to be in the DOM
+    audio.style.cssText = 'position:fixed;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';
+    (document.body || document.documentElement).appendChild(audio);
+
+    _silentAudio = audio;
+    _silentAudioReady = true;
+    return audio;
+  }
+
+  /** Start the silent audio to activate browser media notification. */
+  function _playSilentAudio() {
+    if (_silentAudioPending) return;
+    const audio = _ensureSilentAudio();
+    if (!audio.paused) return; // already playing
+    _silentAudioPending = true;
+    const p = audio.play();
+    if (p && typeof p.then === 'function') {
+      p.then(() => { _silentAudioPending = false; })
+       .catch(() => { _silentAudioPending = false; });
+    } else {
+      _silentAudioPending = false;
+    }
+  }
+
+  /** Pause the silent audio when MIDI stops. */
+  function _pauseSilentAudio() {
+    _silentAudioPending = false;
+    if (_silentAudio && !_silentAudio.paused) {
+      _silentAudio.pause();
+    }
+  }
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+  /** Current song title from the viewer element. */
+  function _getTitle() {
+    return document.getElementById('pdf-viewer-title')?.textContent?.trim() || 'GYS Pujian';
+  }
+
+  /** Current song number label, used as "artist" in the notification. */
+  function _getArtist() {
+    return document.getElementById('pdf-viewer-number')?.textContent?.trim() || 'GYS Chord Book';
+  }
+
+  /** Whether MidiTimeAuthority reports playback is active. */
+  function _isPlaying() {
+    return typeof MidiTimeAuthority !== 'undefined' && !!MidiTimeAuthority._playing;
+  }
+
+  /** Whether a MIDI sequence with non-zero duration is loaded. */
+  function _hasSong() {
+    const dur =
+      (typeof MidiTimeAuthority !== 'undefined'
+        ? MidiTimeAuthority.getDuration()
+        : 0) || window._midiKnownDuration || 0;
+    return dur > 0;
+  }
+
+  /** Current playback position in seconds. */
+  function _getPosition() {
+    return typeof MidiTimeAuthority !== 'undefined' ? MidiTimeAuthority.getTime() : 0;
+  }
+
+  /** Current sequence duration in seconds. */
+  function _getDuration() {
+    return (
+      (typeof MidiTimeAuthority !== 'undefined'
+        ? MidiTimeAuthority.getDuration()
+        : 0) || window._midiKnownDuration || 0
+    );
+  }
+
+  // ─── Wake Lock ───────────────────────────────────────────────────────────────
+
+  async function _requestWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    if (_wakeLockSentinel) return; // already held
+    try {
+      _wakeLockSentinel = await navigator.wakeLock.request('screen');
+      _wakeLockSentinel.addEventListener('release', () => {
+        _wakeLockSentinel = null;
+      });
+    } catch (_e) {
+      // Silently ignore — wake lock is best-effort (fails when page is not visible)
+    }
+  }
+
+  function _releaseWakeLock() {
+    if (_wakeLockSentinel) {
+      _wakeLockSentinel.release().catch(() => {});
+      _wakeLockSentinel = null;
+    }
+  }
+
+  // ─── AudioContext background resume ──────────────────────────────────────────
+  // iOS Safari and some Android browsers suspend the AudioContext when the tab
+  // goes to the background. Resuming it on visibility-restore keeps playback stable.
+
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible') return;
+
+    // Re-acquire wake lock if still playing (OS releases it when screen turns off)
+    if (_isPlaying()) {
+      await _requestWakeLock();
+    }
+
+    // Resume AudioContext (critical for iOS Safari)
+    if (typeof MidiEngine !== 'undefined') {
+      MidiEngine.resumeContext();
+    }
+
+    // Re-start silent audio if it was killed by the OS while backgrounded
+    if (_isPlaying() && _silentAudio && _silentAudio.paused) {
+      _playSilentAudio();
+    }
+
+    // Re-sync Media Session state after coming back to foreground
+    _updatePlaybackState();
+    _updatePositionState();
+  });
+
+  // ─── Media Session metadata ───────────────────────────────────────────────────
+
+  function _updateMetadata() {
+    if (!('mediaSession' in navigator) || !_hasSong()) return;
+    const title = _getTitle();
+    // Only update DOM-impacting call when title actually changed
+    if (title === _lastKnownTitle && _mediaSessionActive) return;
+    _lastKnownTitle = title;
+    _mediaSessionActive = true;
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: title,
+      artist: _getArtist(),
+      album: 'GYS Chord Book',
+      // No artwork: the app has no server-hosted icon images.
+      // Browsers fall back to the favicon or a generic music icon.
+      artwork: [],
+    });
+  }
+
+  // ─── Playback state ───────────────────────────────────────────────────────────
+
+  function _updatePlaybackState(explicitState) {
+    if (!('mediaSession' in navigator)) return;
+    navigator.mediaSession.playbackState =
+      explicitState || (_isPlaying() ? 'playing' : (_hasSong() ? 'paused' : 'none'));
+  }
+
+  // ─── Position state ───────────────────────────────────────────────────────────
+
+  function _updatePositionState() {
+    if (!('mediaSession' in navigator)) return;
+    if (typeof navigator.mediaSession.setPositionState !== 'function') return;
+    const dur = _getDuration();
+    if (dur <= 0) return;
+    const pos = Math.min(Math.max(_getPosition(), 0), dur);
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: dur,
+        playbackRate: 1.0,
+        position: pos,
+      });
+    } catch (_e) {}
+  }
+
+  // ─── Full sync (called after song/state changes) ──────────────────────────────
+
+  function _fullSync() {
+    _updateMetadata();
+    _updatePlaybackState();
+    _updatePositionState();
+    // Keep silent audio in sync with MIDI playback state
+    if (_isPlaying()) {
+      _playSilentAudio();
+    } else {
+      _pauseSilentAudio();
+    }
+  }
+
+  // ─── Action handlers ──────────────────────────────────────────────────────────
+
+  function _setupActionHandlers() {
+    if (!('mediaSession' in navigator)) return;
+
+    // Play
+    navigator.mediaSession.setActionHandler('play', async () => {
+      if (!_isPlaying() && typeof window.toggleMidiPlayback === 'function') {
+        await window.toggleMidiPlayback();
+      }
+      _playSilentAudio();
+      _updatePlaybackState('playing');
+      await _requestWakeLock();
+    });
+
+    // Pause
+    navigator.mediaSession.setActionHandler('pause', async () => {
+      if (_isPlaying() && typeof window.toggleMidiPlayback === 'function') {
+        await window.toggleMidiPlayback();
+      }
+      _pauseSilentAudio();
+      _updatePlaybackState('paused');
+      _releaseWakeLock();
+    });
+
+    // Previous track
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      if (typeof onPrevSong === 'function') onPrevSong(true, true);
+    });
+
+    // Next track
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      if (typeof onNextSong === 'function') onNextSong(true);
+    });
+
+    // Seek to absolute position
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+      if (!_hasSong() || details.seekTime == null) return;
+      const dur = _getDuration();
+      if (dur <= 0) return;
+      const seekTime = Math.min(Math.max(details.seekTime, 0), dur);
+      if (typeof MidiTimeAuthority !== 'undefined') {
+        MidiTimeAuthority.setTime(seekTime, dur);
+      }
+      // Trigger the existing seekbar change handler so MIDI position actually jumps
+      const bar = document.getElementById('custom-seekbar');
+      if (bar) {
+        bar.value = seekTime;
+        bar.dispatchEvent(new Event('change'));
+      }
+      _updatePositionState();
+    });
+
+    // Seek backward (e.g. double-tap rewind on headphones)
+    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+      const skip = (details && details.seekOffset) || 10;
+      const newTime = Math.max(_getPosition() - skip, 0);
+      if (typeof MidiTimeAuthority !== 'undefined') {
+        MidiTimeAuthority.setTime(newTime, _getDuration());
+      }
+      const bar = document.getElementById('custom-seekbar');
+      if (bar) { bar.value = newTime; bar.dispatchEvent(new Event('change')); }
+      _updatePositionState();
+    });
+
+    // Seek forward
+    navigator.mediaSession.setActionHandler('seekforward', (details) => {
+      const skip = (details && details.seekOffset) || 10;
+      const dur = _getDuration();
+      const newTime = Math.min(_getPosition() + skip, dur);
+      if (typeof MidiTimeAuthority !== 'undefined') {
+        MidiTimeAuthority.setTime(newTime, dur);
+      }
+      const bar = document.getElementById('custom-seekbar');
+      if (bar) { bar.value = newTime; bar.dispatchEvent(new Event('change')); }
+      _updatePositionState();
+    });
+  }
+
+  // ─── Patch window.toggleMidiPlayback ────────────────────────────────────────
+  // Wraps the function defined in 05-events.js so that every play/pause
+  // automatically updates Media Session state and the Wake Lock.
+
+  function _patchToggleMidi() {
+    const orig = window.toggleMidiPlayback;
+    if (typeof orig !== 'function') {
+      // Not yet defined — retry after init() has run (DOMContentLoaded fires it)
+      setTimeout(_patchToggleMidi, 50);
+      return;
+    }
+    // Avoid double-patching
+    if (orig._mediaSessionPatched) return;
+
+    window.toggleMidiPlayback = async function (...args) {
+      await orig.apply(this, args);
+      // Full sync: metadata + playback state + position + silent audio
+      _fullSync();
+      if (_isPlaying()) {
+        await _requestWakeLock();
+      } else {
+        _releaseWakeLock();
+      }
+    };
+    window.toggleMidiPlayback._mediaSessionPatched = true;
+  }
+
+  // ─── Polling ─────────────────────────────────────────────────────────────────
+  // Keeps position state and playback state fresh at 1 Hz.
+  // Also ensures silent audio stays in sync with MIDI playback.
+
+  setInterval(() => {
+    if (document.hidden && !_isPlaying()) return;
+    if (!_hasSong()) return;
+    _updatePositionState();
+    _updatePlaybackState();
+    // Keep silent audio aligned — OS can kill it in background
+    if (_isPlaying() && _silentAudioReady && _silentAudio && _silentAudio.paused) {
+      _playSilentAudio();
+    }
+  }, 1000);
+
+  // ─── MutationObserver on song title ─────────────────────────────────────────
+  // Fires immediately when openPdfViewer changes #pdf-viewer-title,
+  // so the notification shows the correct song name without delay.
+
+  function _observeTitleChanges() {
+    const titleEl = document.getElementById('pdf-viewer-title');
+    if (!titleEl) return;
+    const obs = new MutationObserver(() => {
+      _lastKnownTitle = ''; // force refresh
+      _fullSync();
+    });
+    obs.observe(titleEl, { childList: true, characterData: true, subtree: true });
+  }
+
+  // ─── Bootstrap ───────────────────────────────────────────────────────────────
+  // DOMContentLoaded fires after all deferred scripts + init() have run.
+
+  function initMediaSessionBridge() {
+    _setupActionHandlers();
+    _observeTitleChanges();
+    _patchToggleMidi();
+    _fullSync();
+
+    // Pre-warm the silent audio element on first user gesture.
+    // Mobile browsers require .play() to originate from a gesture context.
+    // We play+pause immediately so subsequent programmatic .play() calls succeed.
+    function _warmUpSilentAudio() {
+      const audio = _ensureSilentAudio();
+      const p = audio.play();
+      if (p && typeof p.then === 'function') {
+        p.then(() => {
+          // If MIDI is not currently playing, pause immediately (just warming up)
+          if (!_isPlaying()) audio.pause();
+        }).catch(() => {});
+      }
+    }
+
+    document.body.addEventListener('click', _warmUpSilentAudio, { once: true, capture: true });
+    document.body.addEventListener('touchstart', _warmUpSilentAudio, { once: true, capture: true });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMediaSessionBridge, { once: true });
+  } else {
+    initMediaSessionBridge();
+  }
+
+})();
