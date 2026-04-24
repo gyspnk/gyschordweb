@@ -808,7 +808,14 @@ var MidiEngine = (function () {
 
     _currentMidiUrl = _preloadedMidiUrl;
     _currentBuffer = buf;
-    _currentMidiBuffer = cached && cached.rawMidi ? cached.rawMidi : _currentMidiBuffer;
+    // If the cache entry has the raw MIDI bytes, keep them so transpose/instrument
+    // re-renders work correctly. If not, CLEAR the old raw bytes to prevent
+    // setTranspose from accidentally re-rendering the PREVIOUS song's MIDI data.
+    if (cached && cached.rawMidi) {
+      _currentMidiBuffer = cached.rawMidi;
+    } else {
+      _currentMidiBuffer = null; // force re-fetch on next transpose/instrument change
+    }
     _currentSourceLabel = cached && cached.sourceLabel ? cached.sourceLabel : (_currentSourceLabel || _preloadedMidiUrl);
     _duration = buf.duration;
     _currentTime = 0;
@@ -1067,6 +1074,8 @@ var MidiEngine = (function () {
     if (step === _currentTranspose) return Promise.resolve();
     _currentTranspose = step;
 
+    // Guard: if no raw MIDI bytes are available (e.g. loaded from cache without rawMidi),
+    // we cannot re-render. The next loadMidi will fetch and render from scratch.
     if (!_currentMidiBuffer) return Promise.resolve();
     return _renderAndSwap(_currentMidiBuffer, {
       transpose: step,
