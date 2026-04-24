@@ -3369,37 +3369,51 @@ body[data-layout-style="spacious"] .mini-instrument-capsule {
    ============================================================ */
 
 @media (max-width: 479px) {
+  /* Extras row: flex row, no overflow:hidden so popovers (tempo, instrument) can escape upward */
   body .mini-player-extras {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
     gap: 4px;
-    overflow: hidden;
+    overflow: visible;  /* Must be visible — popovers open upward above this row */
     min-width: 0;
     width: 100%;
   }
 
-  body .mini-transpose-controls {
+  /* Transpose group: shrink but don't clip — the family chord dropdown opens upward */
+  body .mini-player-extras .mini-transpose-controls {
     flex-shrink: 1;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
   }
 
-  body .mini-tempo-action {
+  /* Tempo wrapper: fixed size, popovers escape upward */
+  body .mini-player-extras .mini-tempo-action {
     flex-shrink: 0;
+    overflow: visible;
   }
 
-  body .instrument-selector-wrapper {
+  /* Instrument wrapper: takes remaining space, popover escapes upward */
+  body .mini-player-extras .instrument-selector-wrapper {
     flex: 1 1 0%;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;  /* Critical: CIS popover opens upward, must not be clipped */
   }
 
-  body .mini-instrument-capsule {
+  /* Instrument capsule: fill wrapper width, clip only text inside button (not popover) */
+  body .mini-player-extras .mini-instrument-capsule {
     width: 100%;
     min-width: 0;
+    overflow: hidden;   /* Clips text label inside button — OK, popover is outside button */
+  }
+
+  /* Instrument label text inside capsule — truncate */
+  body .mini-player-extras .mini-cis-label {
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
   }
 
   body .mini-loop,
@@ -3407,19 +3421,31 @@ body[data-layout-style="spacious"] .mini-instrument-capsule {
     flex-shrink: 0;
   }
 
-  body .mini-transpose-value {
+  /* Hide transpose semitone number badge to save space */
+  body .mini-player-extras .mini-transpose-value {
     display: none;
   }
 
-  body .mini-key-btn {
+  body .mini-player-extras .mini-key-btn {
     min-width: 28px;
     padding: 0 5px;
     font-size: 11px;
   }
 
-  body .mini-tempo-toggle-btn {
+  body .mini-player-extras .mini-tempo-toggle-btn {
     min-width: 52px;
     padding: 0 5px;
+  }
+
+  /* Ensure collapsible inner also allows popovers to escape */
+  body .mini-player-collapsible,
+  body .mini-player-collapsible-inner {
+    overflow: visible !important;
+  }
+  /* ...but only when NOT collapsed (collapsed must be hidden) */
+  body .mini-player.is-mini-collapsed .mini-player-collapsible,
+  body .mini-player.is-mini-collapsed .mini-player-collapsible-inner {
+    overflow: hidden !important;
   }
 }
 
@@ -3428,11 +3454,13 @@ body[data-layout-style="spacious"] .mini-instrument-capsule {
     gap: 3px;
   }
 
-  body .mini-accidental-btn {
+  /* On very small phones, hide accidentals (♯/♭) to save space */
+  body .mini-player-extras .mini-accidental-btn {
     display: none;
   }
 
-  body .mini-cis-label {
+  /* Hide label, keep icon only in instrument capsule */
+  body .mini-player-extras .mini-cis-label {
     display: none;
   }
 }

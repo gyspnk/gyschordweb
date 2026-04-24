@@ -201,6 +201,10 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       // sees a gap where both duration=0 and isMidiSwitching=false.
       window.isMidiSwitching = true;
 
+      // Cancel any pending swapTranspose calls from the previous song by bumping
+      // the generation counter — stale swaps will detect the mismatch and abort.
+      window._transposeSwapGeneration = (window._transposeSwapGeneration || 0) + 1;
+
       // Reset MIDI state (but preserve isMidiSwitching and midi-available to prevent flicker)
       resetMidiState({ keepAvailable: true, keepEngineState: true });
       window.isMidiSwitching = true;
@@ -1534,12 +1538,20 @@ function _prefetchPdf(url) {
 
 async function swapTranspose(step) {
   if (typeof MidiEngine === 'undefined' || !MidiEngine.getCurrentMidiUrl()) return;
+  // Skip if a new song load has already started — reading _before_ the await
+  // captures our generation so we can detect if it changed while we awaited.
+  const swapGen = (window._transposeSwapGeneration = window._transposeSwapGeneration || 0);
 
   try {
     await MidiEngine.setTranspose(step);
   } catch (err) {
     console.warn('Failed to swap transpose:', err);
+    return;
   }
+
+  // Abort if a new song navigation has superseded this swap while we were awaiting
+  if ((window._transposeSwapGeneration || 0) !== swapGen) return;
+
   syncSeekbarUI(MidiEngine.getTime(), MidiEngine.getDuration());
   window._midiLastSeekValue = -1;
 }
@@ -2241,8 +2253,9 @@ function updateTransposeUI(options = {}) {
     updateFamilyChordUI();
   }
 
-  // Gapless transpose swap — single SoundFontPlayer reloads only new pitches
-  if (typeof swapTranspose === 'function') {
+  // Gapless transpose swap — single SoundFontPlayer reloads only new pitches.
+  // Skip during song transitions (isMidiSwitching) to avoid racing with loadMidi().
+  if (typeof swapTranspose === 'function' && !window.isMidiSwitching) {
     swapTranspose(transposeStep);
   }
 
