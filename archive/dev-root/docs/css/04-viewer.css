@@ -2934,7 +2934,9 @@ body.measure-layout .custom-midi-player .player-slider::-moz-range-thumb {
 body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
   display: flex;
   flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
+  min-width: 0;
   gap: 6px;
 }
 
@@ -3036,10 +3038,22 @@ body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-icon-btn.in
 
 body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player .player-time {
   font-size: 0.62rem;
+  margin-bottom: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .seekbar-wrapper {
   height: 18px;
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-seekbar-wrapper,
+body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .seekbar-wrapper .player-slider {
+  width: 100%;
+  min-width: 0;
 }
 
 /* ::before line — hidden in popup mode */

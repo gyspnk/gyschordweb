@@ -200,6 +200,10 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       // Set isMidiSwitching BEFORE resetMidiState so the mini player never
       // sees a gap where both duration=0 and isMidiSwitching=false.
       window.isMidiSwitching = true;
+      // Clear song marker immediately so subsequent checks never treat the
+      // previously loaded MIDI as the active song during a switch.
+      window._midiCurrentlyLoadedRawUrl = "";
+      window._midiKnownDuration = 0;
 
       // Cancel any pending swapTranspose calls from the previous song by bumping
       // the generation counter — stale swaps will detect the mismatch and abort.
@@ -270,6 +274,9 @@ async function openPdfViewer(songId, backgroundLoad = false) {
           _determineNextShuffleSong();
           _preloadNextSong();
         }).catch(function (err) {
+
+          // Ignore stale failures from superseded loads.
+          if (_midiLoadGeneration !== thisGeneration) return;
 
           console.warn("Gagal memuat MIDI:", err);
           window.isMidiSwitching = false;

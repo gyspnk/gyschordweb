@@ -1243,6 +1243,12 @@ function setupEventListeners() {
     // Play/Pause — named function so mini player can call directly (real user gesture)
     async function toggleMidiPlayback() {
       if (typeof MidiEngine === 'undefined') return;
+      if (window.isMidiSwitching) {
+        if (typeof showToast === "function") {
+          showToast("Sedang mengganti lagu MIDI, harap tunggu...", "hourglass_empty");
+        }
+        return;
+      }
       if (MidiEngine.isLoading()) {
         if (typeof showToast === "function")
           showToast("Sedang memuat audio MIDI, harap tunggu...", "hourglass_empty");
@@ -1255,7 +1261,6 @@ function setupEventListeners() {
       if (!MidiEngine.getCurrentMidiUrl()) return;
 
       try {
-        window.isMidiSwitching = false;
         const shouldPlay = !MidiEngine.isPlaying();
 
         if (shouldPlay) {
