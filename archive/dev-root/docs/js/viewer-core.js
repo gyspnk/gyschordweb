@@ -1789,171 +1789,14 @@ function createDefaultChordConfig() {
   };
 }
 
-function sanitizeChordConfig(rawConfig) {
-  const safe = createDefaultChordConfig();
-  if (!rawConfig || typeof rawConfig !== "object") return safe;
-
-  if (rawConfig.grid && Number.isFinite(rawConfig.grid.cols) && Number.isFinite(rawConfig.grid.rows)) {
-    safe.grid.cols = Math.max(1, Math.round(rawConfig.grid.cols));
-    safe.grid.rows = Math.max(1, Math.round(rawConfig.grid.rows));
-  }
-
-  if (rawConfig.pages && typeof rawConfig.pages === "object") {
-    Object.entries(rawConfig.pages).forEach(([pageKey, entries]) => {
-      if (!Array.isArray(entries)) return;
-
-      const validEntries = entries
-        .map((entry) => ({
-          row: Math.max(1, Math.min(safe.grid.rows, Number.parseInt(entry.row, 10) || 1)),
-          col: Math.max(1, Math.min(safe.grid.cols, Number.parseInt(entry.col, 10) || 1)),
-          text: typeof entry.text === "string" ? entry.text.trim() : ""
-        }))
-        .filter((entry) => entry.text.length > 0);
-
-      if (validEntries.length > 0) {
-        safe.pages[pageKey] = validEntries;
-      }
-    });
-  }
-
-  return safe;
-}
-
 async function loadChordConfigurationForSong(song) {
+  // Legacy grid-chord TXT loading is intentionally disabled. The app now uses
+  // note-aligned JSON chord files (`*.chord.json`) via loadNoteChordConfiguration().
+  // Keeping the old TXT fetch active caused unnecessary 404s and could make the
+  // viewer wait on the obsolete loader before applying the JSON chord state.
   chordConfig = createDefaultChordConfig();
   originalFamilyChord = null;
-  const txtUrl = getChordTxtUrl(song);
-  const txtFilename = getChordTxtFilename(song);
-  const noteChordFilename = getNoteChordFilename(song);
-
-  try {
-    // Prefer note-aligned chord data when available and skip legacy TXT fetches.
-    const noteChordAssets = _noteChordAssetSet;
-    if (noteChordAssets.has(noteChordFilename)) {
-      updateTransposeVisibility();
-      return;
-    }
-
-    if (_missingChordTxtAssetSet.has(txtFilename)) {
-      updateTransposeVisibility();
-      return;
-    }
-
-    const chordTxtAssets = _chordTxtAssetSet;
-
-    // Always resolve from PDF-derived filename.
-    const response = await fetch(txtUrl, { cache: "no-store" });
-    if (!response.ok) {
-      if (response.status === 404) {
-        chordTxtAssets.delete(txtFilename);
-        _missingChordTxtAssetSet.add(txtFilename);
-      }
-      updateTransposeVisibility();
-      return;
-    }
-
-    chordTxtAssets.add(txtFilename);
-    _missingChordTxtAssetSet.delete(txtFilename);
-
-    const payload = await response.text();
-    const parsed = JSON.parse(payload);
-    chordConfig = sanitizeChordConfig(parsed);
-    detectAndSetFamilyChord();
-  } catch {
-    chordConfig = createDefaultChordConfig();
-    originalFamilyChord = null;
-  }
   updateTransposeVisibility();
-}
-
-function detectAndSetFamilyChord() {
-  if (!chordConfig || !chordConfig.pages) return;
-  let allChords = [];
-  const pageKeys = Object.keys(chordConfig.pages).sort((a, b) => parseInt(a) - parseInt(b));
-  
-  pageKeys.forEach(key => {
-    const entries = chordConfig.pages[key] || [];
-    // Sort by row, then col
-    const sorted = [...entries].sort((a, b) => a.row === b.row ? a.col - b.col : a.row - b.row);
-    sorted.forEach(entry => {
-      if (entry.text && entry.text.trim()) {
-        allChords.push(entry.text.trim());
-      }
-    });
-  });
-
-  if (allChords.length === 0) return;
-
-  const getRoot = (chordText) => {
-    // Matches root note (A-G or 1-7), optional accidental, and optional 'm' or 'min' for minor (excluding 'maj')
-    const match = chordText.match(/^([A-Ga-g1-7])([#♯b♭]?)(min|m(?!aj))?/);
-    if (!match) return null;
-    let r = match[1].toUpperCase();
-    let acc = match[2];
-    let isMinor = !!match[3];
-    if (acc === '♭') acc = 'b';
-    if (acc === '♯') acc = '#';
-    // Translate number to note if needed
-    if (/[1-7]/.test(r)) {
-      r = NUMBER_TO_NOTE[r] || 'C';
-    }
-    return r + acc + (isMinor ? 'm' : '');
-  };
-
-  const roots = allChords.map(getRoot).filter(Boolean);
-  if (roots.length === 0) return;
-
-  const firstRoot = roots[0];
-  const lastRoot = roots[roots.length - 1];
-
-  let detectedRoot = firstRoot;
-  if (firstRoot === lastRoot) {
-    detectedRoot = firstRoot;
-  } else {
-    // Frequencies fallback
-    const counts = {};
-    let max = 0;
-    let mostFreq = firstRoot;
-    roots.forEach(r => {
-      counts[r] = (counts[r] || 0) + 1;
-      if (counts[r] > max) {
-        max = counts[r];
-        mostFreq = r;
-      }
-    });
-    // Bias towards last root if it appears reasonably often
-    if (counts[lastRoot] > 1) {
-      detectedRoot = lastRoot;
-    } else {
-      detectedRoot = mostFreq;
-    }
-  }
-
-  originalFamilyChord = detectedRoot;
-  baseTransposeOffset = 0;
-
-  if (originalPdfKey && originalFamilyChord) {
-    const pdfSemi = parsePdfKeyToSemitone(originalPdfKey);
-    const txtParsed = parseChordToken(originalFamilyChord);
-    if (pdfSemi !== null && txtParsed !== null) {
-      let diff = pdfSemi - txtParsed.semitone;
-      diff = diff % 12;
-      if (diff > 6) diff -= 12;
-      if (diff < -5) diff += 12;
-      baseTransposeOffset = diff;
-    }
-  }
-
-  if (prefs.preferNaturalChords && originalFamilyChord) {
-    const txtParsed = parseChordToken(originalFamilyChord);
-    if (txtParsed !== null) {
-      const finalBaseSemi = wrapSemitone(txtParsed.semitone + baseTransposeOffset);
-      const isBlackKey = [1, 3, 6, 8, 10].includes(finalBaseSemi);
-      if (isBlackKey) {
-        transposeStep = -1;
-      }
-    }
-  }
 }
 
 function parsePdfKeyToSemitone(keyStr) {
@@ -2085,23 +1928,7 @@ function btnText(btn) {
   return btn ? btn.textContent : '';
 }
 
-function getChordTxtUrl(song) {
-  // song.fileHref is 'assets/pdf/filename.pdf'
-  // we want 'assets/chord/filename.txt'
-  let url = song.fileHref;
-  // safely replace 'assets/pdf/' with 'assets/chord/' and '.pdf' with '.txt'
-  url = url.replace(/\/pdf\//i, '/chord/');
-  url = url.replace(/\.pdf$/i, ".txt");
-  return url;
-}
-
-function getChordTxtFilename(song) {
-  return decodeURIComponent(song.fileHref.split("/").pop() || "chord.txt").replace(/\.pdf$/i, ".txt");
-}
-
-let _chordTxtAssetSet = new Set();
 let _noteChordAssetSet = new Set();
-let _missingChordTxtAssetSet = new Set();
 let _missingNoteChordAssetSet = new Set();
 
 function createChordLayer(pageNum) {
@@ -2490,27 +2317,6 @@ function setChordAt(pageNum, row, col, encodedText) {
 
   entries.sort((a, b) => (a.row - b.row) || (a.col - b.col));
   chordConfig.pages[pageKey] = entries;
-}
-
-function saveChordConfigurationFile() {
-  if (currentSongIndex < 0 || !pujianItems[currentSongIndex]) return;
-
-  const song = pujianItems[currentSongIndex];
-  const filename = getChordTxtFilename(song);
-  const dataText = JSON.stringify(chordConfig, null, 2);
-
-  const blob = new Blob([dataText], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-
-  URL.revokeObjectURL(url);
-  showToast(`Konfigurasi chord tersimpan: ${filename}`, "download");
 }
 
 function handleTitleActivatorTap() {

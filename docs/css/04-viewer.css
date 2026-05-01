@@ -3326,8 +3326,134 @@ body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .mi
     display: inline-flex;
   }
 
-  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.instrument-capsule-btn {
+body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.instrument-capsule-btn {
     padding: 0 10px;
+  }
+}
+
+/* Final MIDI loading/layout polish
+   Keep progress indicators out of the control hit-area and make the collapsible
+   mobile player use two clear rows: playback/seekbar first, actions second. */
+.midi-panel,
+.custom-midi-player {
+  overflow: visible;
+}
+
+.custom-midi-player .midi-player-loading {
+  top: 4px;
+  bottom: auto;
+  left: 14px;
+  right: 14px;
+  width: auto;
+  height: 2px;
+  border-radius: 999px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.custom-midi-player .midi-player-loading-bar {
+  border-radius: 999px;
+}
+
+.midi-panel .midi-preload-bar {
+  top: calc(100% + 3px);
+  bottom: auto;
+  left: 12px;
+  right: 12px;
+  width: auto;
+  height: 2px;
+  border-radius: 999px;
+  z-index: 4;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--md-sys-color-surface-variant) 76%, transparent);
+}
+
+.midi-panel .midi-preload-fill {
+  border-radius: 999px;
+}
+
+body.is-expanded-layout .midi-panel .midi-preload-bar,
+body.measure-layout .midi-panel .midi-preload-bar {
+  top: calc(100% + 2px);
+  left: 8px;
+  right: 8px;
+}
+
+body.is-expanded-layout .custom-midi-player .midi-player-loading,
+body.measure-layout .custom-midi-player .midi-player-loading {
+  top: 2px;
+  left: 10px;
+  right: 10px;
+}
+
+@media (max-width: 640px) {
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
+    padding: 6px 8px 9px;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: 5px;
+    align-items: stretch;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-primary {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .player-track-container {
+    width: 100%;
+    min-width: 0;
+    padding: 4px 7px;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-action,
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action,
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-icon-action {
+    min-width: 0;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-instrument-action {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-action-btn.instrument-capsule-btn {
+    width: 100%;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player .midi-player-loading {
+    top: 3px;
+    left: 12px;
+    right: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-player-actions {
+    grid-template-columns: minmax(42px, auto) minmax(0, 1fr) 28px 28px;
+    gap: 3px;
+  }
+
+  body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggle-btn {
+    min-width: 42px;
+    padding: 0 4px;
   }
 }
 

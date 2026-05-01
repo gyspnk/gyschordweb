@@ -1455,12 +1455,10 @@ function setupEventListeners() {
     });
 
   chordSaveBtn.addEventListener("click", () => {
-    // Save note-aligned chord if we have notes detected, otherwise use grid format
-    const hasNotes = pageNotesCache && Object.values(pageNotesCache).some(c => c && c.notes && c.notes.length > 0);
-    if (hasNotes && typeof saveNoteChordConfigurationFile === "function") {
+    // Chord data is now stored only in note-aligned JSON (*.chord.json).
+    // Do not fall back to the legacy grid/TXT saver.
+    if (typeof saveNoteChordConfigurationFile === "function") {
       saveNoteChordConfigurationFile();
-    } else {
-      saveChordConfigurationFile();
     }
   });
 
