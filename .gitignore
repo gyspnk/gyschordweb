@@ -1,5 +1,8 @@
 node_modules/
 
+# Local AI/tooling state
+.playwright-mcp/
+
 # OS / editor
 .DS_Store
 Thumbs.db
@@ -21,10 +24,15 @@ __pycache__/
 venv/
 
 # Playwright / browser automation artifacts
-# (kept tracked for cross-chat debugging references)
+test-results/
+playwright-report/
 
 # Build/test temporary artifacts
-# (kept tracked for cross-chat debugging references)
+_test_temp/
 _test_temp/test_results.txt
 _test_temp/output.txt
 _test_temp/sweep_out.txt
+coverage/
+.cache/
+.vite/
+.turbo/

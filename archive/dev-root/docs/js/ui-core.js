@@ -74,6 +74,7 @@ async function init() {
 
 
   setupEventListeners();
+  setupResponsiveViewportMetrics();
   setupRippleEffect();
   updateChordEditorUI();
   updateTransposeUI();
@@ -198,6 +199,35 @@ let _layoutResizeTimer = null;
 let _layoutCollisionBusy = false;
 let _layoutCollisionPending = false;
 let _layoutCollisionRaf = 0;
+let _viewportMetricRaf = 0;
+
+function updateResponsiveViewportMetrics() {
+  _viewportMetricRaf = 0;
+  const viewport = window.visualViewport;
+  const height = viewport && viewport.height ? viewport.height : window.innerHeight;
+  if (Number.isFinite(height) && height > 0) {
+    document.documentElement.style.setProperty("--app-viewport-height", `${height}px`);
+  }
+  if (document.body.classList.contains("viewer-active") && pdfDoc) {
+    currentScale = "page-fit";
+    renderPage(currentPageNum);
+  }
+  scheduleLayoutCollisionCheck();
+}
+
+function scheduleResponsiveViewportMetrics() {
+  if (_viewportMetricRaf) cancelAnimationFrame(_viewportMetricRaf);
+  _viewportMetricRaf = requestAnimationFrame(updateResponsiveViewportMetrics);
+}
+
+function setupResponsiveViewportMetrics() {
+  scheduleResponsiveViewportMetrics();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleResponsiveViewportMetrics, { passive: true });
+    window.visualViewport.addEventListener("scroll", scheduleResponsiveViewportMetrics, { passive: true });
+  }
+  window.addEventListener("orientationchange", scheduleResponsiveViewportMetrics, { passive: true });
+}
 
 function scheduleLayoutCollisionCheck() {
   if (_layoutCollisionRaf) cancelAnimationFrame(_layoutCollisionRaf);

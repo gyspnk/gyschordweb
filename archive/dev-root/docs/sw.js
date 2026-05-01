@@ -66,7 +66,7 @@ self.addEventListener('fetch', (event) => {
             }
             return networkResponse;
           })
-          .catch(() => caches.match(event.request));
+          .catch(() => caches.match(event.request).then((cachedResponse) => cachedResponse || Response.error()));
       })
     );
     return;
@@ -88,6 +88,7 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       }).catch((e) => {
          console.warn('Network fetch failed for', event.request.url, e);
+         return Response.error();
       });
     })
   );

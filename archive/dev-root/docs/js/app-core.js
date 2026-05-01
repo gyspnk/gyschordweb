@@ -855,6 +855,8 @@ const hideChordBtns = Array.from(document.querySelectorAll(".hide-chord-btn"));
 // --- 2. State ---
 let pujianItems = [];
 let pdfDoc = null;
+let activePdfLoadingTask = null;
+let activePdfLoadingGeneration = 0;
 let currentPageNum = 1;
 let currentSongIndex = -1;
 let currentScale = "page-fit";

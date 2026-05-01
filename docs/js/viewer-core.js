@@ -53,6 +53,13 @@ async function openPdfViewer(songId, backgroundLoad = false) {
     standardFontDataUrl: "https://mozilla.github.io/pdf.js/standard_fonts/",
   };
   const loadingTask = _canReuseDoc ? null : pdfjsLib.getDocument(pdfOptions);
+  if (loadingTask) {
+    if (activePdfLoadingTask && activePdfLoadingTask !== loadingTask) {
+      try { activePdfLoadingTask.destroy(); } catch (_err) {}
+    }
+    activePdfLoadingTask = loadingTask;
+    activePdfLoadingGeneration = thisOpenGeneration;
+  }
 
   // Begin stopping MIDI audio on manual navigation — before the animation wait —
   // so audio stops cleanly. The actual load happens later in the main path.
@@ -80,6 +87,9 @@ async function openPdfViewer(songId, backgroundLoad = false) {
     // This prevents multiple rapid prev/next presses from concurrently
     // corrupting shared MIDI/PDF state.
     if (_openPdfViewerGeneration !== thisOpenGeneration) {
+      if (loadingTask) {
+        try { loadingTask.destroy(); } catch (_err) {}
+      }
       return;
     }
   }
@@ -356,8 +366,20 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       canvasWrapper.classList.remove("is-navigating");
       songTitleWrapper.classList.remove("is-navigating");
     } else {
-      pdfDoc = await loadingTask.promise;
-      if (_openPdfViewerGeneration !== thisOpenGeneration) return;
+      const loadedPdfDoc = await loadingTask.promise;
+      if (_openPdfViewerGeneration !== thisOpenGeneration) {
+        try { loadedPdfDoc.destroy(); } catch (_err) {}
+        return;
+      }
+      const previousPdfDoc = pdfDoc;
+      pdfDoc = loadedPdfDoc;
+      if (activePdfLoadingTask === loadingTask) {
+        activePdfLoadingTask = null;
+        activePdfLoadingGeneration = 0;
+      }
+      if (previousPdfDoc && previousPdfDoc !== pdfDoc) {
+        try { previousPdfDoc.destroy(); } catch (_err) {}
+      }
 
       // Extract PDF Key
       try {
@@ -432,6 +454,12 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       canvasWrapper.classList.remove("is-navigating");
     }
   } catch (reason) {
+    if (_openPdfViewerGeneration !== thisOpenGeneration || reason?.name === "RenderingCancelledException") {
+      if (loadingTask) {
+        try { loadingTask.destroy(); } catch (_err) {}
+      }
+      return;
+    }
     viewerLoader.classList.remove("visible");
     songTitleWrapper.classList.remove("is-navigating");
     canvasWrapper.classList.remove("is-navigating");
@@ -469,6 +497,9 @@ function updateCenteringAndOverflow() {
 async function renderPage(num) {
   if (!pdfDoc) return;
   const requestId = ++renderRequestId;
+  const renderGeneration = _openPdfViewerGeneration;
+  const docForRender = pdfDoc;
+  const isRenderStale = () => requestId !== renderRequestId || renderGeneration !== _openPdfViewerGeneration || docForRender !== pdfDoc;
   const oldWrapper = canvasWrapper;
   const nextWrapper = document.createElement("div");
   nextWrapper.className = oldWrapper.className
@@ -482,7 +513,9 @@ async function renderPage(num) {
     .replace(/\s*zoom-hold-fixed/g, "");
 
   const renderSinglePageTask = async (pageNumToRender, scaleToUse) => {
-    const page = await pdfDoc.getPage(pageNumToRender);
+    if (isRenderStale()) return null;
+    const page = await docForRender.getPage(pageNumToRender);
+    if (isRenderStale()) return null;
     const dpr = window.devicePixelRatio || 1;
     const finalRenderScale = scaleToUse * dpr;
     const viewport = page.getViewport({ scale: finalRenderScale });
@@ -502,8 +535,15 @@ async function renderPage(num) {
     canvas.style.width = `${cssWidth}px`;
     canvas.style.height = `${cssHeight}px`;
 
-    await page.render({ canvasContext: canvas.getContext("2d"), viewport })
-      .promise;
+    const renderTask = page.render({ canvasContext: canvas.getContext("2d"), viewport });
+    try {
+      if (isRenderStale()) renderTask.cancel();
+      await renderTask.promise;
+    } catch (error) {
+      if (error?.name === "RenderingCancelledException" || isRenderStale()) return null;
+      throw error;
+    }
+    if (isRenderStale()) return null;
 
     // Extract notes for note-aligned chord editor
     if (typeof extractPageNotes === "function") {
@@ -531,40 +571,50 @@ async function renderPage(num) {
   };
 
   if (currentScale === "page-fit") {
-    const page1 = await pdfDoc.getPage(1);
+    const page1 = await docForRender.getPage(1);
+    if (isRenderStale()) return;
     const viewport1 = page1.getViewport({ scale: 1 });
-    let containerWidth = pdfViewerContent.clientWidth - 32;
+    const wrapperStyle = getComputedStyle(oldWrapper);
+    const marginX = parseFloat(wrapperStyle.marginLeft || 0) + parseFloat(wrapperStyle.marginRight || 0);
+    const marginY = parseFloat(wrapperStyle.marginTop || 0) + parseFloat(wrapperStyle.marginBottom || 0);
+    const gap = parseFloat(wrapperStyle.columnGap || wrapperStyle.gap || 0) || 0;
+    let containerWidth = Math.max(120, pdfViewerContent.clientWidth - marginX);
+    const containerHeight = Math.max(120, pdfViewerContent.clientHeight - marginY);
 
-    if (currentViewMode === "double" && pdfDoc.numPages > 1) {
-      containerWidth = (containerWidth - 16) / 2;
+    if (currentViewMode === "double" && docForRender.numPages > 1) {
+      containerWidth = Math.max(120, (containerWidth - gap) / 2);
     }
 
     const scaleX = containerWidth / viewport1.width;
-    const scaleY = (pdfViewerContent.clientHeight - 32) / viewport1.height;
-    initialScale = Math.min(scaleX, scaleY);
+    const scaleY = containerHeight / viewport1.height;
+    initialScale = Math.max(0.08, Math.min(scaleX, scaleY));
     currentScale = initialScale;
   }
 
   try {
     if (currentScrollMode === "vertical") {
       nextWrapper.classList.add("vertical-scroll");
-      for (let i = 1; i <= pdfDoc.numPages; i += 1) {
+      for (let i = 1; i <= docForRender.numPages; i += 1) {
+        if (isRenderStale()) return;
         const pageContainer = await renderSinglePageTask(i, currentScale);
+        if (!pageContainer || isRenderStale()) return;
         nextWrapper.appendChild(pageContainer);
       }
     } else {
       nextWrapper.classList.remove("vertical-scroll");
 
       const page1 = await renderSinglePageTask(num, currentScale);
+      if (!page1 || isRenderStale()) return;
       nextWrapper.appendChild(page1);
 
-      if (currentViewMode === "double" && num < pdfDoc.numPages) {
+      if (currentViewMode === "double" && num < docForRender.numPages) {
         const page2 = await renderSinglePageTask(num + 1, currentScale);
+        if (!page2 || isRenderStale()) return;
         nextWrapper.appendChild(page2);
       }
     }
 
-    if (requestId !== renderRequestId) return;
+    if (isRenderStale()) return;
 
     if (zoomDeferInsert) {
       // During zoom: DON'T insert into DOM. Keep wrapper detached.
@@ -581,6 +631,7 @@ async function renderPage(num) {
     }
     return nextWrapper;
   } catch (error) {
+    if (error?.name === "RenderingCancelledException" || isRenderStale()) return;
     console.error("Gagal merender halaman:", error);
   } finally {
     viewerLoader.classList.remove("visible");

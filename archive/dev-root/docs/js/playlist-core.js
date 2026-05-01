@@ -431,6 +431,14 @@ function initPlaylistUiBindings() {
     let userExpandedExtras = false;
     let resizeRaf = 0;
 
+    const updateMiniPlayerReservedHeight = () => {
+      if (miniPlayerContainer.classList.contains('is-hidden')) return;
+      const height = Math.ceil(miniPlayerContainer.getBoundingClientRect().height || 0);
+      if (height > 0) {
+        document.documentElement.style.setProperty('--mini-player-reserved-height', `${height + 20}px`);
+      }
+    };
+
     const applyMiniPlayerExtrasLayout = () => {
       resizeRaf = 0;
       const containerWidth = miniPlayerContainer.clientWidth;
@@ -440,6 +448,7 @@ function initPlaylistUiBindings() {
         miniPlayerContainer.classList.remove('is-extras-collapsed');
         miniPlayerContainer.classList.remove('is-extras-expanded');
         userExpandedExtras = false;
+        updateMiniPlayerReservedHeight();
         return;
       }
 
@@ -448,6 +457,7 @@ function initPlaylistUiBindings() {
         if (!userExpandedExtras) {
           miniPlayerContainer.classList.remove('is-extras-expanded');
         }
+        updateMiniPlayerReservedHeight();
         return;
       }
 
@@ -457,6 +467,7 @@ function initPlaylistUiBindings() {
           miniPlayerContainer.classList.remove('is-extras-expanded');
         }
       }
+      updateMiniPlayerReservedHeight();
     };
 
     const scheduleMiniExtrasLayout = () => {

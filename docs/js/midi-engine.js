@@ -35,6 +35,7 @@ var MidiEngine = (function () {
   var _soundFontLoadPromise = null;
   var _pendingRenders = {};     // id → { resolve, reject }
   var _renderIdCounter = 0;
+  var _WORKER_REQUEST_TIMEOUT_MS = 120000;
 
   // Soundfont
   var _sfontUrl = '';
@@ -74,6 +75,7 @@ var MidiEngine = (function () {
   var _preloadQueue = [];        // URLs queued for preloading
   var _preloadInFlight = {};     // key → Promise currently rendering
   var _preloadBusy = false;      // True while a preload render is in progress
+  var _preloadRetryTimer = null;
   var _PRELOAD_CACHE_MAX = 12;   // Max cached buffers
 
   // Crossfade
@@ -177,26 +179,17 @@ var MidiEngine = (function () {
                rebuildInstrumentSelectors(_sfontUrl);
             }
           }
-          if (_pendingRenders[msg.id]) {
-            _pendingRenders[msg.id].resolve();
-            delete _pendingRenders[msg.id];
-          }
+          _resolvePendingRender(msg.id);
           return;
         }
 
         if (msg.type === 'rendered') {
-          if (_pendingRenders[msg.id]) {
-            _pendingRenders[msg.id].resolve(msg);
-            delete _pendingRenders[msg.id];
-          }
+          _resolvePendingRender(msg.id, msg);
           return;
         }
 
         if (msg.type === 'error') {
-          if (_pendingRenders[msg.id]) {
-            _pendingRenders[msg.id].reject(new Error(msg.error));
-            delete _pendingRenders[msg.id];
-          }
+          _rejectPendingRender(msg.id, new Error(msg.error));
           return;
         }
       };
@@ -205,6 +198,8 @@ var MidiEngine = (function () {
         console.error('MIDI render worker error:', err);
         if (!_workerReady) {
           fail(new Error('MIDI render worker crashed during init'));
+        } else {
+          _handleWorkerFailure(new Error('MIDI render worker crashed'));
         }
       };
 
@@ -214,15 +209,59 @@ var MidiEngine = (function () {
     return _workerInitPromise;
   }
 
+  function _resolvePendingRender(id, value) {
+    var pending = _pendingRenders[id];
+    if (!pending) return;
+    if (pending.timeout) clearTimeout(pending.timeout);
+    delete _pendingRenders[id];
+    pending.resolve(value);
+  }
+
+  function _rejectPendingRender(id, err) {
+    var pending = _pendingRenders[id];
+    if (!pending) return;
+    if (pending.timeout) clearTimeout(pending.timeout);
+    delete _pendingRenders[id];
+    pending.reject(err);
+  }
+
+  function _rejectAllPendingRenders(err) {
+    Object.keys(_pendingRenders).forEach(function (id) {
+      _rejectPendingRender(id, err);
+    });
+  }
+
+  function _handleWorkerFailure(err) {
+    _workerReady = false;
+    _workerInitPromise = null;
+    _sfontLoaded = false;
+    _soundFontLoadPromise = null;
+    _isLoading = false;
+    _preloadBusy = false;
+    _preloadInFlight = {};
+    _rejectAllPendingRenders(err);
+    try { if (_worker) _worker.terminate(); } catch (_e) {}
+    _worker = null;
+  }
+
   function _sendToWorker(msg) {
     var id = ++_renderIdCounter;
     msg.id = id;
     return new Promise(function (resolve, reject) {
-      _pendingRenders[id] = { resolve: resolve, reject: reject };
-      if (msg.type === 'loadSoundFont') {
-        _worker.postMessage(msg, [msg.buffer]);
-      } else {
-        _worker.postMessage(msg);
+      var timeoutMs = msg.type === 'loadSoundFont' ? 60000 : _WORKER_REQUEST_TIMEOUT_MS;
+      var timeout = setTimeout(function () {
+        _rejectPendingRender(id, new Error('MIDI worker request timed out: ' + msg.type));
+        if (msg.type === 'render') _preloadBusy = false;
+      }, timeoutMs);
+      _pendingRenders[id] = { resolve: resolve, reject: reject, timeout: timeout };
+      try {
+        if (msg.type === 'loadSoundFont') {
+          _worker.postMessage(msg, [msg.buffer]);
+        } else {
+          _worker.postMessage(msg);
+        }
+      } catch (err) {
+        _rejectPendingRender(id, err);
       }
     });
   }
@@ -1175,8 +1214,13 @@ var MidiEngine = (function () {
       console.warn('[Preload] Worker not ready (workerReady=' + _workerReady +
         ', sfontLoaded=' + _sfontLoaded + '), deferring queue (' +
         _preloadQueue.length + ' items)');
-      // Retry after a delay once init completes
-      setTimeout(function () { _processPreloadQueue(); }, 2000);
+      // Retry after a delay once init completes, with only one timer active.
+      if (!_preloadRetryTimer) {
+        _preloadRetryTimer = setTimeout(function () {
+          _preloadRetryTimer = null;
+          _processPreloadQueue();
+        }, 2000);
+      }
       return;
     }
 
