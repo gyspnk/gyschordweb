@@ -629,15 +629,21 @@ function syncMiniPlayerUI() {
   
   if (!miniPlayer || !miniTitle) return;
 
+  const isSwitchingMidi = window.isMidiSwitching === true;
   // Show only if a song is loaded (MidiTimeAuthority has a known duration)
-  const dur = typeof MidiTimeAuthority !== 'undefined' ? (MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0) : (window._midiKnownDuration || 0);
+  const dur = isSwitchingMidi
+    ? 0
+    : (typeof MidiTimeAuthority !== 'undefined' ? (MidiTimeAuthority.getDuration() || window._midiKnownDuration || 0) : (window._midiKnownDuration || 0));
   const inViewer = document.body.classList.contains('viewer-active');
   const page = document.body.getAttribute('data-page') || '';
   const hasSong = document.getElementById('pdf-viewer-title')?.textContent;
   
   // Also show if we are not in viewer but playing, loading, or a song was recently loaded
-  const isPlaying = typeof MidiEngine !== 'undefined' ? MidiEngine.isPlaying() : false;
+  const isPlaying = !isSwitchingMidi && typeof MidiEngine !== 'undefined' ? MidiEngine.isPlaying() : false;
   const isEngineLoading = typeof MidiEngine !== 'undefined' && MidiEngine.isLoading();
+  const isLoading = isSwitchingMidi || isEngineLoading;
+  const miniPlayerLoading = document.getElementById('mini-player-loading');
+  if (miniPlayerLoading) miniPlayerLoading.style.display = isLoading ? '' : 'none';
   
   const inSettings = (page === 'pengaturan' || page === 'report-bug' || page === 'about-project' ||
     document.getElementById('pengaturan-btn')?.classList.contains('selected') || 
@@ -649,7 +655,7 @@ function syncMiniPlayerUI() {
     miniPlayer.classList.add('is-hidden');
     miniPlayer.classList.remove('mini-player-enter');
     if (appContent) { appContent.classList.remove('has-mini-player'); appContent.classList.remove('has-mini-player-collapsed'); }
-  } else if (dur > 0 || isPlaying || window.isMidiSwitching || isEngineLoading || !!hasSong) {
+  } else if (dur > 0 || isPlaying || isLoading || !!hasSong) {
     // Show mini player — add entrance animation only on first show
     var wasHidden = miniPlayer.classList.contains('is-hidden');
     miniPlayer.classList.remove('is-hidden');
@@ -662,7 +668,7 @@ function syncMiniPlayerUI() {
       appContent.classList.add('has-mini-player');
       appContent.classList.toggle('has-mini-player-collapsed', isCollapsed);
     }
-    miniTitle.textContent = document.getElementById('pdf-viewer-title')?.textContent || 'Lagu';
+    miniTitle.textContent = window._midiLoadingSongTitle || document.getElementById('pdf-viewer-title')?.textContent || 'Lagu';
 
     // Loading bar is now synced by the RAF loop in 05-events.js
     
@@ -726,7 +732,7 @@ function syncMiniPlayerUI() {
       }
     }
     
-    miniSubtitle.textContent = subtitleText;
+    miniSubtitle.textContent = isLoading ? 'Memuat MIDI...' : subtitleText;
     
     if (miniPlayIcon) {
        miniPlayIcon.textContent = isPlaying ? "pause" : "play_arrow";

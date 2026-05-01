@@ -46,6 +46,25 @@ async function openPdfViewer(songId, backgroundLoad = false) {
     _earlyTargetIsPreloaded = MidiEngine.hasPreloaded(_earlyRawUrl, _earlyTranspose, _earlyInstForCheck);
   }
 
+  if (!_earlyIsSameSong && _earlyRawUrl) {
+    window.isMidiSwitching = true;
+    window._midiCurrentlyLoadedRawUrl = "";
+    window._midiKnownDuration = 0;
+    window._midiLoadingRawUrl = _earlyRawUrl;
+    window._midiLoadingSongTitle = song.judul;
+    window._midiLastSeekValue = 0;
+    resetMidiState({ keepAvailable: true, keepEngineState: true });
+    syncSeekbarUI(0, 0);
+    if (midiPreloadBar) midiPreloadBar.style.display = _earlyTargetIsPreloaded ? "none" : "block";
+    if (midiPreloadFill) midiPreloadFill.style.width = "0%";
+    if (typeof syncMiniPlayerUI === 'function') syncMiniPlayerUI();
+    if (typeof scheduleLayoutCollisionCheck === 'function') {
+      scheduleLayoutCollisionCheck();
+    } else if (typeof checkLayoutCollisions === "function") {
+      checkLayoutCollisions();
+    }
+  }
+
   // Start fetching PDF immediately to overlap network with transition
   // (skipped when we can reuse the existing decoded document)
   const pdfOptions = {
@@ -59,6 +78,13 @@ async function openPdfViewer(songId, backgroundLoad = false) {
     }
     activePdfLoadingTask = loadingTask;
     activePdfLoadingGeneration = thisOpenGeneration;
+  }
+  function abortStaleOpen() {
+    if (_openPdfViewerGeneration === thisOpenGeneration) return false;
+    if (loadingTask) {
+      try { loadingTask.destroy(); } catch (_err) {}
+    }
+    return true;
   }
 
   // Begin stopping MIDI audio on manual navigation — before the animation wait —
@@ -122,6 +148,7 @@ async function openPdfViewer(songId, backgroundLoad = false) {
     let songTempoForLoad = _getSongTargetTempoBpm(song);
     if (!_canReuseDoc && loadingTask && !_earlyTargetIsPreloaded) {
       songTempoForLoad = await _resolveSongTempoForLoad(song, loadingTask);
+      if (abortStaleOpen()) return;
     } else if (!_canReuseDoc && loadingTask) {
       // Warm tempo/transpose caches in the background without delaying the
       // preloaded MIDI switch path.
@@ -200,35 +227,42 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       }
       window._manualNavigation = false;
 
-      // Instantly collapse MIDI panel (no CSS transition) when switching songs.
-      // Keep no-transition until MIDI load completes to prevent animation slip.
-      if (typeof midiPanel !== "undefined" && midiPanel && midiToggleBtn) {
-        midiPanel.classList.add('no-transition');
-        midiToggleBtn.setAttribute("aria-expanded", "false");
-      }
+      if (abortStaleOpen()) return;
 
-      // Set isMidiSwitching BEFORE resetMidiState so the mini player never
-      // sees a gap where both duration=0 and isMidiSwitching=false.
-      window.isMidiSwitching = true;
-      // Clear song marker immediately so subsequent checks never treat the
-      // previously loaded MIDI as the active song during a switch.
-      window._midiCurrentlyLoadedRawUrl = "";
-      window._midiKnownDuration = 0;
+      if (typeof MidiEngine === 'undefined') {
+        window.isMidiSwitching = false;
+        window._midiLoadingRawUrl = "";
+        window._midiLoadingSongTitle = "";
+        if (midiPreloadBar) midiPreloadBar.style.display = "none";
+        syncSeekbarUI(0, 0);
+        if (typeof syncMiniPlayerUI === 'function') syncMiniPlayerUI();
+      } else {
 
-      // Cancel any pending swapTranspose calls from the previous song by bumping
-      // the generation counter — stale swaps will detect the mismatch and abort.
-      window._transposeSwapGeneration = (window._transposeSwapGeneration || 0) + 1;
+        // Instantly collapse MIDI panel (no CSS transition) when switching songs.
+        // Keep no-transition until MIDI load completes to prevent animation slip.
+        if (typeof midiPanel !== "undefined" && midiPanel && midiToggleBtn) {
+          midiPanel.classList.add('no-transition');
+          midiToggleBtn.setAttribute("aria-expanded", "false");
+        }
 
-      // Reset MIDI state (but preserve isMidiSwitching and midi-available to prevent flicker)
-      resetMidiState({ keepAvailable: true, keepEngineState: true });
-      window.isMidiSwitching = true;
-      syncSeekbarUI(0, 0);
-      window._midiLastSeekValue = 0;
+        // Keep the early pending state active while the real MIDI load starts.
+        window.isMidiSwitching = true;
+        window._midiCurrentlyLoadedRawUrl = "";
+        window._midiKnownDuration = 0;
 
-      // Increment generation to cancel any in-flight MIDI loads from previous songs
-      const thisGeneration = ++_midiLoadGeneration;
+        // Cancel any pending swapTranspose calls from the previous song by bumping
+        // the generation counter — stale swaps will detect the mismatch and abort.
+        window._transposeSwapGeneration = (window._transposeSwapGeneration || 0) + 1;
 
-      if (typeof MidiEngine !== 'undefined') {
+        // Reset MIDI state (but preserve isMidiSwitching and midi-available to prevent flicker)
+        resetMidiState({ keepAvailable: true, keepEngineState: true });
+        window.isMidiSwitching = true;
+        syncSeekbarUI(0, 0);
+        window._midiLastSeekValue = 0;
+
+        // Increment generation to cancel any in-flight MIDI loads from previous songs
+        const thisGeneration = ++_midiLoadGeneration;
+
         // Resolve current instrument and the best matching preload transpose.
         let instrumentValue = -1;
         if (prefs && prefs.midiInstrument !== undefined) {
@@ -246,6 +280,8 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         if (midiPreloadBar && !isPreloaded) {
           midiPreloadBar.style.display = "block";
           midiPreloadFill.style.width = "0%";
+        } else if (midiPreloadBar) {
+          midiPreloadBar.style.display = "none";
         }
 
         MidiEngine.loadMidi(rawUrl, {
@@ -256,24 +292,34 @@ async function openPdfViewer(songId, backgroundLoad = false) {
           onProgress: function (pct) {
             if (midiPreloadFill) midiPreloadFill.style.width = pct + '%';
           }
-        }).then(function () {
+        }).then(function (duration) {
           // Cancel if a newer song load has started
-          if (_midiLoadGeneration !== thisGeneration) {
-            if (window.isMidiSwitching && _openPdfViewerGeneration === thisOpenGeneration) {
-              window.isMidiSwitching = false;
-              if (typeof syncMiniPlayerUI === 'function') syncMiniPlayerUI();
-            }
+          if (_midiLoadGeneration !== thisGeneration || _openPdfViewerGeneration !== thisOpenGeneration) {
+            return;
+          }
+
+          const engineDuration = MidiEngine.getDuration();
+          if (!duration || engineDuration <= 0) {
+            window._midiKnownDuration = 0;
+            window.isMidiSwitching = false;
+            window._midiLoadingRawUrl = "";
+            window._midiLoadingSongTitle = "";
+            if (midiPreloadBar) midiPreloadBar.style.display = "none";
+            syncSeekbarUI(0, 0);
+            if (typeof syncMiniPlayerUI === 'function') syncMiniPlayerUI();
             return;
           }
 
           // Mark as loaded only after a successful decode/render.
           window._midiCurrentlyLoadedRawUrl = rawUrl;
+          window._midiLoadingRawUrl = "";
+          window._midiLoadingSongTitle = "";
 
           if (midiPreloadFill) midiPreloadFill.style.width = "100%";
           if (midiPreloadBar) midiPreloadBar.style.display = "none";
 
-          window._midiKnownDuration = MidiEngine.getDuration();
-          syncSeekbarUI(0, MidiEngine.getDuration());
+          window._midiKnownDuration = engineDuration;
+          syncSeekbarUI(0, engineDuration);
           window.isMidiSwitching = false;
 
           // no-transition stays on — only the toggle-button click removes it
@@ -292,11 +338,15 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         }).catch(function (err) {
 
           // Ignore stale failures from superseded loads.
-          if (_midiLoadGeneration !== thisGeneration) return;
+          if (_midiLoadGeneration !== thisGeneration || _openPdfViewerGeneration !== thisOpenGeneration) return;
 
           console.warn("Gagal memuat MIDI:", err);
           window.isMidiSwitching = false;
+          window._midiLoadingRawUrl = "";
+          window._midiLoadingSongTitle = "";
           if (midiPreloadBar) midiPreloadBar.style.display = "none";
+          syncSeekbarUI(0, 0);
+          if (typeof syncMiniPlayerUI === 'function') syncMiniPlayerUI();
           // no-transition stays on — only the toggle-button click removes it
         });
       }
@@ -1685,7 +1735,7 @@ function syncSeekbarUI(time, duration) {
   const displayTime = Math.min(displayDur || 0, toDisplaySeconds(t));
 
   if (typeof customSeekbar !== "undefined" && customSeekbar) {
-    if (dur > 0 && customSeekbar.max != dur) customSeekbar.max = dur;
+    if (customSeekbar.max != dur) customSeekbar.max = dur;
     customSeekbar.value = t;
     const fill = document.getElementById("custom-seekbar-fill");
     if (fill) fill.style.width = pct;
@@ -1697,7 +1747,7 @@ function syncSeekbarUI(time, duration) {
   // Mini player UI sync
   const miniSeekbar = document.getElementById("mini-seekbar");
   if (miniSeekbar) {
-    if (dur > 0 && miniSeekbar.max != dur) miniSeekbar.max = dur;
+    if (miniSeekbar.max != dur) miniSeekbar.max = dur;
     miniSeekbar.value = t;
     const miniFill = document.getElementById("mini-seekbar-fill");
     if (miniFill) miniFill.style.width = pct;

@@ -27,7 +27,7 @@ async function init() {
           window.dispatchEvent(new CustomEvent('midi-song-end'));
         },
         onStateChange: function (playing, time, duration) {
-          window._midiKnownDuration = duration;
+          window._midiKnownDuration = window.isMidiSwitching ? 0 : duration;
           // Sync mini player / UI state
           if (typeof syncMiniPlayerUI === 'function') syncMiniPlayerUI();
         }

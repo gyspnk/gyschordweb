@@ -520,13 +520,14 @@ const NOTE_IDX_AFTER = 99999; // Sentinel: chord after last note (outro)
  * Write methods are no-ops — MidiEngine manages timing internally.
  */
 const MidiTimeAuthority = {
-  get _playing() { return typeof MidiEngine !== 'undefined' && MidiEngine.isPlaying(); },
+  get _playing() { return !window.isMidiSwitching && typeof MidiEngine !== 'undefined' && MidiEngine.isPlaying(); },
 
-  setTime(t) { if (typeof MidiEngine !== 'undefined') MidiEngine.seek(t); },
-  getTime() { return typeof MidiEngine !== 'undefined' ? MidiEngine.getTime() : 0; },
+  setTime(t) { if (!window.isMidiSwitching && typeof MidiEngine !== 'undefined') MidiEngine.seek(t); },
+  seek(t) { if (!window.isMidiSwitching && typeof MidiEngine !== 'undefined') MidiEngine.seek(t); },
+  getTime() { return !window.isMidiSwitching && typeof MidiEngine !== 'undefined' ? MidiEngine.getTime() : 0; },
   setPlaying() {}, // no-op
   setDuration() {}, // no-op
-  getDuration() { return typeof MidiEngine !== 'undefined' ? MidiEngine.getDuration() : 0; },
+  getDuration() { return !window.isMidiSwitching && typeof MidiEngine !== 'undefined' ? MidiEngine.getDuration() : 0; },
   sync() {}, // no-op
   reset() { if (typeof MidiEngine !== 'undefined') MidiEngine.reset(); },
   _seekCooldownUntil: 0,
@@ -1345,12 +1346,18 @@ function setupEventListeners() {
 
       // Sync loading bar on both MIDI player and mini player (always, even when skipping seekbar)
       var engineLoading = typeof MidiEngine !== 'undefined' && MidiEngine.isLoading();
+      var midiUiLoading = engineLoading || window.isMidiSwitching;
       var midiPlayerLoading = document.getElementById('midi-player-loading');
-      if (midiPlayerLoading) midiPlayerLoading.style.display = engineLoading ? '' : 'none';
+      if (midiPlayerLoading) midiPlayerLoading.style.display = midiUiLoading ? '' : 'none';
       var miniPlayerLoading = document.getElementById('mini-player-loading');
-      if (miniPlayerLoading) miniPlayerLoading.style.display = engineLoading ? '' : 'none';
+      if (miniPlayerLoading) miniPlayerLoading.style.display = midiUiLoading ? '' : 'none';
 
-      if (isDraggingSeekbar || engineLoading || window.isMidiSwitching) return;
+      if (engineLoading || window.isMidiSwitching) {
+        window._midiLastSeekValue = 0;
+        syncSeekbarUI(0, 0);
+        return;
+      }
+      if (isDraggingSeekbar) return;
       if (!document.body.classList.contains("viewer-active") && !(typeof MidiEngine !== 'undefined' && MidiEngine.isPlaying())) return;
 
       const dur = (typeof MidiEngine !== 'undefined' ? MidiEngine.getDuration() : 0) || window._midiKnownDuration || 0;
@@ -1370,6 +1377,12 @@ function setupEventListeners() {
     ].filter(Boolean);
     seekbars.forEach((bar) => {
       bar.addEventListener("input", (e) => {
+        if (window.isMidiSwitching || (typeof MidiEngine !== 'undefined' && MidiEngine.isLoading())) {
+          isDraggingSeekbar = false;
+          window._midiLastSeekValue = 0;
+          syncSeekbarUI(0, 0);
+          return;
+        }
         isDraggingSeekbar = true;
         const dur = (typeof MidiEngine !== 'undefined' ? MidiEngine.getDuration() : 0) || window._midiKnownDuration || 0;
         const val = parseFloat(e.target.value);
@@ -1378,7 +1391,11 @@ function setupEventListeners() {
 
       bar.addEventListener("change", (e) => {
         isDraggingSeekbar = false;
-        if (typeof MidiEngine !== 'undefined' && MidiEngine.isLoading()) return;
+        if (window.isMidiSwitching || (typeof MidiEngine !== 'undefined' && MidiEngine.isLoading())) {
+          window._midiLastSeekValue = 0;
+          syncSeekbarUI(0, 0);
+          return;
+        }
         const val = parseFloat(e.target.value);
         const dur = (typeof MidiEngine !== 'undefined' ? MidiEngine.getDuration() : 0) || window._midiKnownDuration || 0;
 
