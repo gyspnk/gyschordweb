@@ -248,7 +248,13 @@ async function openPdfViewer(songId, backgroundLoad = false) {
           }
         }).then(function () {
           // Cancel if a newer song load has started
-          if (_midiLoadGeneration !== thisGeneration) return;
+          if (_midiLoadGeneration !== thisGeneration) {
+            if (window.isMidiSwitching && _openPdfViewerGeneration === thisOpenGeneration) {
+              window.isMidiSwitching = false;
+              if (typeof syncMiniPlayerUI === 'function') syncMiniPlayerUI();
+            }
+            return;
+          }
 
           // Mark as loaded only after a successful decode/render.
           window._midiCurrentlyLoadedRawUrl = rawUrl;
@@ -351,11 +357,14 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       songTitleWrapper.classList.remove("is-navigating");
     } else {
       pdfDoc = await loadingTask.promise;
+      if (_openPdfViewerGeneration !== thisOpenGeneration) return;
 
       // Extract PDF Key
       try {
         const page1 = await pdfDoc.getPage(1);
+        if (_openPdfViewerGeneration !== thisOpenGeneration) return;
         const textContent = await page1.getTextContent();
+        if (_openPdfViewerGeneration !== thisOpenGeneration) return;
         const pdfText = textContent.items.map((item) => item.str).join(" ");
         const detectedTempo = _extractPdfTempoFromText(pdfText);
 
@@ -391,10 +400,12 @@ async function openPdfViewer(songId, backgroundLoad = false) {
 
       if (!isSameSong) {
         await loadChordConfigurationForSong(song);
+        if (_openPdfViewerGeneration !== thisOpenGeneration) return;
         // Also load note-aligned chord config
         if (typeof loadNoteChordConfiguration === "function") {
           pageNotesCache = {}; // Clear note cache for new song
           await loadNoteChordConfiguration(song);
+          if (_openPdfViewerGeneration !== thisOpenGeneration) return;
           if (hasNoteAlignedChords()) {
             detectNoteAlignedFamilyChord();
           }
@@ -411,6 +422,7 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       updateViewerUI();
       updateHideChordButton();
       await renderPage(currentPageNum);
+      if (_openPdfViewerGeneration !== thisOpenGeneration) return;
       updateSongNavButtons();
       fitViewerTitle();
 
