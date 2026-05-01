@@ -146,18 +146,27 @@ async function openPdfViewer(songId, backgroundLoad = false) {
 
   if (!isSameSong) {
     let songTempoForLoad = _getSongTargetTempoBpm(song);
-    if (!_canReuseDoc && loadingTask && !_earlyTargetIsPreloaded) {
-      songTempoForLoad = await _resolveSongTempoForLoad(song, loadingTask);
-      if (abortStaleOpen()) return;
-    } else if (!_canReuseDoc && loadingTask) {
-      // Warm tempo/transpose caches in the background without delaying the
-      // preloaded MIDI switch path.
-      _resolveSongTempoForLoad(song, loadingTask).catch(function () {});
+    if (!_canReuseDoc && loadingTask) {
+      // Do not block the foreground MIDI load on PDF text extraction. Waiting
+      // here makes the selected song appear stuck on the previous MIDI until
+      // PDF parsing finishes. Warm tempo/transpose caches in the background and
+      // update UI tempo only if this navigation is still current.
+      _resolveSongTempoForLoad(song, loadingTask).then(function (resolvedTempo) {
+        if (_openPdfViewerGeneration !== thisOpenGeneration) return;
+        if (typeof setCurrentSongTempo === "function") {
+          setCurrentSongTempo(resolvedTempo, {
+            resetCurrent: true,
+            skipApply: true,
+          });
+        }
+      }).catch(function () {});
     }
     if (typeof setCurrentSongTempo === "function") {
       setCurrentSongTempo(songTempoForLoad, {
         resetCurrent: true,
-        skipApply: _earlyTargetIsPreloaded,
+        // The MIDI engine still owns the previous song at this point. Applying
+        // tempo here would re-render the old MIDI and block the new song load.
+        skipApply: true,
       });
     }
 
@@ -282,6 +291,13 @@ async function openPdfViewer(songId, backgroundLoad = false) {
           midiPreloadFill.style.width = "0%";
         } else if (midiPreloadBar) {
           midiPreloadBar.style.display = "none";
+        }
+
+        // Foreground song selection must take priority over queued neighbor
+        // preloads. Otherwise the worker can spend time rendering an unrelated
+        // background MIDI while the selected pujian appears stuck/loading.
+        if (!isPreloaded && typeof MidiEngine.cancelPreload === 'function') {
+          MidiEngine.cancelPreload();
         }
 
         MidiEngine.loadMidi(rawUrl, {
@@ -446,7 +462,9 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         if (!isSameSong && typeof setCurrentSongTempo === "function") {
           setCurrentSongTempo(detectedTempo, {
             resetCurrent: true,
-            skipApply: _earlyTargetIsPreloaded,
+            // Avoid an unnecessary render while/after the selected MIDI is
+            // loading; base/current tempo state is enough for controls.
+            skipApply: true,
           });
         }
 

@@ -673,7 +673,10 @@ function syncTempoControlsUI() {
 
 function setCurrentSongTempo(defaultBpm, options = {}) {
   const shouldResetCurrent = options.resetCurrent !== false;
-  const shouldSkipApply = options.skipApply === true;
+  // During a song switch the engine may still hold the previous MIDI buffer.
+  // Never re-render/apply tempo to that stale buffer; the foreground load will
+  // render the selected song with the updated tempo state.
+  const shouldSkipApply = options.skipApply === true || window.isMidiSwitching === true;
   currentSongDefaultTempoBpm = clampMidiTempoBpm(defaultBpm, currentSongDefaultTempoBpm);
   if (shouldResetCurrent) {
     currentTempoBpm = currentSongDefaultTempoBpm;
