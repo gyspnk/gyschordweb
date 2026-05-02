@@ -425,6 +425,7 @@ function initPlaylistUiBindings() {
   const miniPlayerContainer = document.getElementById('mini-player');
   const miniExtrasToggle = document.getElementById('mini-extras-toggle');
   let miniCollapseAnimating = false;
+  let scheduleMiniExtrasLayout = () => {};
 
   const updateMiniPlayerReservedHeight = () => {
     if (!miniPlayerContainer || miniPlayerContainer.classList.contains('is-hidden')) return;
@@ -473,7 +474,7 @@ function initPlaylistUiBindings() {
       updateMiniPlayerReservedHeight();
     };
 
-    const scheduleMiniExtrasLayout = () => {
+    scheduleMiniExtrasLayout = () => {
       if (resizeRaf) cancelAnimationFrame(resizeRaf);
       resizeRaf = requestAnimationFrame(applyMiniPlayerExtrasLayout);
     };
