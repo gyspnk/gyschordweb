@@ -110,6 +110,8 @@
 
 .settings-panel {
   max-width: var(--layout-settings-width);
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto; padding: 1rem 0.5rem;
   animation: elegantFadeInUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   display: flex;
@@ -337,6 +339,8 @@
 
 .settings-panel-redesign {
   max-width: var(--layout-settings-redesign-width);
+  width: 100%;
+  box-sizing: border-box;
   padding: 1.25rem 0.5rem 2rem;
   gap: 1.25rem;
 }
@@ -1523,6 +1527,42 @@ body[data-layout-style="spacious"] .settings-subcard {
 
   .settings-panel-redesign {
     padding-inline: 0;
+  }
+}
+
+@media (max-width: 479px) and (orientation: portrait) {
+  body[data-layout-style="compact"] .settings-panel-redesign {
+    gap: 0.8rem;
+    padding-block: 0.75rem 1.25rem;
+  }
+
+  body[data-layout-style="compact"] .settings-card-studio {
+    padding: 0.78rem;
+  }
+
+  body[data-layout-style="compact"] .settings-subcard {
+    padding: 0.72rem;
+  }
+
+  body[data-layout-style="focused"] .settings-panel-redesign {
+    gap: 1.15rem;
+  }
+
+  body[data-layout-style="focused"] .settings-card-studio {
+    padding: 1.06rem;
+  }
+
+  body[data-layout-style="spacious"] .settings-panel-redesign {
+    gap: 1.45rem;
+    padding-block: 1.35rem 2.25rem;
+  }
+
+  body[data-layout-style="spacious"] .settings-card-studio {
+    padding: 1.35rem;
+  }
+
+  body[data-layout-style="spacious"] .settings-subcard {
+    padding: 1.25rem;
   }
 }
 

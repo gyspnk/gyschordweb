@@ -424,21 +424,22 @@ function initPlaylistUiBindings() {
   // Collapsible extras row: auto-collapse when mini-player is narrow
   const miniPlayerContainer = document.getElementById('mini-player');
   const miniExtrasToggle = document.getElementById('mini-extras-toggle');
+  let miniCollapseAnimating = false;
+
+  const updateMiniPlayerReservedHeight = () => {
+    if (!miniPlayerContainer || miniPlayerContainer.classList.contains('is-hidden')) return;
+    const height = Math.ceil(miniPlayerContainer.getBoundingClientRect().height || 0);
+    if (height > 0) {
+      document.documentElement.style.setProperty('--mini-player-reserved-height', `${height + 20}px`);
+    }
+  };
+
   if (miniPlayerContainer && miniExtrasToggle) {
     const mobileMiniMedia = window.matchMedia ? window.matchMedia('(max-width: 640px)') : null;
     const collapseWidth = 540;
     const expandWidth = 600;
     let userExpandedExtras = false;
     let resizeRaf = 0;
-    let miniCollapseAnimating = false;
-
-    const updateMiniPlayerReservedHeight = () => {
-      if (miniPlayerContainer.classList.contains('is-hidden')) return;
-      const height = Math.ceil(miniPlayerContainer.getBoundingClientRect().height || 0);
-      if (height > 0) {
-        document.documentElement.style.setProperty('--mini-player-reserved-height', `${height + 20}px`);
-      }
-    };
 
     const applyMiniPlayerExtrasLayout = () => {
       resizeRaf = 0;
