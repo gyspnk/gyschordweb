@@ -1344,34 +1344,61 @@ function setupEventListeners() {
     });
 
     let _seekbarRafId = null;
+    let _seekbarIdleTimer = null;
+    function scheduleSeekbarLoop(delayMs) {
+      if (_seekbarRafId || _seekbarIdleTimer) return;
+      const delay = Math.max(0, delayMs || 0);
+      if (delay > 0) {
+        _seekbarIdleTimer = setTimeout(function () {
+          _seekbarIdleTimer = null;
+          _seekbarRafId = requestAnimationFrame(seekbarAnimationLoop);
+        }, delay);
+      } else {
+        _seekbarRafId = requestAnimationFrame(seekbarAnimationLoop);
+      }
+    }
+
     function seekbarAnimationLoop() {
-      _seekbarRafId = requestAnimationFrame(seekbarAnimationLoop);
+      _seekbarRafId = null;
 
       // Sync loading bar on both MIDI player and mini player (always, even when skipping seekbar)
       var engineLoading = typeof MidiEngine !== 'undefined' && MidiEngine.isLoading();
       var midiUiLoading = engineLoading || window.isMidiSwitching;
+      var inViewer = document.body.classList.contains("viewer-active");
       var midiPlayerLoading = document.getElementById('midi-player-loading');
-      if (midiPlayerLoading) midiPlayerLoading.style.display = midiUiLoading ? '' : 'none';
+      // In the PDF viewer the external preload bar is the single source of truth.
+      // Keeping this internal loading bar visible there creates a duplicate bar.
+      if (midiPlayerLoading) midiPlayerLoading.style.display = (midiUiLoading && !inViewer) ? '' : 'none';
       var miniPlayerLoading = document.getElementById('mini-player-loading');
-      if (miniPlayerLoading) miniPlayerLoading.style.display = midiUiLoading ? '' : 'none';
+      if (miniPlayerLoading) miniPlayerLoading.style.display = (midiUiLoading && !inViewer) ? '' : 'none';
 
       if (engineLoading || window.isMidiSwitching) {
         window._midiLastSeekValue = 0;
         syncSeekbarUI(0, 0);
+        scheduleSeekbarLoop(100);
         return;
       }
-      if (isDraggingSeekbar) return;
-      if (!document.body.classList.contains("viewer-active") && !(typeof MidiEngine !== 'undefined' && MidiEngine.isPlaying())) return;
+      if (isDraggingSeekbar) {
+        scheduleSeekbarLoop(50);
+        return;
+      }
+      const isPlayingNow = typeof MidiEngine !== 'undefined' && MidiEngine.isPlaying();
+      if (!inViewer && !isPlayingNow) {
+        scheduleSeekbarLoop(500);
+        return;
+      }
 
       const dur = (typeof MidiEngine !== 'undefined' ? MidiEngine.getDuration() : 0) || window._midiKnownDuration || 0;
       const curr = typeof MidiEngine !== 'undefined' ? MidiEngine.getTime() : 0;
 
       // Only update DOM if value changed significantly
-      if (Math.abs(curr - window._midiLastSeekValue) < 0.05 && customSeekbar.max == dur) return;
-      window._midiLastSeekValue = curr;
-      syncSeekbarUI(curr, dur);
+      if (Math.abs(curr - window._midiLastSeekValue) >= 0.05 || customSeekbar.max != dur) {
+        window._midiLastSeekValue = curr;
+        syncSeekbarUI(curr, dur);
+      }
+      scheduleSeekbarLoop(isPlayingNow ? 100 : 500);
     }
-    seekbarAnimationLoop();
+    scheduleSeekbarLoop(0);
 
     // Prevent timeupdate from fighting with user interaction
     const seekbars = [

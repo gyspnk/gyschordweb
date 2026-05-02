@@ -430,6 +430,7 @@ function initPlaylistUiBindings() {
     const expandWidth = 600;
     let userExpandedExtras = false;
     let resizeRaf = 0;
+    let miniCollapseAnimating = false;
 
     const updateMiniPlayerReservedHeight = () => {
       if (miniPlayerContainer.classList.contains('is-hidden')) return;
@@ -441,6 +442,7 @@ function initPlaylistUiBindings() {
 
     const applyMiniPlayerExtrasLayout = () => {
       resizeRaf = 0;
+      if (miniCollapseAnimating) return;
       const containerWidth = miniPlayerContainer.clientWidth;
       const isMobileStable = !!(mobileMiniMedia && mobileMiniMedia.matches);
 
@@ -531,13 +533,21 @@ function initPlaylistUiBindings() {
 
     miniCollapseToggle.addEventListener('click', function (e) {
       e.stopPropagation();
-      var isCollapsed = miniPlayerContainer.classList.toggle('is-mini-collapsed');
+      if (miniCollapseAnimating) return;
+      miniCollapseAnimating = true;
+      miniPlayerContainer.classList.add('is-mini-animating');
+
+      var isCollapsed = !miniPlayerContainer.classList.contains('is-mini-collapsed');
       localStorage.setItem('miniPlayerCollapsed', isCollapsed ? '1' : '0');
       miniCollapseToggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
       miniCollapseToggle.setAttribute('aria-label', isCollapsed ? 'Expand mini player' : 'Collapse mini player');
-      if (appContent) {
-        appContent.classList.toggle('has-mini-player-collapsed', isCollapsed);
-      }
+
+      requestAnimationFrame(function () {
+        miniPlayerContainer.classList.toggle('is-mini-collapsed', isCollapsed);
+        if (appContent) {
+          appContent.classList.toggle('has-mini-player-collapsed', isCollapsed);
+        }
+      });
 
       if (isCollapsed) {
         // Collapsing — revert to CSS default (overflow: hidden)
@@ -555,6 +565,16 @@ function initPlaylistUiBindings() {
           el.addEventListener('transitionend', onEnd);
         });
       }
+
+      setTimeout(function () {
+        miniCollapseAnimating = false;
+        miniPlayerContainer.classList.remove('is-mini-animating');
+        if (!miniPlayerContainer.classList.contains('is-mini-collapsed')) {
+          setCollapsibleOverflow(true);
+        }
+        updateMiniPlayerReservedHeight();
+        scheduleMiniExtrasLayout();
+      }, 340);
     });
   }
 

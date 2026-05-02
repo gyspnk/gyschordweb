@@ -3386,6 +3386,12 @@ body.measure-layout .custom-midi-player .midi-player-loading {
   right: 10px;
 }
 
+/* Avoid duplicate MIDI loading indicators in the PDF viewer. The external
+   preload/progress bar below the panel is the only viewer loading indicator. */
+body.viewer-active #midi-player-loading {
+  display: none !important;
+}
+
 @media (max-width: 640px) {
   body.viewer-active:not(.is-expanded-layout):not(.measure-layout) .midi-panel .custom-midi-player {
     padding: 6px 8px 9px;
