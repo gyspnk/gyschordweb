@@ -1,6 +1,6 @@
 const PDF_JS_URL = 'https://mozilla.github.io/pdf.js/build/pdf.mjs';
-const APP_BUNDLE_URL = './js/app.bundle.min.js?v=8';
-const SERVICE_WORKER_URL = './sw.min.js?v=6';
+const APP_BUNDLE_URL = './js/app.bundle.min.js?v=10';
+const SERVICE_WORKER_URL = './sw.min.js?v=8';
 
 let bootPromise = null;
 const scriptLoadPromises = new Map();

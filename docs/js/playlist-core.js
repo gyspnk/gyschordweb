@@ -1077,6 +1077,51 @@ function getPlaylistFileName(value) {
   }
 }
 
+function getPlaylistSongFileHref(song) {
+  if (!song || typeof song !== 'object') return "";
+  let href = song.fileHref || song.href || song.pdfHref || song.pdf || song.url || song.file || "";
+  href = String(href || "").trim();
+  if (!href) return "";
+  href = href.split(/[?#]/)[0];
+
+  // Some older/imported playlists may store the MIDI URL instead of the PDF URL.
+  href = href.replace(/\\/g, "/");
+  href = href.replace(/\/midi\//i, "/pdf/").replace(/\.mid(?=([?#]|$))/i, ".pdf");
+
+  // If only a filename was stored, resolve it against the standard PDF folder.
+  if (!href.includes("/") && /\.pdf(?=([?#]|$))/i.test(href)) {
+    href = `assets/pdf/${href}`;
+  }
+
+  return href;
+}
+
+function getPlaylistSongNumber(song) {
+  if (!song || typeof song !== 'object') return "?";
+  const raw = song.nomor ?? song.number ?? song.no ?? song.id ?? "?";
+  const rawString = String(raw || "?");
+  const digitMatch = rawString.match(/[0-9]+[A-Za-z]?/);
+  if (digitMatch) return digitMatch[0];
+  const alphaMatch = rawString.match(/[A-Za-z]+[0-9]*/);
+  return alphaMatch ? alphaMatch[0] : rawString;
+}
+
+function getPlaylistSongTitle(song) {
+  if (!song || typeof song !== 'object') return "Tanpa Judul";
+  return String(song.judul || song.title || song.name || "Tanpa Judul").trim() || "Tanpa Judul";
+}
+
+function createPujianItemFromPlaylistSong(song) {
+  const fileHref = getPlaylistSongFileHref(song);
+  if (!fileHref) return null;
+  return {
+    id: Array.isArray(pujianItems) ? pujianItems.length : 0,
+    nomor: getPlaylistSongNumber(song),
+    judul: getPlaylistSongTitle(song),
+    fileHref,
+  };
+}
+
 async function ensurePujianItemsForPlaylist() {
   if (typeof pujianItems !== 'undefined' && Array.isArray(pujianItems) && pujianItems.length > 0) {
     return pujianItems;
@@ -1104,9 +1149,9 @@ async function ensurePujianItemsForPlaylist() {
 function findPlaylistSongGlobalIndex(targetSong, items) {
   if (!targetSong || !Array.isArray(items)) return -1;
 
-  const targetNomor = normalizePlaylistSongKey(targetSong.nomor);
-  const targetFile = getPlaylistFileName(targetSong.fileHref);
-  const targetTitle = normalizePlaylistSongKey(targetSong.judul);
+  const targetNomor = normalizePlaylistSongKey(getPlaylistSongNumber(targetSong));
+  const targetFile = getPlaylistFileName(getPlaylistSongFileHref(targetSong));
+  const targetTitle = normalizePlaylistSongKey(getPlaylistSongTitle(targetSong));
 
   const byFile = targetFile
     ? items.findIndex((song) => getPlaylistFileName(song.fileHref) === targetFile)
@@ -1123,6 +1168,55 @@ function findPlaylistSongGlobalIndex(targetSong, items) {
     : -1;
 }
 
+async function resolvePlaylistSongGlobalIndex(targetSong, debugInfo) {
+  if (!targetSong) return -1;
+
+  const hasLoadedItems = typeof pujianItems !== 'undefined' && Array.isArray(pujianItems) && pujianItems.length > 0;
+  if (debugInfo) debugInfo.initialPujianCount = hasLoadedItems ? pujianItems.length : 0;
+
+  if (hasLoadedItems) {
+    const directIdx = findPlaylistSongGlobalIndex(targetSong, pujianItems);
+    if (directIdx >= 0) {
+      if (debugInfo) debugInfo.resolveMethod = 'loaded-list';
+      return directIdx;
+    }
+  }
+
+  // If the playlist already has a usable PDF href, do not block on assets-list.json.
+  // This avoids a blank/stuck playlist when the main list has not finished loading,
+  // when the app is served from cache, or when the playlist is imported from old data.
+  const syntheticItem = createPujianItemFromPlaylistSong(targetSong);
+  if (syntheticItem) {
+    if (typeof pujianItems === 'undefined' || !Array.isArray(pujianItems)) {
+      pujianItems = [];
+    }
+    syntheticItem.id = pujianItems.length;
+    pujianItems.push(syntheticItem);
+    if (debugInfo) {
+      debugInfo.resolveMethod = 'playlist-fileHref-fallback';
+      debugInfo.syntheticItem = syntheticItem;
+      debugInfo.finalPujianCount = pujianItems.length;
+    }
+    return syntheticItem.id;
+  }
+
+  try {
+    const items = await ensurePujianItemsForPlaylist();
+    const fetchedIdx = findPlaylistSongGlobalIndex(targetSong, items);
+    if (debugInfo) {
+      debugInfo.afterFetchPujianCount = Array.isArray(items) ? items.length : 0;
+      debugInfo.resolveMethod = fetchedIdx >= 0 ? 'fetched-assets-list' : 'not-found-after-fetch';
+    }
+    return fetchedIdx;
+  } catch (error) {
+    if (debugInfo) {
+      debugInfo.resolveMethod = 'assets-list-failed';
+      debugInfo.resolveError = error instanceof Error ? error.message : String(error);
+    }
+    throw error;
+  }
+}
+
 // Play a specific song from a playlist and set it as active
 window.playSongFromPlaylist = async function(songIndex, isBackground = false, forcePlaylistId = null) {
   const plId = forcePlaylistId || currentViewingPlaylistId;
@@ -1137,6 +1231,15 @@ window.playSongFromPlaylist = async function(songIndex, isBackground = false, fo
   const targetSong = pl.songs[songIndex];
   if (!targetSong) return;
 
+  const debugInfo = {
+    startedAt: new Date().toISOString(),
+    songIndex,
+    playlistId: plId,
+    isBackground,
+    targetSong,
+  };
+  window.__playlistLastOpenDebug = debugInfo;
+
   const trackItem = document.querySelector(`#playlist-track-list .playlist-track-item:nth-child(${Number(songIndex) + 1})`);
   if (trackItem) {
     trackItem.classList.add('is-loading');
@@ -1144,17 +1247,40 @@ window.playSongFromPlaylist = async function(songIndex, isBackground = false, fo
   }
 
   try {
-    const items = await ensurePujianItemsForPlaylist();
-    const globalIdx = findPlaylistSongGlobalIndex(targetSong, items);
+    const globalIdx = await resolvePlaylistSongGlobalIndex(targetSong, debugInfo);
     if (globalIdx >= 0 && typeof openPdfViewer === 'function') {
-      await openPdfViewer(globalIdx.toString(), isBackground);
+      debugInfo.globalIdx = globalIdx;
+      const openPromise = Promise.resolve(openPdfViewer(globalIdx.toString(), isBackground));
+      debugInfo.viewerActiveAfterCall = document.body.classList.contains('viewer-active');
+
+      openPromise.catch((error) => {
+        console.error("Gagal membuka PDF dari playlist:", error);
+        if (window.__playlistLastOpenDebug === debugInfo) {
+          debugInfo.openError = error instanceof Error ? error.message : String(error);
+        }
+        if (typeof showToast === 'function') showToast("Gagal membuka PDF dari playlist", "error");
+      });
+
+      if (!isBackground && debugInfo.viewerActiveAfterCall) {
+        debugInfo.openMode = 'foreground-detached';
+        return;
+      }
+
+      const openResult = await Promise.race([
+        openPromise.then(() => 'resolved'),
+        new Promise((resolve) => setTimeout(() => resolve('timeout'), 4000)),
+      ]);
+      debugInfo.openResult = openResult;
+      if (openResult === 'timeout' && !document.body.classList.contains('viewer-active')) {
+        showToast("Viewer belum terbuka, coba muat ulang aplikasi", "warning");
+      }
       return;
     }
     console.warn("Lagu playlist tidak ditemukan di direktori utama", {
       songIndex,
       playlistId: plId,
       targetSong,
-      totalSongs: Array.isArray(items) ? items.length : 0,
+      totalSongs: typeof pujianItems !== 'undefined' && Array.isArray(pujianItems) ? pujianItems.length : 0,
     });
     showToast("Lagu tidak ditemukan di direktori utama", "error");
   } catch (error) {
