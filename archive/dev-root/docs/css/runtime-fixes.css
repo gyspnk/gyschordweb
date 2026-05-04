@@ -16,6 +16,20 @@
   contain: layout !important;
 }
 
+.playlist-track-item.is-loading {
+  opacity: 0.68;
+  pointer-events: none;
+}
+
+.playlist-track-item.is-loading .playlist-track-info::after {
+  content: "Membuka...";
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+}
+
 @media (max-width: 430px) {
   .appearance-layout-gallery {
     grid-template-columns: 1fr !important;

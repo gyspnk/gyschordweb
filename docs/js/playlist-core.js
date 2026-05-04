@@ -1068,7 +1068,13 @@ function normalizePlaylistSongKey(value) {
 }
 
 function getPlaylistFileName(value) {
-  return String(value || "").split(/[\\/]/).pop().toLowerCase();
+  const rawValue = String(value || "").split(/[?#]/)[0];
+  const fileName = rawValue.split(/[\\/]/).pop().toLowerCase();
+  try {
+    return decodeURIComponent(fileName);
+  } catch (_err) {
+    return fileName;
+  }
 }
 
 async function ensurePujianItemsForPlaylist() {
@@ -1102,15 +1108,19 @@ function findPlaylistSongGlobalIndex(targetSong, items) {
   const targetFile = getPlaylistFileName(targetSong.fileHref);
   const targetTitle = normalizePlaylistSongKey(targetSong.judul);
 
-  return items.findIndex((song) => {
-    const songNomor = normalizePlaylistSongKey(song.nomor);
-    const songFile = getPlaylistFileName(song.fileHref);
-    const songTitle = normalizePlaylistSongKey(song.judul);
+  const byFile = targetFile
+    ? items.findIndex((song) => getPlaylistFileName(song.fileHref) === targetFile)
+    : -1;
+  if (byFile >= 0) return byFile;
 
-    return (targetNomor && songNomor === targetNomor) ||
-      (targetFile && songFile === targetFile) ||
-      (targetTitle && songTitle === targetTitle);
-  });
+  const byNomor = targetNomor
+    ? items.findIndex((song) => normalizePlaylistSongKey(song.nomor) === targetNomor)
+    : -1;
+  if (byNomor >= 0) return byNomor;
+
+  return targetTitle
+    ? items.findIndex((song) => normalizePlaylistSongKey(song.judul) === targetTitle)
+    : -1;
 }
 
 // Play a specific song from a playlist and set it as active
@@ -1127,6 +1137,12 @@ window.playSongFromPlaylist = async function(songIndex, isBackground = false, fo
   const targetSong = pl.songs[songIndex];
   if (!targetSong) return;
 
+  const trackItem = document.querySelector(`#playlist-track-list .playlist-track-item:nth-child(${Number(songIndex) + 1})`);
+  if (trackItem) {
+    trackItem.classList.add('is-loading');
+    trackItem.setAttribute('aria-busy', 'true');
+  }
+
   try {
     const items = await ensurePujianItemsForPlaylist();
     const globalIdx = findPlaylistSongGlobalIndex(targetSong, items);
@@ -1134,10 +1150,21 @@ window.playSongFromPlaylist = async function(songIndex, isBackground = false, fo
       await openPdfViewer(globalIdx.toString(), isBackground);
       return;
     }
+    console.warn("Lagu playlist tidak ditemukan di direktori utama", {
+      songIndex,
+      playlistId: plId,
+      targetSong,
+      totalSongs: Array.isArray(items) ? items.length : 0,
+    });
     showToast("Lagu tidak ditemukan di direktori utama", "error");
   } catch (error) {
     console.error("Gagal membuka lagu dari playlist:", error);
     showToast("Gagal memuat lagu dari playlist", "error");
+  } finally {
+    if (trackItem) {
+      trackItem.classList.remove('is-loading');
+      trackItem.removeAttribute('aria-busy');
+    }
   }
 };
 

@@ -3270,6 +3270,20 @@ body .mini-player-loading-bar {
   border-color: color-mix(in srgb, var(--md-sys-color-primary) 20%, transparent);
 }
 
+.playlist-track-item.is-loading {
+  opacity: 0.68;
+  pointer-events: none;
+}
+
+.playlist-track-item.is-loading .playlist-track-info::after {
+  content: "Membuka...";
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+}
+
 .playlist-track-info {
   flex: 1;
   cursor: pointer;
