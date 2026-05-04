@@ -934,8 +934,8 @@ function renderPlaylistDetail(id) {
     items.push(`<ul class="pujian-list" id="playlist-track-list">`);
     pl.songs.forEach((song, idx) => {
       items.push(`
-        <li class="playlist-track-item">
-          <div class="playlist-track-info" onclick="playSongFromPlaylist(${idx})">
+        <li class="playlist-track-item" data-playlist-track="true">
+          <div class="playlist-track-info" onclick="event.stopPropagation(); playSongFromPlaylist(${idx})">
             <div class="playlist-track-nomor">No. ${song.nomor}</div>
             <div class="playlist-track-judul">${song.judul}</div>
           </div>

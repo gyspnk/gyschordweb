@@ -1662,6 +1662,7 @@ function handleMainContentClick(e) {
 
   const pujianItem = e.target.closest(".pujian-list li");
   if (pujianItem) {
+    if (pujianItem.closest('#playlist-track-list') || pujianItem.classList.contains('playlist-track-item')) return;
     if (e.target.closest('.add-to-playlist-btn') || e.target.closest('button')) return;
     
     e.preventDefault();
