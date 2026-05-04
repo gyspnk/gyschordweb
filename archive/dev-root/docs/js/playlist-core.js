@@ -622,6 +622,34 @@ function syncAutoNextMenu() {
   }
 }
 
+function activatePlaylistLoopMode(playlistId, options) {
+  options = options || {};
+  if (!playlistId) return PlaylistManager.getAutoNextMode();
+
+  PlaylistManager.setActiveId(playlistId);
+
+  const currentMode = typeof _resolveEffectiveAutoNextMode === 'function'
+    ? _resolveEffectiveAutoNextMode({ autoFix: false, showToast: false })
+    : PlaylistManager.getAutoNextMode();
+  const playlistModeAlreadyActive = currentMode === 'playlist' || currentMode === 'shuffle-playlist';
+  const nextMode = playlistModeAlreadyActive ? currentMode : 'playlist';
+
+  if (!playlistModeAlreadyActive) {
+    if (typeof window.setNextMode === 'function') {
+      window.setNextMode(nextMode, {
+        silentToast: options.silentToast !== false,
+        skipShuffleRefresh: false,
+      });
+    } else {
+      PlaylistManager.setAutoNextMode(nextMode);
+    }
+  }
+
+  syncAutoNextMenu();
+  if (typeof syncMiniPlayerUI === 'function') syncMiniPlayerUI();
+  return nextMode;
+}
+
 
 function updatePlaylistIndicators() {
   const allBtns = document.querySelectorAll('.add-to-playlist-btn');
@@ -1223,10 +1251,7 @@ window.playSongFromPlaylist = async function(songIndex, isBackground = false, fo
   const pl = PlaylistManager.getById(plId);
   if (!pl) return;
 
-  // Set this playlist as active if it's not
-  if (PlaylistManager.getActiveId() !== plId) {
-    PlaylistManager.setActiveId(plId);
-  }
+  const appliedLoopMode = activatePlaylistLoopMode(plId, { silentToast: true });
   
   const targetSong = pl.songs[songIndex];
   if (!targetSong) return;
@@ -1236,6 +1261,7 @@ window.playSongFromPlaylist = async function(songIndex, isBackground = false, fo
     songIndex,
     playlistId: plId,
     isBackground,
+    appliedLoopMode,
     targetSong,
   };
   window.__playlistLastOpenDebug = debugInfo;
