@@ -1059,6 +1059,60 @@ window.deleteCurrentPlaylist = function() {
   }
 };
 
+function normalizePlaylistSongKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^0+([0-9])/, "$1")
+    .replace(/[^0-9a-z]/g, "");
+}
+
+function getPlaylistFileName(value) {
+  return String(value || "").split(/[\\/]/).pop().toLowerCase();
+}
+
+async function ensurePujianItemsForPlaylist() {
+  if (typeof pujianItems !== 'undefined' && Array.isArray(pujianItems) && pujianItems.length > 0) {
+    return pujianItems;
+  }
+
+  const response = await fetch("assets-list.json");
+  if (!response.ok) throw new Error("Gagal memuat daftar pujian");
+  const files = await response.json();
+  if (!Array.isArray(files)) throw new Error("Format daftar pujian tidak valid");
+
+  pujianItems = files.map((file, index) => {
+    const rawName = decodeURIComponent(file.replace(".pdf", ""));
+    const match = rawName.match(/^([0-9A-Za-z]+)[_.\s]*(.*)$/);
+    return {
+      id: index,
+      nomor: match ? match[1] : "?",
+      judul: match ? match[2].replace(/_/g, " ") : rawName.replace(/_/g, " "),
+      fileHref: `assets/pdf/${file}`
+    };
+  });
+
+  return pujianItems;
+}
+
+function findPlaylistSongGlobalIndex(targetSong, items) {
+  if (!targetSong || !Array.isArray(items)) return -1;
+
+  const targetNomor = normalizePlaylistSongKey(targetSong.nomor);
+  const targetFile = getPlaylistFileName(targetSong.fileHref);
+  const targetTitle = normalizePlaylistSongKey(targetSong.judul);
+
+  return items.findIndex((song) => {
+    const songNomor = normalizePlaylistSongKey(song.nomor);
+    const songFile = getPlaylistFileName(song.fileHref);
+    const songTitle = normalizePlaylistSongKey(song.judul);
+
+    return (targetNomor && songNomor === targetNomor) ||
+      (targetFile && songFile === targetFile) ||
+      (targetTitle && songTitle === targetTitle);
+  });
+}
+
 // Play a specific song from a playlist and set it as active
 window.playSongFromPlaylist = async function(songIndex, isBackground = false, forcePlaylistId = null) {
   const plId = forcePlaylistId || currentViewingPlaylistId;
@@ -1073,16 +1127,17 @@ window.playSongFromPlaylist = async function(songIndex, isBackground = false, fo
   const targetSong = pl.songs[songIndex];
   if (!targetSong) return;
 
-  // We need to find its true global index in pujianItems
-  if (typeof pujianItems !== 'undefined') {
-    const globalIdx = pujianItems.findIndex(p => p.nomor === targetSong.nomor);
-    if (globalIdx >= 0) {
-      if (typeof openPdfViewer === 'function') {
-        await openPdfViewer(globalIdx.toString(), isBackground);
-      }
-    } else {
-      showToast("Lagu tidak ditemukan di direktori utama", "error");
+  try {
+    const items = await ensurePujianItemsForPlaylist();
+    const globalIdx = findPlaylistSongGlobalIndex(targetSong, items);
+    if (globalIdx >= 0 && typeof openPdfViewer === 'function') {
+      await openPdfViewer(globalIdx.toString(), isBackground);
+      return;
     }
+    showToast("Lagu tidak ditemukan di direktori utama", "error");
+  } catch (error) {
+    console.error("Gagal membuka lagu dari playlist:", error);
+    showToast("Gagal memuat lagu dari playlist", "error");
   }
 };
 
