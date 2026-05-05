@@ -1,12 +1,9 @@
 {
   "scripts": {
-    "test": "node --test",
-    "chord:ocr": "node scripts/chord-ocr-worker.js",
-    "chord:notes": "node --test test/pdf-note-extractor.test.js"
+    "test": "node --test"
   },
   "dependencies": {
     "@playwright/test": "^1.59.1",
-    "pdfjs-dist": "^5.7.284",
     "playwright": "^1.59.1"
   }
 }
