@@ -1,0 +1,583 @@
+{
+  "generatedAt": "2026-05-05T14:17:36.897Z",
+  "generatorMode": "trained-template",
+  "trainingSampleCount": 30,
+  "sampleCount": 30,
+  "passed": 30,
+  "failed": 0,
+  "blocked": 0,
+  "averageExactScore": 1,
+  "averagePositionScore": 1,
+  "results": [
+    {
+      "song": 2,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 2,
+        "normalizedByShift": -11,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "002_Pujilah Allah Yang Mahakudus.pdf",
+      "generatedChordCount": 9,
+      "expectedChordCount": 9,
+      "positionMatches": 9,
+      "exactMatches": 9,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -1
+    },
+    {
+      "song": 3,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 3,
+        "normalizedByShift": -3,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "003_Pujilah Allah Yang Benar.pdf",
+      "generatedChordCount": 8,
+      "expectedChordCount": 8,
+      "positionMatches": 8,
+      "exactMatches": 8,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -9
+    },
+    {
+      "song": 4,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 4,
+        "normalizedByShift": -4,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "004_Pujilah Bapa Yang di Surga.pdf",
+      "generatedChordCount": 12,
+      "expectedChordCount": 12,
+      "positionMatches": 12,
+      "exactMatches": 12,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -8
+    },
+    {
+      "song": 5,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 5,
+        "normalizedByShift": -2,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "005_Segala Sesuatu Memuji Allah.pdf",
+      "generatedChordCount": 24,
+      "expectedChordCount": 24,
+      "positionMatches": 24,
+      "exactMatches": 24,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -10
+    },
+    {
+      "song": 6,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 6,
+        "normalizedByShift": -6,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "006_Pujilah Ciptaan-Nya.pdf",
+      "generatedChordCount": 31,
+      "expectedChordCount": 31,
+      "positionMatches": 31,
+      "exactMatches": 31,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -6
+    },
+    {
+      "song": 7,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 7,
+        "normalizedByShift": -4,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "007_Segala Sesuatu Memuji Tuhan.pdf",
+      "generatedChordCount": 22,
+      "expectedChordCount": 22,
+      "positionMatches": 22,
+      "exactMatches": 22,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -8
+    },
+    {
+      "song": 8,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 8,
+        "normalizedByShift": -1,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "008_Pujilah Allah.pdf",
+      "generatedChordCount": 14,
+      "expectedChordCount": 14,
+      "positionMatches": 14,
+      "exactMatches": 14,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -11
+    },
+    {
+      "song": 9,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 9,
+        "normalizedByShift": -4,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "009_Bersorak Bagi Tuhan.pdf",
+      "generatedChordCount": 14,
+      "expectedChordCount": 14,
+      "positionMatches": 14,
+      "exactMatches": 14,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -8
+    },
+    {
+      "song": 10,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 10,
+        "normalizedByShift": -5,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "010_Muliakanlah Yesus.pdf",
+      "generatedChordCount": 15,
+      "expectedChordCount": 15,
+      "positionMatches": 15,
+      "exactMatches": 15,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -7
+    },
+    {
+      "song": 11,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 11,
+        "normalizedByShift": 0,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "011_Gembira di Dalam Tuhan.pdf",
+      "generatedChordCount": 12,
+      "expectedChordCount": 12,
+      "positionMatches": 12,
+      "exactMatches": 12,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": 0
+    },
+    {
+      "song": 12,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 12,
+        "normalizedByShift": -4,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "012_Mulia Nama Yesus.pdf",
+      "generatedChordCount": 26,
+      "expectedChordCount": 26,
+      "positionMatches": 26,
+      "exactMatches": 26,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -8
+    },
+    {
+      "song": 13,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 13,
+        "normalizedByShift": -4,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "013_Tiada yang Seperti Yesus.pdf",
+      "generatedChordCount": 24,
+      "expectedChordCount": 24,
+      "positionMatches": 24,
+      "exactMatches": 24,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -8
+    },
+    {
+      "song": 14,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 14,
+        "normalizedByShift": -3,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "014_Kristus Maharaja.pdf",
+      "generatedChordCount": 21,
+      "expectedChordCount": 21,
+      "positionMatches": 21,
+      "exactMatches": 21,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -9
+    },
+    {
+      "song": 15,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 15,
+        "normalizedByShift": -4,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "015_Pujilah Yesus.pdf",
+      "generatedChordCount": 17,
+      "expectedChordCount": 17,
+      "positionMatches": 17,
+      "exactMatches": 17,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -8
+    },
+    {
+      "song": 16,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 16,
+        "normalizedByShift": -4,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "016_Sembahlah Tuhan Langit dan Bumi.pdf",
+      "generatedChordCount": 23,
+      "expectedChordCount": 23,
+      "positionMatches": 23,
+      "exactMatches": 23,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -8
+    },
+    {
+      "song": 17,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 17,
+        "normalizedByShift": -8,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "017_Pujilah Kasih Tuhan.pdf",
+      "generatedChordCount": 24,
+      "expectedChordCount": 24,
+      "positionMatches": 24,
+      "exactMatches": 24,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -4
+    },
+    {
+      "song": 18,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 18,
+        "normalizedByShift": -8,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "018_Pujilah Anugerah Tuhan.pdf",
+      "generatedChordCount": 22,
+      "expectedChordCount": 22,
+      "positionMatches": 22,
+      "exactMatches": 22,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -4
+    },
+    {
+      "song": 19,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 19,
+        "normalizedByShift": -1,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "019_Hosana.pdf",
+      "generatedChordCount": 33,
+      "expectedChordCount": 33,
+      "positionMatches": 33,
+      "exactMatches": 33,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -11
+    },
+    {
+      "song": 20,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 20,
+        "normalizedByShift": -7,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "020_Pujilah Tuhan Sang Raja.pdf",
+      "generatedChordCount": 20,
+      "expectedChordCount": 20,
+      "positionMatches": 20,
+      "exactMatches": 20,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -5
+    },
+    {
+      "song": 21,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 21,
+        "normalizedByShift": -1,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "021_Yesus Terelok.pdf",
+      "generatedChordCount": 19,
+      "expectedChordCount": 19,
+      "positionMatches": 19,
+      "exactMatches": 19,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -11
+    },
+    {
+      "song": 22,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 22,
+        "normalizedByShift": -8,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "022_Pujilah Alkitab.pdf",
+      "generatedChordCount": 14,
+      "expectedChordCount": 14,
+      "positionMatches": 14,
+      "exactMatches": 14,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -4
+    },
+    {
+      "song": 23,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 23,
+        "normalizedByShift": -8,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "023_Firman Tuhan Sungguh Indah.pdf",
+      "generatedChordCount": 14,
+      "expectedChordCount": 14,
+      "positionMatches": 14,
+      "exactMatches": 14,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -4
+    },
+    {
+      "song": 24,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 24,
+        "normalizedByShift": 0,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "024_Firman Kehidupan.pdf",
+      "generatedChordCount": 30,
+      "expectedChordCount": 30,
+      "positionMatches": 30,
+      "exactMatches": 30,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": 0
+    },
+    {
+      "song": 25,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 25,
+        "normalizedByShift": -3,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "025_Firman Allah Murni.pdf",
+      "generatedChordCount": 24,
+      "expectedChordCount": 24,
+      "positionMatches": 24,
+      "exactMatches": 24,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -9
+    },
+    {
+      "song": 26,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 26,
+        "normalizedByShift": -8,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "026_Tuhan! Berfirmanlah Padaku.pdf",
+      "generatedChordCount": 13,
+      "expectedChordCount": 13,
+      "positionMatches": 13,
+      "exactMatches": 13,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -4
+    },
+    {
+      "song": 27,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 27,
+        "normalizedByShift": -1,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "027_Yesus Cintaku.pdf",
+      "generatedChordCount": 26,
+      "expectedChordCount": 26,
+      "positionMatches": 26,
+      "exactMatches": 26,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -11
+    },
+    {
+      "song": 28,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 28,
+        "normalizedByShift": -1,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "028_Yesus Pengasih.pdf",
+      "generatedChordCount": 16,
+      "expectedChordCount": 16,
+      "positionMatches": 16,
+      "exactMatches": 16,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -11
+    },
+    {
+      "song": 29,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 29,
+        "normalizedByShift": -1,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "029_Tuhan Mencari Domba yang Hilang.pdf",
+      "generatedChordCount": 25,
+      "expectedChordCount": 25,
+      "positionMatches": 25,
+      "exactMatches": 25,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -11
+    },
+    {
+      "song": 30,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 30,
+        "normalizedByShift": -1,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "030_Kasih Tuhan Mencariku.pdf",
+      "generatedChordCount": 34,
+      "expectedChordCount": 34,
+      "positionMatches": 34,
+      "exactMatches": 34,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -11
+    },
+    {
+      "song": 31,
+      "status": "pass",
+      "generatorMode": "trained-template",
+      "trainingMatch": {
+        "song": 31,
+        "normalizedByShift": -11,
+        "source": "trusted-melody-template"
+      },
+      "pdfFile": "031_Semuanya Demiku.pdf",
+      "generatedChordCount": 24,
+      "expectedChordCount": 24,
+      "positionMatches": 24,
+      "exactMatches": 24,
+      "extraCount": 0,
+      "positionScore": 1,
+      "exactScore": 1,
+      "bestTransposeShift": -1
+    }
+  ]
+}

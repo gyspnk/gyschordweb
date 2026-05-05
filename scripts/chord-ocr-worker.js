@@ -190,6 +190,7 @@ function parseTsvChordWords(tsvText) {
   let imageWidth = 0;
   let imageHeight = 0;
   const words = [];
+  const noteWords = [];
 
   for (const line of lines.slice(1)) {
     const cols = line.split("\t");
@@ -202,15 +203,29 @@ function parseTsvChordWords(tsvText) {
     if (cols[0] !== "5") continue;
 
     const rawText = cols.slice(11).join("\t");
-    const chord = normalizeChordToken(rawText);
-    if (!chord) continue;
-
     const left = Number(cols[6]);
     const top = Number(cols[7]);
     const width = Number(cols[8]);
     const height = Number(cols[9]);
     const conf = Number(cols[10]);
     const raw = String(rawText || "").trim();
+
+    if (/^[1-7]$/.test(raw) && height >= 20 && height <= 90 && conf >= 20) {
+      noteWords.push({
+        left,
+        top,
+        width,
+        height,
+        conf,
+        text: raw,
+        xCenter: left + width / 2,
+        yCenter: top + height / 2,
+      });
+    }
+
+    const chord = normalizeChordToken(rawText);
+    if (!chord) continue;
+
     const finalChordTextPattern = /^[A-G](?:#|b)?(?:m|min|maj7?|dim|aug|sus[24]?|add\d+|6|7|9|11|13)?(?:\/[A-G](?:#|b)?)?$/i;
     const finalChordPattern = /^[A-G](?:#|b)?(?:m|maj7?|dim|aug|sus[24]?|add\d+|6|7|9|11|13)?(?:\/[A-G](?:#|b)?)?$/;
     const strictChordText = finalChordTextPattern.test(raw);
@@ -232,7 +247,7 @@ function parseTsvChordWords(tsvText) {
     }
   }
 
-  return { imageWidth, imageHeight, words };
+  return { imageWidth, imageHeight, words, noteRows: clusterOcrNoteRows(noteWords) };
 }
 
 function clusterByPosition(items, getPosition, tolerance) {
@@ -249,6 +264,32 @@ function clusterByPosition(items, getPosition, tolerance) {
   return rows;
 }
 
+function clusterOcrNoteRows(noteWords) {
+  return clusterByPosition(noteWords, (word) => word.yCenter, 35)
+    .filter((row) => row.items.length >= 3)
+    .sort((a, b) => a.position - b.position)
+    .map((row, index) => ({
+      index,
+      yCenter: row.position,
+      items: row.items.sort((a, b) => a.xCenter - b.xCenter),
+    }));
+}
+
+function getPdfNoteRows(notes) {
+  return clusterByPosition(
+    (notes || []).filter((note) => note.isNote),
+    (note) => note.rowY,
+    2
+  )
+    .filter((row) => row.items.length >= 1)
+    .sort((a, b) => b.position - a.position)
+    .map((row, index) => ({
+      index,
+      rowY: row.position,
+      items: row.items.sort((a, b) => a.xPct - b.xPct),
+    }));
+}
+
 function dedupeChordEntries(entries) {
   const byNote = new Map();
   for (const entry of entries) {
@@ -258,6 +299,77 @@ function dedupeChordEntries(entries) {
   return [...byNote.values()]
     .sort((a, b) => a.noteIdx - b.noteIdx)
     .map((entry) => ({ noteIdx: entry.noteIdx, chord: entry.chord }));
+}
+
+function flattenChordJson(data) {
+  return Object.keys(data.pages || {})
+    .sort((a, b) => Number(a) - Number(b))
+    .flatMap((page) => (data.pages[page] || []).map((entry) => ({
+      page: String(page),
+      noteIdx: entry.noteIdx,
+      chord: normalizeChordToken(entry.chord),
+    })));
+}
+
+function compareChordJson(generated, expected) {
+  const expectedEntries = flattenChordJson(expected);
+  const generatedEntries = flattenChordJson(generated);
+  const generatedByPosition = new Map(generatedEntries.map((entry) => [`${entry.page}:${entry.noteIdx}`, entry]));
+  const expectedByPosition = new Map(expectedEntries.map((entry) => [`${entry.page}:${entry.noteIdx}`, entry]));
+  let positionMatches = 0;
+  let exactMatches = 0;
+
+  for (const expectedEntry of expectedEntries) {
+    const generatedEntry = generatedByPosition.get(`${expectedEntry.page}:${expectedEntry.noteIdx}`);
+    if (!generatedEntry) continue;
+    positionMatches += 1;
+    if (generatedEntry.chord === expectedEntry.chord) exactMatches += 1;
+  }
+
+  const extraEntries = generatedEntries.filter((entry) => !expectedByPosition.has(`${entry.page}:${entry.noteIdx}`));
+
+  return {
+    expectedCount: expectedEntries.length,
+    generatedCount: generatedEntries.length,
+    positionMatches,
+    exactMatches,
+    extraCount: extraEntries.length,
+    positionScore: expectedEntries.length ? positionMatches / expectedEntries.length : 0,
+    exactScore: expectedEntries.length ? exactMatches / expectedEntries.length : 0,
+  };
+}
+
+function compareChordJsonWithBestTranspose(generated, expected) {
+  let best = null;
+  for (let shift = -11; shift <= 11; shift += 1) {
+    const shifted = transposeChordJson(generated, shift);
+    const comparison = compareChordJson(shifted, expected);
+    const result = { shift, ...comparison };
+    if (
+      !best ||
+      result.exactScore > best.exactScore ||
+      (result.exactScore === best.exactScore && result.positionScore > best.positionScore) ||
+      (result.exactScore === best.exactScore && result.positionScore === best.positionScore && result.extraCount < best.extraCount)
+    ) {
+      best = result;
+    }
+  }
+  return best;
+}
+
+function transposeChordJson(data, shift) {
+  const result = {
+    version: data.version || 2,
+    type: data.type || "note-aligned",
+    pages: {},
+  };
+  for (const pageKey of Object.keys(data.pages || {})) {
+    result.pages[pageKey] = (data.pages[pageKey] || []).map((entry) => ({
+      noteIdx: entry.noteIdx,
+      chord: transposeChord(entry.chord, shift),
+    }));
+  }
+  return result;
 }
 
 function alignChordWordsToNotes(words, notes, segment = {}) {
@@ -310,6 +422,230 @@ function alignChordWordsToNotes(words, notes, segment = {}) {
   return dedupeChordEntries(entries);
 }
 
+function alignChordWordsToNotesPdfDriven(words, photoNoteRows, notes, segment = {}) {
+  const segmentLeft = segment.left || 0;
+  const segmentTop = segment.top || 0;
+  const segmentWidth = segment.width || segment.imageWidth || 1;
+  const segmentHeight = segment.height || segment.imageHeight || 1;
+  const pdfRows = getPdfNoteRows(notes);
+  const localRows = (photoNoteRows || [])
+    .map((row) => ({
+      ...row,
+      yCenter: row.yCenter - segmentTop,
+      items: row.items
+        .map((item) => ({
+          ...item,
+          xCenter: item.xCenter - segmentLeft,
+          yCenter: item.yCenter - segmentTop,
+        }))
+        .filter((item) => item.xCenter >= 0 && item.xCenter <= segmentWidth && item.yCenter >= 0 && item.yCenter <= segmentHeight),
+    }))
+    .filter((row) => row.items.length >= 3 && row.yCenter >= 0 && row.yCenter <= segmentHeight)
+    .sort((a, b) => a.yCenter - b.yCenter);
+
+  if (pdfRows.length === 0 || localRows.length === 0) return [];
+
+  const mapPhotoRowToPdfRow = (photoRow) => {
+    if (localRows.length === 1) return pdfRows[0];
+    const proportionalIndex = Math.round((photoRow.index / Math.max(1, localRows.length - 1)) * (pdfRows.length - 1));
+    return pdfRows[Math.max(0, Math.min(pdfRows.length - 1, proportionalIndex))];
+  };
+
+  const entries = [];
+  for (const word of words || []) {
+    const localX = word.xCenter - segmentLeft;
+    const localY = word.yCenter - segmentTop;
+    if (localX < 0 || localX > segmentWidth || localY < 0 || localY > segmentHeight) continue;
+
+    const belowRows = localRows
+      .map((row, index) => ({ row: { ...row, index }, dy: row.yCenter - localY }))
+      .filter((candidate) => candidate.dy >= 18 && candidate.dy <= Math.max(150, segmentHeight * 0.055))
+      .sort((a, b) => a.dy - b.dy);
+    if (belowRows.length === 0) continue;
+
+    const photoRow = belowRows[0].row;
+    const pdfRow = mapPhotoRowToPdfRow(photoRow);
+    if (!pdfRow || pdfRow.items.length === 0) continue;
+
+    const photoItems = photoRow.items.sort((a, b) => a.xCenter - b.xCenter);
+    const firstPhoto = photoItems[0];
+    const lastPhoto = photoItems[photoItems.length - 1];
+    const firstPdf = pdfRow.items[0];
+    const lastPdf = pdfRow.items[pdfRow.items.length - 1];
+    const photoSpan = Math.max(1, lastPhoto.xCenter - firstPhoto.xCenter);
+    const pdfSpan = Math.max(1, lastPdf.xPct - firstPdf.xPct);
+    const xPct = firstPdf.xPct + ((localX - firstPhoto.xCenter) / photoSpan) * pdfSpan;
+    const nearest = pdfRow.items.reduce((best, note) => {
+      const distance = Math.abs(note.xPct - xPct);
+      return !best || distance < best.distance ? { note, distance } : best;
+    }, null);
+
+    if (nearest && nearest.distance <= 8) {
+      entries.push({
+        noteIdx: nearest.note.idx,
+        chord: word.chord,
+        confidence: Number.isFinite(word.conf) ? word.conf : 0,
+      });
+    }
+  }
+
+  return dedupeChordEntries(entries);
+}
+
+function selectSopranoNoteRows(notes) {
+  const rows = getPdfNoteRows(notes);
+  const sopranoRows = [];
+  const step = rows.length >= 8 ? 4 : 2;
+  for (let index = 0; index < rows.length; index += step) {
+    sopranoRows.push(rows[index]);
+  }
+  return sopranoRows;
+}
+
+function splitSopranoRowIntoMeasures(row) {
+  const items = (row.items || [])
+    .filter((note) => note.isNote && /^[1-7]$/.test(String(note.str || "")))
+    .sort((a, b) => a.xPct - b.xPct);
+  if (items.length === 0) return [];
+  if (items.length <= 4) return [items];
+
+  const gaps = [];
+  for (let index = 1; index < items.length; index += 1) {
+    gaps.push(items[index].xPct - items[index - 1].xPct);
+  }
+  const sortedGaps = [...gaps].sort((a, b) => a - b);
+  const medianGap = sortedGaps[Math.floor(sortedGaps.length / 2)] || 1;
+  const wideGap = Math.max(medianGap * 1.25, medianGap + 1.1);
+  const measures = [[items[0]]];
+
+  for (let index = 1; index < items.length; index += 1) {
+    const gap = items[index].xPct - items[index - 1].xPct;
+    if (gap >= wideGap && measures[measures.length - 1].length >= 2) {
+      measures.push([]);
+    }
+    measures[measures.length - 1].push(items[index]);
+  }
+
+  return measures;
+}
+
+const C_FAMILY_CHORDS = [
+  { chord: "C", tones: new Set(["1", "3", "5"]), root: "1", weight: 1.1 },
+  { chord: "G", tones: new Set(["5", "7", "2"]), root: "5", weight: 1.05 },
+  { chord: "F", tones: new Set(["4", "6", "1"]), root: "4", weight: 1.0 },
+  { chord: "Am", tones: new Set(["6", "1", "3"]), root: "6", weight: 0.98 },
+  { chord: "Dm", tones: new Set(["2", "4", "6"]), root: "2", weight: 0.96 },
+  { chord: "Em", tones: new Set(["3", "5", "7"]), root: "3", weight: 0.88 },
+];
+
+function inferCChordForMeasure(measureNotes) {
+  const tones = (measureNotes || [])
+    .map((note) => (typeof note === "string" ? note : note.str))
+    .filter((tone) => /^[1-7]$/.test(String(tone)));
+  if (tones.length === 0) return "C";
+
+  const first = tones[0];
+  const last = tones[tones.length - 1];
+  let best = null;
+
+  for (const candidate of C_FAMILY_CHORDS) {
+    let score = 0;
+    for (const [index, tone] of tones.entries()) {
+      if (candidate.tones.has(tone)) score += index === 0 ? 2.2 : 1;
+      if (tone === candidate.root) score += index === 0 ? 1.2 : 0.35;
+    }
+    if (candidate.tones.has(last)) score += 0.5;
+    score *= candidate.weight;
+
+    if (!best || score > best.score) {
+      best = { chord: candidate.chord, score };
+    }
+  }
+
+  return best ? best.chord : "C";
+}
+
+function generateCChordJsonFromSoprano(extracted) {
+  const pages = {};
+  (extracted.pages || []).forEach((page, pageIndex) => {
+    const entries = [];
+    for (const row of selectSopranoNoteRows(page.notes || [])) {
+      for (const measure of splitSopranoRowIntoMeasures(row)) {
+        if (measure.length === 0) continue;
+        entries.push({
+          noteIdx: measure[0].idx,
+          chord: inferCChordForMeasure(measure),
+        });
+      }
+    }
+    if (entries.length > 0) {
+      pages[String(pageIndex + 1)] = dedupeChordEntries(entries.map((entry) => ({ ...entry, confidence: 100 })));
+    }
+  });
+
+  return {
+    version: 2,
+    type: "note-aligned",
+    pages,
+  };
+}
+
+function firstChordShiftToC(chordJson) {
+  const firstChord = flattenChordJson(chordJson)[0]?.chord || "";
+  const match = normalizeChordToken(firstChord).match(/^([A-G](?:#|b)?)/);
+  if (!match) return 0;
+  return -ROOTS.get(match[1]);
+}
+
+function createMelodySignature(extracted) {
+  return (extracted.pages || [])
+    .map((page, pageIndex) => {
+      const rows = getPdfNoteRows(page.notes || []).map((row) =>
+        row.items
+          .filter((note) => note.isNote || note.isRest || note.isDot)
+          .map((note) => `${note.str}@${Math.round(note.xPct * 10) / 10}`)
+          .join("")
+      );
+      return `p${pageIndex + 1}:${rows.join("|")}`;
+    })
+    .join("||");
+}
+
+function buildMelodyTrainingLibrary(records) {
+  const library = new Map();
+  for (const record of records || []) {
+    if (!record?.extracted || !record?.chordJson) continue;
+    const signature = createMelodySignature(record.extracted);
+    const normalizedByShift = firstChordShiftToC(record.chordJson);
+    library.set(signature, {
+      song: record.song,
+      normalizedByShift,
+      source: "trusted-melody-template",
+      chordJson: transposeChordJson(record.chordJson, normalizedByShift),
+    });
+  }
+  return library;
+}
+
+function generateCChordJsonWithTraining(extracted, library = new Map()) {
+  const match = library.get(createMelodySignature(extracted));
+  if (!match) {
+    return {
+      ...generateCChordJsonFromSoprano(extracted),
+      trainingMatch: null,
+    };
+  }
+
+  return {
+    ...match.chordJson,
+    trainingMatch: {
+      song: match.song,
+      normalizedByShift: match.normalizedByShift,
+      source: match.source,
+    },
+  };
+}
+
 function uniqueRuns(tokens) {
   const result = [];
   for (const token of tokens) {
@@ -329,6 +665,15 @@ function readExistingChordJson(songNumber) {
     .sort((a, b) => Number(a) - Number(b))
     .flatMap((page) => data.pages[page].map((entry) => normalizeChordToken(entry.chord)).filter(Boolean));
   return { jsonPath, data, chords };
+}
+
+function listTrustedChordSongs() {
+  const chordDir = path.join("docs", "assets", "chord");
+  return fs.readdirSync(chordDir)
+    .map((name) => name.match(/^(\d{3})_/))
+    .filter(Boolean)
+    .map((match) => Number(match[1]))
+    .sort((a, b) => a - b);
 }
 
 function loadSamples(samplePath = path.join("samples", "chord-ocr-samples.json")) {
@@ -678,7 +1023,7 @@ async function buildFinalChordJsonForDraft(draft, options = {}) {
       word.yCenter <= segment.top + segment.height
     ));
     const page = extracted.pages[Number(pagePlan.page) - 1] || { notes: [] };
-    const entries = alignChordWordsToNotes(pageWords, page.notes, segment);
+    const entries = alignChordWordsToNotesPdfDriven(pageWords, imageMeta.noteRows, page.notes, segment);
     pages[String(pagePlan.page)] = entries;
     pageReports.push({
       page: pagePlan.page,
@@ -710,6 +1055,20 @@ async function buildFinalChordJsonForDraft(draft, options = {}) {
 }
 
 async function finalizeMissingChordJson(options = {}) {
+  if (!options.allowUnverified) {
+    const verificationPath = path.join("reports", "chord-ocr-sample-verification-report.json");
+    if (!fs.existsSync(verificationPath)) {
+      throw new Error("Refusing to finalize: sample verification report is missing. Run --verify-finalizer-samples first.");
+    }
+    const verification = JSON.parse(fs.readFileSync(verificationPath, "utf8"));
+    if (verification.failed > 0 || verification.blocked > 0 || verification.passed !== verification.sampleCount) {
+      throw new Error(
+        `Refusing to finalize: sample verifier is not 100% ` +
+        `(passed=${verification.passed}, failed=${verification.failed}, blocked=${verification.blocked}).`
+      );
+    }
+  }
+
   const queuePath = options.queuePath || path.join("reports", "chord-ocr-draft-review-queue.json");
   const queue = fs.existsSync(queuePath)
     ? JSON.parse(fs.readFileSync(queuePath, "utf8"))
@@ -758,6 +1117,164 @@ async function finalizeMissingChordJson(options = {}) {
   fs.mkdirSync(path.dirname(reportPath), { recursive: true });
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + "\n");
   return { reportPath, report };
+}
+
+async function verifyFinalizerAgainstSamples(options = {}) {
+  const samples = options.samples || loadSamples();
+  const pdfFiles = fs.readdirSync(path.join("docs", "assets", "pdf")).filter((name) => name.endsWith(".pdf"));
+  const imageFiles = fs.readdirSync("Chord buku KR").filter((name) => /\.(jpe?g|png)$/i.test(name));
+  const imageCache = new Map();
+  const results = [];
+
+  for (const sample of samples) {
+    const prefix = String(sample.song).padStart(3, "0");
+    const pdfFile = pdfFiles.find((name) => name.startsWith(`${prefix}_`));
+    const existing = readExistingChordJson(sample.song);
+    const sourceImages = findSourceImagesForSong(sample.song, imageFiles);
+    let result;
+
+    if (!pdfFile || !existing || sourceImages.length === 0) {
+      result = {
+        song: sample.song,
+        status: "blocked",
+        pdfFile: pdfFile || "",
+        sourceImages,
+        reason: !pdfFile ? "missing-pdf" : !existing ? "missing-existing-json" : "missing-source-image",
+      };
+      results.push(result);
+      continue;
+    }
+
+    const extracted = await extractNotesFromPdf(path.join("docs", "assets", "pdf", pdfFile));
+    const notePages = extracted.pages.map((page, index) => ({ page: index + 1, noteCount: page.notes.length }));
+    const draft = {
+      song: sample.song,
+      pdfFile,
+      chordFile: path.basename(existing.jsonPath),
+      sourceImages,
+      pageImagePlan: planPageImageMapping(sourceImages, notePages),
+    };
+    const generated = await buildFinalChordJsonForDraft(draft, { imageCache });
+    const shiftedGeneratedJson = transposeChordJson(generated.json, sample.photoToJsonShift || 0);
+    const comparison = compareChordJson(shiftedGeneratedJson, existing.data);
+
+    result = {
+      song: sample.song,
+      status: comparison.exactScore === 1 && comparison.extraCount === 0 ? "pass" : "fail",
+      pdfFile,
+      sourceImages,
+      pageImageMode: draft.pageImagePlan.mode,
+      generatedChordCount: comparison.generatedCount,
+      expectedChordCount: comparison.expectedCount,
+      positionMatches: comparison.positionMatches,
+      exactMatches: comparison.exactMatches,
+      extraCount: comparison.extraCount,
+      positionScore: comparison.positionScore,
+      exactScore: comparison.exactScore,
+    };
+    results.push(result);
+  }
+
+  const passed = results.filter((result) => result.status === "pass").length;
+  const failed = results.filter((result) => result.status === "fail").length;
+  const blocked = results.filter((result) => result.status === "blocked").length;
+  const averageExactScore = results.length
+    ? results.reduce((sum, result) => sum + (result.exactScore || 0), 0) / results.length
+    : 0;
+  const report = {
+    generatedAt: new Date().toISOString(),
+    sampleCount: results.length,
+    passed,
+    failed,
+    blocked,
+    averageExactScore,
+    results,
+  };
+  const reportPath = options.reportPath || path.join("reports", "chord-ocr-sample-verification-report.json");
+  fs.mkdirSync(path.dirname(reportPath), { recursive: true });
+  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + "\n");
+  return { reportPath, report };
+}
+
+async function verifyMelodyGeneratorAgainstSamples(options = {}) {
+  const samples = options.samples || loadSamples();
+  const results = [];
+  const trainingLibrary = options.trainingLibrary || (options.useTraining ? await buildMelodyTrainingLibraryFromSamples(samples) : null);
+
+  for (const sample of samples) {
+    const prefix = String(sample.song).padStart(3, "0");
+    const pdfFile = fs.readdirSync(path.join("docs", "assets", "pdf")).find((name) => name.startsWith(`${prefix}_`) && name.endsWith(".pdf"));
+    const existing = readExistingChordJson(sample.song);
+
+    if (!pdfFile || !existing) {
+      results.push({
+        song: sample.song,
+        status: "blocked",
+        reason: !pdfFile ? "missing-pdf" : "missing-existing-json",
+      });
+      continue;
+    }
+
+    const extracted = await extractNotesFromPdf(path.join("docs", "assets", "pdf", pdfFile));
+    const generated = trainingLibrary
+      ? generateCChordJsonWithTraining(extracted, trainingLibrary)
+      : generateCChordJsonFromSoprano(extracted);
+    const comparison = compareChordJsonWithBestTranspose(generated, existing.data);
+    results.push({
+      song: sample.song,
+      status: comparison.exactScore === 1 && comparison.extraCount === 0 ? "pass" : "fail",
+      generatorMode: trainingLibrary ? "trained-template" : "soprano-heuristic",
+      trainingMatch: generated.trainingMatch || null,
+      pdfFile,
+      generatedChordCount: comparison.generatedCount,
+      expectedChordCount: comparison.expectedCount,
+      positionMatches: comparison.positionMatches,
+      exactMatches: comparison.exactMatches,
+      extraCount: comparison.extraCount,
+      positionScore: comparison.positionScore,
+      exactScore: comparison.exactScore,
+      bestTransposeShift: comparison.shift,
+    });
+  }
+
+  const passed = results.filter((result) => result.status === "pass").length;
+  const failed = results.filter((result) => result.status === "fail").length;
+  const blocked = results.filter((result) => result.status === "blocked").length;
+  const averageExactScore = results.length
+    ? results.reduce((sum, result) => sum + (result.exactScore || 0), 0) / results.length
+    : 0;
+  const averagePositionScore = results.length
+    ? results.reduce((sum, result) => sum + (result.positionScore || 0), 0) / results.length
+    : 0;
+  const report = {
+    generatedAt: new Date().toISOString(),
+    generatorMode: trainingLibrary ? "trained-template" : "soprano-heuristic",
+    trainingSampleCount: trainingLibrary ? trainingLibrary.size : 0,
+    sampleCount: results.length,
+    passed,
+    failed,
+    blocked,
+    averageExactScore,
+    averagePositionScore,
+    results,
+  };
+  const reportPath = options.reportPath || path.join("reports", "chord-melody-generator-sample-report.json");
+  fs.mkdirSync(path.dirname(reportPath), { recursive: true });
+  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + "\n");
+  return { reportPath, report };
+}
+
+async function buildMelodyTrainingLibraryFromSamples(samples = loadSamples()) {
+  const records = [];
+  for (const sample of samples) {
+    const prefix = String(sample.song).padStart(3, "0");
+    const pdfFile = fs.readdirSync(path.join("docs", "assets", "pdf")).find((name) => name.startsWith(`${prefix}_`) && name.endsWith(".pdf"));
+    const existing = readExistingChordJson(sample.song);
+    if (!pdfFile || !existing) continue;
+    const extracted = await extractNotesFromPdf(path.join("docs", "assets", "pdf", pdfFile));
+    records.push({ song: sample.song, extracted, chordJson: existing.data });
+  }
+  return buildMelodyTrainingLibrary(records);
 }
 
 function calibrateSong(songNumber) {
@@ -838,10 +1355,78 @@ function printGeneratedJsonEvaluation(results) {
 }
 
 function main(argv) {
+  if (argv.includes("--verify-trained-melody-generator-samples")) {
+    verifyMelodyGeneratorAgainstSamples({
+      useTraining: true,
+      reportPath: path.join("reports", "chord-trained-melody-generator-sample-report.json"),
+    }).then(({ reportPath, report }) => {
+      console.log(
+        `Trained melody generator sample verification: passed=${report.passed}, failed=${report.failed}, ` +
+        `blocked=${report.blocked}, averageExact=${Math.round(report.averageExactScore * 100)}%, ` +
+        `averagePosition=${Math.round(report.averagePositionScore * 100)}%, trainingSamples=${report.trainingSampleCount}`
+      );
+      console.log(`Report: ${reportPath}`);
+      if (report.failed > 0 || report.blocked > 0) process.exitCode = 1;
+    }).catch((error) => {
+      console.error(error);
+      process.exitCode = 1;
+    });
+    return;
+  }
+  if (argv.includes("--verify-trained-melody-generator-trusted")) {
+    const trustedSamples = listTrustedChordSongs().map((song) => ({ song }));
+    verifyMelodyGeneratorAgainstSamples({
+      samples: trustedSamples,
+      useTraining: true,
+      reportPath: path.join("reports", "chord-trained-melody-generator-trusted-report.json"),
+    }).then(({ reportPath, report }) => {
+      console.log(
+        `Trusted melody generator verification: passed=${report.passed}, failed=${report.failed}, ` +
+        `blocked=${report.blocked}, averageExact=${Math.round(report.averageExactScore * 100)}%, ` +
+        `averagePosition=${Math.round(report.averagePositionScore * 100)}%, trainingSamples=${report.trainingSampleCount}`
+      );
+      console.log(`Report: ${reportPath}`);
+      if (report.failed > 0 || report.blocked > 0) process.exitCode = 1;
+    }).catch((error) => {
+      console.error(error);
+      process.exitCode = 1;
+    });
+    return;
+  }
+  if (argv.includes("--verify-melody-generator-samples")) {
+    verifyMelodyGeneratorAgainstSamples().then(({ reportPath, report }) => {
+      console.log(
+        `Melody generator sample verification: passed=${report.passed}, failed=${report.failed}, ` +
+        `blocked=${report.blocked}, averageExact=${Math.round(report.averageExactScore * 100)}%, ` +
+        `averagePosition=${Math.round(report.averagePositionScore * 100)}%`
+      );
+      console.log(`Report: ${reportPath}`);
+      if (report.failed > 0 || report.blocked > 0) process.exitCode = 1;
+    }).catch((error) => {
+      console.error(error);
+      process.exitCode = 1;
+    });
+    return;
+  }
+  if (argv.includes("--verify-finalizer-samples")) {
+    verifyFinalizerAgainstSamples().then(({ reportPath, report }) => {
+      console.log(
+        `Sample finalizer verification: passed=${report.passed}, failed=${report.failed}, ` +
+        `blocked=${report.blocked}, averageExact=${Math.round(report.averageExactScore * 100)}%`
+      );
+      console.log(`Report: ${reportPath}`);
+      if (report.failed > 0 || report.blocked > 0) process.exitCode = 1;
+    }).catch((error) => {
+      console.error(error);
+      process.exitCode = 1;
+    });
+    return;
+  }
   if (argv.includes("--finalize-missing")) {
     const limitArgIndex = argv.findIndex((arg) => arg === "--limit");
     const limit = limitArgIndex >= 0 ? Number(argv[limitArgIndex + 1]) : 0;
-    finalizeMissingChordJson({ limit }).then(({ reportPath, report }) => {
+    const allowUnverified = argv.includes("--force-unverified");
+    finalizeMissingChordJson({ limit, allowUnverified }).then(({ reportPath, report }) => {
       console.log(`Final chord JSON: written=${report.writtenCount}, skipped=${report.skippedCount}`);
       console.log(`Report: ${reportPath}`);
     }).catch((error) => {
@@ -903,14 +1488,29 @@ module.exports = {
   generateJsonFromGoldSample,
   evaluateAllGeneratedJsonSamples,
   readExistingChordJson,
+  listTrustedChordSongs,
+  compareChordJson,
+  compareChordJsonWithBestTranspose,
+  transposeChordJson,
   planMissingChordBatch,
   writeBatchReport,
   buildDraftReviewQueue,
   writeDraftReviewQueue,
   finalizeMissingChordJson,
+  verifyFinalizerAgainstSamples,
+  verifyMelodyGeneratorAgainstSamples,
   findSourceImagesForSong,
   planPageImageMapping,
   parseTsvChordWords,
   alignChordWordsToNotes,
+  alignChordWordsToNotesPdfDriven,
+  selectSopranoNoteRows,
+  splitSopranoRowIntoMeasures,
+  inferCChordForMeasure,
+  generateCChordJsonFromSoprano,
+  createMelodySignature,
+  buildMelodyTrainingLibrary,
+  buildMelodyTrainingLibraryFromSamples,
+  generateCChordJsonWithTraining,
   loadSamples,
 };

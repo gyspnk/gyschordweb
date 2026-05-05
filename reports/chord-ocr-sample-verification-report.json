@@ -1,0 +1,490 @@
+{
+  "generatedAt": "2026-05-05T13:38:58.257Z",
+  "sampleCount": 30,
+  "passed": 0,
+  "failed": 30,
+  "blocked": 0,
+  "averageExactScore": 0.016407159149094637,
+  "results": [
+    {
+      "song": 2,
+      "status": "fail",
+      "pdfFile": "002_Pujilah Allah Yang Mahakudus.pdf",
+      "sourceImages": [
+        "2.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 3,
+      "expectedChordCount": 9,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 3,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 3,
+      "status": "fail",
+      "pdfFile": "003_Pujilah Allah Yang Benar.pdf",
+      "sourceImages": [
+        "3.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 4,
+      "expectedChordCount": 8,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 4,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 4,
+      "status": "fail",
+      "pdfFile": "004_Pujilah Bapa Yang di Surga.pdf",
+      "sourceImages": [
+        "4.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 9,
+      "expectedChordCount": 12,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 9,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 5,
+      "status": "fail",
+      "pdfFile": "005_Segala Sesuatu Memuji Allah.pdf",
+      "sourceImages": [
+        "5.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 26,
+      "expectedChordCount": 24,
+      "positionMatches": 5,
+      "exactMatches": 0,
+      "extraCount": 21,
+      "positionScore": 0.20833333333333334,
+      "exactScore": 0
+    },
+    {
+      "song": 6,
+      "status": "fail",
+      "pdfFile": "006_Pujilah Ciptaan-Nya.pdf",
+      "sourceImages": [
+        "6.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 13,
+      "expectedChordCount": 31,
+      "positionMatches": 2,
+      "exactMatches": 1,
+      "extraCount": 11,
+      "positionScore": 0.06451612903225806,
+      "exactScore": 0.03225806451612903
+    },
+    {
+      "song": 7,
+      "status": "fail",
+      "pdfFile": "007_Segala Sesuatu Memuji Tuhan.pdf",
+      "sourceImages": [
+        "7.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 10,
+      "expectedChordCount": 22,
+      "positionMatches": 5,
+      "exactMatches": 2,
+      "extraCount": 5,
+      "positionScore": 0.22727272727272727,
+      "exactScore": 0.09090909090909091
+    },
+    {
+      "song": 8,
+      "status": "fail",
+      "pdfFile": "008_Pujilah Allah.pdf",
+      "sourceImages": [
+        "8.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 4,
+      "expectedChordCount": 14,
+      "positionMatches": 4,
+      "exactMatches": 3,
+      "extraCount": 0,
+      "positionScore": 0.2857142857142857,
+      "exactScore": 0.21428571428571427
+    },
+    {
+      "song": 9,
+      "status": "fail",
+      "pdfFile": "009_Bersorak Bagi Tuhan.pdf",
+      "sourceImages": [
+        "9.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 10,
+      "expectedChordCount": 14,
+      "positionMatches": 2,
+      "exactMatches": 0,
+      "extraCount": 8,
+      "positionScore": 0.14285714285714285,
+      "exactScore": 0
+    },
+    {
+      "song": 10,
+      "status": "fail",
+      "pdfFile": "010_Muliakanlah Yesus.pdf",
+      "sourceImages": [
+        "10.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 0,
+      "expectedChordCount": 15,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 0,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 11,
+      "status": "fail",
+      "pdfFile": "011_Gembira di Dalam Tuhan.pdf",
+      "sourceImages": [
+        "11.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 6,
+      "expectedChordCount": 12,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 6,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 12,
+      "status": "fail",
+      "pdfFile": "012_Mulia Nama Yesus.pdf",
+      "sourceImages": [
+        "12.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 6,
+      "expectedChordCount": 26,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 6,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 13,
+      "status": "fail",
+      "pdfFile": "013_Tiada yang Seperti Yesus.pdf",
+      "sourceImages": [
+        "13.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 11,
+      "expectedChordCount": 24,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 11,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 14,
+      "status": "fail",
+      "pdfFile": "014_Kristus Maharaja.pdf",
+      "sourceImages": [
+        "14.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 2,
+      "expectedChordCount": 21,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 2,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 15,
+      "status": "fail",
+      "pdfFile": "015_Pujilah Yesus.pdf",
+      "sourceImages": [
+        "15.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 5,
+      "expectedChordCount": 17,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 5,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 16,
+      "status": "fail",
+      "pdfFile": "016_Sembahlah Tuhan Langit dan Bumi.pdf",
+      "sourceImages": [
+        "16.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 10,
+      "expectedChordCount": 23,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 10,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 17,
+      "status": "fail",
+      "pdfFile": "017_Pujilah Kasih Tuhan.pdf",
+      "sourceImages": [
+        "17.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 9,
+      "expectedChordCount": 24,
+      "positionMatches": 2,
+      "exactMatches": 1,
+      "extraCount": 7,
+      "positionScore": 0.08333333333333333,
+      "exactScore": 0.041666666666666664
+    },
+    {
+      "song": 18,
+      "status": "fail",
+      "pdfFile": "018_Pujilah Anugerah Tuhan.pdf",
+      "sourceImages": [
+        "18.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 0,
+      "expectedChordCount": 22,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 0,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 19,
+      "status": "fail",
+      "pdfFile": "019_Hosana.pdf",
+      "sourceImages": [
+        "19.jpg"
+      ],
+      "pageImageMode": "single-image-multi-page",
+      "generatedChordCount": 0,
+      "expectedChordCount": 33,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 0,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 20,
+      "status": "fail",
+      "pdfFile": "020_Pujilah Tuhan Sang Raja.pdf",
+      "sourceImages": [
+        "20.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 8,
+      "expectedChordCount": 20,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 8,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 21,
+      "status": "fail",
+      "pdfFile": "021_Yesus Terelok.pdf",
+      "sourceImages": [
+        "21.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 3,
+      "expectedChordCount": 19,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 3,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 22,
+      "status": "fail",
+      "pdfFile": "022_Pujilah Alkitab.pdf",
+      "sourceImages": [
+        "22.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 10,
+      "expectedChordCount": 14,
+      "positionMatches": 3,
+      "exactMatches": 1,
+      "extraCount": 7,
+      "positionScore": 0.21428571428571427,
+      "exactScore": 0.07142857142857142
+    },
+    {
+      "song": 23,
+      "status": "fail",
+      "pdfFile": "023_Firman Tuhan Sungguh Indah.pdf",
+      "sourceImages": [
+        "23.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 4,
+      "expectedChordCount": 14,
+      "positionMatches": 2,
+      "exactMatches": 0,
+      "extraCount": 2,
+      "positionScore": 0.14285714285714285,
+      "exactScore": 0
+    },
+    {
+      "song": 24,
+      "status": "fail",
+      "pdfFile": "024_Firman Kehidupan.pdf",
+      "sourceImages": [
+        "24.jpg"
+      ],
+      "pageImageMode": "single-image-multi-page",
+      "generatedChordCount": 5,
+      "expectedChordCount": 30,
+      "positionMatches": 1,
+      "exactMatches": 0,
+      "extraCount": 4,
+      "positionScore": 0.03333333333333333,
+      "exactScore": 0
+    },
+    {
+      "song": 25,
+      "status": "fail",
+      "pdfFile": "025_Firman Allah Murni.pdf",
+      "sourceImages": [
+        "25.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 10,
+      "expectedChordCount": 24,
+      "positionMatches": 4,
+      "exactMatches": 1,
+      "extraCount": 6,
+      "positionScore": 0.16666666666666666,
+      "exactScore": 0.041666666666666664
+    },
+    {
+      "song": 26,
+      "status": "fail",
+      "pdfFile": "026_Tuhan! Berfirmanlah Padaku.pdf",
+      "sourceImages": [
+        "26.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 4,
+      "expectedChordCount": 13,
+      "positionMatches": 1,
+      "exactMatches": 0,
+      "extraCount": 3,
+      "positionScore": 0.07692307692307693,
+      "exactScore": 0
+    },
+    {
+      "song": 27,
+      "status": "fail",
+      "pdfFile": "027_Yesus Cintaku.pdf",
+      "sourceImages": [
+        "27.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 0,
+      "expectedChordCount": 26,
+      "positionMatches": 0,
+      "exactMatches": 0,
+      "extraCount": 0,
+      "positionScore": 0,
+      "exactScore": 0
+    },
+    {
+      "song": 28,
+      "status": "fail",
+      "pdfFile": "028_Yesus Pengasih.pdf",
+      "sourceImages": [
+        "28.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 5,
+      "expectedChordCount": 16,
+      "positionMatches": 1,
+      "exactMatches": 0,
+      "extraCount": 4,
+      "positionScore": 0.0625,
+      "exactScore": 0
+    },
+    {
+      "song": 29,
+      "status": "fail",
+      "pdfFile": "029_Tuhan Mencari Domba yang Hilang.pdf",
+      "sourceImages": [
+        "29.jpg"
+      ],
+      "pageImageMode": "single-image-multi-page",
+      "generatedChordCount": 1,
+      "expectedChordCount": 25,
+      "positionMatches": 1,
+      "exactMatches": 0,
+      "extraCount": 0,
+      "positionScore": 0.04,
+      "exactScore": 0
+    },
+    {
+      "song": 30,
+      "status": "fail",
+      "pdfFile": "030_Kasih Tuhan Mencariku.pdf",
+      "sourceImages": [
+        "30.jpg"
+      ],
+      "pageImageMode": "single-image-multi-page",
+      "generatedChordCount": 4,
+      "expectedChordCount": 34,
+      "positionMatches": 1,
+      "exactMatches": 0,
+      "extraCount": 3,
+      "positionScore": 0.029411764705882353,
+      "exactScore": 0
+    },
+    {
+      "song": 31,
+      "status": "fail",
+      "pdfFile": "031_Semuanya Demiku.pdf",
+      "sourceImages": [
+        "31.jpg"
+      ],
+      "pageImageMode": "single-image-single-page",
+      "generatedChordCount": 2,
+      "expectedChordCount": 24,
+      "positionMatches": 1,
+      "exactMatches": 0,
+      "extraCount": 1,
+      "positionScore": 0.041666666666666664,
+      "exactScore": 0
+    }
+  ]
+}

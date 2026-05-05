@@ -1,7 +1,4732 @@
 {
-  "generatedAt": "2026-05-05T12:51:02.550Z",
+  "generatedAt": "2026-05-05T13:10:12.617Z",
   "createCount": 0,
-  "skipCount": 0,
+  "skipCount": 471,
   "create": [],
-  "skip": []
+  "skip": [
+    {
+      "song": 32,
+      "songKey": "32",
+      "pdfFile": "032_Yesus Menerima Orang Berdosa.pdf",
+      "chordFile": "032_Yesus Menerima Orang Berdosa.chord.json",
+      "sourceImages": [
+        "32.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 34,
+      "songKey": "34",
+      "pdfFile": "034_Yesus Memanggilmu.pdf",
+      "chordFile": "034_Yesus Memanggilmu.chord.json",
+      "sourceImages": [
+        "34.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 35,
+      "songKey": "35",
+      "pdfFile": "035_Hujan Malam Berlalu, Terbitlah Terang.pdf",
+      "chordFile": "035_Hujan Malam Berlalu, Terbitlah Terang.chord.json",
+      "sourceImages": [
+        "35.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 36,
+      "songKey": "36",
+      "pdfFile": "036_Suara Pengharapan.pdf",
+      "chordFile": "036_Suara Pengharapan.chord.json",
+      "sourceImages": [
+        "36.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 37,
+      "songKey": "37",
+      "pdfFile": "037_Dosa di Putihkan Seperti Salju.pdf",
+      "chordFile": "037_Dosa di Putihkan Seperti Salju.chord.json",
+      "sourceImages": [
+        "37.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 38,
+      "songKey": "38",
+      "pdfFile": "038_Aku Mendengar Suara Yesus.pdf",
+      "chordFile": "038_Aku Mendengar Suara Yesus.chord.json",
+      "sourceImages": [
+        "38.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 39,
+      "songKey": "39",
+      "pdfFile": "039_Hanya Darah-Nya Yang Berkuasa.pdf",
+      "chordFile": "039_Hanya Darah-Nya Yang Berkuasa.chord.json",
+      "sourceImages": [
+        "39.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 40,
+      "songKey": "40",
+      "pdfFile": "040_Darah Yesus.pdf",
+      "chordFile": "040_Darah Yesus.chord.json",
+      "sourceImages": [
+        "40.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 41,
+      "songKey": "41",
+      "pdfFile": "041_Darah Tuhan Berkuasa.pdf",
+      "chordFile": "041_Darah Tuhan Berkuasa.chord.json",
+      "sourceImages": [
+        "41.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 42,
+      "songKey": "42",
+      "pdfFile": "042_Darah Anak Domba.pdf",
+      "chordFile": "042_Darah Anak Domba.chord.json",
+      "sourceImages": [
+        "42.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 43,
+      "songKey": "43",
+      "pdfFile": "043_DarahNya Membersihkan.pdf",
+      "chordFile": "043_DarahNya Membersihkan.chord.json",
+      "sourceImages": [
+        "43.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 44,
+      "songKey": "44",
+      "pdfFile": "044_Hanya Tuhan Penolongku.pdf",
+      "chordFile": "044_Hanya Tuhan Penolongku.chord.json",
+      "sourceImages": [
+        "44.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 45,
+      "songKey": "45",
+      "pdfFile": "045_Menyelamatkan Orang Berdosa.pdf",
+      "chordFile": "045_Menyelamatkan Orang Berdosa.chord.json",
+      "sourceImages": [
+        "45.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 46,
+      "songKey": "46",
+      "pdfFile": "046_Tuhan Buka Mata Hatiku.pdf",
+      "chordFile": "046_Tuhan Buka Mata Hatiku.chord.json",
+      "sourceImages": [
+        "46.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 47,
+      "songKey": "47",
+      "pdfFile": "047_Yesus Telah Tolongku.pdf",
+      "chordFile": "047_Yesus Telah Tolongku.chord.json",
+      "sourceImages": [
+        "47.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 48,
+      "songKey": "48",
+      "pdfFile": "048_Anugerah di Atas Salib.pdf",
+      "chordFile": "048_Anugerah di Atas Salib.chord.json",
+      "sourceImages": [
+        "48.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 49,
+      "songKey": "49",
+      "pdfFile": "049_Tuhan Selamatkanku.pdf",
+      "chordFile": "049_Tuhan Selamatkanku.chord.json",
+      "sourceImages": [
+        "49.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 50,
+      "songKey": "50",
+      "pdfFile": "050_Hanya Yesus.pdf",
+      "chordFile": "050_Hanya Yesus.chord.json",
+      "sourceImages": [
+        "50.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 51,
+      "songKey": "51A",
+      "pdfFile": "051A_Batu Zaman.pdf",
+      "chordFile": "051A_Batu Zaman.chord.json",
+      "sourceImages": [
+        "51a.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 51,
+      "songKey": "51B",
+      "pdfFile": "051B_Batu Zaman.pdf",
+      "chordFile": "051B_Batu Zaman.chord.json",
+      "sourceImages": [
+        "51b.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 52,
+      "songKey": "52",
+      "pdfFile": "052_Ku Dengar Suara Yesus.pdf",
+      "chordFile": "052_Ku Dengar Suara Yesus.chord.json",
+      "sourceImages": [
+        "52.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 53,
+      "songKey": "53",
+      "pdfFile": "053_Allah Bapa Pengasih.pdf",
+      "chordFile": "053_Allah Bapa Pengasih.chord.json",
+      "sourceImages": [
+        "53.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 54,
+      "songKey": "54",
+      "pdfFile": "054_Bebas Dari Gelap Menuju Terang.pdf",
+      "chordFile": "054_Bebas Dari Gelap Menuju Terang.chord.json",
+      "sourceImages": [
+        "54.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 55,
+      "songKey": "55",
+      "pdfFile": "055_Tuhan Bebaskan.pdf",
+      "chordFile": "055_Tuhan Bebaskan.chord.json",
+      "sourceImages": [
+        "55.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 56,
+      "songKey": "56",
+      "pdfFile": "056_Tahun Yobel Sudah Tiba.pdf",
+      "chordFile": "056_Tahun Yobel Sudah Tiba.chord.json",
+      "sourceImages": [
+        "56.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 57,
+      "songKey": "57",
+      "pdfFile": "057_Dosaku Amat Berat.pdf",
+      "chordFile": "057_Dosaku Amat Berat.chord.json",
+      "sourceImages": [
+        "57.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 58,
+      "songKey": "58",
+      "pdfFile": "058_Yesus Pimpin.pdf",
+      "chordFile": "058_Yesus Pimpin.chord.json",
+      "sourceImages": [
+        "58.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 60,
+      "songKey": "60",
+      "pdfFile": "060_Menempuh Jalan Surga.pdf",
+      "chordFile": "060_Menempuh Jalan Surga.chord.json",
+      "sourceImages": [
+        "60.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 61,
+      "songKey": "61",
+      "pdfFile": "061_Tuhan Pimpin Jalanku.pdf",
+      "chordFile": "061_Tuhan Pimpin Jalanku.chord.json",
+      "sourceImages": [
+        "61.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 62,
+      "songKey": "62",
+      "pdfFile": "062_Semoga Tuhan Menyertai.pdf",
+      "chordFile": "062_Semoga Tuhan Menyertai.chord.json",
+      "sourceImages": [
+        "62.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 63,
+      "songKey": "63",
+      "pdfFile": "063_Semoga Tuhan Pimpin.pdf",
+      "chordFile": "063_Semoga Tuhan Pimpin.chord.json",
+      "sourceImages": [
+        "63.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 64,
+      "songKey": "64",
+      "pdfFile": "064_Terang Tuhan Memimpin.pdf",
+      "chordFile": "064_Terang Tuhan Memimpin.chord.json",
+      "sourceImages": [
+        "64.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 65,
+      "songKey": "65",
+      "pdfFile": "065_Dekat Pada Tuhan.pdf",
+      "chordFile": "065_Dekat Pada Tuhan.chord.json",
+      "sourceImages": [
+        "65.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 66,
+      "songKey": "66",
+      "pdfFile": "066_Tuhan, Aku Menantikan Engkau.pdf",
+      "chordFile": "066_Tuhan, Aku Menantikan Engkau.chord.json",
+      "sourceImages": [
+        "66.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 67,
+      "songKey": "67",
+      "pdfFile": "067_Tuhan Tuntunlah Aku.pdf",
+      "chordFile": "067_Tuhan Tuntunlah Aku.chord.json",
+      "sourceImages": [
+        "67.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 68,
+      "songKey": "68",
+      "pdfFile": "068_Tuhan, Pegangilah Tanganku.pdf",
+      "chordFile": "068_Tuhan, Pegangilah Tanganku.chord.json",
+      "sourceImages": [
+        "68.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 69,
+      "songKey": "69",
+      "pdfFile": "069_Yesus Jurumudiku.pdf",
+      "chordFile": "069_Yesus Jurumudiku.chord.json",
+      "sourceImages": [
+        "69.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 70,
+      "songKey": "70",
+      "pdfFile": "070_Tuhan Sumber Segala Berkat.pdf",
+      "chordFile": "070_Tuhan Sumber Segala Berkat.chord.json",
+      "sourceImages": [
+        "70.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 71,
+      "songKey": "71",
+      "pdfFile": "071_Yesus Tuhanku.pdf",
+      "chordFile": "071_Yesus Tuhanku.chord.json",
+      "sourceImages": [
+        "71.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 72,
+      "songKey": "72",
+      "pdfFile": "072_Tuhan Segala Berkat.pdf",
+      "chordFile": "072_Tuhan Segala Berkat.chord.json",
+      "sourceImages": [
+        "72.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 73,
+      "songKey": "73",
+      "pdfFile": "073_Yesus Pemberi Berkat.pdf",
+      "chordFile": "073_Yesus Pemberi Berkat.chord.json",
+      "sourceImages": [
+        "73.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 74,
+      "songKey": "74",
+      "pdfFile": "074_Dosa di Putihkan Seperti Salju.pdf",
+      "chordFile": "074_Dosa di Putihkan Seperti Salju.chord.json",
+      "sourceImages": [
+        "74.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 75,
+      "songKey": "75",
+      "pdfFile": "075_Kristus Lahir.pdf",
+      "chordFile": "075_Kristus Lahir.chord.json",
+      "sourceImages": [
+        "75.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 76,
+      "songKey": "76",
+      "pdfFile": "076_Yesus Disalib.pdf",
+      "chordFile": "076_Yesus Disalib.chord.json",
+      "sourceImages": [
+        "76.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 77,
+      "songKey": "77",
+      "pdfFile": "077_Junjung Tinggi Salib Tuhan.pdf",
+      "chordFile": "077_Junjung Tinggi Salib Tuhan.chord.json",
+      "sourceImages": [
+        "77.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 78,
+      "songKey": "78",
+      "pdfFile": "078_Tuhan Bangkit.pdf",
+      "chordFile": "078_Tuhan Bangkit.chord.json",
+      "sourceImages": [
+        "78.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 79,
+      "songKey": "79",
+      "pdfFile": "079_Puji Kebangkitan Yesus.pdf",
+      "chordFile": "079_Puji Kebangkitan Yesus.chord.json",
+      "sourceImages": [
+        "79.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 80,
+      "songKey": "80",
+      "pdfFile": "080_Tuhan Telah Kalahkan Maut.pdf",
+      "chordFile": "080_Tuhan Telah Kalahkan Maut.chord.json",
+      "sourceImages": [
+        "80.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 81,
+      "songKey": "81",
+      "pdfFile": "081_Yesus Datang Kembali.pdf",
+      "chordFile": "081_Yesus Datang Kembali.chord.json",
+      "sourceImages": [
+        "81.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 82,
+      "songKey": "82",
+      "pdfFile": "082_Bersiap dan Berjaga.pdf",
+      "chordFile": "082_Bersiap dan Berjaga.chord.json",
+      "sourceImages": [
+        "82.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 83,
+      "songKey": "83",
+      "pdfFile": "083_Ketika Yesus Datang.pdf",
+      "chordFile": "083_Ketika Yesus Datang.chord.json",
+      "sourceImages": [
+        "83.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 84,
+      "songKey": "84",
+      "pdfFile": "084_Menyambut Rajaku.pdf",
+      "chordFile": "084_Menyambut Rajaku.chord.json",
+      "sourceImages": [
+        "84.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 85,
+      "songKey": "85",
+      "pdfFile": "085_Tuhan Segera Datang.pdf",
+      "chordFile": "085_Tuhan Segera Datang.chord.json",
+      "sourceImages": [
+        "85.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 86,
+      "songKey": "86",
+      "pdfFile": "086_Baik dan Jahat Dibalas.pdf",
+      "chordFile": "086_Baik dan Jahat Dibalas.chord.json",
+      "sourceImages": [
+        "86.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 87,
+      "songKey": "87",
+      "pdfFile": "087_Hari Penghakiman.pdf",
+      "chordFile": "087_Hari Penghakiman.chord.json",
+      "sourceImages": [
+        "87.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 88,
+      "songKey": "88",
+      "pdfFile": "088_Anugerah Juruselamat.pdf",
+      "chordFile": "088_Anugerah Juruselamat.chord.json",
+      "sourceImages": [
+        "88.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 91,
+      "songKey": "91",
+      "pdfFile": "091_Tuhan Pimpin Jalanku.pdf",
+      "chordFile": "091_Tuhan Pimpin Jalanku.chord.json",
+      "sourceImages": [
+        "91.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 92,
+      "songKey": "92",
+      "pdfFile": "092_Bersyukur Atas Kesembuhan.pdf",
+      "chordFile": "092_Bersyukur Atas Kesembuhan.chord.json",
+      "sourceImages": [
+        "92.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 93,
+      "songKey": "93",
+      "pdfFile": "093_Bersyukur Atas Pembaharuan.pdf",
+      "chordFile": "093_Bersyukur Atas Pembaharuan.chord.json",
+      "sourceImages": [
+        "93.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 94,
+      "songKey": "94",
+      "pdfFile": "094_Anugerah Tuhan Kekal.pdf",
+      "chordFile": "094_Anugerah Tuhan Kekal.chord.json",
+      "sourceImages": [
+        "94.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 95,
+      "songKey": "95",
+      "pdfFile": "095_Raja yang Diurapi.pdf",
+      "chordFile": "095_Raja yang Diurapi.chord.json",
+      "sourceImages": [
+        "95.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 96,
+      "songKey": "96",
+      "pdfFile": "096_Anugerah yang Mengherankan.pdf",
+      "chordFile": "096_Anugerah yang Mengherankan.chord.json",
+      "sourceImages": [
+        "96.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 97,
+      "songKey": "97",
+      "pdfFile": "097_Tuhan Tinggalkan Maligai Gading.pdf",
+      "chordFile": "097_Tuhan Tinggalkan Maligai Gading.chord.json",
+      "sourceImages": [
+        "97.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 98,
+      "songKey": "98",
+      "pdfFile": "098_Kala Kukenang Salib.pdf",
+      "chordFile": "098_Kala Kukenang Salib.chord.json",
+      "sourceImages": [
+        "98.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 99,
+      "songKey": "99",
+      "pdfFile": "099_Mencintai Tuhan Lebih Dalam.pdf",
+      "chordFile": "099_Mencintai Tuhan Lebih Dalam.chord.json",
+      "sourceImages": [
+        "99.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 100,
+      "songKey": "100",
+      "pdfFile": "100_Hanya Darah-Nya Yang Berkuasa.pdf",
+      "chordFile": "100_Hanya Darah-Nya Yang Berkuasa.chord.json",
+      "sourceImages": [
+        "100.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 102,
+      "songKey": "102",
+      "pdfFile": "102_Hidup Untuk Tuhan.pdf",
+      "chordFile": "102_Hidup Untuk Tuhan.chord.json",
+      "sourceImages": [
+        "102.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 103,
+      "songKey": "103",
+      "pdfFile": "103_Lebih Baik Ada Yesus.pdf",
+      "chordFile": "103_Lebih Baik Ada Yesus.chord.json",
+      "sourceImages": [
+        "103.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 104,
+      "songKey": "104",
+      "pdfFile": "104_Aku Amat Cinta Yesus.pdf",
+      "chordFile": "104_Aku Amat Cinta Yesus.chord.json",
+      "sourceImages": [
+        "104.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 105,
+      "songKey": "105",
+      "pdfFile": "105_Mati Untuk Tuhan.pdf",
+      "chordFile": "105_Mati Untuk Tuhan.chord.json",
+      "sourceImages": [
+        "105.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 106,
+      "songKey": "106",
+      "pdfFile": "106_Aku Murid Yesus.pdf",
+      "chordFile": "106_Aku Murid Yesus.chord.json",
+      "sourceImages": [
+        "106.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 107,
+      "songKey": "107",
+      "pdfFile": "107_Ikut Yesus.pdf",
+      "chordFile": "107_Ikut Yesus.chord.json",
+      "sourceImages": [
+        "107.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 108,
+      "songKey": "108",
+      "pdfFile": "108_Ikut Almasih.pdf",
+      "chordFile": "108_Ikut Almasih.chord.json",
+      "sourceImages": [
+        "108.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 109,
+      "songKey": "109",
+      "pdfFile": "109_Turut Jejak Tuhan.pdf",
+      "chordFile": "109_Turut Jejak Tuhan.chord.json",
+      "sourceImages": [
+        "109.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 110,
+      "songKey": "110",
+      "pdfFile": "110_Tinggalkan Segalanya Ikut Tuhan.pdf",
+      "chordFile": "110_Tinggalkan Segalanya Ikut Tuhan.chord.json",
+      "sourceImages": [
+        "110.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 111,
+      "songKey": "111",
+      "pdfFile": "111_Ikut Juruselamat.pdf",
+      "chordFile": "111_Ikut Juruselamat.chord.json",
+      "sourceImages": [
+        "111.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 112,
+      "songKey": "112",
+      "pdfFile": "112_Aku Mau Ikut Tuhan.pdf",
+      "chordFile": "112_Aku Mau Ikut Tuhan.chord.json",
+      "sourceImages": [
+        "112.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 113,
+      "songKey": "113",
+      "pdfFile": "113_Pentahbisan Gedung Gereja.pdf",
+      "chordFile": "113_Pentahbisan Gedung Gereja.chord.json",
+      "sourceImages": [
+        "113.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 114,
+      "songKey": "114",
+      "pdfFile": "114_Persembahan Syukur.pdf",
+      "chordFile": "114_Persembahan Syukur.chord.json",
+      "sourceImages": [
+        "114.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 115,
+      "songKey": "115",
+      "pdfFile": "115_Gedung Gereja Terbangun.pdf",
+      "chordFile": "115_Gedung Gereja Terbangun.chord.json",
+      "sourceImages": [
+        "115.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 116,
+      "songKey": "116",
+      "pdfFile": "116_Persembahkan Jiwa Raga.pdf",
+      "chordFile": "116_Persembahkan Jiwa Raga.chord.json",
+      "sourceImages": [
+        "116.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 117,
+      "songKey": "117",
+      "pdfFile": "117_Terimalah Persembahanku.pdf",
+      "chordFile": "117_Terimalah Persembahanku.chord.json",
+      "sourceImages": [
+        "117.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 118,
+      "songKey": "118",
+      "pdfFile": "118_Persembahkan Seluruh Hidupku.pdf",
+      "chordFile": "118_Persembahkan Seluruh Hidupku.chord.json",
+      "sourceImages": [
+        "118.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 119,
+      "songKey": "119",
+      "pdfFile": "119_Semuanya Bagi Yesus.pdf",
+      "chordFile": "119_Semuanya Bagi Yesus.chord.json",
+      "sourceImages": [
+        "119.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 120,
+      "songKey": "120",
+      "pdfFile": "120_Mempersembahkan Semua.pdf",
+      "chordFile": "120_Mempersembahkan Semua.chord.json",
+      "sourceImages": [
+        "120.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 121,
+      "songKey": "121",
+      "pdfFile": "121_Apa Yang Kupersembahkan.pdf",
+      "chordFile": "121_Apa Yang Kupersembahkan.chord.json",
+      "sourceImages": [
+        "121.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 123,
+      "songKey": "123",
+      "pdfFile": "123_Sampai Bertemu Lagi.pdf",
+      "chordFile": "123_Sampai Bertemu Lagi.chord.json",
+      "sourceImages": [
+        "123.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 124,
+      "songKey": "124A",
+      "pdfFile": "124A_Melaksanakan Kasih.pdf",
+      "chordFile": "124A_Melaksanakan Kasih.chord.json",
+      "sourceImages": [
+        "124a.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 124,
+      "songKey": "124B",
+      "pdfFile": "124B_Melaksanakan Kasih.pdf",
+      "chordFile": "124B_Melaksanakan Kasih.chord.json",
+      "sourceImages": [
+        "124b.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 125,
+      "songKey": "125",
+      "pdfFile": "125_Kidung Perpisahan.pdf",
+      "chordFile": "125_Kidung Perpisahan.chord.json",
+      "sourceImages": [
+        "125.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 127,
+      "songKey": "127",
+      "pdfFile": "127_Saling Mengasihi Dengan Sungguh.pdf",
+      "chordFile": "127_Saling Mengasihi Dengan Sungguh.chord.json",
+      "sourceImages": [
+        "127.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 128,
+      "songKey": "128",
+      "pdfFile": "128_Hari Kudus Nan Bahagia.pdf",
+      "chordFile": "128_Hari Kudus Nan Bahagia.chord.json",
+      "sourceImages": [
+        "128.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 129,
+      "songKey": "129",
+      "pdfFile": "129_Peringati Hari Kudus.pdf",
+      "chordFile": "129_Peringati Hari Kudus.chord.json",
+      "sourceImages": [
+        "129.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 130,
+      "songKey": "130",
+      "pdfFile": "130_Sabat Kudus.pdf",
+      "chordFile": "130_Sabat Kudus.chord.json",
+      "sourceImages": [
+        "130.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 131,
+      "songKey": "131",
+      "pdfFile": "131_Girang Berhari Sabat.pdf",
+      "chordFile": "131_Girang Berhari Sabat.chord.json",
+      "sourceImages": [
+        "131.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 132,
+      "songKey": "132A",
+      "pdfFile": "132A_Mohon Tuhan Lindungi.pdf",
+      "chordFile": "132A_Mohon Tuhan Lindungi.chord.json",
+      "sourceImages": [
+        "132a.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 132,
+      "songKey": "132B",
+      "pdfFile": "132B_Mohon Tuhan Lindungi.pdf",
+      "chordFile": "132B_Mohon Tuhan Lindungi.chord.json",
+      "sourceImages": [
+        "132b.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 134,
+      "songKey": "134",
+      "pdfFile": "134_Pandanglah Tuhan.pdf",
+      "chordFile": "134_Pandanglah Tuhan.chord.json",
+      "sourceImages": [
+        "134.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 135,
+      "songKey": "135",
+      "pdfFile": "135_Mengapa Sibuk _.pdf",
+      "chordFile": "135_Mengapa Sibuk _.chord.json",
+      "sourceImages": [
+        "135.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 136,
+      "songKey": "136",
+      "pdfFile": "136_Aku Tahu Siapa yang Kupercaya.pdf",
+      "chordFile": "136_Aku Tahu Siapa yang Kupercaya.chord.json",
+      "sourceImages": [
+        "136.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 137,
+      "songKey": "137",
+      "pdfFile": "137_Yesus Sahabatku.pdf",
+      "chordFile": "137_Yesus Sahabatku.chord.json",
+      "sourceImages": [
+        "137.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 138,
+      "songKey": "138",
+      "pdfFile": "138_Bila Menolak Almasih.pdf",
+      "chordFile": "138_Bila Menolak Almasih.chord.json",
+      "sourceImages": [
+        "138.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 139,
+      "songKey": "139",
+      "pdfFile": "139_Mendengar Yesus Lewat.pdf",
+      "chordFile": "139_Mendengar Yesus Lewat.chord.json",
+      "sourceImages": [
+        "139.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 140,
+      "songKey": "140",
+      "pdfFile": "140_Almasih Tahu Dukamu.pdf",
+      "chordFile": "140_Almasih Tahu Dukamu.chord.json",
+      "sourceImages": [
+        "140.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 141,
+      "songKey": "141",
+      "pdfFile": "141_Bahagia Kekal atau Sengsara Kekal_.pdf",
+      "chordFile": "141_Bahagia Kekal atau Sengsara Kekal_.chord.json",
+      "sourceImages": [
+        "141.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 142,
+      "songKey": "142",
+      "pdfFile": "142_Sandar Tuhan Hapuskan Duka.pdf",
+      "chordFile": "142_Sandar Tuhan Hapuskan Duka.chord.json",
+      "sourceImages": [
+        "142.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 143,
+      "songKey": "143",
+      "pdfFile": "143_Aku Mau Sandar Tuhan.pdf",
+      "chordFile": "143_Aku Mau Sandar Tuhan.chord.json",
+      "sourceImages": [
+        "143.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 144,
+      "songKey": "144",
+      "pdfFile": "144_Percayalah Tuhan Dengan Sungguh.pdf",
+      "chordFile": "144_Percayalah Tuhan Dengan Sungguh.chord.json",
+      "sourceImages": [
+        "144.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 147,
+      "songKey": "147",
+      "pdfFile": "147_Carilah Dahulu Kerajaan Allah.pdf",
+      "chordFile": "147_Carilah Dahulu Kerajaan Allah.chord.json",
+      "sourceImages": [
+        "147.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 148,
+      "songKey": "148",
+      "pdfFile": "148_Yesus Gembalaku.pdf",
+      "chordFile": "148_Yesus Gembalaku.chord.json",
+      "sourceImages": [
+        "148.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 150,
+      "songKey": "150",
+      "pdfFile": "150_Gembala yang Baik Menjaga.pdf",
+      "chordFile": "150_Gembala yang Baik Menjaga.chord.json",
+      "sourceImages": [
+        "150.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 151,
+      "songKey": "151",
+      "pdfFile": "151_Tuhan Menjagamu.pdf",
+      "chordFile": "151_Tuhan Menjagamu.chord.json",
+      "sourceImages": [
+        "151.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 152,
+      "songKey": "152",
+      "pdfFile": "152_Tuhan Menyediakan.pdf",
+      "chordFile": "152_Tuhan Menyediakan.chord.json",
+      "sourceImages": [
+        "152.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 153,
+      "songKey": "153",
+      "pdfFile": "153_Setiap Waktu Berserah Pada Tuhan.pdf",
+      "chordFile": "153_Setiap Waktu Berserah Pada Tuhan.chord.json",
+      "sourceImages": [
+        "153.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 154,
+      "songKey": "154",
+      "pdfFile": "154_Yesus Bentengku yang Kokoh.pdf",
+      "chordFile": "154_Yesus Bentengku yang Kokoh.chord.json",
+      "sourceImages": [
+        "154.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 156,
+      "songKey": "156",
+      "pdfFile": "156_Jalan Bersama Tuhan.pdf",
+      "chordFile": "156_Jalan Bersama Tuhan.chord.json",
+      "sourceImages": [
+        "156.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 157,
+      "songKey": "157",
+      "pdfFile": "157_Surga di Dalam Hati.pdf",
+      "chordFile": "157_Surga di Dalam Hati.chord.json",
+      "sourceImages": [
+        "157.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 158,
+      "songKey": "158",
+      "pdfFile": "158_Berjalan di Jalan Tuhan.pdf",
+      "chordFile": "158_Berjalan di Jalan Tuhan.chord.json",
+      "sourceImages": [
+        "158.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 159,
+      "songKey": "159",
+      "pdfFile": "159_Tuhan Beri Sejahtera.pdf",
+      "chordFile": "159_Tuhan Beri Sejahtera.chord.json",
+      "sourceImages": [
+        "159.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 160,
+      "songKey": "160",
+      "pdfFile": "160_Terang Sejati di Hati.pdf",
+      "chordFile": "160_Terang Sejati di Hati.chord.json",
+      "sourceImages": [
+        "160.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 162,
+      "songKey": "162",
+      "pdfFile": "162_Tuhan Pikul Bebanku.pdf",
+      "chordFile": "162_Tuhan Pikul Bebanku.chord.json",
+      "sourceImages": [
+        "162.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 163,
+      "songKey": "163",
+      "pdfFile": "163_Giranglah Jiwaku.pdf",
+      "chordFile": "163_Giranglah Jiwaku.chord.json",
+      "sourceImages": [
+        "163.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 164,
+      "songKey": "164",
+      "pdfFile": "164_Cukuplah Kasih Karunia Tuhan.pdf",
+      "chordFile": "164_Cukuplah Kasih Karunia Tuhan.chord.json",
+      "sourceImages": [
+        "164.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 166,
+      "songKey": "166",
+      "pdfFile": "166_Di Bawah Naungan Tuhan.pdf",
+      "chordFile": "166_Di Bawah Naungan Tuhan.chord.json",
+      "sourceImages": [
+        "166.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 167,
+      "songKey": "167",
+      "pdfFile": "167_Laskar Salib.pdf",
+      "chordFile": "167_Laskar Salib.chord.json",
+      "sourceImages": [
+        "167.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 168,
+      "songKey": "168",
+      "pdfFile": "168_Laskar Kristus Maju.pdf",
+      "chordFile": "168_Laskar Kristus Maju.chord.json",
+      "sourceImages": [
+        "168.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 169,
+      "songKey": "169",
+      "pdfFile": "169_Baik dan Jahat Berlawanan.pdf",
+      "chordFile": "169_Baik dan Jahat Berlawanan.chord.json",
+      "sourceImages": [
+        "169.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 170,
+      "songKey": "170",
+      "pdfFile": "170_Maju Untuk Tuhan.pdf",
+      "chordFile": "170_Maju Untuk Tuhan.chord.json",
+      "sourceImages": [
+        "170.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 171,
+      "songKey": "171",
+      "pdfFile": "171_Gereja Yesus Sejati.pdf",
+      "chordFile": "171_Gereja Yesus Sejati.chord.json",
+      "sourceImages": [
+        "171.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 172,
+      "songKey": "172",
+      "pdfFile": "172_Kau Pasti Menang.pdf",
+      "chordFile": "172_Kau Pasti Menang.chord.json",
+      "sourceImages": [
+        "172.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 173,
+      "songKey": "173",
+      "pdfFile": "173_Panji Salib.pdf",
+      "chordFile": "173_Panji Salib.chord.json",
+      "sourceImages": [
+        "173.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 174,
+      "songKey": "174",
+      "pdfFile": "174_GerejaNya Pasti Maju.pdf",
+      "chordFile": "174_GerejaNya Pasti Maju.chord.json",
+      "sourceImages": [
+        "174.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 175,
+      "songKey": "175",
+      "pdfFile": "175_Pantang Mundur.pdf",
+      "chordFile": "175_Pantang Mundur.chord.json",
+      "sourceImages": [
+        "175.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 176,
+      "songKey": "176",
+      "pdfFile": "176_Pastilah Menang.pdf",
+      "chordFile": "176_Pastilah Menang.chord.json",
+      "sourceImages": [
+        "176.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 177,
+      "songKey": "177",
+      "pdfFile": "177_Jangan Turut Bujukan.pdf",
+      "chordFile": "177_Jangan Turut Bujukan.chord.json",
+      "sourceImages": [
+        "177.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 178,
+      "songKey": "178",
+      "pdfFile": "178_Menuju Ke Surga.pdf",
+      "chordFile": "178_Menuju Ke Surga.chord.json",
+      "sourceImages": [
+        "178.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 179,
+      "songKey": "179",
+      "pdfFile": "179_Bersiap Masuk Surga.pdf",
+      "chordFile": "179_Bersiap Masuk Surga.chord.json",
+      "sourceImages": [
+        "179.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 180,
+      "songKey": "180",
+      "pdfFile": "180_Jalan Hidup Kekal.pdf",
+      "chordFile": "180_Jalan Hidup Kekal.chord.json",
+      "sourceImages": [
+        "180.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 181,
+      "songKey": "181",
+      "pdfFile": "181_Ku Harus Maju.pdf",
+      "chordFile": "181_Ku Harus Maju.chord.json",
+      "sourceImages": [
+        "181.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 182,
+      "songKey": "182",
+      "pdfFile": "182_Maju Terus.pdf",
+      "chordFile": "182_Maju Terus.chord.json",
+      "sourceImages": [
+        "182.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 183,
+      "songKey": "183",
+      "pdfFile": "183_Maju Tak Gentar.pdf",
+      "chordFile": "183_Maju Tak Gentar.chord.json",
+      "sourceImages": [
+        "183.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 184,
+      "songKey": "184",
+      "pdfFile": "184_Berjalan di Atas Jalan Surgawi.pdf",
+      "chordFile": "184_Berjalan di Atas Jalan Surgawi.chord.json",
+      "sourceImages": [
+        "184.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 185,
+      "songKey": "185",
+      "pdfFile": "185_Rindu Rumah di Surga.pdf",
+      "chordFile": "185_Rindu Rumah di Surga.chord.json",
+      "sourceImages": [
+        "185.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 186,
+      "songKey": "186",
+      "pdfFile": "186_Surga Rumahku.pdf",
+      "chordFile": "186_Surga Rumahku.chord.json",
+      "sourceImages": [
+        "186.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 187,
+      "songKey": "187",
+      "pdfFile": "187_Datang ke Tempat nan Indah.pdf",
+      "chordFile": "187_Datang ke Tempat nan Indah.chord.json",
+      "sourceImages": [
+        "187.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 188,
+      "songKey": "188",
+      "pdfFile": "188_Kembali ke surga Mulia.pdf",
+      "chordFile": "188_Kembali ke surga Mulia.chord.json",
+      "sourceImages": [
+        "188.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 189,
+      "songKey": "189",
+      "pdfFile": "189_Surga Indah.pdf",
+      "chordFile": "189_Surga Indah.chord.json",
+      "sourceImages": [
+        "189.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 190,
+      "songKey": "190",
+      "pdfFile": "190_Umat Surga.pdf",
+      "chordFile": "190_Umat Surga.chord.json",
+      "sourceImages": [
+        "190.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 191,
+      "songKey": "191",
+      "pdfFile": "191_Rumahku di Surga.pdf",
+      "chordFile": "191_Rumahku di Surga.chord.json",
+      "sourceImages": [
+        "191.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 192,
+      "songKey": "192",
+      "pdfFile": "192_Salib Pimpin Jalanku.pdf",
+      "chordFile": "192_Salib Pimpin Jalanku.chord.json",
+      "sourceImages": [
+        "192.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 193,
+      "songKey": "193",
+      "pdfFile": "193_Surga Yang Mulia.pdf",
+      "chordFile": "193_Surga Yang Mulia.chord.json",
+      "sourceImages": [
+        "193.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 194,
+      "songKey": "194",
+      "pdfFile": "194_Perhentian di Surga.pdf",
+      "chordFile": "194_Perhentian di Surga.chord.json",
+      "sourceImages": [
+        "194.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 195,
+      "songKey": "195",
+      "pdfFile": "195_Rindu Tempat Bahagia.pdf",
+      "chordFile": "195_Rindu Tempat Bahagia.chord.json",
+      "sourceImages": [
+        "195.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 196,
+      "songKey": "196",
+      "pdfFile": "196_Surga Indah.pdf",
+      "chordFile": "196_Surga Indah.chord.json",
+      "sourceImages": [
+        "196.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 197,
+      "songKey": "197",
+      "pdfFile": "197_Pulang ke Rumah.pdf",
+      "chordFile": "197_Pulang ke Rumah.chord.json",
+      "sourceImages": [
+        "197.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 198,
+      "songKey": "198",
+      "pdfFile": "198_Sandar Tuhan ke Surga.pdf",
+      "chordFile": "198_Sandar Tuhan ke Surga.chord.json",
+      "sourceImages": [
+        "198.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 199,
+      "songKey": "199",
+      "pdfFile": "199_Rumahku Yang di Surga.pdf",
+      "chordFile": "199_Rumahku Yang di Surga.chord.json",
+      "sourceImages": [
+        "199.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 200,
+      "songKey": "200",
+      "pdfFile": "200_Merindukan Rumah di Surga.pdf",
+      "chordFile": "200_Merindukan Rumah di Surga.chord.json",
+      "sourceImages": [
+        "200.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 201,
+      "songKey": "201",
+      "pdfFile": "201_Kemuliaan Kekal.pdf",
+      "chordFile": "201_Kemuliaan Kekal.chord.json",
+      "sourceImages": [
+        "201.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 202,
+      "songKey": "202",
+      "pdfFile": "202_Surga Tempat Bahagia.pdf",
+      "chordFile": "202_Surga Tempat Bahagia.chord.json",
+      "sourceImages": [
+        "202.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 203,
+      "songKey": "203",
+      "pdfFile": "203_Bunga Bakung.pdf",
+      "chordFile": "203_Bunga Bakung.chord.json",
+      "sourceImages": [
+        "203.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 204,
+      "songKey": "204",
+      "pdfFile": "204_Berpengharapan Karena Iman.pdf",
+      "chordFile": "204_Berpengharapan Karena Iman.chord.json",
+      "sourceImages": [
+        "204.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 205,
+      "songKey": "205",
+      "pdfFile": "205_Di Dalam Kristus Pasti Bangkit.pdf",
+      "chordFile": "205_Di Dalam Kristus Pasti Bangkit.chord.json",
+      "sourceImages": [
+        "205.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 206,
+      "songKey": "206",
+      "pdfFile": "206_Aku Pasti Berjumpa Dengan Tuhan.pdf",
+      "chordFile": "206_Aku Pasti Berjumpa Dengan Tuhan.chord.json",
+      "sourceImages": [
+        "206.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 207,
+      "songKey": "207",
+      "pdfFile": "207_Merindukan Kedatangan Tuhan.pdf",
+      "chordFile": "207_Merindukan Kedatangan Tuhan.chord.json",
+      "sourceImages": [
+        "207.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 208,
+      "songKey": "208",
+      "pdfFile": "208_Umat Kudus Diangkat.pdf",
+      "chordFile": "208_Umat Kudus Diangkat.chord.json",
+      "sourceImages": [
+        "208.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 209,
+      "songKey": "209",
+      "pdfFile": "209_Aku Akan Melihat Tuhan.pdf",
+      "chordFile": "209_Aku Akan Melihat Tuhan.chord.json",
+      "sourceImages": [
+        "209.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 210,
+      "songKey": "210",
+      "pdfFile": "210_Di Kala Hidup Ini Berakhir.pdf",
+      "chordFile": "210_Di Kala Hidup Ini Berakhir.chord.json",
+      "sourceImages": [
+        "210.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 211,
+      "songKey": "211",
+      "pdfFile": "211_Allah Mengawasi.pdf",
+      "chordFile": "211_Allah Mengawasi.chord.json",
+      "sourceImages": [
+        "211.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 212,
+      "songKey": "212",
+      "pdfFile": "212_Bersinar Bagi Tuhan.pdf",
+      "chordFile": "212_Bersinar Bagi Tuhan.chord.json",
+      "sourceImages": [
+        "212.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 213,
+      "songKey": "213",
+      "pdfFile": "213_Walau Sedikit Namun Berarti.pdf",
+      "chordFile": "213_Walau Sedikit Namun Berarti.chord.json",
+      "sourceImages": [
+        "213.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 214,
+      "songKey": "214",
+      "pdfFile": "214_Delapan Kebahagiaan.pdf",
+      "chordFile": "214_Delapan Kebahagiaan.chord.json",
+      "sourceImages": [
+        "214.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 215,
+      "songKey": "215",
+      "pdfFile": "215_Akhlak Gereja Benar.pdf",
+      "chordFile": "215_Akhlak Gereja Benar.chord.json",
+      "sourceImages": [
+        "215.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 216,
+      "songKey": "216",
+      "pdfFile": "216_Budi Pekerti Umat Suci.pdf",
+      "chordFile": "216_Budi Pekerti Umat Suci.chord.json",
+      "sourceImages": [
+        "216.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 217,
+      "songKey": "217",
+      "pdfFile": "217_Melakukan Firman Tuhan.pdf",
+      "chordFile": "217_Melakukan Firman Tuhan.chord.json",
+      "sourceImages": [
+        "217.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 218,
+      "songKey": "218",
+      "pdfFile": "218_Buah Roh Kudus.pdf",
+      "chordFile": "218_Buah Roh Kudus.chord.json",
+      "sourceImages": [
+        "218.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 219,
+      "songKey": "219",
+      "pdfFile": "219_Di mana Saja Bersinar.pdf",
+      "chordFile": "219_Di mana Saja Bersinar.chord.json",
+      "sourceImages": [
+        "219.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 220,
+      "songKey": "220",
+      "pdfFile": "220_Api Pengujian.pdf",
+      "chordFile": "220_Api Pengujian.chord.json",
+      "sourceImages": [
+        "220.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 221,
+      "songKey": "221",
+      "pdfFile": "221_Taklukkan Keinginan Daging.pdf",
+      "chordFile": "221_Taklukkan Keinginan Daging.chord.json",
+      "sourceImages": [
+        "221.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 222,
+      "songKey": "222",
+      "pdfFile": "222_Berbahagialah Yang Suci Hatinya.pdf",
+      "chordFile": "222_Berbahagialah Yang Suci Hatinya.chord.json",
+      "sourceImages": [
+        "222.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 225,
+      "songKey": "225",
+      "pdfFile": "225_Turut Roh Kudus.pdf",
+      "chordFile": "225_Turut Roh Kudus.chord.json",
+      "sourceImages": [
+        "225.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 226,
+      "songKey": "226",
+      "pdfFile": "226_Jadilah Kehendak Tuhan.pdf",
+      "chordFile": "226_Jadilah Kehendak Tuhan.chord.json",
+      "sourceImages": [
+        "226.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 227,
+      "songKey": "227",
+      "pdfFile": "227_Berbahagialah Yang Mendengar PerintahNya.pdf",
+      "chordFile": "227_Berbahagialah Yang Mendengar PerintahNya.chord.json",
+      "sourceImages": [
+        "227.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 228,
+      "songKey": "228",
+      "pdfFile": "228_Berbahagialah Yang Turut PerintahNya.pdf",
+      "chordFile": "228_Berbahagialah Yang Turut PerintahNya.chord.json",
+      "sourceImages": [
+        "228.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 229,
+      "songKey": "229",
+      "pdfFile": "229_Sepuluh Perintah Allah.pdf",
+      "chordFile": "229_Sepuluh Perintah Allah.chord.json",
+      "sourceImages": [
+        "229.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 230,
+      "songKey": "230",
+      "pdfFile": "230_Berbahagialah Orang yang Benar.pdf",
+      "chordFile": "230_Berbahagialah Orang yang Benar.chord.json",
+      "sourceImages": [
+        "230.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 231,
+      "songKey": "231",
+      "pdfFile": "231_Jadilah Seperti Kehendak-Mu.pdf",
+      "chordFile": "231_Jadilah Seperti Kehendak-Mu.chord.json",
+      "sourceImages": [
+        "231.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 232,
+      "songKey": "232",
+      "pdfFile": "232_Seperti Yesus.pdf",
+      "chordFile": "232_Seperti Yesus.chord.json",
+      "sourceImages": [
+        "232.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 233,
+      "songKey": "233",
+      "pdfFile": "233_Milik Yesus.pdf",
+      "chordFile": "233_Milik Yesus.chord.json",
+      "sourceImages": [
+        "233.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 234,
+      "songKey": "234",
+      "pdfFile": "234_Ingin Lebih Dekat Tuhan.pdf",
+      "chordFile": "234_Ingin Lebih Dekat Tuhan.chord.json",
+      "sourceImages": [
+        "234.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 235,
+      "songKey": "235",
+      "pdfFile": "235_Tuhan dan Aku Satu Tubuh.pdf",
+      "chordFile": "235_Tuhan dan Aku Satu Tubuh.chord.json",
+      "sourceImages": [
+        "235.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 236,
+      "songKey": "236",
+      "pdfFile": "236_Aku Milik Yesus.pdf",
+      "chordFile": "236_Aku Milik Yesus.chord.json",
+      "sourceImages": [
+        "236.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 237,
+      "songKey": "237",
+      "pdfFile": "237_Sejak Yesus di Hatiku.pdf",
+      "chordFile": "237_Sejak Yesus di Hatiku.chord.json",
+      "sourceImages": [
+        "237.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 238,
+      "songKey": "238",
+      "pdfFile": "238_Yesus, Tinggallah di Hatiku.pdf",
+      "chordFile": "238_Yesus, Tinggallah di Hatiku.chord.json",
+      "sourceImages": [
+        "238.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 239,
+      "songKey": "239",
+      "pdfFile": "239_Tuhan, Tinggallah Bersamaku.pdf",
+      "chordFile": "239_Tuhan, Tinggallah Bersamaku.chord.json",
+      "sourceImages": [
+        "239.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 240,
+      "songKey": "240",
+      "pdfFile": "240_Girang Bersama Tuhan.pdf",
+      "chordFile": "240_Girang Bersama Tuhan.chord.json",
+      "sourceImages": [
+        "240.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 241,
+      "songKey": "241",
+      "pdfFile": "241_Raja Jiwaku.pdf",
+      "chordFile": "241_Raja Jiwaku.chord.json",
+      "sourceImages": [
+        "241.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 242,
+      "songKey": "242",
+      "pdfFile": "242_Tuhan Menanti di Luar Pintu.pdf",
+      "chordFile": "242_Tuhan Menanti di Luar Pintu.chord.json",
+      "sourceImages": [
+        "242.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 244,
+      "songKey": "244",
+      "pdfFile": "244_Tuhan, Aku Mau Seperti-Mu.pdf",
+      "chordFile": "244_Tuhan, Aku Mau Seperti-Mu.chord.json",
+      "sourceImages": [
+        "244.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 245,
+      "songKey": "245",
+      "pdfFile": "245_Tinggal Bersama Tuhan.pdf",
+      "chordFile": "245_Tinggal Bersama Tuhan.chord.json",
+      "sourceImages": [
+        "245.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 246,
+      "songKey": "246",
+      "pdfFile": "246_Memohon Roh Kudus.pdf",
+      "chordFile": "246_Memohon Roh Kudus.chord.json",
+      "sourceImages": [
+        "246.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 247,
+      "songKey": "247",
+      "pdfFile": "247_Kuasa Roh Kudus.pdf",
+      "chordFile": "247_Kuasa Roh Kudus.chord.json",
+      "sourceImages": [
+        "247.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 248,
+      "songKey": "248",
+      "pdfFile": "248_Mohon Roh Kudus.pdf",
+      "chordFile": "248_Mohon Roh Kudus.chord.json",
+      "sourceImages": [
+        "248.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 250,
+      "songKey": "250",
+      "pdfFile": "250_Mendapat Kekuatan Baru.pdf",
+      "chordFile": "250_Mendapat Kekuatan Baru.chord.json",
+      "sourceImages": [
+        "250.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 251,
+      "songKey": "251",
+      "pdfFile": "251_Baptisan Roh Kudus.pdf",
+      "chordFile": "251_Baptisan Roh Kudus.chord.json",
+      "sourceImages": [
+        "251.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 252,
+      "songKey": "252",
+      "pdfFile": "252_Rindu Kepenuhan Roh Kudus.pdf",
+      "chordFile": "252_Rindu Kepenuhan Roh Kudus.chord.json",
+      "sourceImages": [
+        "252.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 253,
+      "songKey": "253",
+      "pdfFile": "253_Roh Kudus Telah Datang.pdf",
+      "chordFile": "253_Roh Kudus Telah Datang.chord.json",
+      "sourceImages": [
+        "253.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 254,
+      "songKey": "254",
+      "pdfFile": "254_Berbahasa Roh Sangat Penting.pdf",
+      "chordFile": "254_Berbahasa Roh Sangat Penting.chord.json",
+      "sourceImages": [
+        "254.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 255,
+      "songKey": "255",
+      "pdfFile": "255_Kebaktian Kebangunan Rohani.pdf",
+      "chordFile": "255_Kebaktian Kebangunan Rohani.chord.json",
+      "sourceImages": [
+        "255.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 256,
+      "songKey": "256",
+      "pdfFile": "256_Hujan Yang Membawa Berkat.pdf",
+      "chordFile": "256_Hujan Yang Membawa Berkat.chord.json",
+      "sourceImages": [
+        "256.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 257,
+      "songKey": "257",
+      "pdfFile": "257_Berjaga-jaga dan Berdoa.pdf",
+      "chordFile": "257_Berjaga-jaga dan Berdoa.chord.json",
+      "sourceImages": [
+        "257.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 258,
+      "songKey": "258",
+      "pdfFile": "258_Berdoa dan Berpuasa.pdf",
+      "chordFile": "258_Berdoa dan Berpuasa.chord.json",
+      "sourceImages": [
+        "258.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 259,
+      "songKey": "259",
+      "pdfFile": "259_Tekun Berdoa.pdf",
+      "chordFile": "259_Tekun Berdoa.chord.json",
+      "sourceImages": [
+        "259.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 260,
+      "songKey": "260",
+      "pdfFile": "260_Pujian di Pagi Hari.pdf",
+      "chordFile": "260_Pujian di Pagi Hari.chord.json",
+      "sourceImages": [
+        "260.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 261,
+      "songKey": "261",
+      "pdfFile": "261_Doa di Malam Hari.pdf",
+      "chordFile": "261_Doa di Malam Hari.chord.json",
+      "sourceImages": [
+        "261.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 263,
+      "songKey": "263",
+      "pdfFile": "263_Yesus Sahabat Yang Baik.pdf",
+      "chordFile": "263_Yesus Sahabat Yang Baik.chord.json",
+      "sourceImages": [
+        "263.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 264,
+      "songKey": "264",
+      "pdfFile": "264_Tuhan, Dengarlah Doaku.pdf",
+      "chordFile": "264_Tuhan, Dengarlah Doaku.chord.json",
+      "sourceImages": [
+        "264.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 265,
+      "songKey": "265",
+      "pdfFile": "265_Lekas Beritahu Yesus.pdf",
+      "chordFile": "265_Lekas Beritahu Yesus.chord.json",
+      "sourceImages": [
+        "265.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 266,
+      "songKey": "266",
+      "pdfFile": "266_Memberitakan Injil.pdf",
+      "chordFile": "266_Memberitakan Injil.chord.json",
+      "sourceImages": [
+        "266.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 267,
+      "songKey": "267",
+      "pdfFile": "267_Menuruti Pengutusan Tuhan.pdf",
+      "chordFile": "267_Menuruti Pengutusan Tuhan.chord.json",
+      "sourceImages": [
+        "267.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 268,
+      "songKey": "268",
+      "pdfFile": "268_Turut Panggilan Tuhan.pdf",
+      "chordFile": "268_Turut Panggilan Tuhan.chord.json",
+      "sourceImages": [
+        "268.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 269,
+      "songKey": "269",
+      "pdfFile": "269_Dengar Tuhan Memanggilku.pdf",
+      "chordFile": "269_Dengar Tuhan Memanggilku.chord.json",
+      "sourceImages": [
+        "269.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 270,
+      "songKey": "270",
+      "pdfFile": "270_Ke Tempat Nan Jauh.pdf",
+      "chordFile": "270_Ke Tempat Nan Jauh.chord.json",
+      "sourceImages": [
+        "270.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 271,
+      "songKey": "271",
+      "pdfFile": "271_Jangan Takut.pdf",
+      "chordFile": "271_Jangan Takut.chord.json",
+      "sourceImages": [
+        "271.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 272,
+      "songKey": "272",
+      "pdfFile": "272_Roh Penghibur Datang.pdf",
+      "chordFile": "272_Roh Penghibur Datang.chord.json",
+      "sourceImages": [
+        "272.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 273,
+      "songKey": "273",
+      "pdfFile": "273_Kabar Gembira.pdf",
+      "chordFile": "273_Kabar Gembira.chord.json",
+      "sourceImages": [
+        "273.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 274,
+      "songKey": "274",
+      "pdfFile": "274_Hujan Akhir Turun.pdf",
+      "chordFile": "274_Hujan Akhir Turun.chord.json",
+      "sourceImages": [
+        "274.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 275,
+      "songKey": "275",
+      "pdfFile": "275_Bawa Berkas ke Rumah.pdf",
+      "chordFile": "275_Bawa Berkas ke Rumah.chord.json",
+      "sourceImages": [
+        "275.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 276,
+      "songKey": "276",
+      "pdfFile": "276_Dengarlah InjilNya.pdf",
+      "chordFile": "276_Dengarlah InjilNya.chord.json",
+      "sourceImages": [
+        "276.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 277,
+      "songKey": "277",
+      "pdfFile": "277_Girang Memberitakan Injil.pdf",
+      "chordFile": "277_Girang Memberitakan Injil.chord.json",
+      "sourceImages": [
+        "277.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 278,
+      "songKey": "278",
+      "pdfFile": "278_Tuhan Tolong.pdf",
+      "chordFile": "278_Tuhan Tolong.chord.json",
+      "sourceImages": [
+        "278.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 279,
+      "songKey": "279",
+      "pdfFile": "279_Pintu Anugerah Terbuka.pdf",
+      "chordFile": "279_Pintu Anugerah Terbuka.chord.json",
+      "sourceImages": [
+        "279.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 280,
+      "songKey": "280",
+      "pdfFile": "280_Beritakan Injil.pdf",
+      "chordFile": "280_Beritakan Injil.chord.json",
+      "sourceImages": [
+        "280.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 281,
+      "songKey": "281",
+      "pdfFile": "281_Keluhan Jiwa.pdf",
+      "chordFile": "281_Keluhan Jiwa.chord.json",
+      "sourceImages": [
+        "281.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 282,
+      "songKey": "282",
+      "pdfFile": "282_Giatlah Bekerja.pdf",
+      "chordFile": "282_Giatlah Bekerja.chord.json",
+      "sourceImages": [
+        "282.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 283,
+      "songKey": "283",
+      "pdfFile": "283_Menuai Untuk Tuhan.pdf",
+      "chordFile": "283_Menuai Untuk Tuhan.chord.json",
+      "sourceImages": [
+        "283.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 284,
+      "songKey": "284",
+      "pdfFile": "284_Bersinarkan Terang Injil.pdf",
+      "chordFile": "284_Bersinarkan Terang Injil.chord.json",
+      "sourceImages": [
+        "284.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 285,
+      "songKey": "285",
+      "pdfFile": "285_Bertolak Ke Lautan Dalam.pdf",
+      "chordFile": "285_Bertolak Ke Lautan Dalam.chord.json",
+      "sourceImages": [
+        "285.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 286,
+      "songKey": "286",
+      "pdfFile": "286_Beritakan Anugerah Keselamatan.pdf",
+      "chordFile": "286_Beritakan Anugerah Keselamatan.chord.json",
+      "sourceImages": [
+        "286.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 287,
+      "songKey": "287",
+      "pdfFile": "287_Bekerja Untuk Yesus.pdf",
+      "chordFile": "287_Bekerja Untuk Yesus.chord.json",
+      "sourceImages": [
+        "287.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 288,
+      "songKey": "288",
+      "pdfFile": "288_Lekas Bekerja.pdf",
+      "chordFile": "288_Lekas Bekerja.chord.json",
+      "sourceImages": [
+        "288.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 289,
+      "songKey": "289",
+      "pdfFile": "289_Mengutus Pekerja Kudus.pdf",
+      "chordFile": "289_Mengutus Pekerja Kudus.chord.json",
+      "sourceImages": [
+        "289.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 290,
+      "songKey": "290",
+      "pdfFile": "290_Upacara Pentahbisan.pdf",
+      "chordFile": "290_Upacara Pentahbisan.chord.json",
+      "sourceImages": [
+        "290.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 291,
+      "songKey": "291",
+      "pdfFile": "291_Sumber Penghapus Dosa.pdf",
+      "chordFile": "291_Sumber Penghapus Dosa.chord.json",
+      "sourceImages": [
+        "291.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 292,
+      "songKey": "292",
+      "pdfFile": "292_Anugerah Penebusan Dosa.pdf",
+      "chordFile": "292_Anugerah Penebusan Dosa.chord.json",
+      "sourceImages": [
+        "292.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 293,
+      "songKey": "293",
+      "pdfFile": "293_Dosa Dibersihkan.pdf",
+      "chordFile": "293_Dosa Dibersihkan.chord.json",
+      "sourceImages": [
+        "293.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 294,
+      "songKey": "294",
+      "pdfFile": "294_Aku Menghampiri Mu.pdf",
+      "chordFile": "294_Aku Menghampiri Mu.chord.json",
+      "sourceImages": [
+        "294.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 295,
+      "songKey": "295",
+      "pdfFile": "295_Sakramen Pembasuhan Kaki.pdf",
+      "chordFile": "295_Sakramen Pembasuhan Kaki.chord.json",
+      "sourceImages": [
+        "295.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 296,
+      "songKey": "296",
+      "pdfFile": "296_Memperingati Kematian Tuhan.pdf",
+      "chordFile": "296_Memperingati Kematian Tuhan.chord.json",
+      "sourceImages": [
+        "296.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 297,
+      "songKey": "297",
+      "pdfFile": "297_Apakah Tekadku Untuk Tuhan.pdf",
+      "chordFile": "297_Apakah Tekadku Untuk Tuhan.chord.json",
+      "sourceImages": [
+        "297.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 298,
+      "songKey": "298",
+      "pdfFile": "298_Upacara Pernikahan Umat Suci.pdf",
+      "chordFile": "298_Upacara Pernikahan Umat Suci.chord.json",
+      "sourceImages": [
+        "298.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 299,
+      "songKey": "299",
+      "pdfFile": "299_Pemberkatan Nikah.pdf",
+      "chordFile": "299_Pemberkatan Nikah.chord.json",
+      "sourceImages": [
+        "299.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 300,
+      "songKey": "300",
+      "pdfFile": "300_Ucapan Selamat Berbahagia.pdf",
+      "chordFile": "300_Ucapan Selamat Berbahagia.chord.json",
+      "sourceImages": [
+        "300.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 301,
+      "songKey": "301",
+      "pdfFile": "301_Hidup Manusia Tidak Lama.pdf",
+      "chordFile": "301_Hidup Manusia Tidak Lama.chord.json",
+      "sourceImages": [
+        "301.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 302,
+      "songKey": "302",
+      "pdfFile": "302_Pemakaman.pdf",
+      "chordFile": "302_Pemakaman.chord.json",
+      "sourceImages": [
+        "302.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 303,
+      "songKey": "303",
+      "pdfFile": "303_Surga Telah Datang.pdf",
+      "chordFile": "303_Surga Telah Datang.chord.json",
+      "sourceImages": [
+        "303.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 304,
+      "songKey": "304",
+      "pdfFile": "304_Anak Hilang Telah Kembali.pdf",
+      "chordFile": "304_Anak Hilang Telah Kembali.chord.json",
+      "sourceImages": [
+        "304.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 305,
+      "songKey": "305",
+      "pdfFile": "305_Mawas Diri.pdf",
+      "chordFile": "305_Mawas Diri.chord.json",
+      "sourceImages": [
+        "305.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 306,
+      "songKey": "306",
+      "pdfFile": "306_Bertobat dan Lahir Kembali.pdf",
+      "chordFile": "306_Bertobat dan Lahir Kembali.chord.json",
+      "sourceImages": [
+        "306.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 307,
+      "songKey": "307",
+      "pdfFile": "307_Pulanglah !.pdf",
+      "chordFile": "307_Pulanglah !.chord.json",
+      "sourceImages": [
+        "307.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 308,
+      "songKey": "308",
+      "pdfFile": "308_Tuhan Teman Orang Berdosa.pdf",
+      "chordFile": "308_Tuhan Teman Orang Berdosa.chord.json",
+      "sourceImages": [
+        "308.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 309,
+      "songKey": "309",
+      "pdfFile": "309_Pengharapan di Tahun Baru.pdf",
+      "chordFile": "309_Pengharapan di Tahun Baru.chord.json",
+      "sourceImages": [
+        "309.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 310,
+      "songKey": "310",
+      "pdfFile": "310_Ucapan Syukur di Akhir Tahun.pdf",
+      "chordFile": "310_Ucapan Syukur di Akhir Tahun.chord.json",
+      "sourceImages": [
+        "310.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 311,
+      "songKey": "311",
+      "pdfFile": "311_Segala Ciptaan Tuhan.pdf",
+      "chordFile": "311_Segala Ciptaan Tuhan.chord.json",
+      "sourceImages": [
+        "311.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 312,
+      "songKey": "312",
+      "pdfFile": "312_Mari Berkumpul MenyembahNya.pdf",
+      "chordFile": "312_Mari Berkumpul MenyembahNya.chord.json",
+      "sourceImages": [
+        "312.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 313,
+      "songKey": "313",
+      "pdfFile": "313_Besar KesetiaanMu.pdf",
+      "chordFile": "313_Besar KesetiaanMu.chord.json",
+      "sourceImages": [
+        "313.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 314,
+      "songKey": "314",
+      "pdfFile": "314_Sungguh Besar Allahku.pdf",
+      "chordFile": "314_Sungguh Besar Allahku.chord.json",
+      "sourceImages": [
+        "314.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 315,
+      "songKey": "315",
+      "pdfFile": "315_Allah yang Esa, Kekal dan tak Nampak.pdf",
+      "chordFile": "315_Allah yang Esa, Kekal dan tak Nampak.chord.json",
+      "sourceImages": [
+        "315.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 316,
+      "songKey": "316",
+      "pdfFile": "316_Sembahlah Sang Raja.pdf",
+      "chordFile": "316_Sembahlah Sang Raja.chord.json",
+      "sourceImages": [
+        "316.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 317,
+      "songKey": "317",
+      "pdfFile": "317_Tuhan Telah Datang.pdf",
+      "chordFile": "317_Tuhan Telah Datang.chord.json",
+      "sourceImages": [
+        "317.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 318,
+      "songKey": "318",
+      "pdfFile": "318_Pelabuhan Jiwa.pdf",
+      "chordFile": "318_Pelabuhan Jiwa.chord.json",
+      "sourceImages": [
+        "318.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 319,
+      "songKey": "319",
+      "pdfFile": "319_Malaikat dari Tempat Mulia.pdf",
+      "chordFile": "319_Malaikat dari Tempat Mulia.chord.json",
+      "sourceImages": [
+        "319.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 320,
+      "songKey": "320",
+      "pdfFile": "320_Kemuliaan Bagi Allah.pdf",
+      "chordFile": "320_Kemuliaan Bagi Allah.chord.json",
+      "sourceImages": [
+        "320.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 321,
+      "songKey": "321",
+      "pdfFile": "321_Marilah Memuji.pdf",
+      "chordFile": "321_Marilah Memuji.chord.json",
+      "sourceImages": [
+        "321.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 322,
+      "songKey": "322",
+      "pdfFile": "322_Kemuliaan Untuk Tuhan.pdf",
+      "chordFile": "322_Kemuliaan Untuk Tuhan.chord.json",
+      "sourceImages": [
+        "322.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 323,
+      "songKey": "323",
+      "pdfFile": "323_Muliakanlah Yesus.pdf",
+      "chordFile": "323_Muliakanlah Yesus.chord.json",
+      "sourceImages": [
+        "323.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 324,
+      "songKey": "324",
+      "pdfFile": "324_Mulialah NamaMu.pdf",
+      "chordFile": "324_Mulialah NamaMu.chord.json",
+      "sourceImages": [
+        "324.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 325,
+      "songKey": "325",
+      "pdfFile": "325_Yesus Amatlah Berharga.pdf",
+      "chordFile": "325_Yesus Amatlah Berharga.chord.json",
+      "sourceImages": [
+        "325.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 326,
+      "songKey": "326",
+      "pdfFile": "326_Dia Membuat Ku Selalu Bernyanyi.pdf",
+      "chordFile": "326_Dia Membuat Ku Selalu Bernyanyi.chord.json",
+      "sourceImages": [
+        "326.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 327,
+      "songKey": "327",
+      "pdfFile": "327_Lebih Mengenal Yesus.pdf",
+      "chordFile": "327_Lebih Mengenal Yesus.chord.json",
+      "sourceImages": [
+        "327.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 328,
+      "songKey": "328",
+      "pdfFile": "328_Puji Tuhan Yang Maha Kuasa.pdf",
+      "chordFile": "328_Puji Tuhan Yang Maha Kuasa.chord.json",
+      "sourceImages": [
+        "328.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 329,
+      "songKey": "329",
+      "pdfFile": "329_Allah Abraham, Ishak dan Yakub.pdf",
+      "chordFile": "329_Allah Abraham, Ishak dan Yakub.chord.json",
+      "sourceImages": [
+        "329.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 331,
+      "songKey": "331",
+      "pdfFile": "331_Kasih Setia dan Rahmat.pdf",
+      "chordFile": "331_Kasih Setia dan Rahmat.chord.json",
+      "sourceImages": [
+        "331.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 333,
+      "songKey": "333",
+      "pdfFile": "333_Tiap Minggu DijagaNya.pdf",
+      "chordFile": "333_Tiap Minggu DijagaNya.chord.json",
+      "sourceImages": [
+        "333.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 334,
+      "songKey": "334",
+      "pdfFile": "334_Yesus Mawar Saron.pdf",
+      "chordFile": "334_Yesus Mawar Saron.chord.json",
+      "sourceImages": [
+        "334.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 335,
+      "songKey": "335",
+      "pdfFile": "335_Yesus Datang.pdf",
+      "chordFile": "335_Yesus Datang.chord.json",
+      "sourceImages": [
+        "335.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 336,
+      "songKey": "336",
+      "pdfFile": "336_Apakah Yesus Memperhatikan _.pdf",
+      "chordFile": "336_Apakah Yesus Memperhatikan _.chord.json",
+      "sourceImages": [
+        "336.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 337,
+      "songKey": "337",
+      "pdfFile": "337_Sebab Dia Hidup.pdf",
+      "chordFile": "337_Sebab Dia Hidup.chord.json",
+      "sourceImages": [
+        "337.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 338,
+      "songKey": "338",
+      "pdfFile": "338_Dia Mengangkatku.pdf",
+      "chordFile": "338_Dia Mengangkatku.chord.json",
+      "sourceImages": [
+        "338.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 339,
+      "songKey": "339",
+      "pdfFile": "339_Yesus Segalanya Bagiku.pdf",
+      "chordFile": "339_Yesus Segalanya Bagiku.chord.json",
+      "sourceImages": [
+        "339.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 340,
+      "songKey": "340",
+      "pdfFile": "340_Juruselamat Kita Yang Agung.pdf",
+      "chordFile": "340_Juruselamat Kita Yang Agung.chord.json",
+      "sourceImages": [
+        "340.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 341,
+      "songKey": "341",
+      "pdfFile": "341_Undanglah Yesus ke Hatimu.pdf",
+      "chordFile": "341_Undanglah Yesus ke Hatimu.chord.json",
+      "sourceImages": [
+        "341.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 342,
+      "songKey": "342",
+      "pdfFile": "342_Pelita Kecil, Berkobarlah!.pdf",
+      "chordFile": "342_Pelita Kecil, Berkobarlah!.chord.json",
+      "sourceImages": [
+        "342.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 343,
+      "songKey": "343",
+      "pdfFile": "343_KasihNya Mengangkatku.pdf",
+      "chordFile": "343_KasihNya Mengangkatku.chord.json",
+      "sourceImages": [
+        "343 part 1.jpg",
+        "343 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 344,
+      "songKey": "344",
+      "pdfFile": "344_Betapa Dia Mengasihi Kau dan Aku.pdf",
+      "chordFile": "344_Betapa Dia Mengasihi Kau dan Aku.chord.json",
+      "sourceImages": [
+        "344.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 345,
+      "songKey": "345",
+      "pdfFile": "345_Sungguh Dalam Kasih Yesus.pdf",
+      "chordFile": "345_Sungguh Dalam Kasih Yesus.chord.json",
+      "sourceImages": [
+        "345.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 346,
+      "songKey": "346",
+      "pdfFile": "346_Lemah Lembut PanggilanNya.pdf",
+      "chordFile": "346_Lemah Lembut PanggilanNya.chord.json",
+      "sourceImages": [
+        "346.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 347,
+      "songKey": "347",
+      "pdfFile": "347_Batu Karang yang Kokoh.pdf",
+      "chordFile": "347_Batu Karang yang Kokoh.chord.json",
+      "sourceImages": [
+        "347.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 348,
+      "songKey": "348",
+      "pdfFile": "348_Anugerah Yesus yang Ajaib.pdf",
+      "chordFile": "348_Anugerah Yesus yang Ajaib.chord.json",
+      "sourceImages": [
+        "348 part 1.jpg",
+        "348 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 349,
+      "songKey": "349",
+      "pdfFile": "349_Ajaib, Ajaiblah Yesus.pdf",
+      "chordFile": "349_Ajaib, Ajaiblah Yesus.chord.json",
+      "sourceImages": [
+        "349.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 350,
+      "songKey": "350",
+      "pdfFile": "350_Hadirkah Kau_.pdf",
+      "chordFile": "350_Hadirkah Kau_.chord.json",
+      "sourceImages": [
+        "350.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 351,
+      "songKey": "351",
+      "pdfFile": "351_Dia Hidup.pdf",
+      "chordFile": "351_Dia Hidup.chord.json",
+      "sourceImages": [
+        "351 part 1.jpg",
+        "351 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 352,
+      "songKey": "352",
+      "pdfFile": "352_Dia Menaungi Jiwaku.pdf",
+      "chordFile": "352_Dia Menaungi Jiwaku.chord.json",
+      "sourceImages": [
+        "352 part 1.jpg",
+        "352 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 353,
+      "songKey": "353",
+      "pdfFile": "353_Di bawah Salib Yesus.pdf",
+      "chordFile": "353_Di bawah Salib Yesus.chord.json",
+      "sourceImages": [
+        "353.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 354,
+      "songKey": "354",
+      "pdfFile": "354_Kemenangan Dalam Yesus.pdf",
+      "chordFile": "354_Kemenangan Dalam Yesus.chord.json",
+      "sourceImages": [
+        "354 part 1.jpg",
+        "354 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 355,
+      "songKey": "355",
+      "pdfFile": "355_Kekal di Hatiku.pdf",
+      "chordFile": "355_Kekal di Hatiku.chord.json",
+      "sourceImages": [
+        "355 part 1.jpg",
+        "355 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 356,
+      "songKey": "356",
+      "pdfFile": "356_Imanlah Kemenangan.pdf",
+      "chordFile": "356_Imanlah Kemenangan.chord.json",
+      "sourceImages": [
+        "356 part 1.jpg",
+        "356 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 357,
+      "songKey": "357",
+      "pdfFile": "357_Tuhan adalah Gembalaku.pdf",
+      "chordFile": "357_Tuhan adalah Gembalaku.chord.json",
+      "sourceImages": [
+        "357.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 359,
+      "songKey": "359",
+      "pdfFile": "359_Kita Berjalan ke Sion.pdf",
+      "chordFile": "359_Kita Berjalan ke Sion.chord.json",
+      "sourceImages": [
+        "359 part 1.jpg",
+        "359 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 360,
+      "songKey": "360",
+      "pdfFile": "360_Adakah Tempat Bagi Yesus_.pdf",
+      "chordFile": "360_Adakah Tempat Bagi Yesus_.chord.json",
+      "sourceImages": [
+        "360.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 361,
+      "songKey": "361",
+      "pdfFile": "361_Haruskah Yesus Memikul Salib Sendiri_.pdf",
+      "chordFile": "361_Haruskah Yesus Memikul Salib Sendiri_.chord.json",
+      "sourceImages": [
+        "361.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 362,
+      "songKey": "362",
+      "pdfFile": "362_Tuhan Roti Hidup.pdf",
+      "chordFile": "362_Tuhan Roti Hidup.chord.json",
+      "sourceImages": [
+        "362.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 363,
+      "songKey": "363",
+      "pdfFile": "363_Berpegang Pada JanjiNya.pdf",
+      "chordFile": "363_Berpegang Pada JanjiNya.chord.json",
+      "sourceImages": [
+        "363.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 364,
+      "songKey": "364",
+      "pdfFile": "364_Hatiku Simpan FirmanMu.pdf",
+      "chordFile": "364_Hatiku Simpan FirmanMu.chord.json",
+      "sourceImages": [
+        "364.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 365,
+      "songKey": "365",
+      "pdfFile": "365_Kepala Tuhan Kini Terluka.pdf",
+      "chordFile": "365_Kepala Tuhan Kini Terluka.chord.json",
+      "sourceImages": [
+        "365.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 366,
+      "songKey": "366",
+      "pdfFile": "366_Berimanlah Kepada Tuhan.pdf",
+      "chordFile": "366_Berimanlah Kepada Tuhan.chord.json",
+      "sourceImages": [
+        "366.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 367,
+      "songKey": "367",
+      "pdfFile": "367_Burung Pipit Dia Jaga.pdf",
+      "chordFile": "367_Burung Pipit Dia Jaga.chord.json",
+      "sourceImages": [
+        "367.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 369,
+      "songKey": "369",
+      "pdfFile": "369_Perlu Yesus.pdf",
+      "chordFile": "369_Perlu Yesus.chord.json",
+      "sourceImages": [
+        "369.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 370,
+      "songKey": "370",
+      "pdfFile": "370_Bila Tuhan Beserta Kita.pdf",
+      "chordFile": "370_Bila Tuhan Beserta Kita.chord.json",
+      "sourceImages": [
+        "370.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 371,
+      "songKey": "371",
+      "pdfFile": "371_Dalam Pencobaan.pdf",
+      "chordFile": "371_Dalam Pencobaan.chord.json",
+      "sourceImages": [
+        "371.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 372,
+      "songKey": "372",
+      "pdfFile": "372_Saat Ini.pdf",
+      "chordFile": "372_Saat Ini.chord.json",
+      "sourceImages": [
+        "372.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 374,
+      "songKey": "374",
+      "pdfFile": "374_Raja kekal, Pimpinlah.pdf",
+      "chordFile": "374_Raja kekal, Pimpinlah.chord.json",
+      "sourceImages": [
+        "374.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 375,
+      "songKey": "375",
+      "pdfFile": "375_Bekas Paku di TanganNya.pdf",
+      "chordFile": "375_Bekas Paku di TanganNya.chord.json",
+      "sourceImages": [
+        "375.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 376,
+      "songKey": "376",
+      "pdfFile": "376_Batu Karang.pdf",
+      "chordFile": "376_Batu Karang.chord.json",
+      "sourceImages": [
+        "376.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 378,
+      "songKey": "378",
+      "pdfFile": "378_Percaya dan Taat.pdf",
+      "chordFile": "378_Percaya dan Taat.chord.json",
+      "sourceImages": [
+        "378.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 379,
+      "songKey": "379",
+      "pdfFile": "379_Pandanglah Pada Yesus.pdf",
+      "chordFile": "379_Pandanglah Pada Yesus.chord.json",
+      "sourceImages": [
+        "379.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 380,
+      "songKey": "380",
+      "pdfFile": "380_Yesus Segalanya Bagiku.pdf",
+      "chordFile": "380_Yesus Segalanya Bagiku.chord.json",
+      "sourceImages": [
+        "380.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 381,
+      "songKey": "381",
+      "pdfFile": "381_Betapa Aku Mengasihi Yesus.pdf",
+      "chordFile": "381_Betapa Aku Mengasihi Yesus.chord.json",
+      "sourceImages": [
+        "381.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 382,
+      "songKey": "382",
+      "pdfFile": "382_Di Hatiku Ada Melodi Kasih.pdf",
+      "chordFile": "382_Di Hatiku Ada Melodi Kasih.chord.json",
+      "sourceImages": [
+        "382.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 383,
+      "songKey": "383",
+      "pdfFile": "383_Suatu Hari Nanti.pdf",
+      "chordFile": "383_Suatu Hari Nanti.chord.json",
+      "sourceImages": [
+        "383.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 384,
+      "songKey": "384",
+      "pdfFile": "384_Cepat Atau Lambat.pdf",
+      "chordFile": "384_Cepat Atau Lambat.chord.json",
+      "sourceImages": [
+        "384.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 385,
+      "songKey": "385",
+      "pdfFile": "385_Di Tepi Yordan.pdf",
+      "chordFile": "385_Di Tepi Yordan.chord.json",
+      "sourceImages": [
+        "385.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 386,
+      "songKey": "386",
+      "pdfFile": "386_Aku Menemukan Sobat Setia.pdf",
+      "chordFile": "386_Aku Menemukan Sobat Setia.chord.json",
+      "sourceImages": [
+        "386.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 387,
+      "songKey": "387",
+      "pdfFile": "387_Tuhan, Bersabdalah Padaku.pdf",
+      "chordFile": "387_Tuhan, Bersabdalah Padaku.chord.json",
+      "sourceImages": [
+        "387.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 388,
+      "songKey": "388",
+      "pdfFile": "388_Dekat Dengan Tuhanku.pdf",
+      "chordFile": "388_Dekat Dengan Tuhanku.chord.json",
+      "sourceImages": [
+        "388.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 389,
+      "songKey": "389",
+      "pdfFile": "389_Lebih Dekat Kepada Tuhan.pdf",
+      "chordFile": "389_Lebih Dekat Kepada Tuhan.chord.json",
+      "sourceImages": [
+        "389.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 390,
+      "songKey": "390",
+      "pdfFile": "390_Lebih Dekat PadaMu.pdf",
+      "chordFile": "390_Lebih Dekat PadaMu.chord.json",
+      "sourceImages": [
+        "390.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 391,
+      "songKey": "391",
+      "pdfFile": "391_Ku Tak Akan Pernah Sendiri.pdf",
+      "chordFile": "391_Ku Tak Akan Pernah Sendiri.chord.json",
+      "sourceImages": [
+        "391.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 392,
+      "songKey": "392",
+      "pdfFile": "392_Aku Akan Pergi ke Mana Engkau Mengutusku.pdf",
+      "chordFile": "392_Aku Akan Pergi ke Mana Engkau Mengutusku.chord.json",
+      "sourceImages": [
+        "392.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 393,
+      "songKey": "393",
+      "pdfFile": "393_Terima Kasih, Tuhan.pdf",
+      "chordFile": "393_Terima Kasih, Tuhan.chord.json",
+      "sourceImages": [
+        "393.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 394,
+      "songKey": "394",
+      "pdfFile": "394_Terima Kasih Pada Tuhan.pdf",
+      "chordFile": "394_Terima Kasih Pada Tuhan.chord.json",
+      "sourceImages": [
+        "394.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 395,
+      "songKey": "395",
+      "pdfFile": "395_Di Tempat yang Lebih Tinggi.pdf",
+      "chordFile": "395_Di Tempat yang Lebih Tinggi.chord.json",
+      "sourceImages": [
+        "395.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 396,
+      "songKey": "396",
+      "pdfFile": "396_Aku Akan Setia.pdf",
+      "chordFile": "396_Aku Akan Setia.chord.json",
+      "sourceImages": [
+        "396.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 397,
+      "songKey": "397",
+      "pdfFile": "397_Nyatakan Yesus Dalammu.pdf",
+      "chordFile": "397_Nyatakan Yesus Dalammu.chord.json",
+      "sourceImages": [
+        "397.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 398,
+      "songKey": "398",
+      "pdfFile": "398_Hidup Untuk Yesus.pdf",
+      "chordFile": "398_Hidup Untuk Yesus.chord.json",
+      "sourceImages": [
+        "398.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 399,
+      "songKey": "399",
+      "pdfFile": "399_Tuhan, Ku Mau Menjadi Kristen.pdf",
+      "chordFile": "399_Tuhan, Ku Mau Menjadi Kristen.chord.json",
+      "sourceImages": [
+        "399.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 400,
+      "songKey": "400",
+      "pdfFile": "400_Aku Mau Seperti Yesus.pdf",
+      "chordFile": "400_Aku Mau Seperti Yesus.chord.json",
+      "sourceImages": [
+        "400.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 401,
+      "songKey": "401",
+      "pdfFile": "401_Kuduskan Dirimu.pdf",
+      "chordFile": "401_Kuduskan Dirimu.chord.json",
+      "sourceImages": [
+        "401.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 402,
+      "songKey": "402",
+      "pdfFile": "402_Jalan Tuhan.pdf",
+      "chordFile": "402_Jalan Tuhan.chord.json",
+      "sourceImages": [
+        "402.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 403,
+      "songKey": "403",
+      "pdfFile": "403_Tuhan, Jadilah KehendakMu.pdf",
+      "chordFile": "403_Tuhan, Jadilah KehendakMu.chord.json",
+      "sourceImages": [
+        "403.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 404,
+      "songKey": "404",
+      "pdfFile": "404_Tuhan Memberkatimu.pdf",
+      "chordFile": "404_Tuhan Memberkatimu.chord.json",
+      "sourceImages": [
+        "404.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 405,
+      "songKey": "405",
+      "pdfFile": "405_Berdoakah Engkau_.pdf",
+      "chordFile": "405_Berdoakah Engkau_.chord.json",
+      "sourceImages": [
+        "405.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 406,
+      "songKey": "406",
+      "pdfFile": "406_Aku Harus Memberitahu Yesus.pdf",
+      "chordFile": "406_Aku Harus Memberitahu Yesus.chord.json",
+      "sourceImages": [
+        "406.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 407,
+      "songKey": "407",
+      "pdfFile": "407_Dalam Taman.pdf",
+      "chordFile": "407_Dalam Taman.chord.json",
+      "sourceImages": [
+        "407.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 408,
+      "songKey": "408",
+      "pdfFile": "408_Masuklah Dalam Hatiku.pdf",
+      "chordFile": "408_Masuklah Dalam Hatiku.chord.json",
+      "sourceImages": [
+        "408.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 409,
+      "songKey": "409",
+      "pdfFile": "409_Jadikan Aku Saluran Berkat.pdf",
+      "chordFile": "409_Jadikan Aku Saluran Berkat.chord.json",
+      "sourceImages": [
+        "409.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 410,
+      "songKey": "410",
+      "pdfFile": "410_Ajarlah Aku Berdoa.pdf",
+      "chordFile": "410_Ajarlah Aku Berdoa.chord.json",
+      "sourceImages": [
+        "410.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 411,
+      "songKey": "411",
+      "pdfFile": "411_Taman Doa Nan indah.pdf",
+      "chordFile": "411_Taman Doa Nan indah.chord.json",
+      "sourceImages": [
+        "411.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 412,
+      "songKey": "412",
+      "pdfFile": "412_Indahnya Saat Berdoa.pdf",
+      "chordFile": "412_Indahnya Saat Berdoa.chord.json",
+      "sourceImages": [
+        "412.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 413,
+      "songKey": "413",
+      "pdfFile": "413_Layanilah Tuhan Dengan Sukacita.pdf",
+      "chordFile": "413_Layanilah Tuhan Dengan Sukacita.chord.json",
+      "sourceImages": [
+        "413.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 414,
+      "songKey": "414",
+      "pdfFile": "414_Bila Aku Semakin Melayani Dia.pdf",
+      "chordFile": "414_Bila Aku Semakin Melayani Dia.chord.json",
+      "sourceImages": [
+        "414.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 415,
+      "songKey": "415",
+      "pdfFile": "415_Serahkan Yang Terbaik PadaNya.pdf",
+      "chordFile": "415_Serahkan Yang Terbaik PadaNya.chord.json",
+      "sourceImages": [
+        "415 part 1.jpg",
+        "415 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 417,
+      "songKey": "417",
+      "pdfFile": "417_Mengikut Yesus.pdf",
+      "chordFile": "417_Mengikut Yesus.chord.json",
+      "sourceImages": [
+        "417.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 418,
+      "songKey": "418",
+      "pdfFile": "418_Sudahkah Kau Persembahkan Semua_.pdf",
+      "chordFile": "418_Sudahkah Kau Persembahkan Semua_.chord.json",
+      "sourceImages": [
+        "418.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 419,
+      "songKey": "419",
+      "pdfFile": "419_Jadikan Aku Saluran Berkat.pdf",
+      "chordFile": "419_Jadikan Aku Saluran Berkat.chord.json",
+      "sourceImages": [
+        "419.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 420,
+      "songKey": "420",
+      "pdfFile": "420_Persembahan Bagi Tuhan.pdf",
+      "chordFile": "420_Persembahan Bagi Tuhan.chord.json",
+      "sourceImages": [
+        "420.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 421,
+      "songKey": "421",
+      "pdfFile": "421_Datanglah ke PestaNya.pdf",
+      "chordFile": "421_Datanglah ke PestaNya.chord.json",
+      "sourceImages": [
+        "421.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 423,
+      "songKey": "423",
+      "pdfFile": "423_Ceritakanlah Tentang Yesus.pdf",
+      "chordFile": "423_Ceritakanlah Tentang Yesus.chord.json",
+      "sourceImages": [
+        "423.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 424,
+      "songKey": "424",
+      "pdfFile": "424_Perintah Raja.pdf",
+      "chordFile": "424_Perintah Raja.chord.json",
+      "sourceImages": [
+        "424.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 425,
+      "songKey": "425",
+      "pdfFile": "425_Ulurkan Tali Keselamatan.pdf",
+      "chordFile": "425_Ulurkan Tali Keselamatan.chord.json",
+      "sourceImages": [
+        "425.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 426,
+      "songKey": "426",
+      "pdfFile": "426_Juruselamat Yang Ajaib.pdf",
+      "chordFile": "426_Juruselamat Yang Ajaib.chord.json",
+      "sourceImages": [
+        "426.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 427,
+      "songKey": "427",
+      "pdfFile": "427_Ceritakan Pada Bangsa - Bangsa.pdf",
+      "chordFile": "427_Ceritakan Pada Bangsa - Bangsa.chord.json",
+      "sourceImages": [
+        "427.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 428,
+      "songKey": "428",
+      "pdfFile": "428_Orang Yang Penuh Kesengsaraan.pdf",
+      "chordFile": "428_Orang Yang Penuh Kesengsaraan.chord.json",
+      "sourceImages": [
+        "428.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 429,
+      "songKey": "429",
+      "pdfFile": "429_Aku Telah Melihat KemuliaanNya.pdf",
+      "chordFile": "429_Aku Telah Melihat KemuliaanNya.chord.json",
+      "sourceImages": [
+        "429.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 430,
+      "songKey": "430",
+      "pdfFile": "430_Berhimpunkah di Surga Kehidupan_.pdf",
+      "chordFile": "430_Berhimpunkah di Surga Kehidupan_.chord.json",
+      "sourceImages": [
+        "430.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 431,
+      "songKey": "431",
+      "pdfFile": "431_Kasih Sempurna.pdf",
+      "chordFile": "431_Kasih Sempurna.chord.json",
+      "sourceImages": [
+        "431.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 432,
+      "songKey": "432",
+      "pdfFile": "432_Pengertian Yang Mendalam.pdf",
+      "chordFile": "432_Pengertian Yang Mendalam.chord.json",
+      "sourceImages": [
+        "432.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 434,
+      "songKey": "434",
+      "pdfFile": "434_Di Suatu Negeri Yang Mulia.pdf",
+      "chordFile": "434_Di Suatu Negeri Yang Mulia.chord.json",
+      "sourceImages": [
+        "434.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 436,
+      "songKey": "436",
+      "pdfFile": "436_Sepanjang Jalan Tuhan Memimpinku.pdf",
+      "chordFile": "436_Sepanjang Jalan Tuhan Memimpinku.chord.json",
+      "sourceImages": [
+        "436.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 437,
+      "songKey": "437",
+      "pdfFile": "437_Tuhan, Buatlah Hatiku Bersemi.pdf",
+      "chordFile": "437_Tuhan, Buatlah Hatiku Bersemi.chord.json",
+      "sourceImages": [
+        "437.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 438,
+      "songKey": "438",
+      "pdfFile": "438_Untuk Keindahan Bumi.pdf",
+      "chordFile": "438_Untuk Keindahan Bumi.chord.json",
+      "sourceImages": [
+        "438.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 439,
+      "songKey": "439",
+      "pdfFile": "439_Setiap Saat.pdf",
+      "chordFile": "439_Setiap Saat.chord.json",
+      "sourceImages": [
+        "439.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 440,
+      "songKey": "440",
+      "pdfFile": "440_Biarlah Semua Makhluk.pdf",
+      "chordFile": "440_Biarlah Semua Makhluk.chord.json",
+      "sourceImages": [
+        "440 part 1.jpg",
+        "440 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 441,
+      "songKey": "441",
+      "pdfFile": "441_Bersukacitalah.pdf",
+      "chordFile": "441_Bersukacitalah.chord.json",
+      "sourceImages": [
+        "441.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 442,
+      "songKey": "442",
+      "pdfFile": "442_Tuhan Memimpin Kita.pdf",
+      "chordFile": "442_Tuhan Memimpin Kita.chord.json",
+      "sourceImages": [
+        "442.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 443,
+      "songKey": "443",
+      "pdfFile": "443_Iman Umat-Umat Kudus.pdf",
+      "chordFile": "443_Iman Umat-Umat Kudus.chord.json",
+      "sourceImages": [
+        "443.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 444,
+      "songKey": "444",
+      "pdfFile": "444_Yesuslah Nama Yang Terindah.pdf",
+      "chordFile": "444_Yesuslah Nama Yang Terindah.chord.json",
+      "sourceImages": [
+        "444.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 445,
+      "songKey": "445",
+      "pdfFile": "445_Anugerah Lebih Besar dari Dosa.pdf",
+      "chordFile": "445_Anugerah Lebih Besar dari Dosa.chord.json",
+      "sourceImages": [
+        "445.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 446,
+      "songKey": "446",
+      "pdfFile": "446_Terpujilah Nama Tuhan.pdf",
+      "chordFile": "446_Terpujilah Nama Tuhan.chord.json",
+      "sourceImages": [
+        "446.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 447,
+      "songKey": "447",
+      "pdfFile": "447_Imanku Menemukan Tempat Perhentian.pdf",
+      "chordFile": "447_Imanku Menemukan Tempat Perhentian.chord.json",
+      "sourceImages": [
+        "447.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 448,
+      "songKey": "448",
+      "pdfFile": "448_Bersukacitalah, Tuhan Itu Raja.pdf",
+      "chordFile": "448_Bersukacitalah, Tuhan Itu Raja.chord.json",
+      "sourceImages": [
+        "448.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 449,
+      "songKey": "449",
+      "pdfFile": "449_Mungkinkah _.pdf",
+      "chordFile": "449_Mungkinkah _.chord.json",
+      "sourceImages": [
+        "449 part 1.jpg",
+        "449 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 450,
+      "songKey": "450",
+      "pdfFile": "450_Serukanlah Perang.pdf",
+      "chordFile": "450_Serukanlah Perang.chord.json",
+      "sourceImages": [
+        "450.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 451,
+      "songKey": "451",
+      "pdfFile": "451_Serukanlah Dari Puncak Gunung.pdf",
+      "chordFile": "451_Serukanlah Dari Puncak Gunung.chord.json",
+      "sourceImages": [
+        "451.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 453,
+      "songKey": "453",
+      "pdfFile": "453_Anak Raja.pdf",
+      "chordFile": "453_Anak Raja.chord.json",
+      "sourceImages": [
+        "453.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 454,
+      "songKey": "454",
+      "pdfFile": "454_Oh Datanglah, Imanuel.pdf",
+      "chordFile": "454_Oh Datanglah, Imanuel.chord.json",
+      "sourceImages": [
+        "454.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 455,
+      "songKey": "455",
+      "pdfFile": "455_Nama Yang Indah.pdf",
+      "chordFile": "455_Nama Yang Indah.chord.json",
+      "sourceImages": [
+        "455.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 456,
+      "songKey": "456",
+      "pdfFile": "456_Yesuslah Terang Dunia.pdf",
+      "chordFile": "456_Yesuslah Terang Dunia.chord.json",
+      "sourceImages": [
+        "456.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 457,
+      "songKey": "457",
+      "pdfFile": "457_Hanyalah JamahanMu.pdf",
+      "chordFile": "457_Hanyalah JamahanMu.chord.json",
+      "sourceImages": [
+        "457.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 458,
+      "songKey": "458",
+      "pdfFile": "458_Janganlah Pergi Tanpa Yesus.pdf",
+      "chordFile": "458_Janganlah Pergi Tanpa Yesus.chord.json",
+      "sourceImages": [
+        "458.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 459,
+      "songKey": "459",
+      "pdfFile": "459_Yesuslah Terang Dunia.pdf",
+      "chordFile": "459_Yesuslah Terang Dunia.chord.json",
+      "sourceImages": [
+        "459.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 460,
+      "songKey": "460",
+      "pdfFile": "460_Yesus Paling Mengenalmu.pdf",
+      "chordFile": "460_Yesus Paling Mengenalmu.chord.json",
+      "sourceImages": [
+        "460.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 461,
+      "songKey": "461",
+      "pdfFile": "461_Semua Karena Bukit Golgota.pdf",
+      "chordFile": "461_Semua Karena Bukit Golgota.chord.json",
+      "sourceImages": [
+        "461.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 462,
+      "songKey": "462",
+      "pdfFile": "462_Penebus Agung.pdf",
+      "chordFile": "462_Penebus Agung.chord.json",
+      "sourceImages": [
+        "462.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 463,
+      "songKey": "463",
+      "pdfFile": "463_Roh Kudus, Penolongku.pdf",
+      "chordFile": "463_Roh Kudus, Penolongku.chord.json",
+      "sourceImages": [
+        "463.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 464,
+      "songKey": "464",
+      "pdfFile": "464_Tertegun di HadapanNya.pdf",
+      "chordFile": "464_Tertegun di HadapanNya.chord.json",
+      "sourceImages": [
+        "464.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 465,
+      "songKey": "465",
+      "pdfFile": "465_Yesus Perlindunganku Yang Teguh.pdf",
+      "chordFile": "465_Yesus Perlindunganku Yang Teguh.chord.json",
+      "sourceImages": [
+        "465.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 466,
+      "songKey": "466",
+      "pdfFile": "466_Tiap Hari, Tiap Waktu.pdf",
+      "chordFile": "466_Tiap Hari, Tiap Waktu.chord.json",
+      "sourceImages": [
+        "466.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 467,
+      "songKey": "467",
+      "pdfFile": "467_Percayalah Pada Yesus.pdf",
+      "chordFile": "467_Percayalah Pada Yesus.chord.json",
+      "sourceImages": [
+        "467.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 469,
+      "songKey": "469",
+      "pdfFile": "469_Dia Menuntunmu.pdf",
+      "chordFile": "469_Dia Menuntunmu.chord.json",
+      "sourceImages": [
+        "469.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 470,
+      "songKey": "470",
+      "pdfFile": "470_Hai Sion, Bersegeralah.pdf",
+      "chordFile": "470_Hai Sion, Bersegeralah.chord.json",
+      "sourceImages": [
+        "470.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 471,
+      "songKey": "471",
+      "pdfFile": "471_Di Kalvari.pdf",
+      "chordFile": "471_Di Kalvari.chord.json",
+      "sourceImages": [
+        "471.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 472,
+      "songKey": "472",
+      "pdfFile": "472_Dengarlah Doa Kami, Ya Tuhan!.pdf",
+      "chordFile": "472_Dengarlah Doa Kami, Ya Tuhan!.chord.json",
+      "sourceImages": [
+        "472.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 473,
+      "songKey": "473",
+      "pdfFile": "473_Tuhan, Pakailah Daku.pdf",
+      "chordFile": "473_Tuhan, Pakailah Daku.chord.json",
+      "sourceImages": [
+        "473.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 474,
+      "songKey": "474",
+      "pdfFile": "474_Datanglah dengan Hati yang Hancur.pdf",
+      "chordFile": "474_Datanglah dengan Hati yang Hancur.chord.json",
+      "sourceImages": [
+        "474.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 475,
+      "songKey": "475",
+      "pdfFile": "475_Juruselamat Menantimu.pdf",
+      "chordFile": "475_Juruselamat Menantimu.chord.json",
+      "sourceImages": [
+        "475.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 476,
+      "songKey": "476",
+      "pdfFile": "476_Diamlah Jiwaku.pdf",
+      "chordFile": "476_Diamlah Jiwaku.chord.json",
+      "sourceImages": [
+        "476.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 477,
+      "songKey": "477",
+      "pdfFile": "477_Dunia Berlalu.pdf",
+      "chordFile": "477_Dunia Berlalu.chord.json",
+      "sourceImages": [
+        "477.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 478,
+      "songKey": "478",
+      "pdfFile": "478_Ku Mau Seperti Yesus.pdf",
+      "chordFile": "478_Ku Mau Seperti Yesus.chord.json",
+      "sourceImages": [
+        "478.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 479,
+      "songKey": "479",
+      "pdfFile": "479_Bawalah Mereka.pdf",
+      "chordFile": "479_Bawalah Mereka.chord.json",
+      "sourceImages": [
+        "479.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 480,
+      "songKey": "480",
+      "pdfFile": "480_Mengapa Tidak Sekarang _.pdf",
+      "chordFile": "480_Mengapa Tidak Sekarang _.chord.json",
+      "sourceImages": [
+        "480.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 481,
+      "songKey": "481",
+      "pdfFile": "481_Pujilah Dia !.pdf",
+      "chordFile": "481_Pujilah Dia !.chord.json",
+      "sourceImages": [
+        "481.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 482,
+      "songKey": "482",
+      "pdfFile": "482_Surga Datang.pdf",
+      "chordFile": "482_Surga Datang.chord.json",
+      "sourceImages": [
+        "482.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 483,
+      "songKey": "483",
+      "pdfFile": "483_Hanya Satu Rencana.pdf",
+      "chordFile": "483_Hanya Satu Rencana.chord.json",
+      "sourceImages": [
+        "483.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 484,
+      "songKey": "484",
+      "pdfFile": "484_Sang Raja Telah Datang.pdf",
+      "chordFile": "484_Sang Raja Telah Datang.chord.json",
+      "sourceImages": [
+        "484.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 485,
+      "songKey": "485",
+      "pdfFile": "485_Sumber Air Kehidupan.pdf",
+      "chordFile": "485_Sumber Air Kehidupan.chord.json",
+      "sourceImages": [
+        "485.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 486,
+      "songKey": "486",
+      "pdfFile": "486_Tentara Salibkah Aku_.pdf",
+      "chordFile": "486_Tentara Salibkah Aku_.chord.json",
+      "sourceImages": [
+        "486.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 487,
+      "songKey": "487",
+      "pdfFile": "487_Sampai ke Seluruh Dunia.pdf",
+      "chordFile": "487_Sampai ke Seluruh Dunia.chord.json",
+      "sourceImages": [
+        "487.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 488,
+      "songKey": "488",
+      "pdfFile": "488_Bawalah Daku, ya Bapa.pdf",
+      "chordFile": "488_Bawalah Daku, ya Bapa.chord.json",
+      "sourceImages": [
+        "488.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 489,
+      "songKey": "489",
+      "pdfFile": "489_Bukan Perak atau Emas.pdf",
+      "chordFile": "489_Bukan Perak atau Emas.chord.json",
+      "sourceImages": [
+        "489.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 490,
+      "songKey": "490",
+      "pdfFile": "490_Saat Fajar Tiba.pdf",
+      "chordFile": "490_Saat Fajar Tiba.chord.json",
+      "sourceImages": [
+        "490.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 491,
+      "songKey": "491",
+      "pdfFile": "491_Aku Memuji Penebusku.pdf",
+      "chordFile": "491_Aku Memuji Penebusku.chord.json",
+      "sourceImages": [
+        "491.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 492,
+      "songKey": "492",
+      "pdfFile": "492_Allahku Yang Ajaib.pdf",
+      "chordFile": "492_Allahku Yang Ajaib.chord.json",
+      "sourceImages": [
+        "492.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 493,
+      "songKey": "493",
+      "pdfFile": "493_Kita Berkumpul Bersama.pdf",
+      "chordFile": "493_Kita Berkumpul Bersama.chord.json",
+      "sourceImages": [
+        "493.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 494,
+      "songKey": "494",
+      "pdfFile": "494_Bersama Mu.pdf",
+      "chordFile": "494_Bersama Mu.chord.json",
+      "sourceImages": [
+        "494.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 495,
+      "songKey": "495",
+      "pdfFile": "495_Datanglah !.pdf",
+      "chordFile": "495_Datanglah !.chord.json",
+      "sourceImages": [
+        "495.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 496,
+      "songKey": "496",
+      "pdfFile": "496_Yesus Menjamahku.pdf",
+      "chordFile": "496_Yesus Menjamahku.chord.json",
+      "sourceImages": [
+        "496.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 497,
+      "songKey": "497",
+      "pdfFile": "497_Janji Tuhan Bagiku.pdf",
+      "chordFile": "497_Janji Tuhan Bagiku.chord.json",
+      "sourceImages": [
+        "497.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 498,
+      "songKey": "498",
+      "pdfFile": "498_Yesus Pimpin Kita Pulang.pdf",
+      "chordFile": "498_Yesus Pimpin Kita Pulang.chord.json",
+      "sourceImages": [
+        "498.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 499,
+      "songKey": "499",
+      "pdfFile": "499_Jamahan Tangan Tuhan.pdf",
+      "chordFile": "499_Jamahan Tangan Tuhan.chord.json",
+      "sourceImages": [
+        "499.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 500,
+      "songKey": "500",
+      "pdfFile": "500_Siapa di Muka Pintuku_.pdf",
+      "chordFile": "500_Siapa di Muka Pintuku_.chord.json",
+      "sourceImages": [
+        "500.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 501,
+      "songKey": "501",
+      "pdfFile": "501_Dia Menerimaku.pdf",
+      "chordFile": "501_Dia Menerimaku.chord.json",
+      "sourceImages": [
+        "501.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 502,
+      "songKey": "502",
+      "pdfFile": "502_Yesus Juruselamatku Yang Ajaib.pdf",
+      "chordFile": "502_Yesus Juruselamatku Yang Ajaib.chord.json",
+      "sourceImages": [
+        "502.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 503,
+      "songKey": "503",
+      "pdfFile": "503_Penebus yang Terindah.pdf",
+      "chordFile": "503_Penebus yang Terindah.chord.json",
+      "sourceImages": [
+        "503.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 504,
+      "songKey": "504",
+      "pdfFile": "504_Pimpin ke Kalvari.pdf",
+      "chordFile": "504_Pimpin ke Kalvari.chord.json",
+      "sourceImages": [
+        "504.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 505,
+      "songKey": "505",
+      "pdfFile": "505_Yang Hampir yakin, Percayalah.pdf",
+      "chordFile": "505_Yang Hampir yakin, Percayalah.chord.json",
+      "sourceImages": [
+        "505.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 506,
+      "songKey": "506",
+      "pdfFile": "506_Ku Senang Beritakan Penebusan.pdf",
+      "chordFile": "506_Ku Senang Beritakan Penebusan.chord.json",
+      "sourceImages": [
+        "506.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 507,
+      "songKey": "507",
+      "pdfFile": "507_Beban Terangkat di Kalvari.pdf",
+      "chordFile": "507_Beban Terangkat di Kalvari.chord.json",
+      "sourceImages": [
+        "507.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 508,
+      "songKey": "508",
+      "pdfFile": "508_Sauh Jiwa Kita.pdf",
+      "chordFile": "508_Sauh Jiwa Kita.chord.json",
+      "sourceImages": [
+        "508.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 509,
+      "songKey": "509",
+      "pdfFile": "509_Aku Milik Raja.pdf",
+      "chordFile": "509_Aku Milik Raja.chord.json",
+      "sourceImages": [
+        "509.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 510,
+      "songKey": "510",
+      "pdfFile": "510_Yesus Berjalan Denganku.pdf",
+      "chordFile": "510_Yesus Berjalan Denganku.chord.json",
+      "sourceImages": [
+        "510.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 511,
+      "songKey": "511",
+      "pdfFile": "511_Sekarang Aku Milik Yesus.pdf",
+      "chordFile": "511_Sekarang Aku Milik Yesus.chord.json",
+      "sourceImages": [
+        "511.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 512,
+      "songKey": "512",
+      "pdfFile": "512_Tuhan, Biarkan Ku Berjalan Dengan Mu.pdf",
+      "chordFile": "512_Tuhan, Biarkan Ku Berjalan Dengan Mu.chord.json",
+      "sourceImages": [
+        "512.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 513,
+      "songKey": "513",
+      "pdfFile": "513_Yesus, Hembuskan Berkat Mu.pdf",
+      "chordFile": "513_Yesus, Hembuskan Berkat Mu.chord.json",
+      "sourceImages": [
+        "513.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 514,
+      "songKey": "514",
+      "pdfFile": "514_Dalam Kristus Tiada Timur atau Barat.pdf",
+      "chordFile": "514_Dalam Kristus Tiada Timur atau Barat.chord.json",
+      "sourceImages": [
+        "514.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 515,
+      "songKey": "515",
+      "pdfFile": "515_Kenangan Indah.pdf",
+      "chordFile": "515_Kenangan Indah.chord.json",
+      "sourceImages": [
+        "515.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 516,
+      "songKey": "516",
+      "pdfFile": "516_Aku Bertekad.pdf",
+      "chordFile": "516_Aku Bertekad.chord.json",
+      "sourceImages": [
+        "516.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 517,
+      "songKey": "517",
+      "pdfFile": "517_Allah Abraham.pdf",
+      "chordFile": "517_Allah Abraham.chord.json",
+      "sourceImages": [
+        "517.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 518,
+      "songKey": "518",
+      "pdfFile": "518_Kemuliaan Selamanya Bagi Yesus.pdf",
+      "chordFile": "518_Kemuliaan Selamanya Bagi Yesus.chord.json",
+      "sourceImages": [
+        "518.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 519,
+      "songKey": "519",
+      "pdfFile": "519_Berlindung Pada Batu Karang.pdf",
+      "chordFile": "519_Berlindung Pada Batu Karang.chord.json",
+      "sourceImages": [
+        "519.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 520,
+      "songKey": "520",
+      "pdfFile": "520_Menabur Dengan Air Mata.pdf",
+      "chordFile": "520_Menabur Dengan Air Mata.chord.json",
+      "sourceImages": [
+        "520.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 521,
+      "songKey": "521",
+      "pdfFile": "521_Akulah DombaNya.pdf",
+      "chordFile": "521_Akulah DombaNya.chord.json",
+      "sourceImages": [
+        "521.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 522,
+      "songKey": "522",
+      "pdfFile": "522_Dengan Darah Yesus.pdf",
+      "chordFile": "522_Dengan Darah Yesus.chord.json",
+      "sourceImages": [
+        "522.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 523,
+      "songKey": "523",
+      "pdfFile": "523_Betapa Mulianya Hari Itu.pdf",
+      "chordFile": "523_Betapa Mulianya Hari Itu.chord.json",
+      "sourceImages": [
+        "523.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 524,
+      "songKey": "524",
+      "pdfFile": "524_Bagaimana Bila Sekarang_.pdf",
+      "chordFile": "524_Bagaimana Bila Sekarang_.chord.json",
+      "sourceImages": [
+        "524.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 525,
+      "songKey": "525",
+      "pdfFile": "525_Biarlah Jiwamu Bergembira.pdf",
+      "chordFile": "525_Biarlah Jiwamu Bergembira.chord.json",
+      "sourceImages": [
+        "525.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 526,
+      "songKey": "526",
+      "pdfFile": "526_Hosana.pdf",
+      "chordFile": "526_Hosana.chord.json",
+      "sourceImages": [
+        "526.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 527,
+      "songKey": "527",
+      "pdfFile": "527_Gerbang Surga Terbuka Lebar.pdf",
+      "chordFile": "527_Gerbang Surga Terbuka Lebar.chord.json",
+      "sourceImages": [
+        "527.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 528,
+      "songKey": "528",
+      "pdfFile": "528_Dia Segalanya Bagiku.pdf",
+      "chordFile": "528_Dia Segalanya Bagiku.chord.json",
+      "sourceImages": [
+        "528 part 1.jpg",
+        "528 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 529,
+      "songKey": "529",
+      "pdfFile": "529_Datanglah Pada Yesus.pdf",
+      "chordFile": "529_Datanglah Pada Yesus.chord.json",
+      "sourceImages": [
+        "529 part 1.jpg",
+        "529 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    },
+    {
+      "song": 530,
+      "songKey": "530",
+      "pdfFile": "530_Doa Bapa Kami.pdf",
+      "chordFile": "530_Doa Bapa Kami.chord.json",
+      "sourceImages": [
+        "530 part 1.jpg",
+        "530 part 2.jpg"
+      ],
+      "reason": "no-trusted-chord-source"
+    }
+  ]
 }

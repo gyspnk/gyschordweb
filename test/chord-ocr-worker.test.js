@@ -9,10 +9,19 @@ const {
   evaluateGoldSample,
   generateJsonFromGoldSample,
   readExistingChordJson,
+  compareChordJson,
   planMissingChordBatch,
   findSourceImagesForSong,
   planPageImageMapping,
   alignChordWordsToNotes,
+  alignChordWordsToNotesPdfDriven,
+  selectSopranoNoteRows,
+  splitSopranoRowIntoMeasures,
+  inferCChordForMeasure,
+  generateCChordJsonFromSoprano,
+  createMelodySignature,
+  buildMelodyTrainingLibrary,
+  generateCChordJsonWithTraining,
   loadSamples,
 } = require("../scripts/chord-ocr-worker");
 
@@ -98,6 +107,36 @@ test("generated JSON for songs 2-31 preserves the exact noteIdx positions", () =
     assert.equal(generated.positionMatches, generated.total, `song ${sample.song} noteIdx positions should match`);
     assert.equal(generated.chordMatches, generated.total, `song ${sample.song} chords should match after transpose`);
   }
+});
+
+test("compares generated chord JSON against a trusted note-aligned reference", () => {
+  const expected = {
+    pages: {
+      "1": [
+        { noteIdx: 0, chord: "C" },
+        { noteIdx: 4, chord: "G" },
+      ],
+    },
+  };
+  const generated = {
+    pages: {
+      "1": [
+        { noteIdx: 0, chord: "C" },
+        { noteIdx: 3, chord: "F" },
+        { noteIdx: 4, chord: "D" },
+      ],
+    },
+  };
+
+  assert.deepEqual(compareChordJson(generated, expected), {
+    expectedCount: 2,
+    generatedCount: 3,
+    positionMatches: 2,
+    exactMatches: 1,
+    extraCount: 1,
+    positionScore: 1,
+    exactScore: 0.5,
+  });
 });
 
 test("batch planner refuses to create final JSON without a trusted chord source", () => {
@@ -193,4 +232,177 @@ test("aligns OCR chord words to the nearest note on matching note rows", () => {
     { noteIdx: 1, chord: "G" },
     { noteIdx: 2, chord: "F" },
   ]);
+});
+
+test("PDF-driven alignment uses OCR note rows as local anchors", () => {
+  const notes = [
+    { idx: 0, xPct: 10, rowY: 200, isNote: true },
+    { idx: 1, xPct: 30, rowY: 200, isNote: true },
+    { idx: 2, xPct: 50, rowY: 200, isNote: true },
+    { idx: 3, xPct: 10, rowY: 100, isNote: true },
+    { idx: 4, xPct: 30, rowY: 100, isNote: true },
+    { idx: 5, xPct: 50, rowY: 100, isNote: true },
+  ];
+  const photoNoteRows = [
+    {
+      yCenter: 300,
+      items: [
+        { xCenter: 100, yCenter: 300 },
+        { xCenter: 300, yCenter: 300 },
+        { xCenter: 500, yCenter: 300 },
+      ],
+    },
+    {
+      yCenter: 700,
+      items: [
+        { xCenter: 100, yCenter: 700 },
+        { xCenter: 300, yCenter: 700 },
+        { xCenter: 500, yCenter: 700 },
+      ],
+    },
+  ];
+  const words = [
+    { chord: "C", xCenter: 300, yCenter: 230, conf: 80 },
+    { chord: "G", xCenter: 500, yCenter: 630, conf: 80 },
+  ];
+
+  const entries = alignChordWordsToNotesPdfDriven(words, photoNoteRows, notes, { left: 0, top: 0, width: 1000, height: 1000 });
+
+  assert.deepEqual(entries, [
+    { noteIdx: 1, chord: "C" },
+    { noteIdx: 5, chord: "G" },
+  ]);
+});
+
+test("selects only soprano rows from paired numeric-notation rows", () => {
+  const notes = [
+    { idx: 0, str: "3", rowY: 500, xPct: 10, isNote: true },
+    { idx: 1, str: "5", rowY: 480, xPct: 10, isNote: true },
+    { idx: 2, str: "1", rowY: 420, xPct: 10, isNote: true },
+    { idx: 3, str: "3", rowY: 400, xPct: 10, isNote: true },
+  ];
+
+  const rows = selectSopranoNoteRows(notes);
+
+  assert.deepEqual(rows.map((row) => row.items.map((note) => note.idx)), [[0], [2]]);
+});
+
+test("splits a soprano row into measure-like groups from wider x gaps", () => {
+  const row = {
+    items: [
+      { idx: 0, str: "1", xPct: 10, isNote: true },
+      { idx: 1, str: "2", xPct: 15, isNote: true },
+      { idx: 2, str: "3", xPct: 20, isNote: true },
+      { idx: 3, str: "4", xPct: 25, isNote: true },
+      { idx: 4, str: "5", xPct: 35, isNote: true },
+      { idx: 5, str: "6", xPct: 40, isNote: true },
+    ],
+  };
+
+  const measures = splitSopranoRowIntoMeasures(row);
+
+  assert.deepEqual(measures.map((measure) => measure.map((note) => note.idx)), [[0, 1, 2, 3], [4, 5]]);
+});
+
+test("infers C-family chords from soprano measure tones including minor colors", () => {
+  assert.equal(inferCChordForMeasure(["1", "3", "5", "1"]), "C");
+  assert.equal(inferCChordForMeasure(["5", "7", "2", "5"]), "G");
+  assert.equal(inferCChordForMeasure(["6", "1", "3", "6"]), "Am");
+  assert.equal(inferCChordForMeasure(["2", "4", "6", "2"]), "Dm");
+});
+
+test("generates note-aligned C-family chord JSON from soprano measure starts", () => {
+  const notes = [
+    { idx: 0, str: "1", rowY: 500, xPct: 10, isNote: true },
+    { idx: 1, str: "3", rowY: 500, xPct: 15, isNote: true },
+    { idx: 2, str: "5", rowY: 500, xPct: 20, isNote: true },
+    { idx: 3, str: "1", rowY: 500, xPct: 25, isNote: true },
+    { idx: 4, str: "6", rowY: 500, xPct: 35, isNote: true },
+    { idx: 5, str: "1", rowY: 500, xPct: 40, isNote: true },
+    { idx: 6, str: "5", rowY: 480, xPct: 10, isNote: true },
+    { idx: 7, str: "5", rowY: 480, xPct: 15, isNote: true },
+  ];
+
+  const json = generateCChordJsonFromSoprano({ pages: [{ notes }] });
+
+  assert.deepEqual(json, {
+    version: 2,
+    type: "note-aligned",
+    pages: {
+      "1": [
+        { noteIdx: 0, chord: "C" },
+        { noteIdx: 4, chord: "Am" },
+      ],
+    },
+  });
+});
+
+test("trained melody generator reuses a trusted melody template in C family", () => {
+  const extracted = {
+    pages: [
+      {
+        notes: [
+          { idx: 0, str: "1", rowY: 500, xPct: 10, isNote: true },
+          { idx: 1, str: "3", rowY: 500, xPct: 20, isNote: true },
+          { idx: 2, str: "5", rowY: 480, xPct: 10, isNote: true },
+        ],
+      },
+    ],
+  };
+  const trustedJson = {
+    version: 2,
+    type: "note-aligned",
+    pages: {
+      "1": [
+        { noteIdx: 0, chord: "E" },
+        { noteIdx: 1, chord: "B" },
+      ],
+    },
+  };
+
+  const library = buildMelodyTrainingLibrary([{ song: 7, extracted, chordJson: trustedJson }]);
+  const generated = generateCChordJsonWithTraining(extracted, library);
+
+  assert.equal(library.get(createMelodySignature(extracted)).song, 7);
+  assert.deepEqual(generated, {
+    version: 2,
+    type: "note-aligned",
+    pages: {
+      "1": [
+        { noteIdx: 0, chord: "C" },
+        { noteIdx: 1, chord: "G" },
+      ],
+    },
+    trainingMatch: {
+      song: 7,
+      normalizedByShift: -4,
+      source: "trusted-melody-template",
+    },
+  });
+});
+
+test("trained melody generator falls back to soprano inference when no template matches", () => {
+  const extracted = {
+    pages: [
+      {
+        notes: [
+          { idx: 0, str: "1", rowY: 500, xPct: 10, isNote: true },
+          { idx: 1, str: "3", xPct: 15, rowY: 500, isNote: true },
+          { idx: 2, str: "5", xPct: 20, rowY: 500, isNote: true },
+          { idx: 3, str: "1", xPct: 25, rowY: 500, isNote: true },
+        ],
+      },
+    ],
+  };
+
+  const generated = generateCChordJsonWithTraining(extracted, new Map());
+
+  assert.deepEqual(generated, {
+    version: 2,
+    type: "note-aligned",
+    pages: {
+      "1": [{ noteIdx: 0, chord: "C" }],
+    },
+    trainingMatch: null,
+  });
 });
