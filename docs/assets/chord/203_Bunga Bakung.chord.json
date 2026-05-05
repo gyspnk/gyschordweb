@@ -1,0 +1,128 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 17,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 21,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 29,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 33,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 41,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 51,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 65,
+        "chord": "C"
+      },
+      {
+        "noteIdx": 71,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 81,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 96,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 144,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 147,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 162,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 167,
+        "chord": "Am"
+      },
+      {
+        "noteIdx": 171,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 198,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 207,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 243,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 273,
+        "chord": "Em"
+      },
+      {
+        "noteIdx": 276,
+        "chord": "Am"
+      },
+      {
+        "noteIdx": 282,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 306,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 348,
+        "chord": "C"
+      },
+      {
+        "noteIdx": 357,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 363,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 417,
+        "chord": "Em"
+      },
+      {
+        "noteIdx": 447,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 480,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 492,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 543,
+        "chord": "A"
+      }
+    ]
+  }
+}

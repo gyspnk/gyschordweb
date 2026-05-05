@@ -1,0 +1,140 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 10,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 34,
+        "chord": "Bm"
+      },
+      {
+        "noteIdx": 37,
+        "chord": "Em"
+      },
+      {
+        "noteIdx": 40,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 44,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 60,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 79,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 91,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 114,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 130,
+        "chord": "Bm"
+      },
+      {
+        "noteIdx": 133,
+        "chord": "Em"
+      },
+      {
+        "noteIdx": 136,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 159,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 172,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 187,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 200,
+        "chord": "Em"
+      },
+      {
+        "noteIdx": 206,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 207,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 217,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 225,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 259,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 263,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 268,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 278,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 310,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 339,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 343,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 364,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 374,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 377,
+        "chord": "F"
+      },
+      {
+        "noteIdx": 381,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 388,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 391,
+        "chord": "A"
+      }
+    ]
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 2,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 53,
+        "chord": "Bm"
+      },
+      {
+        "noteIdx": 87,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 93,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 126,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 155,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 177,
+        "chord": "Em"
+      },
+      {
+        "noteIdx": 182,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 198,
+        "chord": "A"
+      }
+    ],
+    "2": [
+      {
+        "noteIdx": 55,
+        "chord": "F"
+      },
+      {
+        "noteIdx": 91,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 95,
+        "chord": "Cm"
+      },
+      {
+        "noteIdx": 122,
+        "chord": "A7"
+      },
+      {
+        "noteIdx": 148,
+        "chord": "F"
+      }
+    ]
+  }
+}

@@ -1,0 +1,194 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 0,
+        "chord": "F"
+      },
+      {
+        "noteIdx": 16,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 33,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 38,
+        "chord": "F"
+      },
+      {
+        "noteIdx": 54,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 74,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 107,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 133,
+        "chord": "Am"
+      },
+      {
+        "noteIdx": 136,
+        "chord": "Em"
+      },
+      {
+        "noteIdx": 141,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 144,
+        "chord": "C"
+      },
+      {
+        "noteIdx": 148,
+        "chord": "Am"
+      },
+      {
+        "noteIdx": 154,
+        "chord": "F"
+      },
+      {
+        "noteIdx": 160,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 164,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 184,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 191,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 194,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 195,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 220,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 227,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 231,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 236,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 262,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 263,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 268,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 292,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 294,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 297,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 298,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 304,
+        "chord": "F"
+      },
+      {
+        "noteIdx": 315,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 322,
+        "chord": "F"
+      },
+      {
+        "noteIdx": 323,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 327,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 347,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 357,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 359,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 373,
+        "chord": "E"
+      }
+    ],
+    "2": [
+      {
+        "noteIdx": 6,
+        "chord": "Dm"
+      },
+      {
+        "noteIdx": 11,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 37,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 89,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 118,
+        "chord": "C"
+      },
+      {
+        "noteIdx": 184,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 216,
+        "chord": "A"
+      }
+    ]
+  }
+}

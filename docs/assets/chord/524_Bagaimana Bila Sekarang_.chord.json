@@ -1,0 +1,130 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 1,
+        "chord": "C"
+      },
+      {
+        "noteIdx": 9,
+        "chord": "C"
+      },
+      {
+        "noteIdx": 18,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 30,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 49,
+        "chord": "Dm"
+      },
+      {
+        "noteIdx": 54,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 63,
+        "chord": "A6"
+      },
+      {
+        "noteIdx": 77,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 113,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 135,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 153,
+        "chord": "C"
+      },
+      {
+        "noteIdx": 198,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 207,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 233,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 252,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 264,
+        "chord": "Dm"
+      },
+      {
+        "noteIdx": 270,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 273,
+        "chord": "Dm"
+      },
+      {
+        "noteIdx": 276,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 293,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 317,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 347,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 360,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 362,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 384,
+        "chord": "E"
+      }
+    ],
+    "2": [
+      {
+        "noteIdx": 6,
+        "chord": "Em"
+      },
+      {
+        "noteIdx": 137,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 138,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 246,
+        "chord": "Dm"
+      },
+      {
+        "noteIdx": 374,
+        "chord": "B"
+      }
+    ]
+  }
+}

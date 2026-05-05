@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 0,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 72,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 158,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 230,
+        "chord": "Bm"
+      }
+    ]
+  }
+}

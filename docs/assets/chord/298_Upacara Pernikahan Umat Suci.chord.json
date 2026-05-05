@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 4,
+        "chord": "Em"
+      },
+      {
+        "noteIdx": 12,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 52,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 88,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 132,
+        "chord": "Em"
+      },
+      {
+        "noteIdx": 168,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 212,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 248,
+        "chord": "D"
+      }
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 7,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 45,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 86,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 142,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 176,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 212,
+        "chord": "A"
+      }
+    ],
+    "2": [
+      {
+        "noteIdx": 4,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 7,
+        "chord": "B"
+      }
+    ]
+  }
+}

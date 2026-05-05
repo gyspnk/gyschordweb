@@ -1,0 +1,144 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 7,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 10,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 25,
+        "chord": "F"
+      },
+      {
+        "noteIdx": 50,
+        "chord": "F"
+      },
+      {
+        "noteIdx": 69,
+        "chord": "F"
+      },
+      {
+        "noteIdx": 90,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 105,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 107,
+        "chord": "Am"
+      },
+      {
+        "noteIdx": 115,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 117,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 135,
+        "chord": "F"
+      },
+      {
+        "noteIdx": 152,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 157,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 166,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 168,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 169,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 175,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 177,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 178,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 180,
+        "chord": "Am"
+      },
+      {
+        "noteIdx": 187,
+        "chord": "Dm"
+      },
+      {
+        "noteIdx": 190,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 195,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 210,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 219,
+        "chord": "F"
+      },
+      {
+        "noteIdx": 238,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 245,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 262,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 265,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 267,
+        "chord": "Am"
+      },
+      {
+        "noteIdx": 281,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 315,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 318,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 338,
+        "chord": "G"
+      }
+    ]
+  }
+}
