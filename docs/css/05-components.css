@@ -2068,6 +2068,18 @@ body[data-page="about-project"] .mini-player {
   transition: transform var(--duration-short) var(--ease-spring);
 }
 .mini-loop:active { transform: scale(0.82); }
+
+.mini-fullscreen-btn {
+  width: 26px; height: 26px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--duration-short) var(--ease-spring);
+  color: var(--md-sys-color-on-surface-variant);
+}
+.mini-fullscreen-btn:active { transform: scale(0.82); }
+.mini-fullscreen-btn .material-symbols-outlined { font-size: 16px; }
 .mini-loop .material-symbols-outlined { font-size: 16px; }
 
 /* Extras toggle button: hidden by default, shown when collapsed */
@@ -3132,6 +3144,36 @@ body .mini-player-loading-bar {
 .add-to-playlist-btn.in-playlist {
   color: var(--md-sys-color-primary);
   opacity: 1;
+}
+
+/* Chord Availability Indicator */
+.chord-indicator {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.chord-indicator .material-symbols-outlined {
+  font-size: 20px;
+  font-variation-settings: 'FILL' 1;
+}
+.chord-indicator.has-chord {
+  color: #22c55e;
+  opacity: 0.65;
+}
+.chord-indicator.no-chord {
+  color: var(--md-sys-color-outline-variant);
+  opacity: 0.35;
+}
+.pujian-item:hover .chord-indicator.has-chord {
+  opacity: 1;
+}
+.pujian-item:hover .chord-indicator.no-chord {
+  opacity: 0.55;
 }
 
 /* --- Playlist View --- */

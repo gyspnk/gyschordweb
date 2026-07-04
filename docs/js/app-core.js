@@ -938,6 +938,10 @@ let lastIndicatorTapAt = 0;
 let lastIndicatorTapEl = null;
 const chordDissolveTimers = new WeakMap();
 
+// Chord availability tracking: a Set of base filenames (without extension)
+// that have corresponding chord.json files in assets/chord/.
+let chordAvailableSet = new Set();
+
 // Shuffle predetermination: the next song is decided when the current one loads,
 // so we can show it in the UI and preload its audio in the background.
 let shuffleNextGlobalIdx = -1;      // Predetermined next global index (shuffle-all)
@@ -1671,12 +1675,19 @@ function renderPujianList() {
     return;
   }
 
-  fetch("assets-list.json")
-    .then((response) => (response.ok ? response.json() : Promise.reject("Gagal memuat daftar pujian")))
-    .then((files) => {
+  // Fetch both PDF list and chord list in parallel
+  Promise.all([
+    fetch("assets-list.json").then((r) => (r.ok ? r.json() : Promise.reject("Gagal memuat daftar pujian"))),
+    fetch("assets-chord-list.json").then((r) => (r.ok ? r.json() : [])).catch(() => [])
+  ])
+    .then(([files, chordFiles]) => {
       if (!Array.isArray(files)) {
         throw new Error("Format data tidak valid");
       }
+      // Build chord availability Set from base filenames
+      chordAvailableSet = new Set(
+        Array.isArray(chordFiles) ? chordFiles.map((c) => c.toLowerCase()) : []
+      );
       pujianItems = files.map((file, index) => {
         const rawName = decodeURIComponent(file.replace(".pdf", ""));
         const match = rawName.match(/^([0-9A-Za-z]+)[_.\s]*(.*)$/);
@@ -1684,7 +1695,8 @@ function renderPujianList() {
           id: index,
           nomor: match ? match[1] : "?",
           judul: match ? match[2].replace(/_/g, " ") : rawName.replace(/_/g, " "),
-          fileHref: `assets/pdf/${file}`
+          fileHref: `assets/pdf/${file}`,
+          fileBase: rawName
         };
       });        displayPujian(pujianItems);
         
@@ -1710,19 +1722,27 @@ function renderPujianList() {
 }
 
 function displayPujian(items) {
+  const hasChordsAvailable = chordAvailableSet && chordAvailableSet.size > 0;
   mainContent.innerHTML = `
     <ul class="pujian-list" id="pujian-list">
       ${items
         .map(
-          (item) => `
+          (item) => {
+            const chordKey = (item.fileBase || "").toLowerCase();
+            const hasChord = hasChordsAvailable && chordAvailableSet.has(chordKey);
+            return `
         <li data-id="${item.id}" data-nomor="${item.nomor.toLowerCase()}" data-judul="${item.judul.toLowerCase()}" class="pujian-item">
           <span class="pujian-nomor">${item.nomor}</span>
           <a href="${item.fileHref}" class="pujian-title">${item.judul}</a>
+          <span class="chord-indicator${hasChord ? " has-chord" : " no-chord"}" title="${hasChord ? "Chord tersedia" : "Chord belum tersedia"}">
+            <span class="material-symbols-outlined">${hasChord ? "check_circle" : "cancel"}</span>
+          </span>
           <button class="icon-button add-to-playlist-btn" data-id="${item.id}" aria-label="Tambah ke Playlist" title="Tambah ke Playlist">
             <span class="material-symbols-outlined">playlist_add</span>
           </button>
         </li>
-      `
+      `;
+          }
         )
         .join("")}
     </ul>`;

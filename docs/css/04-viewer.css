@@ -3463,4 +3463,18 @@ body.viewer-active #midi-player-loading {
   }
 }
 
+/* Fullscreen button in header MIDI player */
+.midi-fullscreen-btn .material-symbols-outlined {
+  font-size: 1.15rem;
+}
+.midi-fullscreen-btn.instrument-capsule-btn {
+  width: 38px;
+  min-width: 38px;
+  padding: 0;
+  justify-content: center;
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 66%, transparent);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+
 

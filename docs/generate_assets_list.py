@@ -41,6 +41,19 @@ def generate_assets_list() -> list[str]:
     return sorted(pdf_files, key=natural_sort_key)
 
 
+def generate_chord_list() -> list[str]:
+    chord_dir = DOCS_DIR / "assets" / "chord"
+    if not chord_dir.is_dir():
+        return []
+
+    chord_files = [
+        path.name[: -len(".chord.json")]
+        for path in chord_dir.glob("*.chord.json")
+        if path.is_file()
+    ]
+    return sorted(chord_files, key=natural_sort_key)
+
+
 def main() -> None:
     assets = generate_assets_list()
     OUTPUT_FILE.write_text(
@@ -48,6 +61,14 @@ def main() -> None:
         encoding="utf-8",
     )
     print(f"Generated {OUTPUT_FILE.relative_to(DOCS_DIR.parent).as_posix()} with {len(assets)} PDF assets")
+
+    chords = generate_chord_list()
+    chord_output = DOCS_DIR / "assets-chord-list.json"
+    chord_output.write_text(
+        json.dumps(chords, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    print(f"Generated {chord_output.relative_to(DOCS_DIR.parent).as_posix()} with {len(chords)} chord assets")
 
 
 if __name__ == "__main__":

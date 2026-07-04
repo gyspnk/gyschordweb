@@ -31,6 +31,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/assets-list.json
-          git diff --cached --quiet || git commit -m "Update assets-list.json [auto]"
+          git add docs/assets-list.json docs/assets-chord-list.json
+          git diff --cached --quiet || git commit -m "Update assets-list.json and assets-chord-list.json [auto]"
           git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}

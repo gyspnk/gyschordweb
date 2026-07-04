@@ -580,6 +580,81 @@ function initPlaylistUiBindings() {
     });
   }
 
+  // --- Fullscreen Button Injection ---
+  injectFullscreenButtons();
+
+}
+
+// --- Fullscreen Button ---
+function injectFullscreenButtons() {
+  function createFullscreenBtn() {
+    var btn = document.createElement('button');
+    btn.className = 'icon-button fullscreen-btn';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Fullscreen');
+    btn.title = 'Fullscreen';
+    btn.innerHTML = '<span class="material-symbols-outlined">fullscreen</span>';
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleFullscreen();
+    });
+    return btn;
+  }
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      var el = document.documentElement;
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(function () {});
+      } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+      }
+      updateFullscreenIcons(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+      updateFullscreenIcons(false);
+    }
+  }
+
+  function updateFullscreenIcons(isFullscreen) {
+    var icons = document.querySelectorAll('.fullscreen-btn .material-symbols-outlined');
+    icons.forEach(function (icon) {
+      icon.textContent = isFullscreen ? 'fullscreen_exit' : 'fullscreen';
+    });
+  }
+
+  function onFullscreenChange() {
+    var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    updateFullscreenIcons(isFs);
+  }
+  document.addEventListener('fullscreenchange', onFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+
+  // Inject after header loop button
+  var headerLoopBtn = document.getElementById('custom-loop-btn');
+  if (headerLoopBtn) {
+    var headerWrapper = headerLoopBtn.closest('.instrument-selector-wrapper');
+    if (headerWrapper && headerWrapper.parentNode) {
+      var headerBtn = createFullscreenBtn();
+      headerBtn.classList.add('instrument-capsule-btn', 'midi-action-btn', 'midi-icon-btn', 'midi-fullscreen-btn');
+      var headerFullscreenWrapper = document.createElement('div');
+      headerFullscreenWrapper.className = 'instrument-selector-wrapper flex-shrink-0 midi-action midi-icon-action';
+      headerFullscreenWrapper.appendChild(headerBtn);
+      headerWrapper.parentNode.insertBefore(headerFullscreenWrapper, headerWrapper.nextSibling);
+    }
+  }
+
+  // Inject after mini player loop button
+  var miniLoopBtn = document.getElementById('mini-loop-btn');
+  if (miniLoopBtn && miniLoopBtn.parentNode) {
+    var miniBtn = createFullscreenBtn();
+    miniBtn.classList.add('mini-btn', 'mini-surface-btn', 'mini-fullscreen-btn');
+    miniLoopBtn.parentNode.insertBefore(miniBtn, miniLoopBtn.nextSibling);
+  }
 }
 
 if (document.readyState === 'loading') {
