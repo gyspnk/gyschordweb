@@ -2466,13 +2466,18 @@ async function extractPageNotes(page) {
     return digits.length >= 2;
   });
 
-  // Create flat array of notes with sequential indices
+  // Create flat array of notes with sequential indices, preserving row grouping
   const notes = [];
-  for (const row of musicRows) {
+  const noteRows = []; // Exposed for per-row sentinel creation
+  for (let ri = 0; ri < musicRows.length; ri++) {
+    const row = musicRows[ri];
     const sortedItems = [...row.items].sort((a, b) => a.x - b.x);
+    const rowNoteIndices = [];
     for (const item of sortedItems) {
+      const idx = notes.length;
+      rowNoteIndices.push(idx);
       notes.push({
-        idx: notes.length,
+        idx,
         str: item.str,
         x: item.x,
         y: item.y,
@@ -2480,14 +2485,21 @@ async function extractPageNotes(page) {
         xPct: ((item.x + item.w / 2) / pageWidth) * 100,
         yPct: ((1 - item.y / pageHeight) * 100),
         rowY: row.y,
+        rowIndex: ri,
         isNote: /^[1-7]$/.test(item.str),
         isDot: item.str === '.',
         isRest: item.str === '0'
       });
     }
+    noteRows.push({
+      rowIndex: ri,
+      y: row.y,
+      firstIdx: rowNoteIndices[0],
+      lastIdx: rowNoteIndices[rowNoteIndices.length - 1]
+    });
   }
 
-  return { notes, pageWidth, pageHeight };
+  return { notes, pageWidth, pageHeight, noteRows };
 }
 
 /**
@@ -2596,16 +2608,38 @@ function createNoteAlignedChordLayer(pageNum, notes) {
   // Chord vertical offset above note (percentage of page height)
   const chordYOffset = NOTE_CHORD_Y_OFFSET_PCT;
 
+  // Build row groups from notes that have rowIndex
+  const noteRows = [];
+  const rowMap = new Map();
+  notes.forEach(note => {
+    if (note.rowIndex === undefined) return;
+    if (!rowMap.has(note.rowIndex)) {
+      rowMap.set(note.rowIndex, { rowIndex: note.rowIndex, notes: [] });
+      noteRows.push(rowMap.get(note.rowIndex));
+    }
+    rowMap.get(note.rowIndex).notes.push(note);
+  });
+
   if (chordEditorEnabled) {
     // Create note target indicators for clicking
-    // First: "before first note" sentinel
+    // First: "before first note" sentinel (intro)
     if (notes.length > 0) {
       const first = notes[0];
-      // Find if there are multiple rows; if so, place intro sentinel at first row
       const introX = Math.max(1, first.xPct - 2.5);
       const introTarget = createNoteTarget(NOTE_IDX_BEFORE, introX, first.yPct, "▸", "Intro / sebelum lagu");
       layer.appendChild(introTarget);
     }
+
+    // Per-row start sentinels
+    noteRows.forEach(row => {
+      if (row.notes.length > 0) {
+        const first = row.notes[0];
+        const rowStartX = Math.max(1, first.xPct - 2.5);
+        const rowStartIdx = noteIdxForRowStart(row.rowIndex);
+        const target = createNoteTarget(rowStartIdx, rowStartX, first.yPct, "▸", `Row ${row.rowIndex + 1} start`);
+        layer.appendChild(target);
+      }
+    });
 
     // Note targets
     notes.forEach(note => {
@@ -2614,7 +2648,18 @@ function createNoteAlignedChordLayer(pageNum, notes) {
       layer.appendChild(target);
     });
 
-    // Last: "after last note" sentinel
+    // Per-row end sentinels
+    noteRows.forEach(row => {
+      if (row.notes.length > 0) {
+        const last = row.notes[row.notes.length - 1];
+        const rowEndX = Math.min(99, last.xPct + 2.5);
+        const rowEndIdx = noteIdxForRowEnd(row.rowIndex);
+        const target = createNoteTarget(rowEndIdx, rowEndX, last.yPct, "◂", `Row ${row.rowIndex + 1} end`);
+        layer.appendChild(target);
+      }
+    });
+
+    // Last: "after last note" sentinel (outro)
     if (notes.length > 0) {
       const last = notes[notes.length - 1];
       const outroX = Math.min(99, last.xPct + 2.5);
@@ -2623,19 +2668,52 @@ function createNoteAlignedChordLayer(pageNum, notes) {
     }
   }
 
+  // Build position lookup for chord markers: noteIdx -> {xPct, yPct}
+  const effectivePositions = {};
+
+  // Regular notes
+  notes.forEach(note => {
+    effectivePositions[note.idx] = { xPct: note.xPct, yPct: note.yPct };
+  });
+
+  // Intro sentinel
+  if (notes.length > 0) {
+    effectivePositions[NOTE_IDX_BEFORE] = {
+      xPct: Math.max(1, notes[0].xPct - 2.5),
+      yPct: notes[0].yPct
+    };
+  }
+
+  // Per-row sentinels
+  noteRows.forEach(row => {
+    if (row.notes.length > 0) {
+      effectivePositions[noteIdxForRowStart(row.rowIndex)] = {
+        xPct: Math.max(1, row.notes[0].xPct - 2.5),
+        yPct: row.notes[0].yPct
+      };
+      effectivePositions[noteIdxForRowEnd(row.rowIndex)] = {
+        xPct: Math.min(99, row.notes[row.notes.length - 1].xPct + 2.5),
+        yPct: row.notes[row.notes.length - 1].yPct
+      };
+    }
+  });
+
+  // Outro sentinel
+  if (notes.length > 0) {
+    effectivePositions[NOTE_IDX_AFTER] = {
+      xPct: Math.min(99, notes[notes.length - 1].xPct + 2.5),
+      yPct: notes[notes.length - 1].yPct
+    };
+  }
+
   // Place chord markers above notes
   chordEntries.forEach(entry => {
-    let pos = null;
-    if (entry.noteIdx === NOTE_IDX_BEFORE && notes.length > 0) {
-      const first = notes[0];
-      pos = { xPct: Math.max(1, first.xPct - 2.5), yPct: first.yPct };
-    } else if (entry.noteIdx >= notes.length && notes.length > 0) {
+    let pos = effectivePositions[entry.noteIdx];
+    if (!pos && entry.noteIdx > NOTE_IDX_AFTER && notes.length > 0) {
+      // Fallback: any noteIdx beyond all notes gets outro placement
       const last = notes[notes.length - 1];
       pos = { xPct: Math.min(99, last.xPct + 2.5), yPct: last.yPct };
-    } else if (entry.noteIdx >= 0 && entry.noteIdx < notes.length) {
-      pos = { xPct: notes[entry.noteIdx].xPct, yPct: notes[entry.noteIdx].yPct };
     }
-
     if (pos) {
       const marker = createNoteChordMarker(entry, pos, chordYOffset);
       layer.appendChild(marker);
@@ -2651,7 +2729,7 @@ function createNoteAlignedChordLayer(pageNum, notes) {
 function createNoteTarget(noteIdx, xPct, yPct, label, title) {
   const el = document.createElement("div");
   el.className = "note-target";
-  if (noteIdx === NOTE_IDX_BEFORE || noteIdx === NOTE_IDX_AFTER) {
+  if (noteIdx === NOTE_IDX_BEFORE || noteIdx === NOTE_IDX_AFTER || isPerRowSentinel(noteIdx)) {
     el.classList.add("note-target-sentinel");
   }
   el.dataset.noteIdx = String(noteIdx);

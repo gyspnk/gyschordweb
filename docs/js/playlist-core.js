@@ -647,14 +647,6 @@ function injectFullscreenButtons() {
       headerWrapper.parentNode.insertBefore(headerFullscreenWrapper, headerWrapper.nextSibling);
     }
   }
-
-  // Inject after mini player loop button
-  var miniLoopBtn = document.getElementById('mini-loop-btn');
-  if (miniLoopBtn && miniLoopBtn.parentNode) {
-    var miniBtn = createFullscreenBtn();
-    miniBtn.classList.add('mini-btn', 'mini-surface-btn', 'mini-fullscreen-btn');
-    miniLoopBtn.parentNode.insertBefore(miniBtn, miniLoopBtn.nextSibling);
-  }
 }
 
 if (document.readyState === 'loading') {

@@ -146,7 +146,7 @@ var MidiEngine = (function () {
       }
 
       try {
-        var workerUrl = 'js/midi-render-worker.min.js?v=4';
+        var workerUrl = 'js/midi-render-worker.min.js?v=6';
         _worker = new Worker(workerUrl);
       } catch (err) {
         fail(new Error('Failed to create MIDI render worker: ' + err.message));

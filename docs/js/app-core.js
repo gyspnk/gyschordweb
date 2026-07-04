@@ -513,6 +513,24 @@ const MIDI_TEMPO_MAX_BPM = 220;
 const NOTE_CHORD_Y_OFFSET_PCT = 2.5; // Chord vertical offset above note (% of page height)
 const NOTE_IDX_BEFORE = -1; // Sentinel: chord before first note (intro)
 const NOTE_IDX_AFTER = 99999; // Sentinel: chord after last note (outro)
+const ROW_START_BASE = -2000000; // Base for per-row start sentinel noteIdx
+const ROW_END_BASE = 2000000; // Base for per-row end sentinel noteIdx
+
+function noteIdxForRowStart(rowIndex) {
+  return ROW_START_BASE - rowIndex;
+}
+function noteIdxForRowEnd(rowIndex) {
+  return ROW_END_BASE + rowIndex;
+}
+function isRowStartSentinel(noteIdx) {
+  return noteIdx <= ROW_START_BASE && noteIdx > ROW_START_BASE - 100000;
+}
+function isRowEndSentinel(noteIdx) {
+  return noteIdx >= ROW_END_BASE && noteIdx < ROW_END_BASE + 100000;
+}
+function isPerRowSentinel(noteIdx) {
+  return isRowStartSentinel(noteIdx) || isRowEndSentinel(noteIdx);
+}
 
 /**
  * MidiTimeAuthority — Thin proxy to MidiEngine for backward compatibility.
