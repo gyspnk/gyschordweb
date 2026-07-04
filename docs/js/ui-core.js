@@ -705,6 +705,15 @@ async function closePdfViewer() {
   closeTransposeCollapse();
   updateHideChordButton();
 
+  // Auto-exit fullscreen when leaving PDF viewer
+  if (document.fullscreenElement || document.webkitFullscreenElement) {
+    if (document.exitFullscreen) {
+      document.exitFullscreen().catch(function () {});
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    }
+  }
+
   // We no longer stop the MIDI player when closing the PDF viewer so the Mini Player keeps it alive.
 }
 ;
