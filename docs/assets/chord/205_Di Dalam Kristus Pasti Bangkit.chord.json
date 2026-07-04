@@ -1,0 +1,136 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 0,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 3,
+        "chord": "Bm"
+      },
+      {
+        "noteIdx": 5,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 7,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 10,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 12,
+        "chord": "F#m"
+      },
+      {
+        "noteIdx": 14,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 17,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 71,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 74,
+        "chord": "Bm"
+      },
+      {
+        "noteIdx": 76,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 78,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 81,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 83,
+        "chord": "F#m"
+      },
+      {
+        "noteIdx": 85,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 88,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 142,
+        "chord": "Em"
+      },
+      {
+        "noteIdx": 144,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 147,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 149,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 152,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 154,
+        "chord": "Bm"
+      },
+      {
+        "noteIdx": 157,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 160,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 222,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 225,
+        "chord": "F#m"
+      },
+      {
+        "noteIdx": 228,
+        "chord": "G"
+      },
+      {
+        "noteIdx": 231,
+        "chord": "D"
+      },
+      {
+        "noteIdx": 234,
+        "chord": "Em"
+      },
+      {
+        "noteIdx": 237,
+        "chord": "F#m"
+      },
+      {
+        "noteIdx": 241,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 244,
+        "chord": "D"
+      }
+    ]
+  }
+}

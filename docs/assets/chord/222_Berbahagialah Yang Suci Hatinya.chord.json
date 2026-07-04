@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 1,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 5,
+        "chord": "C#m"
+      },
+      {
+        "noteIdx": 9,
+        "chord": "F#m"
+      },
+      {
+        "noteIdx": 13,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 65,
+        "chord": "E"
+      },
+      {
+        "noteIdx": 71,
+        "chord": "A"
+      },
+      {
+        "noteIdx": 73,
+        "chord": "F#m"
+      },
+      {
+        "noteIdx": 75,
+        "chord": "B"
+      },
+      {
+        "noteIdx": 77,
+        "chord": "E"
+      }
+    ]
+  }
+}
