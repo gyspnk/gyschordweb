@@ -3058,3 +3058,426 @@ function hasNoteAlignedChords() {
   if (!noteChordConfig || !noteChordConfig.pages) return false;
   return Object.values(noteChordConfig.pages).some(page => page && page.length > 0);
 }
+
+/* SOURCE: 99-lyrics-viewer.js */
+// --- Lyrics-Only View Mode ---
+
+let lyricsData = null;
+let lyricsVerseIndex = 0;
+let lyricsFontSize = 28;
+let lyricsLineSpacing = 1.8;
+let lyricsViewActive = false;
+let lyricsViewWasActive = false; // persists across song changes
+
+const LYRICS_FONT_SIZE_KEY = "lyrics-font-size";
+const LYRICS_LINE_SPACING_KEY = "lyrics-line-spacing";
+
+function loadLyricsPreferences() {
+  try {
+    var fs = localStorage.getItem(LYRICS_FONT_SIZE_KEY);
+    if (fs) lyricsFontSize = parseInt(fs, 10) || 28;
+    var ls = localStorage.getItem(LYRICS_LINE_SPACING_KEY);
+    if (ls) lyricsLineSpacing = parseFloat(ls) || 1.8;
+  } catch (e) {}
+}
+
+function saveLyricsPreferences() {
+  localStorage.setItem(LYRICS_FONT_SIZE_KEY, String(lyricsFontSize));
+  localStorage.setItem(LYRICS_LINE_SPACING_KEY, String(lyricsLineSpacing));
+}
+
+function getLyricsUrl() {
+  return "assets-lyrics.json";
+}
+
+function getSongLyricData(song) {
+  if (!lyricsData || !Array.isArray(lyricsData)) return null;
+  var num = String(song.nomor).replace(/^0+/, "") || "1";
+  return lyricsData.find(function (entry) {
+    return String(entry.number).replace(/^0+/, "") === num;
+  }) || null;
+}
+
+function hasLyricsAvailable(song) {
+  return !!getSongLyricData(song);
+}
+
+function createLyricsPanel() {
+  var existing = document.getElementById("lyrics-panel");
+  if (existing) return existing;
+
+  var p = document.createElement("div");
+  p.id = "lyrics-panel";
+  p.className = "lyrics-panel";
+  p.style.cssText = "position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center";
+
+  var bd = document.createElement("div");
+  bd.className = "lyrics-backdrop";
+  bd.id = "lyrics-backdrop";
+  bd.style.cssText = "position:absolute;inset:0;background:var(--md-sys-color-surface)";
+  bd.addEventListener("click", function (e) { e.stopPropagation(); });
+  p.appendChild(bd);
+
+  var inn = document.createElement("div");
+  inn.className = "lyrics-inner";
+  inn.style.cssText = "position:relative;z-index:1;display:flex;flex-direction:column;width:100%;height:100%;max-width:700px;margin:0 auto";
+
+  // Header
+  var hd = document.createElement("div");
+  hd.className = "lyrics-header";
+  hd.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 16px;flex-shrink:0;gap:8px";
+
+  var si = document.createElement("div");
+  si.className = "lyrics-song-info";
+  si.style.cssText = "display:flex;align-items:baseline;gap:2px;min-width:0;flex:1";
+  var sn = document.createElement("span");
+  sn.id = "lyrics-song-number";
+  sn.style.cssText = "font-size:0.75rem;font-weight:600;color:var(--md-sys-color-primary);white-space:nowrap";
+  si.appendChild(sn);
+  var st = document.createElement("h2");
+  st.id = "lyrics-song-title";
+  st.style.cssText = "font-family:var(--font-display);font-size:1.05rem;font-weight:700;color:var(--md-sys-color-on-surface);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";
+  si.appendChild(st);
+  hd.appendChild(si);
+
+  var ha = document.createElement("div");
+  ha.className = "lyrics-header-actions";
+  ha.style.cssText = "display:flex;gap:2px;flex-shrink:0";
+
+  function mkBtn(id, title, icon) {
+    var b = document.createElement("button");
+    b.id = id;
+    b.className = "icon-button lyrics-ctrl-btn";
+    b.title = title;
+    b.setAttribute("aria-label", title);
+    b.style.cssText = "width:32px;height:32px;border-radius:10px;opacity:0.5;transition:opacity 0.15s;display:flex;align-items:center;justify-content:center";
+    var s = document.createElement("span");
+    s.className = "material-symbols-outlined";
+    s.style.fontSize = "18px";
+    s.textContent = icon;
+    b.appendChild(s);
+    return b;
+  }
+
+  var fd = mkBtn("lyrics-font-down", "Perkecil font", "text_decrease");
+  fd.addEventListener("click", function () { lyricsFontSize = Math.max(14, lyricsFontSize - 4); saveLyricsPreferences(); updateLyricsVerse(); });
+  ha.appendChild(fd);
+  var fu = mkBtn("lyrics-font-up", "Perbesar font", "text_increase");
+  fu.addEventListener("click", function () { lyricsFontSize = Math.min(72, lyricsFontSize + 4); saveLyricsPreferences(); updateLyricsVerse(); });
+  ha.appendChild(fu);
+  var sd = mkBtn("lyrics-spacing-down", "Rapatkan teks", "format_line_spacing");
+  sd.addEventListener("click", function () { lyricsLineSpacing = Math.max(1, +(lyricsLineSpacing - 0.2).toFixed(1)); saveLyricsPreferences(); updateLyricsVerse(); });
+  ha.appendChild(sd);
+  var su = mkBtn("lyrics-spacing-up", "Renggangkan teks", "line_weight");
+  su.addEventListener("click", function () { lyricsLineSpacing = Math.min(3.5, +(lyricsLineSpacing + 0.2).toFixed(1)); saveLyricsPreferences(); updateLyricsVerse(); });
+  ha.appendChild(su);
+  var cb = mkBtn("lyrics-close-btn", "Kembali ke PDF", "close");
+  cb.addEventListener("click", function () { hideLyricsView(); });
+  ha.appendChild(cb);
+  hd.appendChild(ha);
+  inn.appendChild(hd);
+
+  // Content
+  var ct = document.createElement("div");
+  ct.className = "lyrics-content";
+  ct.id = "lyrics-content";
+  ct.style.cssText = "flex:1;display:flex;align-items:center;justify-content:center;padding:16px 24px;overflow-y:auto;min-height:0";
+
+  var vc = document.createElement("div");
+  vc.className = "lyrics-verse-container";
+  vc.id = "lyrics-verse-container";
+  vc.style.cssText = "text-align:center;width:100%";
+
+  var vt = document.createElement("div");
+  vt.id = "lyrics-verse-text";
+  vt.className = "lyrics-verse-text";
+  vt.style.cssText = "font-family:var(--font-display);color:var(--md-sys-color-on-surface);font-weight:500;transition:font-size 0.2s ease,line-height 0.2s ease";
+  vc.appendChild(vt);
+  ct.appendChild(vc);
+  inn.appendChild(ct);
+
+  // Footer
+  var ft = document.createElement("div");
+  ft.className = "lyrics-footer";
+  ft.style.cssText = "display:flex;align-items:center;padding:8px 16px 16px;flex-shrink:0";
+
+  var fl = document.createElement("div");
+  fl.className = "lyrics-footer-left";
+  fl.style.cssText = "flex:1;display:flex";
+  var fc = document.createElement("div");
+  fc.className = "lyrics-footer-center";
+  fc.style.cssText = "display:flex;align-items:center;gap:10px";
+  var fr = document.createElement("div");
+  fr.className = "lyrics-footer-right";
+  fr.style.cssText = "flex:1;display:flex;justify-content:flex-end";
+
+  function mkNav(id, title, icon) {
+    var b = document.createElement("button");
+    b.id = id;
+    b.className = "icon-button lyrics-nav-btn";
+    b.title = title;
+    b.setAttribute("aria-label", title);
+    b.style.cssText = "width:38px;height:38px;border-radius:12px;background:var(--md-sys-color-surface-container-highest);display:flex;align-items:center;justify-content:center;transition:opacity 0.2s,transform 0.12s";
+    var s = document.createElement("span");
+    s.className = "material-symbols-outlined";
+    s.style.fontSize = "22px";
+    s.textContent = icon;
+    b.appendChild(s);
+    return b;
+  }
+
+  var pv = mkNav("lyrics-song-prev", "Lagu sebelumnya", "skip_previous");
+  pv.addEventListener("click", function (e) { e.stopPropagation(); if (typeof onPrevSong === "function") onPrevSong(true, true); });
+  fl.appendChild(pv);
+  var nv = mkNav("lyrics-song-next", "Lagu berikutnya", "skip_next");
+  nv.addEventListener("click", function (e) { e.stopPropagation(); if (typeof onNextSong === "function") onNextSong(true); });
+  fr.appendChild(nv);
+
+  var vb = mkNav("lyrics-prev-verse", "Bait sebelumnya", "arrow_upward");
+  vb.addEventListener("click", function () { navigateLyricsVerse(-1); });
+  fc.appendChild(vb);
+  var vi = document.createElement("span");
+  vi.id = "lyrics-verse-indicator";
+  vi.className = "lyrics-verse-indicator";
+  vi.style.cssText = "font-size:0.82rem;font-weight:600;color:var(--md-sys-color-on-surface-variant);min-width:110px;text-align:center;white-space:nowrap";
+  vi.textContent = "Bait 1 dari 1";
+  fc.appendChild(vi);
+  var va = mkNav("lyrics-next-verse", "Bait berikutnya", "arrow_downward");
+  va.addEventListener("click", function () { navigateLyricsVerse(1); });
+  fc.appendChild(va);
+
+  ft.appendChild(fl);
+  ft.appendChild(fc);
+  ft.appendChild(fr);
+  inn.appendChild(ft);
+  p.appendChild(inn);
+  document.body.appendChild(p);
+
+  // Swipe / wheel gestures on content
+  var tsY = 0, tsT = 0;
+  ct.addEventListener("touchstart", function (e) {
+    if (e.touches.length === 1) { tsY = e.touches[0].clientY; tsT = Date.now(); }
+  }, { passive: true });
+  ct.addEventListener("touchend", function (e) {
+    if (!e.changedTouches.length) return;
+    var dy = e.changedTouches[0].clientY - tsY;
+    var dt = Date.now() - tsT;
+    if (dt > 800 || Math.abs(dy) < 50) return;
+    navigateLyricsVerse(dy > 0 ? -1 : 1);
+  });
+  ct.addEventListener("wheel", function (e) {
+    if (Math.abs(e.deltaY) > 30) { e.preventDefault(); navigateLyricsVerse(e.deltaY > 0 ? 1 : -1); }
+  }, { passive: false });
+
+  return p;
+}
+
+function bindLyricsPanelEvents(panel) {
+  // Prevent backdrop click from propagating
+  var backdrop = document.getElementById("lyrics-backdrop");
+  if (backdrop) {
+    backdrop.addEventListener("click", function (e) { e.stopPropagation(); });
+  }
+
+  var fontDown = document.getElementById("lyrics-font-down");
+  var fontUp = document.getElementById("lyrics-font-up");
+  var spacingDown = document.getElementById("lyrics-spacing-down");
+  var spacingUp = document.getElementById("lyrics-spacing-up");
+  var closeBtn = document.getElementById("lyrics-close-btn");
+  var prevVerse = document.getElementById("lyrics-prev-verse");
+  var nextVerse = document.getElementById("lyrics-next-verse");
+  var prevSong = document.getElementById("lyrics-song-prev");
+  var nextSong = document.getElementById("lyrics-song-next");
+  var content = document.getElementById("lyrics-content");
+
+  if (fontDown) fontDown.addEventListener("click", function () { lyricsFontSize = Math.max(14, lyricsFontSize - 4); saveLyricsPreferences(); updateLyricsVerse(); });
+  if (fontUp) fontUp.addEventListener("click", function () { lyricsFontSize = Math.min(72, lyricsFontSize + 4); saveLyricsPreferences(); updateLyricsVerse(); });
+  if (spacingDown) spacingDown.addEventListener("click", function () { lyricsLineSpacing = Math.max(1.0, +(lyricsLineSpacing - 0.2).toFixed(1)); saveLyricsPreferences(); updateLyricsVerse(); });
+  if (spacingUp) spacingUp.addEventListener("click", function () { lyricsLineSpacing = Math.min(3.5, +(lyricsLineSpacing + 0.2).toFixed(1)); saveLyricsPreferences(); updateLyricsVerse(); });
+  if (closeBtn) closeBtn.addEventListener("click", function () { hideLyricsView(); });
+  if (prevVerse) prevVerse.addEventListener("click", function () { navigateLyricsVerse(-1); });
+  if (nextVerse) nextVerse.addEventListener("click", function () { navigateLyricsVerse(1); });
+  if (prevSong) prevSong.addEventListener("click", function (e) { e.stopPropagation(); if (typeof onPrevSong === "function") onPrevSong(true, true); });
+  if (nextSong) nextSong.addEventListener("click", function (e) { e.stopPropagation(); if (typeof onNextSong === "function") onNextSong(true); });
+
+  if (content) {
+    var touchStartY = 0, touchStartTime = 0;
+    content.addEventListener("touchstart", function (e) {
+      if (e.touches.length === 1) { touchStartY = e.touches[0].clientY; touchStartTime = Date.now(); }
+    }, { passive: true });
+    content.addEventListener("touchend", function (e) {
+      if (!e.changedTouches.length) return;
+      var dy = e.changedTouches[0].clientY - touchStartY;
+      var dt = Date.now() - touchStartTime;
+      if (dt > 800 || Math.abs(dy) < 50) return;
+      navigateLyricsVerse(dy > 0 ? -1 : 1);
+    });
+    content.addEventListener("wheel", function (e) {
+      if (Math.abs(e.deltaY) > 30) { e.preventDefault(); navigateLyricsVerse(e.deltaY > 0 ? 1 : -1); }
+    }, { passive: false });
+  }
+}
+
+function navigateLyricsVerse(delta) {
+  var entry = getCurrentLyricEntry();
+  if (!entry || !entry.verses) return;
+  var newIdx = lyricsVerseIndex + delta;
+  if (newIdx < 0 || newIdx >= entry.verses.length) return;
+  lyricsVerseIndex = newIdx;
+  updateLyricsVerse();
+}
+
+function getCurrentLyricEntry() {
+  if (currentSongIndex < 0 || !pujianItems[currentSongIndex]) return null;
+  return getSongLyricData(pujianItems[currentSongIndex]);
+}
+
+function updateLyricsVerse() {
+  var verseText = document.getElementById("lyrics-verse-text");
+  var indicator = document.getElementById("lyrics-verse-indicator");
+  var prevBtn = document.getElementById("lyrics-prev-verse");
+  var nextBtn = document.getElementById("lyrics-next-verse");
+  var entry = getCurrentLyricEntry();
+
+  if (!entry || !entry.verses || entry.verses.length === 0) {
+    if (verseText) verseText.innerHTML = "<p class='lyrics-empty'>Teks lagu belum tersedia.</p>";
+    if (indicator) indicator.textContent = "";
+    if (prevBtn) prevBtn.style.visibility = "hidden";
+    if (nextBtn) nextBtn.style.visibility = "hidden";
+    return;
+  }
+
+  if (lyricsVerseIndex >= entry.verses.length) lyricsVerseIndex = 0;
+  if (lyricsVerseIndex < 0) lyricsVerseIndex = entry.verses.length - 1;
+
+  var verse = entry.verses[lyricsVerseIndex];
+  var lines = verse.split("\n").filter(function (l) { return l.trim().length > 0; });
+  var html = "";
+  for (var i = 0; i < lines.length; i++) { html += "<p class='lyrics-line'>" + escapeHtml(lines[i]) + "</p>"; }
+
+  if (verseText) {
+    verseText.innerHTML = html;
+    verseText.style.fontSize = lyricsFontSize + "px";
+    verseText.style.lineHeight = String(lyricsLineSpacing);
+  }
+  if (indicator) indicator.textContent = "Bait " + (lyricsVerseIndex + 1) + " dari " + entry.verses.length;
+  if (prevBtn) { prevBtn.style.visibility = lyricsVerseIndex <= 0 ? "hidden" : "visible"; prevBtn.disabled = lyricsVerseIndex <= 0; }
+  if (nextBtn) { nextBtn.style.visibility = lyricsVerseIndex >= entry.verses.length - 1 ? "hidden" : "visible"; nextBtn.disabled = lyricsVerseIndex >= entry.verses.length - 1; }
+}
+
+function escapeHtml(text) {
+  var div = document.createElement("div");
+  div.appendChild(document.createTextNode(text));
+  return div.innerHTML;
+}
+
+function showLyricsView() {
+  var panel = createLyricsPanel();
+  if (!panel) return;
+
+  lyricsViewActive = true;
+  lyricsViewWasActive = true;
+  lyricsVerseIndex = 0;
+
+  var entry = getCurrentLyricEntry();
+  if (entry) {
+    var numberEl = document.getElementById("lyrics-song-number");
+    var titleEl = document.getElementById("lyrics-song-title");
+    if (numberEl) numberEl.textContent = (entry.number || "") + " - ";
+    if (titleEl) titleEl.textContent = entry.title || "";
+  }
+
+  updateLyricsVerse();
+  panel.style.display = "flex";
+  document.body.classList.add("lyrics-mode");
+
+  // Hide PDF view elements
+  var pdfContent = document.querySelector(".pdf-viewer-content");
+  if (pdfContent) pdfContent.style.display = "none";
+  var pdfFooter = document.querySelector(".pdf-viewer-footer");
+  if (pdfFooter) pdfFooter.style.display = "none";
+  // Also hide the viewer overlay except the title bar
+  var overlay = document.querySelector(".pdf-viewer-overlay");
+  if (overlay) overlay.classList.add("lyrics-active");
+
+  var toggleBtn = document.getElementById("lyrics-toggle-btn");
+  if (toggleBtn) { toggleBtn.setAttribute("aria-pressed", "true"); toggleBtn.classList.add("active"); }
+}
+
+function hideLyricsView() {
+  lyricsViewActive = false;
+  lyricsViewWasActive = false;
+
+  var panel = document.getElementById("lyrics-panel");
+  if (panel) panel.style.display = "none";
+
+  document.body.classList.remove("lyrics-mode");
+
+  var pdfContent = document.querySelector(".pdf-viewer-content");
+  if (pdfContent) pdfContent.style.display = "";
+  var pdfFooter = document.querySelector(".pdf-viewer-footer");
+  if (pdfFooter) pdfFooter.style.display = "";
+  var overlay = document.querySelector(".pdf-viewer-overlay");
+  if (overlay) overlay.classList.remove("lyrics-active");
+
+  var toggleBtn = document.getElementById("lyrics-toggle-btn");
+  if (toggleBtn) { toggleBtn.setAttribute("aria-pressed", "false"); toggleBtn.classList.remove("active"); }
+}
+
+function toggleLyricsView() {
+  if (lyricsViewActive) {
+    hideLyricsView();
+  } else {
+    if (!lyricsData) {
+      fetch(getLyricsUrl()).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }).then(function (data) { lyricsData = data; showLyricsView(); });
+    } else {
+      showLyricsView();
+    }
+  }
+}
+
+function injectLyricsToggleButton() {
+  var existing = document.getElementById("lyrics-toggle-btn");
+  if (existing) return;
+  var songNav = document.querySelector(".song-navigation");
+  if (!songNav) return;
+  var wrapper = songNav.querySelector(".song-title-wrapper");
+  if (!wrapper) return;
+
+  var btn = document.createElement("button");
+  btn.id = "lyrics-toggle-btn";
+  btn.className = "icon-button lyrics-toggle-btn";
+  btn.setAttribute("aria-label", "Lihat Lirik");
+  btn.setAttribute("aria-pressed", "false");
+  btn.title = "Lihat Lirik";
+  btn.innerHTML = '<span class="material-symbols-outlined">menu_book</span>';
+  btn.addEventListener("click", function (e) { e.stopPropagation(); toggleLyricsView(); });
+  wrapper.parentNode.insertBefore(btn, wrapper.nextSibling);
+}
+
+function preloadLyricsData() {
+  if (lyricsData) return;
+  fetch(getLyricsUrl()).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }).then(function (data) { lyricsData = data; });
+}
+
+// Restore lyrics view after song change if it was active
+var _origOpenPdfViewerLyrics = openPdfViewer;
+openPdfViewer = async function(songId, backgroundLoad) {
+  var wasActive = lyricsViewActive;
+  var result = await _origOpenPdfViewerLyrics(songId, backgroundLoad);
+  if (!backgroundLoad) {
+    setTimeout(function () {
+      injectLyricsToggleButton();
+      loadLyricsPreferences();
+      // Restore lyrics view if it was active before song change
+      if (wasActive || lyricsViewWasActive) {
+        if (!lyricsData) {
+          fetch(getLyricsUrl()).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }).then(function (data) { lyricsData = data; showLyricsView(); });
+        } else {
+          showLyricsView();
+        }
+      }
+    }, 200);
+  }
+  return result;
+};

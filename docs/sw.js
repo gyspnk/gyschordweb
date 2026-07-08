@@ -1,5 +1,5 @@
-const CACHE_NAME = 'gys-cache-v50';
-const APP_VERSION = '3.6.18';
+const CACHE_NAME = 'gys-cache-v52';
+const APP_VERSION = '3.7.0';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -41,7 +41,8 @@ self.addEventListener('fetch', (event) => {
       url.pathname.includes('/pdf/') || 
       url.pathname.includes('/chord/') || 
       url.pathname.includes('assets-list.json') ||
-      url.pathname.includes('assets-chord-list.json')) {
+      url.pathname.includes('assets-chord-list.json') ||
+      url.pathname.includes('assets-lyrics.json')) {
     event.respondWith(fetch(event.request));
     return;
   }
