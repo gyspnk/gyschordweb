@@ -7,6 +7,9 @@ on:
       - '.github/workflows/generate-assets-list.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   generate-assets-list:
     runs-on: ubuntu-latest
