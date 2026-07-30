@@ -313,8 +313,7 @@
       }
     }
 
-    var toggleBtn = document.getElementById('lyrics-toggle-btn');
-    if (toggleBtn) { toggleBtn.setAttribute('aria-pressed', 'true'); toggleBtn.classList.add('active'); }
+    syncLyricsToggleButtons();
   }
 
   window.hideLyricsView = function () {
@@ -328,8 +327,7 @@
     }
 
     document.body.classList.remove('lyrics-mode');
-    var toggleBtn = document.getElementById('lyrics-toggle-btn');
-    if (toggleBtn) { toggleBtn.setAttribute('aria-pressed', 'false'); toggleBtn.classList.remove('active'); }
+    syncLyricsToggleButtons();
   };
 
   function toggleLyricsView() {
@@ -348,23 +346,53 @@
   }
 
 
-  function injectLyricsToggleButton() {
-    var existing = document.getElementById('lyrics-toggle-btn');
-    if (existing) return;
-    var transport = document.querySelector('.mini-transport');
-    if (!transport) return;
+  function syncLyricsToggleButtons() {
+    var pressed = lyricsViewActive ? 'true' : 'false';
+    document.querySelectorAll('#lyrics-toggle-btn, #midi-lyrics-toggle-btn').forEach(function (b) {
+      b.setAttribute('aria-pressed', pressed);
+      b.classList.toggle('active', lyricsViewActive);
+    });
+  }
 
-    var btn = document.createElement('button');
-    btn.id = 'lyrics-toggle-btn';
-    btn.className = 'icon-button mini-lyrics-toggle-btn';
-    btn.setAttribute('aria-label', 'Lihat Lirik');
-    btn.setAttribute('aria-pressed', 'false');
-    btn.title = 'Lihat Lirik';
-    btn.innerHTML = '<span class="material-symbols-outlined">menu_book</span>';
-    btn.addEventListener('click', function (e) { e.stopPropagation(); toggleLyricsView(); });
-    // Append to transport controls so it sits inline with prev/play/next buttons
-    // and does not add an extra child to the .mini-player-top grid
-    transport.appendChild(btn);
+  function injectLyricsToggleButton() {
+    var transport = document.querySelector('.mini-transport');
+    var miniExists = !!document.getElementById('lyrics-toggle-btn');
+    if (!miniExists && transport) {
+      var btn = document.createElement('button');
+      btn.id = 'lyrics-toggle-btn';
+      btn.className = 'icon-button mini-lyrics-toggle-btn';
+      btn.setAttribute('aria-label', 'Lihat Lirik');
+      btn.setAttribute('aria-pressed', 'false');
+      btn.title = 'Lihat Lirik';
+      btn.innerHTML = '<span class="material-symbols-outlined">menu_book</span>';
+      btn.addEventListener('click', function (e) { e.stopPropagation(); toggleLyricsView(); });
+      // Append to transport controls so it sits inline with prev/play/next buttons
+      // and does not add an extra child to the .mini-player-top grid
+      transport.appendChild(btn);
+    }
+
+    // Also inject into MIDI player actions area (shown when PDF viewer is open)
+    var midiExisting = document.getElementById('midi-lyrics-toggle-btn');
+    if (!midiExisting) {
+      var playerActions = document.querySelector('.custom-player-actions');
+      if (playerActions && !playerActions.querySelector('#midi-lyrics-toggle-btn')) {
+        var midiBtn = document.createElement('button');
+        midiBtn.id = 'midi-lyrics-toggle-btn';
+        midiBtn.className = 'instrument-capsule-btn midi-action-btn midi-icon-btn';
+        midiBtn.setAttribute('aria-label', 'Lihat Lirik');
+        midiBtn.setAttribute('aria-pressed', 'false');
+        midiBtn.title = 'Lihat Lirik';
+        midiBtn.innerHTML = '<span class="material-symbols-outlined cis-icon">menu_book</span>';
+        midiBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleLyricsView(); });
+        // Insert before the loop/autonext buttons at the end of the action row
+        var loopBtn = playerActions.querySelector('#custom-loop-btn');
+        if (loopBtn) {
+          loopBtn.closest('.instrument-selector-wrapper').before(midiBtn);
+        } else {
+          playerActions.appendChild(midiBtn);
+        }
+      }
+    }
   }
 
   // Hook into openPdfViewer to inject button and restore state
