@@ -419,11 +419,10 @@
       var _orig = openPdfViewer;
       openPdfViewer = async function (songId, backgroundLoad) {
         var wasActive = lyricsViewActive;
-        // Update lyrics IMMEDIATELY before PDF/MIDI load — lyrics data is
-        // already in memory, no need to wait for the full page load cycle.
-        // Also update on background loads (mini player on home page) since
-        // the song index still changes even without the viewer opening.
+        // Update lyrics IMMEDIATELY before PDF/MIDI load. Set currentSongIndex
+        // first so getCurrentLyricEntry() reads the target song, not the old one.
         if (wasActive) {
+          currentSongIndex = parseInt(songId, 10);
           loadPrefs();
           if (lyricsData) {
             _updateLyricsContentAfterSongChange();
@@ -431,7 +430,7 @@
             fetch('assets-lyrics.json')
               .then(function (r) { return r.ok ? r.json() : []; })
               .catch(function () { return []; })
-              .then(function (data) { lyricsData = data; _updateLyricsContentAfterSongChange(); });
+              .then(function (data) { lyricsData = data; currentSongIndex = parseInt(songId, 10); _updateLyricsContentAfterSongChange(); });
           }
         }
         var result = await _orig(songId, backgroundLoad);
