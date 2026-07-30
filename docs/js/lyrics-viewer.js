@@ -430,11 +430,22 @@
 		}
 		updateLyricsVerse(0);
 
-		// Open animation: display flex + opacity 0 → trigger reflow → fade in
+		// Open animation: make visible with opacity 0, then WAAPI fade-in.
+		// inline opacity:0 prevents flash before animation takes over.
 		panel.style.display = "flex";
 		panel.style.opacity = "0";
-		void panel.offsetWidth;
-		panel.style.opacity = "1";
+		if (typeof panel.animate === "function") {
+			panel.animate(
+				[
+					{ opacity: 0, transform: "translateY(8px)" },
+					{ opacity: 1, transform: "translateY(0)" },
+				],
+				{ duration: 250, easing: "ease", fill: "forwards" },
+			);
+		} else {
+			void panel.offsetWidth;
+			panel.style.opacity = "1";
+		}
 
 		document.body.classList.add("lyrics-mode");
 
