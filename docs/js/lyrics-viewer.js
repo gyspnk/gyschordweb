@@ -430,8 +430,12 @@
 		}
 		updateLyricsVerse(0);
 
+		// Open animation: display flex + opacity 0 → trigger reflow → fade in
 		panel.style.display = "flex";
+		panel.style.opacity = "0";
+		void panel.offsetWidth;
 		panel.style.opacity = "1";
+
 		document.body.classList.add("lyrics-mode");
 
 		if (isSongChange) {
@@ -460,6 +464,8 @@
 
 		var panel = qs("#lyrics-panel");
 		if (panel) {
+			// Remove inline opacity so CSS .fading-out class can take effect
+			panel.style.removeProperty("opacity");
 			panel.classList.add("fading-out");
 			setTimeout(function () {
 				panel.style.display = "none";
