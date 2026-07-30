@@ -347,27 +347,28 @@
     }
   }
 
+
   function injectLyricsToggleButton() {
     var existing = document.getElementById('lyrics-toggle-btn');
     if (existing) return;
-    var songNav = document.querySelector('.song-navigation');
-    if (!songNav) return;
-    var wrapper = songNav.querySelector('.song-title-wrapper');
-    if (!wrapper) return;
+    var extras = document.querySelector('.mini-player-extras');
+    if (!extras) return;
 
     var btn = document.createElement('button');
     btn.id = 'lyrics-toggle-btn';
-    btn.className = 'icon-button lyrics-toggle-btn';
+    btn.className = 'icon-button mini-lyrics-toggle-btn';
     btn.setAttribute('aria-label', 'Lihat Lirik');
     btn.setAttribute('aria-pressed', 'false');
     btn.title = 'Lihat Lirik';
-    btn.style.cssText = 'opacity:0.7;transition:opacity 0.2s,color 0.2s;margin-left:4px';
-    var icon = document.createElement('span');
-    icon.className = 'material-symbols-outlined';
-    icon.textContent = 'menu_book';
-    btn.appendChild(icon);
+    btn.innerHTML = '<span class="material-symbols-outlined">menu_book</span>';
     btn.addEventListener('click', function (e) { e.stopPropagation(); toggleLyricsView(); });
-    wrapper.parentNode.insertBefore(btn, wrapper.nextSibling);
+    // Insert before the extras toggle button (last item) so it appears in a natural spot
+    var ref = extras.querySelector('.mini-extras-toggle');
+    if (ref) {
+      extras.insertBefore(btn, ref);
+    } else {
+      extras.appendChild(btn);
+    }
   }
 
   // Hook into openPdfViewer to inject button and restore state
