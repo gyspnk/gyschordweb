@@ -351,8 +351,8 @@
   function injectLyricsToggleButton() {
     var existing = document.getElementById('lyrics-toggle-btn');
     if (existing) return;
-    var heading = document.querySelector('.mini-player-heading');
-    if (!heading) return;
+    var miniTop = document.querySelector('.mini-player-top');
+    if (!miniTop) return;
 
     var btn = document.createElement('button');
     btn.id = 'lyrics-toggle-btn';
@@ -362,12 +362,12 @@
     btn.title = 'Lihat Lirik';
     btn.innerHTML = '<span class="material-symbols-outlined">menu_book</span>';
     btn.addEventListener('click', function (e) { e.stopPropagation(); toggleLyricsView(); });
-    // Insert before the extras toggle button so it's always visible in the heading row
-    var ref = heading.querySelector('#mini-extras-toggle');
+    // Insert before the extras toggle button so it's always visible in the top row
+    var ref = document.getElementById('mini-extras-toggle');
     if (ref) {
-      heading.insertBefore(btn, ref);
+      miniTop.insertBefore(btn, ref);
     } else {
-      heading.appendChild(btn);
+      miniTop.appendChild(btn);
     }
   }
 
