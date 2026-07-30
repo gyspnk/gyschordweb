@@ -54,6 +54,11 @@
 
   function qs(id) { return document.querySelector(id); }
 
+  // Check if MIDI is currently playing to preserve play state on navigation
+  function _midiIsPlaying() {
+    return typeof MidiEngine !== 'undefined' && MidiEngine.isPlaying();
+  }
+
   function updateLyricsVerse(animateDir) {
     var verseText = qs('#lyrics-verse-text');
     var indicator = qs('#lyrics-verse-indicator');
@@ -227,10 +232,10 @@
     }
 
     var pv = mkNavBtn('lyrics-song-prev', 'Lagu sebelumnya', 'skip_previous');
-    pv.addEventListener('click', function (e) { e.stopPropagation(); if (typeof onPrevSong === 'function') onPrevSong(false, true); });
+    pv.addEventListener('click', function (e) { e.stopPropagation(); if (typeof onPrevSong === 'function') onPrevSong(_midiIsPlaying(), false); });
     fl.append(pv);
     var nv = mkNavBtn('lyrics-song-next', 'Lagu berikutnya', 'skip_next');
-    nv.addEventListener('click', function (e) { e.stopPropagation(); if (typeof onNextSong === 'function') onNextSong(false); });
+    nv.addEventListener('click', function (e) { e.stopPropagation(); if (typeof onNextSong === 'function') onNextSong(_midiIsPlaying()); });
     fr.append(nv);
     var vb = mkNavBtn('lyrics-prev-verse', 'Bait sebelumnya', 'arrow_upward');
     vb.addEventListener('click', function () { navigateLyricsVerse(-1); });
@@ -264,8 +269,8 @@
       if (absDx < 40 && absDy < 40) return;
       if (absDx > absDy) {
         if (absDx > 40) {
-          if (dx < 0) { if (typeof onNextSong === 'function') onNextSong(false); }
-          else { if (typeof onPrevSong === 'function') onPrevSong(false, true); }
+          if (dx < 0) { if (typeof onNextSong === 'function') onNextSong(_midiIsPlaying()); }
+          else { if (typeof onPrevSong === 'function') onPrevSong(_midiIsPlaying(), false); }
         }
       } else {
         if (absDy > 40) navigateLyricsVerse(dy > 0 ? -1 : 1);
@@ -416,7 +421,9 @@
         var wasActive = lyricsViewActive;
         // Update lyrics IMMEDIATELY before PDF/MIDI load — lyrics data is
         // already in memory, no need to wait for the full page load cycle.
-        if (wasActive && !backgroundLoad) {
+        // Also update on background loads (mini player on home page) since
+        // the song index still changes even without the viewer opening.
+        if (wasActive) {
           loadPrefs();
           if (lyricsData) {
             _updateLyricsContentAfterSongChange();
