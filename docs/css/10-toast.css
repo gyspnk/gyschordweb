@@ -163,10 +163,6 @@ body.dark-theme .zoom-toast {
   transform-origin: bottom left;
 }
 
-.transpose-collapse.is-open .transpose-controls-header .family-chord-dropdown {
-  /* Jika dicolapse, dropdown mengikuti kontainer collapse */
-}
-
 .family-chord-option {
   padding: 6px 12px;
   border-radius: 4px;

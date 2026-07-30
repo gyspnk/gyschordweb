@@ -46,19 +46,20 @@
     el.style.whiteSpace = 'nowrap';
     el.style.overflow = 'hidden';
     el.style.textOverflow = 'ellipsis';
-    // Try reducing font size until it fits or hits minimum
     for (var size = 1.05; size >= 0.65; size -= 0.05) {
       el.style.fontSize = size + 'rem';
       if (el.scrollWidth <= el.clientWidth + 2) break;
     }
   }
 
+  function qs(id) { return document.querySelector(id); }
+
   function updateLyricsVerse(animateDir) {
-    var verseText = document.getElementById('lyrics-verse-text');
-    var indicator = document.getElementById('lyrics-verse-indicator');
-    var prevBtn = document.getElementById('lyrics-prev-verse');
-    var nextBtn = document.getElementById('lyrics-next-verse');
-    var container = document.getElementById('lyrics-verse-container');
+    var verseText = qs('#lyrics-verse-text');
+    var indicator = qs('#lyrics-verse-indicator');
+    var prevBtn = qs('#lyrics-prev-verse');
+    var nextBtn = qs('#lyrics-next-verse');
+    var container = qs('#lyrics-verse-container');
     var entry = getCurrentLyricEntry();
 
     if (!entry || !entry.verses || entry.verses.length === 0) {
@@ -67,7 +68,7 @@
         var p = document.createElement('p');
         p.style.cssText = 'font-style:italic;color:var(--md-sys-color-on-surface-variant);font-size:1rem;line-height:1.6;white-space:normal;margin:0;padding:0';
         p.textContent = 'Teks lagu belum tersedia.';
-        verseText.appendChild(p);
+        verseText.append(p);
       }
       if (indicator) indicator.textContent = '';
       if (prevBtn) prevBtn.style.visibility = 'hidden';
@@ -87,10 +88,9 @@
         p.className = 'lyrics-line';
         p.style.cssText = 'margin:0;padding:0';
         p.textContent = lines[i];
-        verseText.appendChild(p);
+        verseText.append(p);
       }
       if (animateDir && animateDir !== 0 && container) {
-        // Verse change animation: slide up/down
         container.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
         container.style.transform = 'translateY(' + (animateDir > 0 ? -20 : 20) + 'px)';
         container.style.opacity = '0';
@@ -106,7 +106,6 @@
           });
         }, 200);
       } else {
-        // Direct update, no animation
         verseText.style.fontSize = lyricsFontSize + 'px';
         verseText.style.lineHeight = String(lyricsLineSpacing);
       }
@@ -129,7 +128,7 @@
   }
 
   function createLyricsPanel() {
-    var existing = document.getElementById('lyrics-panel');
+    var existing = qs('#lyrics-panel');
     if (existing) return existing;
 
     var p = document.createElement('div');
@@ -142,7 +141,7 @@
     bd.id = 'lyrics-backdrop';
     bd.style.cssText = 'position:absolute;inset:0;background:var(--md-sys-color-surface)';
     bd.addEventListener('click', function (e) { e.stopPropagation(); });
-    p.appendChild(bd);
+    p.append(bd);
 
     var inn = document.createElement('div');
     inn.className = 'lyrics-inner';
@@ -156,12 +155,12 @@
     var sn = document.createElement('span');
     sn.id = 'lyrics-song-number';
     sn.style.cssText = 'font-size:0.75rem;font-weight:600;color:var(--md-sys-color-primary);white-space:nowrap';
-    si.appendChild(sn);
+    si.append(sn);
     var st = document.createElement('h2');
     st.id = 'lyrics-song-title';
     st.style.cssText = 'font-family:var(--font-display);font-size:1.05rem;font-weight:700;color:var(--md-sys-color-on-surface);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
-    si.appendChild(st);
-    hd.appendChild(si);
+    si.append(st);
+    hd.append(si);
 
     var ha = document.createElement('div');
     ha.style.cssText = 'display:flex;gap:2px;flex-shrink:0';
@@ -173,26 +172,26 @@
       b.style.cssText = 'width:32px;height:32px;border-radius:10px;opacity:0.5;display:flex;align-items:center;justify-content:center';
       var s = document.createElement('span');
       s.className = 'material-symbols-outlined'; s.style.fontSize = '18px'; s.textContent = icon;
-      b.appendChild(s); return b;
+      b.append(s); return b;
     }
 
     var fd = mkCtrlBtn('lyrics-font-down', 'Perkecil font', 'text_decrease');
     fd.addEventListener('click', function () { lyricsFontSize = Math.max(14, lyricsFontSize - 4); savePrefs(); updateLyricsVerse(); });
-    ha.appendChild(fd);
+    ha.append(fd);
     var fu = mkCtrlBtn('lyrics-font-up', 'Perbesar font', 'text_increase');
     fu.addEventListener('click', function () { lyricsFontSize = Math.min(72, lyricsFontSize + 4); savePrefs(); updateLyricsVerse(); });
-    ha.appendChild(fu);
+    ha.append(fu);
     var sd = mkCtrlBtn('lyrics-spacing-down', 'Rapatkan teks', 'format_line_spacing');
     sd.addEventListener('click', function () { lyricsLineSpacing = Math.max(1, +(lyricsLineSpacing - 0.2).toFixed(1)); savePrefs(); updateLyricsVerse(); });
-    ha.appendChild(sd);
+    ha.append(sd);
     var su = mkCtrlBtn('lyrics-spacing-up', 'Renggangkan teks', 'line_weight');
     su.addEventListener('click', function () { lyricsLineSpacing = Math.min(3.5, +(lyricsLineSpacing + 0.2).toFixed(1)); savePrefs(); updateLyricsVerse(); });
-    ha.appendChild(su);
+    ha.append(su);
     var cb = mkCtrlBtn('lyrics-close-btn', 'Kembali ke PDF', 'close');
     cb.addEventListener('click', function () { window.hideLyricsView(); });
-    ha.appendChild(cb);
-    hd.appendChild(ha);
-    inn.appendChild(hd);
+    ha.append(cb);
+    hd.append(ha);
+    inn.append(hd);
 
     // Content
     var ct = document.createElement('div');
@@ -205,7 +204,7 @@
     vt.id = 'lyrics-verse-text';
     vt.className = 'lyrics-verse-text';
     vt.style.cssText = 'font-family:var(--font-display);color:var(--md-sys-color-on-surface);font-weight:500;transition:font-size 0.2s ease,line-height 0.2s ease;white-space:normal';
-    vc.appendChild(vt); ct.appendChild(vc); inn.appendChild(ct);
+    vc.append(vt); ct.append(vc); inn.append(ct);
 
     // Footer
     var ft = document.createElement('div');
@@ -224,31 +223,31 @@
       b.style.cssText = 'width:38px;height:38px;border-radius:12px;background:var(--md-sys-color-surface-container-highest);display:flex;align-items:center;justify-content:center;transition:opacity 0.2s,transform 0.12s';
       var s = document.createElement('span');
       s.className = 'material-symbols-outlined'; s.style.fontSize = '22px'; s.textContent = icon;
-      b.appendChild(s); return b;
+      b.append(s); return b;
     }
 
     var pv = mkNavBtn('lyrics-song-prev', 'Lagu sebelumnya', 'skip_previous');
     pv.addEventListener('click', function (e) { e.stopPropagation(); if (typeof onPrevSong === 'function') onPrevSong(false, true); });
-    fl.appendChild(pv);
+    fl.append(pv);
     var nv = mkNavBtn('lyrics-song-next', 'Lagu berikutnya', 'skip_next');
     nv.addEventListener('click', function (e) { e.stopPropagation(); if (typeof onNextSong === 'function') onNextSong(false); });
-    fr.appendChild(nv);
+    fr.append(nv);
     var vb = mkNavBtn('lyrics-prev-verse', 'Bait sebelumnya', 'arrow_upward');
     vb.addEventListener('click', function () { navigateLyricsVerse(-1); });
-    fc.appendChild(vb);
+    fc.append(vb);
     var vi = document.createElement('span');
     vi.id = 'lyrics-verse-indicator';
     vi.className = 'lyrics-verse-indicator';
     vi.style.cssText = 'font-size:0.82rem;font-weight:600;color:var(--md-sys-color-on-surface-variant);min-width:110px;text-align:center;white-space:nowrap';
     vi.textContent = 'Bait 1 dari 1';
-    fc.appendChild(vi);
+    fc.append(vi);
     var va = mkNavBtn('lyrics-next-verse', 'Bait berikutnya', 'arrow_downward');
     va.addEventListener('click', function () { navigateLyricsVerse(1); });
-    fc.appendChild(va);
+    fc.append(va);
 
-    ft.appendChild(fl); ft.appendChild(fc); ft.appendChild(fr);
-    inn.appendChild(ft); p.appendChild(inn);
-    document.body.appendChild(p);
+    ft.append(fl); ft.append(fc); ft.append(fr);
+    inn.append(ft); p.append(inn);
+    document.body.append(p);
 
     // Gestures: vertical swipe = verse nav, horizontal swipe = song nav
     var tsX = 0, tsY = 0, tsT = 0;
@@ -264,17 +263,14 @@
       var absDx = Math.abs(dx), absDy = Math.abs(dy);
       if (absDx < 40 && absDy < 40) return;
       if (absDx > absDy) {
-        // Horizontal swipe: song navigation
         if (absDx > 40) {
           if (dx < 0) { if (typeof onNextSong === 'function') onNextSong(false); }
           else { if (typeof onPrevSong === 'function') onPrevSong(false, true); }
         }
       } else {
-        // Vertical swipe: verse navigation
         if (absDy > 40) navigateLyricsVerse(dy > 0 ? -1 : 1);
       }
     });
-    // Wheel: vertical only for verse nav
     ct.addEventListener('wheel', function (e) {
       if (Math.abs(e.deltaY) > 30) { e.preventDefault(); navigateLyricsVerse(e.deltaY > 0 ? 1 : -1); }
     }, { passive: false });
@@ -289,11 +285,10 @@
     lyricsViewWasActive = true;
     lyricsVerseIndex = 0;
 
-    // Update title + verse content FIRST
     var entry = getCurrentLyricEntry();
     if (entry) {
-      var sn = document.getElementById('lyrics-song-number');
-      var st = document.getElementById('lyrics-song-title');
+      var sn = qs('#lyrics-song-number');
+      var st = qs('#lyrics-song-title');
       if (sn) sn.textContent = (entry.number || '') + ' - ';
       if (st) { st.textContent = entry.title || ''; st.title = entry.title || ''; autoFitLyricsTitle(st); }
     }
@@ -303,9 +298,8 @@
     panel.style.opacity = '1';
     document.body.classList.add('lyrics-mode');
 
-    // Song-change: animate the verse container using Web Animations API
     if (isSongChange) {
-      var vt = document.getElementById('lyrics-verse-text');
+      var vt = qs('#lyrics-verse-text');
       if (vt && typeof vt.animate === 'function') {
         vt.animate([
           { opacity: 0, transform: 'scale(0.94)' },
@@ -321,7 +315,7 @@
     lyricsViewActive = false;
     lyricsViewWasActive = false;
 
-    var panel = document.getElementById('lyrics-panel');
+    var panel = qs('#lyrics-panel');
     if (panel) {
       panel.classList.add('fading-out');
       setTimeout(function () { panel.style.display = 'none'; panel.classList.remove('fading-out'); }, 250);
@@ -346,7 +340,6 @@
     }
   }
 
-
   function syncLyricsToggleButtons() {
     var pressed = lyricsViewActive ? 'true' : 'false';
     document.querySelectorAll('#lyrics-toggle-btn, #midi-lyrics-toggle-btn').forEach(function (b) {
@@ -357,7 +350,7 @@
 
   function injectLyricsToggleButton() {
     var transport = document.querySelector('.mini-transport');
-    var miniExists = !!document.getElementById('lyrics-toggle-btn');
+    var miniExists = !!qs('#lyrics-toggle-btn');
     if (!miniExists && transport) {
       var btn = document.createElement('button');
       btn.id = 'lyrics-toggle-btn';
@@ -365,44 +358,42 @@
       btn.setAttribute('aria-label', 'Lihat Lirik');
       btn.setAttribute('aria-pressed', 'false');
       btn.title = 'Lihat Lirik';
-      (function() { var s = document.createElement('span'); s.className = 'material-symbols-outlined'; s.textContent = 'menu_book'; btn.appendChild(s); })();
+      var s = document.createElement('span');
+      s.className = 'material-symbols-outlined'; s.textContent = 'menu_book';
+      btn.append(s);
       btn.addEventListener('click', function (e) { e.stopPropagation(); toggleLyricsView(); });
-      // Append to transport controls so it sits inline with prev/play/next buttons
-      // and does not add an extra child to the .mini-player-top grid
-      transport.appendChild(btn);
+      transport.append(btn);
     }
 
-    // Also inject into MIDI player actions area (shown when PDF viewer is open)
-    var midiExisting = document.getElementById('midi-lyrics-toggle-btn');
+    var midiExisting = qs('#midi-lyrics-toggle-btn');
     if (!midiExisting) {
       var playerActions = document.querySelector('.custom-player-actions');
-      if (playerActions && !playerActions.querySelector('#midi-lyrics-toggle-btn')) {
+      if (playerActions && !qs('#midi-lyrics-toggle-btn')) {
         var midiBtn = document.createElement('button');
         midiBtn.id = 'midi-lyrics-toggle-btn';
         midiBtn.className = 'instrument-capsule-btn midi-action-btn midi-icon-btn';
         midiBtn.setAttribute('aria-label', 'Lihat Lirik');
         midiBtn.setAttribute('aria-pressed', 'false');
         midiBtn.title = 'Lihat Lirik';
-        (function() { var s = document.createElement('span'); s.className = 'material-symbols-outlined cis-icon'; s.textContent = 'menu_book'; midiBtn.appendChild(s); })();
+        var s = document.createElement('span');
+        s.className = 'material-symbols-outlined cis-icon'; s.textContent = 'menu_book';
+        midiBtn.append(s);
         midiBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleLyricsView(); });
-        // Insert before the loop/autonext buttons at the end of the action row
         var loopBtn = playerActions.querySelector('#custom-loop-btn');
         if (loopBtn) {
           loopBtn.closest('.instrument-selector-wrapper').before(midiBtn);
         } else {
-          playerActions.appendChild(midiBtn);
+          playerActions.append(midiBtn);
         }
       }
     }
   }
 
-  // Update song title + verse text without touching panel visibility or animation.
-  // Called during song navigation while lyrics mode is already active.
   function _updateLyricsContentAfterSongChange() {
     var entry = getCurrentLyricEntry();
     if (entry) {
-      var sn = document.getElementById('lyrics-song-number');
-      var st = document.getElementById('lyrics-song-title');
+      var sn = qs('#lyrics-song-number');
+      var st = qs('#lyrics-song-title');
       if (sn) sn.textContent = (entry.number || '') + ' - ';
       if (st) { st.textContent = entry.title || ''; st.title = entry.title || ''; autoFitLyricsTitle(st); }
     }
@@ -410,7 +401,6 @@
     updateLyricsVerse(0);
   }
 
-  // Hook into openPdfViewer to inject button and restore state
   function hookOpenPdfViewer() {
     if (typeof openPdfViewer !== 'undefined') {
       var _orig = openPdfViewer;
@@ -419,9 +409,9 @@
         var result = await _orig(songId, backgroundLoad);
         if (!backgroundLoad) {
           loadPrefs();
+          // Inject toggle buttons into PDF viewer MIDI player (only once)
+          setTimeout(injectLyricsToggleButton, 100);
           if (wasActive) {
-            // Song changed while lyrics was visible — update content instantly,
-            // skip full showLyricsView (panel already shown, no animation needed).
             if (lyricsData) {
               _updateLyricsContentAfterSongChange();
             } else {
@@ -441,7 +431,6 @@
           return await _origClose();
         };
       }
-      console.log('[lyrics-viewer] hooked');
     } else {
       setTimeout(hookOpenPdfViewer, 200);
     }
@@ -449,6 +438,7 @@
   setTimeout(hookOpenPdfViewer, 500);
 
   setTimeout(function () {
+    injectLyricsToggleButton();
     if (!lyricsData) {
       fetch('assets-lyrics.json')
         .then(function (r) { return r.ok ? r.json() : []; })
@@ -457,6 +447,4 @@
     }
     loadPrefs();
   }, 2000);
-
-  console.log('[lyrics-viewer] initialized');
 })();
