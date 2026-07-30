@@ -628,7 +628,9 @@
 							});
 					}
 				}
-				var result = await _orig(songId, backgroundLoad);
+				// In lyrics mode, skip full PDF render — audio + lyrics is enough.
+				// The PDF still loads in background for when user exits lyrics mode.
+				var result = await _orig(songId, wasActive || backgroundLoad);
 				if (!backgroundLoad) {
 					setTimeout(injectLyricsToggleButton, 100);
 				}
@@ -648,19 +650,7 @@
 	setTimeout(hookOpenPdfViewer, 500);
 
 	setTimeout(function () {
-		injectLyricsToggleButton();
-		if (!lyricsData) {
-			fetch("assets-lyrics.json")
-				.then(function (r) {
-					return r.ok ? r.json() : [];
-				})
-				.catch(function () {
-					return [];
-				})
-				.then(function (data) {
-					lyricsData = data;
-				});
-		}
-		loadPrefs();
-	}, 2000);
+	injectLyricsToggleButton();
+	loadPrefs();
+	}, 2000); /* ponytail: only loads prefs now; lyrics JSON fetched on first toggle */
 })();
