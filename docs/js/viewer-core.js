@@ -3439,8 +3439,8 @@ function toggleLyricsView() {
 function injectLyricsToggleButton() {
   var existing = document.getElementById("lyrics-toggle-btn");
   if (existing) return;
-  var miniTop = document.querySelector(".mini-player-top");
-  if (!miniTop) return;
+  var transport = document.querySelector(".mini-transport");
+  if (!transport) return;
 
   var btn = document.createElement("button");
   btn.id = "lyrics-toggle-btn";
@@ -3450,13 +3450,9 @@ function injectLyricsToggleButton() {
   btn.title = "Lihat Lirik";
   btn.innerHTML = '<span class="material-symbols-outlined">menu_book</span>';
   btn.addEventListener("click", function (e) { e.stopPropagation(); toggleLyricsView(); });
-  // Insert before the extras toggle button so it's always visible in the top row
-  var ref = document.getElementById("mini-extras-toggle");
-  if (ref) {
-    miniTop.insertBefore(btn, ref);
-  } else {
-    miniTop.appendChild(btn);
-  }
+  // Append to transport controls so it sits inline with prev/play/next buttons
+  // and does not add an extra child to the .mini-player-top grid
+  transport.appendChild(btn);
 }
 
 function preloadLyricsData() {
