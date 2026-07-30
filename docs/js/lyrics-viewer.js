@@ -38,12 +38,6 @@
     return getSongLyricData(pujianItems[currentSongIndex]);
   }
 
-  function escapeHtml(text) {
-    var div = document.createElement('div');
-    div.appendChild(document.createTextNode(text));
-    return div.innerHTML;
-  }
-
   function autoFitLyricsTitle(el) {
     if (!el) return;
     var maxWidth = el.parentElement ? el.parentElement.clientWidth - 80 : 300;
@@ -68,7 +62,13 @@
     var entry = getCurrentLyricEntry();
 
     if (!entry || !entry.verses || entry.verses.length === 0) {
-      if (verseText) verseText.innerHTML = '<p style="font-style:italic;color:var(--md-sys-color-on-surface-variant);font-size:1rem;line-height:1.6;white-space:normal">Teks lagu belum tersedia.</p>';
+      if (verseText) {
+        verseText.textContent = '';
+        var p = document.createElement('p');
+        p.style.cssText = 'font-style:italic;color:var(--md-sys-color-on-surface-variant);font-size:1rem;line-height:1.6;white-space:normal;margin:0;padding:0';
+        p.textContent = 'Teks lagu belum tersedia.';
+        verseText.appendChild(p);
+      }
       if (indicator) indicator.textContent = '';
       if (prevBtn) prevBtn.style.visibility = 'hidden';
       if (nextBtn) nextBtn.style.visibility = 'hidden';
@@ -80,19 +80,21 @@
 
     var verse = entry.verses[lyricsVerseIndex];
     var lines = verse.split('\n').filter(function (l) { return l.trim().length > 0; });
-    var html = '';
-    for (var i = 0; i < lines.length; i++) {
-      html += '<p class="lyrics-line" style="margin:0;padding:0">' + escapeHtml(lines[i]) + '</p>';
-    }
-
     if (verseText) {
+      verseText.textContent = '';
+      for (var i = 0; i < lines.length; i++) {
+        var p = document.createElement('p');
+        p.className = 'lyrics-line';
+        p.style.cssText = 'margin:0;padding:0';
+        p.textContent = lines[i];
+        verseText.appendChild(p);
+      }
       if (animateDir && animateDir !== 0 && container) {
         // Verse change animation: slide up/down
         container.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
         container.style.transform = 'translateY(' + (animateDir > 0 ? -20 : 20) + 'px)';
         container.style.opacity = '0';
         setTimeout(function () {
-          verseText.innerHTML = html;
           verseText.style.fontSize = lyricsFontSize + 'px';
           verseText.style.lineHeight = String(lyricsLineSpacing);
           container.style.transform = 'translateY(' + (animateDir > 0 ? 20 : -20) + 'px)';
@@ -105,7 +107,6 @@
         }, 200);
       } else {
         // Direct update, no animation
-        verseText.innerHTML = html;
         verseText.style.fontSize = lyricsFontSize + 'px';
         verseText.style.lineHeight = String(lyricsLineSpacing);
       }
@@ -364,7 +365,7 @@
       btn.setAttribute('aria-label', 'Lihat Lirik');
       btn.setAttribute('aria-pressed', 'false');
       btn.title = 'Lihat Lirik';
-      btn.innerHTML = '<span class="material-symbols-outlined">menu_book</span>';
+      (function() { var s = document.createElement('span'); s.className = 'material-symbols-outlined'; s.textContent = 'menu_book'; btn.appendChild(s); })();
       btn.addEventListener('click', function (e) { e.stopPropagation(); toggleLyricsView(); });
       // Append to transport controls so it sits inline with prev/play/next buttons
       // and does not add an extra child to the .mini-player-top grid
@@ -382,7 +383,7 @@
         midiBtn.setAttribute('aria-label', 'Lihat Lirik');
         midiBtn.setAttribute('aria-pressed', 'false');
         midiBtn.title = 'Lihat Lirik';
-        midiBtn.innerHTML = '<span class="material-symbols-outlined cis-icon">menu_book</span>';
+        (function() { var s = document.createElement('span'); s.className = 'material-symbols-outlined cis-icon'; s.textContent = 'menu_book'; midiBtn.appendChild(s); })();
         midiBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleLyricsView(); });
         // Insert before the loop/autonext buttons at the end of the action row
         var loopBtn = playerActions.querySelector('#custom-loop-btn');
@@ -395,6 +396,20 @@
     }
   }
 
+  // Update song title + verse text without touching panel visibility or animation.
+  // Called during song navigation while lyrics mode is already active.
+  function _updateLyricsContentAfterSongChange() {
+    var entry = getCurrentLyricEntry();
+    if (entry) {
+      var sn = document.getElementById('lyrics-song-number');
+      var st = document.getElementById('lyrics-song-title');
+      if (sn) sn.textContent = (entry.number || '') + ' - ';
+      if (st) { st.textContent = entry.title || ''; st.title = entry.title || ''; autoFitLyricsTitle(st); }
+    }
+    lyricsVerseIndex = 0;
+    updateLyricsVerse(0);
+  }
+
   // Hook into openPdfViewer to inject button and restore state
   function hookOpenPdfViewer() {
     if (typeof openPdfViewer !== 'undefined') {
@@ -404,20 +419,18 @@
         var result = await _orig(songId, backgroundLoad);
         if (!backgroundLoad) {
           loadPrefs();
-          setTimeout(function () {
-            injectLyricsToggleButton();
-            // Only restore if lyrics was actually active (not just wasActive flag)
-            if (wasActive) {
-              if (lyricsData) {
-                showLyricsView(true);
-              } else {
-                fetch('assets-lyrics.json')
-                  .then(function (r) { return r.ok ? r.json() : []; })
-                  .catch(function () { return []; })
-                  .then(function (data) { lyricsData = data; showLyricsView(true); });
-              }
+          if (wasActive) {
+            // Song changed while lyrics was visible — update content instantly,
+            // skip full showLyricsView (panel already shown, no animation needed).
+            if (lyricsData) {
+              _updateLyricsContentAfterSongChange();
+            } else {
+              fetch('assets-lyrics.json')
+                .then(function (r) { return r.ok ? r.json() : []; })
+                .catch(function () { return []; })
+                .then(function (data) { lyricsData = data; _updateLyricsContentAfterSongChange(); });
             }
-          }, 300);
+          }
         }
         return result;
       };
