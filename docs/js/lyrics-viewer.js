@@ -399,6 +399,14 @@
     }
     lyricsVerseIndex = 0;
     updateLyricsVerse(0);
+    // Crossfade animation for song change
+    var vt = qs('#lyrics-verse-text');
+    if (vt && typeof vt.animate === 'function') {
+      vt.animate([
+        { opacity: 0, transform: 'scale(0.94)' },
+        { opacity: 1, transform: 'scale(1)' }
+      ], { duration: 300, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'forwards' });
+    }
   }
 
   function hookOpenPdfViewer() {
@@ -406,21 +414,22 @@
       var _orig = openPdfViewer;
       openPdfViewer = async function (songId, backgroundLoad) {
         var wasActive = lyricsViewActive;
+        // Update lyrics IMMEDIATELY before PDF/MIDI load — lyrics data is
+        // already in memory, no need to wait for the full page load cycle.
+        if (wasActive && !backgroundLoad) {
+          loadPrefs();
+          if (lyricsData) {
+            _updateLyricsContentAfterSongChange();
+          } else {
+            fetch('assets-lyrics.json')
+              .then(function (r) { return r.ok ? r.json() : []; })
+              .catch(function () { return []; })
+              .then(function (data) { lyricsData = data; _updateLyricsContentAfterSongChange(); });
+          }
+        }
         var result = await _orig(songId, backgroundLoad);
         if (!backgroundLoad) {
-          loadPrefs();
-          // Inject toggle buttons into PDF viewer MIDI player (only once)
           setTimeout(injectLyricsToggleButton, 100);
-          if (wasActive) {
-            if (lyricsData) {
-              _updateLyricsContentAfterSongChange();
-            } else {
-              fetch('assets-lyrics.json')
-                .then(function (r) { return r.ok ? r.json() : []; })
-                .catch(function () { return []; })
-                .then(function (data) { lyricsData = data; _updateLyricsContentAfterSongChange(); });
-            }
-          }
         }
         return result;
       };
