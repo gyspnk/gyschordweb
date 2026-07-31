@@ -1,89 +1,117 @@
-const CACHE_NAME = "gys-cache-v54";
-const APP_VERSION = "3.8.0";
+const CACHE_NAME = "gys-cache-v55";
+const APP_VERSION = "3.8.1";
 
 self.addEventListener("install", (_event) => {
-  self.skipWaiting();
+	self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
-  );
+	event.waitUntil(
+		caches
+			.keys()
+			.then((cacheNames) => {
+				return Promise.all(
+					cacheNames.map((cacheName) => {
+						if (cacheName !== CACHE_NAME) {
+							return caches.delete(cacheName);
+						}
+					}),
+				);
+			})
+			.then(() => self.clients.claim()),
+	);
 });
 
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "GET_VERSION") {
-    event.source.postMessage({ type: "VERSION", version: APP_VERSION });
-  }
-  if (event.data && event.data.type === "CLEAR_CACHE") {
-    caches.keys().then((cacheNames) => {
-      return Promise.all(cacheNames.map((name) => caches.delete(name)));
-    }).then(() => {
-      event.source.postMessage({ type: "CACHE_CLEARED" });
-    });
-  }
+	if (event.data && event.data.type === "GET_VERSION") {
+		event.source.postMessage({ type: "VERSION", version: APP_VERSION });
+	}
+	if (event.data && event.data.type === "CLEAR_CACHE") {
+		caches
+			.keys()
+			.then((cacheNames) => {
+				return Promise.all(cacheNames.map((name) => caches.delete(name)));
+			})
+			.then(() => {
+				event.source.postMessage({ type: "CACHE_CLEARED" });
+			});
+	}
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+	if (event.request.method !== "GET") return;
 
-  // Parse URL safely
-  var url;
-  try { url = new URL(event.request.url); } catch (_) { return; }
+	// Parse URL safely
+	var url;
+	try {
+		url = new URL(event.request.url);
+	} catch (_) {
+		return;
+	}
 
-  // NEVER cache dynamic assets — always network
-  if (url.pathname.includes("/midi/") ||
-      url.pathname.includes("/pdf/") ||
-      url.pathname.includes("/chord/") ||
-      url.pathname.includes("assets-list.json") ||
-      url.pathname.includes("assets-lyrics.json") ||
-      url.pathname.includes("assets-chord-list.json")) {
-    event.respondWith(fetch(event.request));
-    return;
-  }
+	// NEVER cache dynamic assets — always network
+	if (
+		url.pathname.includes("/midi/") ||
+		url.pathname.includes("/pdf/") ||
+		url.pathname.includes("/chord/") ||
+		url.pathname.includes("assets-list.json") ||
+		url.pathname.includes("assets-lyrics.json") ||
+		url.pathname.includes("assets-chord-list.json")
+	) {
+		event.respondWith(fetch(event.request));
+		return;
+	}
 
-  // Local app files (JS, CSS, HTML): network-first, fallback to cache
-  var isLocalAppFile = url.origin === self.location.origin &&
-    (url.pathname.endsWith(".js") || url.pathname.endsWith(".css") ||
-     url.pathname.endsWith(".html") || url.pathname === "/" || url.pathname.endsWith("/"));
+	// Local app files (JS, CSS, HTML): network-first, fallback to cache
+	var isLocalAppFile =
+		url.origin === self.location.origin &&
+		(url.pathname.endsWith(".js") ||
+			url.pathname.endsWith(".css") ||
+			url.pathname.endsWith(".html") ||
+			url.pathname === "/" ||
+			url.pathname.endsWith("/"));
 
-  if (isLocalAppFile) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then((cache) => fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              cache.put(event.request, networkResponse.clone());
-            }
-            return networkResponse;
-          })
-          .catch(() => caches.match(event.request).then((cachedResponse) => cachedResponse || Response.error())))
-    );
-    return;
-  }
+	if (isLocalAppFile) {
+		event.respondWith(
+			caches.open(CACHE_NAME).then((cache) =>
+				fetch(event.request)
+					.then((networkResponse) => {
+						if (networkResponse && networkResponse.status === 200) {
+							cache.put(event.request, networkResponse.clone());
+						}
+						return networkResponse;
+					})
+					.catch(() =>
+						caches
+							.match(event.request)
+							.then((cachedResponse) => cachedResponse || Response.error()),
+					),
+			),
+		);
+		return;
+	}
 
-  // All other assets (CDN scripts, fonts, images): cache-first
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        if (networkResponse && (networkResponse.status === 200 || networkResponse.type === "opaque")) {
-          var responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      }).catch(() => Response.error());
-    })
-  );
+	// All other assets (CDN scripts, fonts, images): cache-first
+	event.respondWith(
+		caches.match(event.request).then((cachedResponse) => {
+			if (cachedResponse) {
+				return cachedResponse;
+			}
+			return fetch(event.request)
+				.then((networkResponse) => {
+					if (
+						networkResponse &&
+						(networkResponse.status === 200 ||
+							networkResponse.type === "opaque")
+					) {
+						var responseToCache = networkResponse.clone();
+						caches.open(CACHE_NAME).then((cache) => {
+							cache.put(event.request, responseToCache);
+						});
+					}
+					return networkResponse;
+				})
+				.catch(() => Response.error());
+		}),
+	);
 });
