@@ -4422,13 +4422,13 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	flex-direction: row !important;
 	flex-wrap: nowrap !important;
 	align-items: center;
-	gap: 3px;
+	gap: 4px;
 }
 #custom-midi-player .custom-player-primary {
 	display: flex !important;
 	flex-direction: row !important;
 	align-items: center;
-	gap: 3px;
+	gap: 4px;
 	flex: 1 1 auto;
 	min-width: 0;
 }
@@ -4437,7 +4437,7 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	flex-direction: row !important;
 	flex-wrap: nowrap !important;
 	align-items: center;
-	gap: 2px;
+	gap: 4px;
 	flex: 0 1 auto;
 	min-width: 0;
 }
@@ -4468,30 +4468,30 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	padding: 0 2px;
 	white-space: nowrap;
 }
-/* Semua icon button: 24px, label disembunyikan */
+/* Semua icon button: adaptif (padding-based, bisa menyusut/melar) */
 #custom-midi-player .instrument-capsule-btn,
 #custom-midi-player .midi-icon-btn.instrument-capsule-btn,
 #custom-midi-player .midi-action-btn.instrument-capsule-btn {
-	width: 24px !important;
-	min-width: 24px !important;
+	width: auto !important;
+	min-width: 26px;
 	height: 24px !important;
-	padding: 0 !important;
+	padding: 0 6px !important;
 	justify-content: center;
 	border-radius: 7px;
-	flex-shrink: 0;
+	flex: 0 1 auto;
 }
 #custom-midi-player .midi-action-btn .cis-label,
 #custom-midi-player .midi-action-btn .cis-chevron {
 	display: none !important;
 }
-/* Tempo: icon + angka saja */
+/* Tempo: icon + angka, adaptif */
 #custom-midi-player .midi-tempo-toggle-btn {
-	min-width: 38px !important;
+	min-width: 26px;
 	height: 24px !important;
-	padding: 0 4px !important;
+	padding: 0 7px !important;
 	border-radius: 7px;
-	gap: 1px;
-	flex-shrink: 0;
+	gap: 2px;
+	flex: 0 1 auto;
 }
 #custom-midi-player .midi-tempo-chevron,
 #custom-midi-player .midi-tempo-toggle-unit {
