@@ -1,6 +1,6 @@
 /* Lyrics-Only View Mode - standalone module */
-(function () {
-	"use strict";
+(() => {
+	
 
 	var lyricsData = null;
 	var lyricsVerseIndex = 0;
@@ -29,9 +29,7 @@
 		if (!lyricsData || !Array.isArray(lyricsData)) return null;
 		var num = String(song.nomor).replace(/^0+/, "") || "1";
 		return (
-			lyricsData.find(function (entry) {
-				return String(entry.number).replace(/^0+/, "") === num;
-			}) || null
+			lyricsData.find((entry) => String(entry.number).replace(/^0+/, "") === num) || null
 		);
 	}
 
@@ -96,9 +94,7 @@
 		if (lyricsVerseIndex < 0) lyricsVerseIndex = entry.verses.length - 1;
 
 		var verse = entry.verses[lyricsVerseIndex];
-		var lines = verse.split("\n").filter(function (l) {
-			return l.trim().length > 0;
-		});
+		var lines = verse.split("\n").filter((l) => l.trim().length > 0);
 		if (verseText) {
 			if (animateDir && animateDir !== 0 && container) {
 				// Phase 1: slide OLD content out
@@ -106,7 +102,7 @@
 				container.style.transform =
 					"translateY(" + (animateDir > 0 ? -20 : 20) + "px)";
 				container.style.opacity = "0";
-				setTimeout(function () {
+				setTimeout(() => {
 					// Phase 2: swap to NEW content while invisible
 					verseText.textContent = "";
 					for (var i = 0; i < lines.length; i++) {
@@ -123,8 +119,8 @@
 					container.style.transform =
 						"translateY(" + (animateDir > 0 ? 20 : -20) + "px)";
 					container.style.opacity = "1";
-					requestAnimationFrame(function () {
-						requestAnimationFrame(function () {
+					requestAnimationFrame(() => {
+						requestAnimationFrame(() => {
 							// Phase 3: slide NEW content in
 							container.style.transition =
 								"transform 0.2s ease, opacity 0.2s ease";
@@ -169,7 +165,7 @@
 		lyricsTransitioning = true;
 		lyricsVerseIndex = newIdx;
 		updateLyricsVerse(delta);
-		setTimeout(function () {
+		setTimeout(() => {
 			lyricsTransitioning = false;
 		}, 300);
 	}
@@ -189,7 +185,7 @@
 		bd.id = "lyrics-backdrop";
 		bd.style.cssText =
 			"position:absolute;inset:0;background:var(--md-sys-color-surface)";
-		bd.addEventListener("click", function (e) {
+		bd.addEventListener("click", (e) => {
 			e.stopPropagation();
 		});
 		p.append(bd);
@@ -238,14 +234,14 @@
 		}
 
 		var fd = mkCtrlBtn("lyrics-font-down", "Perkecil font", "text_decrease");
-		fd.addEventListener("click", function () {
+		fd.addEventListener("click", () => {
 			lyricsFontSize = Math.max(14, lyricsFontSize - 4);
 			savePrefs();
 			updateLyricsVerse();
 		});
 		ha.append(fd);
 		var fu = mkCtrlBtn("lyrics-font-up", "Perbesar font", "text_increase");
-		fu.addEventListener("click", function () {
+		fu.addEventListener("click", () => {
 			lyricsFontSize = Math.min(72, lyricsFontSize + 4);
 			savePrefs();
 			updateLyricsVerse();
@@ -256,21 +252,21 @@
 			"Rapatkan teks",
 			"format_line_spacing",
 		);
-		sd.addEventListener("click", function () {
+		sd.addEventListener("click", () => {
 			lyricsLineSpacing = Math.max(1, +(lyricsLineSpacing - 0.2).toFixed(1));
 			savePrefs();
 			updateLyricsVerse();
 		});
 		ha.append(sd);
 		var su = mkCtrlBtn("lyrics-spacing-up", "Renggangkan teks", "line_weight");
-		su.addEventListener("click", function () {
+		su.addEventListener("click", () => {
 			lyricsLineSpacing = Math.min(3.5, +(lyricsLineSpacing + 0.2).toFixed(1));
 			savePrefs();
 			updateLyricsVerse();
 		});
 		ha.append(su);
 		var cb = mkCtrlBtn("lyrics-close-btn", "Kembali ke PDF", "close");
-		cb.addEventListener("click", function () {
+		cb.addEventListener("click", () => {
 			window.hideLyricsView();
 		});
 		ha.append(cb);
@@ -323,19 +319,19 @@
 		}
 
 		var pv = mkNavBtn("lyrics-song-prev", "Lagu sebelumnya", "skip_previous");
-		pv.addEventListener("click", function (e) {
+		pv.addEventListener("click", (e) => {
 			e.stopPropagation();
 			if (typeof onPrevSong === "function") onPrevSong(_midiIsPlaying(), false);
 		});
 		fl.append(pv);
 		var nv = mkNavBtn("lyrics-song-next", "Lagu berikutnya", "skip_next");
-		nv.addEventListener("click", function (e) {
+		nv.addEventListener("click", (e) => {
 			e.stopPropagation();
 			if (typeof onNextSong === "function") onNextSong(_midiIsPlaying());
 		});
 		fr.append(nv);
 		var vb = mkNavBtn("lyrics-prev-verse", "Bait sebelumnya", "arrow_upward");
-		vb.addEventListener("click", function () {
+		vb.addEventListener("click", () => {
 			navigateLyricsVerse(-1);
 		});
 		fc.append(vb);
@@ -347,7 +343,7 @@
 		vi.textContent = "Bait 1 dari 1";
 		fc.append(vi);
 		var va = mkNavBtn("lyrics-next-verse", "Bait berikutnya", "arrow_downward");
-		va.addEventListener("click", function () {
+		va.addEventListener("click", () => {
 			navigateLyricsVerse(1);
 		});
 		fc.append(va);
@@ -365,7 +361,7 @@
 			tsT = 0;
 		ct.addEventListener(
 			"touchstart",
-			function (e) {
+			(e) => {
 				if (e.touches.length === 1) {
 					tsX = e.touches[0].clientX;
 					tsY = e.touches[0].clientY;
@@ -374,7 +370,7 @@
 			},
 			{ passive: true },
 		);
-		ct.addEventListener("touchend", function (e) {
+		ct.addEventListener("touchend", (e) => {
 			if (!e.changedTouches.length) return;
 			var dx = e.changedTouches[0].clientX - tsX;
 			var dy = e.changedTouches[0].clientY - tsY;
@@ -398,7 +394,7 @@
 		});
 		ct.addEventListener(
 			"wheel",
-			function (e) {
+			(e) => {
 				if (Math.abs(e.deltaY) > 30) {
 					e.preventDefault();
 					navigateLyricsVerse(e.deltaY > 0 ? 1 : -1);
@@ -469,16 +465,20 @@
 		syncLyricsToggleButtons();
 	}
 
-	window.hideLyricsView = function () {
+	window.hideLyricsView = () => {
 		lyricsViewActive = false;
 		lyricsViewWasActive = false;
 
 		var panel = qs("#lyrics-panel");
 		if (panel) {
+			// Cancel any active WAAPI animation so CSS .fading-out can take over
+			if (typeof panel.getAnimations === "function") {
+				panel.getAnimations().forEach((a) => { a.cancel(); });
+			}
 			// Remove inline opacity so CSS .fading-out class can take effect
 			panel.style.removeProperty("opacity");
 			panel.classList.add("fading-out");
-			setTimeout(function () {
+			setTimeout(() => {
 				panel.style.display = "none";
 				panel.classList.remove("fading-out");
 			}, 250);
@@ -496,13 +496,9 @@
 				showLyricsView();
 			} else {
 				fetch("assets-lyrics.json")
-					.then(function (r) {
-						return r.ok ? r.json() : [];
-					})
-					.catch(function () {
-						return [];
-					})
-					.then(function (data) {
+					.then((r) => r.ok ? r.json() : [])
+					.catch(() => [])
+					.then((data) => {
 						lyricsData = data;
 						showLyricsView();
 					});
@@ -514,7 +510,7 @@
 		var pressed = lyricsViewActive ? "true" : "false";
 		document
 			.querySelectorAll("#lyrics-toggle-btn, #midi-lyrics-toggle-btn")
-			.forEach(function (b) {
+			.forEach((b) => {
 				b.setAttribute("aria-pressed", pressed);
 				b.classList.toggle("active", lyricsViewActive);
 			});
@@ -534,7 +530,7 @@
 			s.className = "material-symbols-outlined";
 			s.textContent = "menu_book";
 			btn.append(s);
-			btn.addEventListener("click", function (e) {
+			btn.addEventListener("click", (e) => {
 				e.stopPropagation();
 				toggleLyricsView();
 			});
@@ -556,7 +552,7 @@
 				s.className = "material-symbols-outlined cis-icon";
 				s.textContent = "menu_book";
 				midiBtn.append(s);
-				midiBtn.addEventListener("click", function (e) {
+				midiBtn.addEventListener("click", (e) => {
 					e.stopPropagation();
 					toggleLyricsView();
 				});
@@ -604,7 +600,7 @@
 	function hookOpenPdfViewer() {
 		if (typeof openPdfViewer !== "undefined") {
 			var _orig = openPdfViewer;
-			openPdfViewer = async function (songId, backgroundLoad) {
+			openPdfViewer = async (songId, backgroundLoad) => {
 				var wasActive = lyricsViewActive;
 				// Update lyrics IMMEDIATELY before PDF/MIDI load. Set currentSongIndex
 				// first so getCurrentLyricEntry() reads the target song, not the old one.
@@ -615,13 +611,9 @@
 						_updateLyricsContentAfterSongChange();
 					} else {
 						fetch("assets-lyrics.json")
-							.then(function (r) {
-								return r.ok ? r.json() : [];
-							})
-							.catch(function () {
-								return [];
-							})
-							.then(function (data) {
+							.then((r) => r.ok ? r.json() : [])
+							.catch(() => [])
+							.then((data) => {
 								lyricsData = data;
 								currentSongIndex = parseInt(songId, 10);
 								_updateLyricsContentAfterSongChange();
@@ -638,7 +630,7 @@
 			};
 			if (typeof closePdfViewer !== "undefined") {
 				var _origClose = closePdfViewer;
-				closePdfViewer = async function () {
+				closePdfViewer = async () => {
 					if (lyricsViewActive) window.hideLyricsView();
 					return await _origClose();
 				};
@@ -649,7 +641,7 @@
 	}
 	setTimeout(hookOpenPdfViewer, 500);
 
-	setTimeout(function () {
+	setTimeout(() => {
 		injectLyricsToggleButton();
 		loadPrefs();
 	}, 2000); /* ponytail: only loads prefs now; lyrics JSON fetched on first toggle */
