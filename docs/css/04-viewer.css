@@ -4186,10 +4186,11 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	z-index: 9999;
 	display: none;
 	flex-direction: column;
-	transition: opacity 0.25s ease;
+	transition: opacity 0.25s ease, transform 0.25s ease;
 }
 .lyrics-panel.fading-out {
 	opacity: 0;
+	transform: translateY(10px);
 }
 
 @keyframes lyricsVerseEnter {
@@ -4448,7 +4449,8 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	min-width: 0;
 }
 /* Player padding: hemat ruang (hanya mode dropdown/portrait) */
-body:not(.is-expanded-layout):not(.measure-layout) #custom-midi-player.custom-midi-player {
+body:not(.is-expanded-layout):not(.measure-layout)
+#custom-midi-player.custom-midi-player {
 	padding: 4px 8px;
 }
 /* Play: kompak tapi tetap tap-friendly */
@@ -4531,6 +4533,11 @@ body:not(.is-expanded-layout):not(.measure-layout) #custom-midi-player.custom-mi
 /* === Mini player: extras rapi, content-sized === */
 body .mini-player-extras {
 	gap: 6px;
+	/* Semua kolom content-sized — jangan biarkan instrument (1fr) melar */
+	grid-template-columns: auto auto auto auto;
+}
+body .mini-player-extras .instrument-selector-wrapper {
+	width: auto;
 }
 body .mini-transpose-controls .mini-key-btn,
 body .mini-transpose-controls .mini-transpose-btn {

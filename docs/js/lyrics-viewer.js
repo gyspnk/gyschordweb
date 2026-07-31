@@ -1,7 +1,5 @@
 /* Lyrics-Only View Mode - standalone module */
 (() => {
-	
-
 	var lyricsData = null;
 	var lyricsVerseIndex = 0;
 	var lyricsFontSize = 28;
@@ -29,7 +27,9 @@
 		if (!lyricsData || !Array.isArray(lyricsData)) return null;
 		var num = String(song.nomor).replace(/^0+/, "") || "1";
 		return (
-			lyricsData.find((entry) => String(entry.number).replace(/^0+/, "") === num) || null
+			lyricsData.find(
+				(entry) => String(entry.number).replace(/^0+/, "") === num,
+			) || null
 		);
 	}
 
@@ -471,12 +471,17 @@
 
 		var panel = qs("#lyrics-panel");
 		if (panel) {
-			// Cancel any active WAAPI animation so CSS .fading-out can take over
+			// Cancel WAAPI animation, then force opacity back to 1 BEFORE
+			// adding .fading-out, otherwise the browser sees 0 -> 0 and
+			// skips the transition entirely (no exit animation).
 			if (typeof panel.getAnimations === "function") {
-				panel.getAnimations().forEach((a) => { a.cancel(); });
+				panel.getAnimations().forEach((a) => {
+					a.cancel();
+				});
 			}
-			// Remove inline opacity so CSS .fading-out class can take effect
 			panel.style.removeProperty("opacity");
+			panel.style.removeProperty("transform");
+			void panel.offsetWidth; // commit nilai awal (opacity 1) sebelum transisi
 			panel.classList.add("fading-out");
 			setTimeout(() => {
 				panel.style.display = "none";
@@ -496,7 +501,7 @@
 				showLyricsView();
 			} else {
 				fetch("assets-lyrics.json")
-					.then((r) => r.ok ? r.json() : [])
+					.then((r) => (r.ok ? r.json() : []))
 					.catch(() => [])
 					.then((data) => {
 						lyricsData = data;
@@ -611,7 +616,7 @@
 						_updateLyricsContentAfterSongChange();
 					} else {
 						fetch("assets-lyrics.json")
-							.then((r) => r.ok ? r.json() : [])
+							.then((r) => (r.ok ? r.json() : []))
 							.catch(() => [])
 							.then((data) => {
 								lyricsData = data;
