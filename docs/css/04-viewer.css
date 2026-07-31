@@ -4414,8 +4414,19 @@ body.lyrics-mode .pdf-viewer-page-controls {
 /* === MIDI Player: responsive single-row, no clip popovers === */
 
 #custom-midi-player .custom-player-controls {
+	display: flex;
+	flex-direction: row;
 	flex-wrap: nowrap;
+	align-items: center;
 	gap: 4px;
+}
+#custom-midi-player .custom-player-primary {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+	flex: 1 1 auto;
+	min-width: 0;
 }
 #custom-midi-player .custom-player-actions {
 	display: flex;
@@ -4466,8 +4477,13 @@ body.lyrics-mode .pdf-viewer-page-controls {
 }
 
 /* Compact vertical: thin player in header */
-#custom-midi-player.custom-midi-player { padding: 3px 6px; }
+#custom-midi-player.custom-midi-player {
+	padding: 3px 6px;
+}
 #custom-midi-player .seekbar-wrapper {
 	height: 10px;
 }
-#custom-midi-player .player-track-container { padding: 1px 6px; gap: 1px; }
+#custom-midi-player .player-track-container {
+	padding: 1px 6px;
+	gap: 1px;
+}
