@@ -650,7 +650,7 @@
 	setTimeout(hookOpenPdfViewer, 500);
 
 	setTimeout(function () {
-	injectLyricsToggleButton();
-	loadPrefs();
+		injectLyricsToggleButton();
+		loadPrefs();
 	}, 2000); /* ponytail: only loads prefs now; lyrics JSON fetched on first toggle */
 })();
