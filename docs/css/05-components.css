@@ -97,13 +97,10 @@
   }
 
   .pujian-list li a.pujian-title {
-    white-space: normal;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    white-space: nowrap;
+    display: block;
     overflow: hidden;
-    line-height: 1.35;
+    text-overflow: ellipsis;
     align-self: center;
   }
 }
