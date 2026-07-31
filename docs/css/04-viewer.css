@@ -4437,7 +4437,7 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	flex-direction: row !important;
 	flex-wrap: nowrap !important;
 	align-items: center;
-	gap: 6px;
+	gap: 3px;
 	flex: 0 1 auto;
 	min-width: 0;
 }
@@ -4445,6 +4445,10 @@ body.lyrics-mode .pdf-viewer-page-controls {
 #custom-midi-player .custom-player-actions .instrument-selector-wrapper {
 	flex: 0 1 auto;
 	min-width: 0;
+}
+/* Player padding: hemat ruang (hanya mode dropdown/portrait) */
+body:not(.is-expanded-layout):not(.measure-layout) #custom-midi-player.custom-midi-player {
+	padding: 4px 8px;
 }
 /* Play: kompak tapi tetap tap-friendly */
 #custom-midi-player .custom-player-play.player-btn {
@@ -4456,7 +4460,7 @@ body.lyrics-mode .pdf-viewer-page-controls {
 /* Track: seekbar adaptif, boleh menyusut tapi tidak hilang */
 #custom-midi-player .player-track-container {
 	flex: 1 1 auto;
-	min-width: 56px;
+	min-width: 48px;
 	overflow: hidden;
 }
 #custom-midi-player .custom-player-heading {
@@ -4468,14 +4472,14 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	padding: 0 2px;
 	white-space: nowrap;
 }
-/* Semua icon button: content-sized, min 36px tap-friendly */
+/* Semua icon button: content-sized, min 30px tap-friendly */
 #custom-midi-player .instrument-capsule-btn,
 #custom-midi-player .midi-icon-btn.instrument-capsule-btn,
 #custom-midi-player .midi-action-btn.instrument-capsule-btn {
 	width: auto !important;
-	min-width: 36px;
+	min-width: 30px;
 	height: 26px !important;
-	padding: 0 8px !important;
+	padding: 0 6px !important;
 	justify-content: center;
 	border-radius: 7px;
 	flex: 0 1 auto;
@@ -4486,9 +4490,9 @@ body.lyrics-mode .pdf-viewer-page-controls {
 }
 /* Tempo: icon + angka, content-sized */
 #custom-midi-player .midi-tempo-toggle-btn {
-	min-width: 44px;
+	min-width: 40px;
 	height: 26px !important;
-	padding: 0 8px !important;
+	padding: 0 6px !important;
 	border-radius: 7px;
 	gap: 2px;
 	flex: 0 1 auto;
@@ -4496,6 +4500,11 @@ body.lyrics-mode .pdf-viewer-page-controls {
 #custom-midi-player .midi-tempo-chevron,
 #custom-midi-player .midi-tempo-toggle-unit {
 	display: none !important;
+}
+/* Autonext: compact (base punya min-width 48px !important) */
+#custom-midi-player #autonext-btn {
+	min-width: 0 !important;
+	width: auto !important;
 }
 /* Popover tetap anchor ke kanan (tidak menggoyang layout) */
 #custom-midi-player .midi-tempo-popover,
