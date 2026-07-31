@@ -4539,9 +4539,9 @@ body .mini-player-extras {
 	align-items: center;
 	width: 100%;
 	min-width: 0;
-	/* transpose & loop natural di kiri/kanan, tempo & instrument
-	   mengisi tengah — kiri dan kanan terisi, tombol adaptif */
-	grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+	/* transpose & loop natural di kiri/kanan, instrument lebih lebar
+	   dari tempo — kiri dan kanan terisi, tombol adaptif */
+	grid-template-columns: auto minmax(0, 0.8fr) minmax(0, 1.3fr) auto;
 }
 /* Kalahkan flex:1 1 0% (max-width:479px) di tailwind — wrapper
    instrument mengisi kolomnya, bukan melar ke seluruh baris */
