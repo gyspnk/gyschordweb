@@ -22,21 +22,21 @@ async function init() {
       isSoundfontSwitching = true;
       MidiEngine.loadCrossfadePrefs();
       MidiEngine.init(sfUrl, {
-        onSongEnd: function () {
+        onSongEnd: () => {
           // Dispatch custom event so 05-events.js can handle auto-next, loop, etc.
           window.dispatchEvent(new CustomEvent('midi-song-end'));
         },
-        onStateChange: function (playing, time, duration) {
+        onStateChange: (playing, time, duration) => {
           window._midiKnownDuration = window.isMidiSwitching ? 0 : duration;
           // Sync mini player / UI state
           if (typeof syncMiniPlayerUI === 'function') syncMiniPlayerUI();
         }
-      }).then(function () {
+      }).then(() => {
         isSoundfontSwitching = false;
         if (typeof rebuildInstrumentSelectors === 'function') {
           rebuildInstrumentSelectors(sfUrl);
         }
-      }).catch(function (err) {
+      }).catch((err) => {
         isSoundfontSwitching = false;
         if (typeof rebuildInstrumentSelectors === 'function') {
           rebuildInstrumentSelectors(sfUrl);
@@ -65,7 +65,7 @@ async function init() {
 
   const systemThemeMedia = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
   if (systemThemeMedia && typeof syncHeaderBranding === 'function') {
-    systemThemeMedia.addEventListener('change', function () {
+    systemThemeMedia.addEventListener('change', () => {
       if (localStorage.getItem('dark-theme') == null) {
         syncHeaderBranding();
       }
@@ -96,12 +96,12 @@ function checkForAppUpdate() {
   const APP_VERSION_KEY = 'gys-app-version';
   const savedVersion = localStorage.getItem(APP_VERSION_KEY);
 
-  navigator.serviceWorker.ready.then(function(registration) {
+  navigator.serviceWorker.ready.then((registration) => {
     // Listen for new service worker installing
-    registration.addEventListener('updatefound', function() {
+    registration.addEventListener('updatefound', () => {
       const newWorker = registration.installing;
       if (!newWorker) return;
-      newWorker.addEventListener('statechange', function() {
+      newWorker.addEventListener('statechange', () => {
         if (newWorker.state === 'activated') {
           showUpdateBanner();
         }
@@ -111,7 +111,7 @@ function checkForAppUpdate() {
     // Also ask the active worker for its version
     if (registration.active) {
       var msgChannel = new MessageChannel();
-      msgChannel.port1.onmessage = function(event) {
+      msgChannel.port1.onmessage = (event) => {
         if (event.data && event.data.type === 'VERSION') {
           var swVersion = event.data.version;
           if (savedVersion && savedVersion !== swVersion) {
@@ -124,7 +124,7 @@ function checkForAppUpdate() {
     }
 
     // Check for updates (non-blocking)
-    registration.update().catch(function() {});
+    registration.update().catch(() => {});
   });
 }
 
@@ -147,11 +147,11 @@ function showUpdateBanner() {
   document.body.appendChild(banner);
 
   // Animate in
-  requestAnimationFrame(function() {
+  requestAnimationFrame(() => {
     banner.classList.add('is-visible');
   });
 
-  document.getElementById('update-banner-btn').addEventListener('click', function() {
+  document.getElementById('update-banner-btn').addEventListener('click', () => {
     // Preserve playlists before clearing
     var playlistData = localStorage.getItem('playlists');
     var activePlaylist = localStorage.getItem('active-playlist-id');
@@ -167,7 +167,7 @@ function showUpdateBanner() {
     if (activePlaylist) keysToKeep['active-playlist-id'] = activePlaylist;
 
     localStorage.clear();
-    Object.keys(keysToKeep).forEach(function(k) {
+    Object.keys(keysToKeep).forEach((k) => {
       localStorage.setItem(k, keysToKeep[k]);
     });
 
@@ -175,9 +175,9 @@ function showUpdateBanner() {
     window.location.reload(true);
   });
 
-  document.getElementById('update-banner-dismiss').addEventListener('click', function() {
+  document.getElementById('update-banner-dismiss').addEventListener('click', () => {
     banner.classList.remove('is-visible');
-    setTimeout(function() { banner.remove(); }, 300);
+    setTimeout(() => { banner.remove(); }, 300);
   });
 }
 ;
@@ -466,18 +466,31 @@ function fitViewerTitle() {
 }
 
 function fitListTitles() {
-  document.querySelectorAll(".pujian-title").forEach((titleEl) => {
-    autoFitTextSingleLine(titleEl, {
-      maxPx: 16,
-      minPx: 10
+  const run = () => {
+    document.querySelectorAll(".pujian-title").forEach((titleEl) => {
+      autoFitTextSingleLine(titleEl, {
+        maxPx: 16,
+        minPx: 10
+      });
     });
-  });
+  };
+  run();
+  // Retry setelah layout settle + web font siap (pengukuran pertama bisa salah)
+  requestAnimationFrame(() => requestAnimationFrame(run));
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => requestAnimationFrame(run));
+  }
 }
 
 const _textFitStateCache = new WeakMap();
 
 function autoFitTextSingleLine(element, { maxPx, minPx }) {
-  if (!element || element.offsetParent === null) return;
+  if (!element) return;
+
+  // Paksa 1 baris dari JS (inline menang atas CSS media query / cache lama)
+  element.style.whiteSpace = "nowrap";
+  element.style.overflow = "hidden";
+  element.style.textOverflow = "ellipsis";
 
   const width = Math.round(element.clientWidth);
   if (width <= 0) return;
@@ -491,7 +504,9 @@ function autoFitTextSingleLine(element, { maxPx, minPx }) {
     previousState.maxPx === maxPx &&
     previousState.minPx === minPx
   ) {
-    return;
+    // Verifikasi hasil cache masih muat (web font bisa mengubah ukuran)
+    element.style.fontSize = `${previousState.appliedPx}px`;
+    if (element.scrollWidth <= width + 1) return;
   }
 
   // Start at max and check if it fits
@@ -652,7 +667,7 @@ function rebuildInstrumentSelectors(sfUrl) {
     }
   }
 
-  document.querySelectorAll('.instrument-capsule-btn').forEach(function (btn) {
+  document.querySelectorAll('.instrument-capsule-btn').forEach((btn) => {
     var wrapper = btn.closest('.instrument-selector-wrapper');
     if (!wrapper) return;
     var grid = wrapper.querySelector('.cis-menu-popover .cis-grid');
@@ -664,14 +679,14 @@ function rebuildInstrumentSelectors(sfUrl) {
     ? getMidiInstrumentIcon(currentVal, titleText)
     : 'music_note';
 
-  document.querySelectorAll('#cis-icon, #mini-cis-icon').forEach(function (el) {
+  document.querySelectorAll('#cis-icon, #mini-cis-icon').forEach((el) => {
     el.textContent = iconText;
   });
 
   if (typeof applyInstrumentLabelPresentation === 'function') {
     applyInstrumentLabelPresentation(titleText);
   } else {
-    document.querySelectorAll('#cis-label, #mini-cis-label').forEach(function (el) {
+    document.querySelectorAll('#cis-label, #mini-cis-label').forEach((el) => {
       el.textContent = titleText;
     });
   }
@@ -708,7 +723,7 @@ async function closePdfViewer() {
   // Auto-exit fullscreen when leaving PDF viewer
   if (document.fullscreenElement || document.webkitFullscreenElement) {
     if (document.exitFullscreen) {
-      document.exitFullscreen().catch(function () {});
+      document.exitFullscreen().catch(() => {});
     } else if (document.webkitExitFullscreen) {
       document.webkitExitFullscreen();
     }
@@ -1152,8 +1167,8 @@ function handleTouchMove(event) {
   // But CSS scale around that point means the wrapper's bounding rect changes.
   // The anchor in document space stays at: anchorContentX, anchorContentY
   // We want it to appear at finger viewport position:
-  let targetScrollX = anchorContentX - currentFingerViewportX;
-  let targetScrollY = anchorContentY - currentFingerViewportY;
+  const targetScrollX = anchorContentX - currentFingerViewportX;
+  const targetScrollY = anchorContentY - currentFingerViewportY;
 
   // Clamp scroll to viewport bounds
   const maxScrollX = Math.max(
@@ -1616,7 +1631,7 @@ function handleMainContentClick(e) {
         // Use text content minus the check icon text
         label.textContent = settingsDropdownOption.textContent.replace(/^check\s*/, '').trim();
       }
-      wrapper.querySelectorAll('.settings-dropdown-option').forEach(function(opt) {
+      wrapper.querySelectorAll('.settings-dropdown-option').forEach((opt) => {
         opt.classList.toggle('selected', opt === settingsDropdownOption);
       });
       wrapper.classList.remove('is-open');
@@ -1632,7 +1647,7 @@ function handleMainContentClick(e) {
     const wrapper = settingsDropdownBtn.closest('.settings-custom-dropdown');
     if (wrapper) {
       // Close all other open dropdowns first
-      document.querySelectorAll('.settings-custom-dropdown.is-open').forEach(function(other) {
+      document.querySelectorAll('.settings-custom-dropdown.is-open').forEach((other) => {
         if (other !== wrapper) {
           other.classList.remove('is-open');
           const btn = other.querySelector('.settings-dropdown-btn');
@@ -1939,7 +1954,7 @@ function handleSettingsChange(e) {
     isSoundfontSwitching = true;
     document
       .querySelectorAll(".instrument-selector-wrapper.is-open")
-      .forEach(function (wrapper) {
+      .forEach((wrapper) => {
         wrapper.classList.remove("is-open");
         var capBtn = wrapper.querySelector(".instrument-capsule-btn, .tempo-popover-toggle");
         if (capBtn) capBtn.setAttribute("aria-expanded", "false");
@@ -1947,7 +1962,7 @@ function handleSettingsChange(e) {
 
     if (typeof MidiEngine !== "undefined" && MidiEngine.changeSoundFont) {
       MidiEngine.changeSoundFont(nextSf)
-        .then(function () {
+        .then(() => {
           if (requestId !== soundfontSwitchRequestId) return;
           // Re-sync once the new SoundFont is fully loaded.
           if (typeof rebuildInstrumentSelectors === 'function') {
@@ -1963,7 +1978,7 @@ function handleSettingsChange(e) {
             return changeInstrument();
           }
         })
-        .catch(function (err) {
+        .catch((err) => {
           if (requestId !== soundfontSwitchRequestId) return;
           isSoundfontSwitching = false;
           console.warn('Gagal ganti SoundFont:', err);
