@@ -4411,75 +4411,24 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	}
 }
 
-/* === MIDI Player: responsive single-row, no clip popovers === */
+/* === MIDI Player minimal fix === */
 
-#custom-midi-player .custom-player-controls {
-	display: flex;
-	flex-direction: row;
-	flex-wrap: nowrap;
-	align-items: center;
-	gap: 2px;
-}
-#custom-midi-player .custom-player-primary {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 2px;
-	flex: 1 1 auto;
-	min-width: 0;
-}
-#custom-midi-player .custom-player-actions {
-	display: flex;
-	flex-direction: row;
-	flex-wrap: nowrap;
-	align-items: center;
-	gap: 1px;
-	overflow: visible;
-}
-#custom-midi-player .midi-action,
-#custom-midi-player .instrument-selector-wrapper {
-	flex: 0 0 auto;
-	min-width: 0;
-	overflow: visible;
-}
 #custom-midi-player .instrument-capsule-btn,
 #custom-midi-player .midi-icon-btn.instrument-capsule-btn,
 #custom-midi-player .midi-action-btn.instrument-capsule-btn {
-	width: 22px;
-	height: 22px;
-	min-width: 22px;
-	padding: 0;
-	justify-content: center;
-	border-radius: 6px;
-	flex-shrink: 0;
+	width: 26px; height: 26px; min-width: 26px;
+	padding: 0; justify-content: center; border-radius: 7px;
 }
 #custom-midi-player .midi-action-btn .cis-label,
-#custom-midi-player .midi-action-btn .cis-chevron {
-	display: none;
-}
+#custom-midi-player .midi-action-btn .cis-chevron { display: none; }
 #custom-midi-player .midi-tempo-toggle-btn {
-	min-width: 36px;
-	height: 22px;
-	padding: 0 3px;
-	border-radius: 6px;
-	gap: 1px;
-	flex-shrink: 0;
+	min-width: 40px; height: 26px;
+	padding: 0 5px; border-radius: 7px;
 }
 #custom-midi-player .midi-tempo-chevron,
-#custom-midi-player .midi-tempo-toggle-unit {
-	display: none;
-}
+#custom-midi-player .midi-tempo-toggle-unit { display: none; }
 #custom-midi-player .midi-tempo-popover,
 #custom-midi-player .cis-menu-popover {
-	left: auto;
-	right: 0;
-	transform-origin: top right;
+	left: auto !important; right: 0 !important; transform-origin: top right;
 }
-
-/* Compact */
-#custom-midi-player.custom-midi-player { padding: 2px 4px; }
-#custom-midi-player .custom-player-play.player-btn {
-	width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
-}
-#custom-midi-player .seekbar-wrapper { height: 8px; }
-#custom-midi-player .player-track-container { padding: 0 4px; gap: 0; }
+#custom-midi-player .custom-player-actions { flex-wrap: wrap; gap: 2px; }
