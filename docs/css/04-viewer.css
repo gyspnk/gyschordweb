@@ -4413,44 +4413,10 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	}
 }
 
-/* === MIDI Player minimal fix === */
+/* === MIDI Player: 1 baris di SEMUA layout (konsolidasi) === */
+/* Portrait, expanded, measure, kecil — selalu satu row.
+   Aturan ID (spec 110) mengalahkan media query (spec 41) dan base grid. */
 
-#custom-midi-player .instrument-capsule-btn,
-#custom-midi-player .midi-icon-btn.instrument-capsule-btn,
-#custom-midi-player .midi-action-btn.instrument-capsule-btn {
-	width: 26px;
-	height: 26px;
-	min-width: 26px;
-	padding: 0;
-	justify-content: center;
-	border-radius: 7px;
-}
-#custom-midi-player .midi-action-btn .cis-label,
-#custom-midi-player .midi-action-btn .cis-chevron {
-	display: none;
-}
-#custom-midi-player .midi-tempo-toggle-btn {
-	min-width: 40px;
-	height: 26px;
-	padding: 0 5px;
-	border-radius: 7px;
-}
-#custom-midi-player .midi-tempo-chevron,
-#custom-midi-player .midi-tempo-toggle-unit {
-	display: none;
-}
-#custom-midi-player .midi-tempo-popover,
-#custom-midi-player .cis-menu-popover {
-	left: auto !important;
-	right: 0 !important;
-	transform-origin: top right;
-}
-#custom-midi-player .custom-player-actions {
-	flex-wrap: wrap;
-	gap: 2px;
-}
-
-/* Force single-row: override grid layout */
 #custom-midi-player .custom-player-controls {
 	display: flex !important;
 	flex-direction: row !important;
@@ -4460,31 +4426,86 @@ body.lyrics-mode .pdf-viewer-page-controls {
 }
 #custom-midi-player .custom-player-primary {
 	display: flex !important;
-	flex-direction: row;
+	flex-direction: row !important;
 	align-items: center;
 	gap: 3px;
 	flex: 1 1 auto;
 	min-width: 0;
 }
 #custom-midi-player .custom-player-actions {
-	flex-wrap: nowrap;
-	flex-shrink: 0;
+	display: flex !important;
+	flex-direction: row !important;
+	flex-wrap: nowrap !important;
+	align-items: center;
+	gap: 2px;
+	flex: 0 1 auto;
+	min-width: 0;
 }
-/* Sane defaults: compact buttons fit 1 row */
+#custom-midi-player .custom-player-actions .midi-action,
+#custom-midi-player .custom-player-actions .instrument-selector-wrapper {
+	flex: 0 1 auto;
+	min-width: 0;
+}
+/* Play: kompak tapi tetap tap-friendly */
 #custom-midi-player .custom-player-play.player-btn {
-	width: 28px !important; height: 28px !important;
+	width: 28px !important;
+	height: 28px !important;
 	border-radius: 8px;
 	flex-shrink: 0;
 }
+/* Track: seekbar adaptif, boleh menyusut tapi tidak hilang */
 #custom-midi-player .player-track-container {
 	flex: 1 1 auto;
-	min-width: 60px;
+	min-width: 56px;
 	overflow: hidden;
 }
-#custom-midi-player .custom-player-heading { gap: 2px; }
-#custom-midi-player .player-time { font-size: 0.6rem; padding: 0 2px; white-space: nowrap; }
+#custom-midi-player .custom-player-heading {
+	gap: 2px;
+	min-width: 0;
+}
+#custom-midi-player .player-time {
+	font-size: 0.6rem;
+	padding: 0 2px;
+	white-space: nowrap;
+}
+/* Semua icon button: 24px, label disembunyikan */
+#custom-midi-player .instrument-capsule-btn,
+#custom-midi-player .midi-icon-btn.instrument-capsule-btn,
+#custom-midi-player .midi-action-btn.instrument-capsule-btn {
+	width: 24px !important;
+	min-width: 24px !important;
+	height: 24px !important;
+	padding: 0 !important;
+	justify-content: center;
+	border-radius: 7px;
+	flex-shrink: 0;
+}
+#custom-midi-player .midi-action-btn .cis-label,
+#custom-midi-player .midi-action-btn .cis-chevron {
+	display: none !important;
+}
+/* Tempo: icon + angka saja */
+#custom-midi-player .midi-tempo-toggle-btn {
+	min-width: 38px !important;
+	height: 24px !important;
+	padding: 0 4px !important;
+	border-radius: 7px;
+	gap: 1px;
+	flex-shrink: 0;
+}
+#custom-midi-player .midi-tempo-chevron,
+#custom-midi-player .midi-tempo-toggle-unit {
+	display: none !important;
+}
+/* Popover tetap anchor ke kanan (tidak menggoyang layout) */
+#custom-midi-player .midi-tempo-popover,
+#custom-midi-player .cis-menu-popover {
+	left: auto !important;
+	right: 0 !important;
+	transform-origin: top right;
+}
 
-/* Mini player popups: force upward + high z-index to avoid clipping */
+/* Mini player popups: force upward + high z-index */
 .mini-player .instrument-selector-wrapper .cis-menu-popover {
 	top: auto !important;
 	bottom: calc(100% + 6px) !important;
@@ -4495,14 +4516,4 @@ body.lyrics-mode .pdf-viewer-page-controls {
 }
 .mini-player .mini-tempo-popover {
 	z-index: 9999 !important;
-}
-
-/* PDF viewer MIDI: track seekbar flex-shrink so buttons fit 1 row */
-#custom-midi-player .player-track-container {
-	flex: 1 1 auto;
-	min-width: 40px;
-}
-#custom-midi-player .custom-player-primary {
-	flex: 1 1 auto;
-	min-width: 0;
 }
