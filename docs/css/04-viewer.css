@@ -4468,24 +4468,19 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	flex-wrap: nowrap;
 	flex-shrink: 0;
 }
-#custom-midi-player .player-track-container {
-	flex: 1 1 auto;
-	min-width: 30px;
-	overflow: hidden;
-}
+/* Sane defaults: compact buttons fit 1 row */
 #custom-midi-player .custom-player-play.player-btn {
-	width: 28px; height: 28px;
+	width: 28px !important; height: 28px !important;
 	border-radius: 8px;
 	flex-shrink: 0;
 }
-#custom-midi-player .custom-player-heading {
-	gap: 2px;
+#custom-midi-player .player-track-container {
+	flex: 1 1 auto;
+	min-width: 60px;
+	overflow: hidden;
 }
-#custom-midi-player .player-time {
-	font-size: 0.6rem;
-	padding: 0 2px;
-	white-space: nowrap;
-}
+#custom-midi-player .custom-player-heading { gap: 2px; }
+#custom-midi-player .player-time { font-size: 0.6rem; padding: 0 2px; white-space: nowrap; }
 
 /* Mini player popups: force upward + high z-index to avoid clipping */
 .mini-player .instrument-selector-wrapper .cis-menu-popover {
