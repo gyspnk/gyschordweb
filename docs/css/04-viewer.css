@@ -4411,100 +4411,198 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	}
 }
 
-/* === MIDI Player — consolidated responsive layout ===
- * ID selector (#custom-midi-player) ensures specificity 1,0,0
- * overrides all scattered layout-mode-specific rules.
- * All action buttons are icon-only; flex-wrap handles overflow.
+/* ============================================================
+ * MIDI Player & Mini Player — single-source responsive layout
+ * ============================================================
+ * #custom-midi-player ID selector (specificity 100) overrides
+ * ALL scattered layout-mode rules in one place.
+ *
+ * Layout (works on all screen sizes):
+ *   Row 1: [Play] [======== seekbar track ========]
+ *   Row 2: [Tempo] [Inst] [AutoNext] [Loop] [Lyrics] [...]
+ *
+ * Buttons are always icon-only; flex-wrap handles overflow.
  */
+
+/* --- Player container --- */
 #custom-midi-player.custom-midi-player {
+	position: relative;
 	min-width: 200px;
-	max-width: none;
-	padding: 4px 10px;
+	width: 100%;
+	padding: 8px 10px;
+	gap: 8px;
+}
+
+/* --- Controls: vertical flex instead of grid --- */
+#custom-midi-player .custom-player-controls {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+/* --- Row 1: play + track --- */
+#custom-midi-player .custom-player-primary {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	flex: 0 0 auto;
+	min-width: 0;
+}
+
+#custom-midi-player .custom-player-play.player-btn {
+	width: 36px;
+	height: 36px;
+	border-radius: 12px;
+	flex-shrink: 0;
+}
+
+#custom-midi-player .player-track-container {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	flex: 1 1 auto;
+	min-width: 60px;
+	padding: 3px 8px;
+	border-radius: 12px;
+}
+
+#custom-midi-player .custom-player-heading {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
 	gap: 4px;
 }
 
-#custom-midi-player .custom-player-controls {
+#custom-midi-player .custom-player-kicker {
+	display: none;
+}
+
+#custom-midi-player .player-time {
+	font-size: 0.68rem !important;
+	padding: 0.1rem 0.5rem;
+	margin: 0;
+}
+
+#custom-midi-player .seekbar-wrapper {
+	height: 14px;
+}
+
+/* --- Row 2: action buttons --- */
+#custom-midi-player .custom-player-actions {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 4px;
+	flex: 0 0 auto;
 }
 
-#custom-midi-player .custom-player-primary {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-	flex: 1 1 auto;
+/* All action buttons: compact icons */
+#custom-midi-player .midi-action {
+	flex: 0 0 auto;
 	min-width: 0;
 }
 
-#custom-midi-player .custom-player-actions {
+#custom-midi-player .instrument-capsule-btn {
+	width: 30px;
+	height: 30px;
+	min-width: 30px;
+	padding: 0;
+	border-radius: 9px;
 	display: flex;
 	align-items: center;
-	gap: 3px;
-	flex: 0 0 auto;
-	flex-wrap: wrap;
+	justify-content: center;
 }
 
-/* Icon-only buttons */
 #custom-midi-player .midi-action-btn .cis-label,
 #custom-midi-player .midi-action-btn .cis-chevron {
 	display: none !important;
 }
 
-#custom-midi-player .midi-icon-btn.instrument-capsule-btn {
-	width: 30px;
-	min-width: 30px;
-	height: 30px;
-	padding: 0;
-	justify-content: center;
+/* Tempo button: icon + value only */
+#custom-midi-player .midi-tempo-toggle-btn {
+	min-width: 44px;
+	height: 28px;
+	padding: 0 6px;
+	gap: 3px;
 	border-radius: 9px;
 }
 
-#custom-midi-player .midi-instrument-action {
-	flex: 0 0 auto;
-	min-width: 0;
-}
-
-/* Tempo: icon + value only */
 #custom-midi-player .midi-tempo-chevron,
 #custom-midi-player .midi-tempo-toggle-unit {
 	display: none !important;
 }
 
-#custom-midi-player .midi-tempo-toggle-btn {
-	min-width: 46px;
-	height: 30px;
-	padding: 0 6px;
-	border-radius: 9px;
-}
-
 #custom-midi-player .midi-tempo-icon {
-	font-size: 0.9rem;
+	font-size: 0.85rem;
 }
 
 #custom-midi-player .midi-tempo-toggle-value {
-	font-size: 0.7rem;
+	font-size: 0.68rem;
 }
 
-/* Popover: open from right edge */
+/* Popover: right-anchored, never overflows rightward */
 #custom-midi-player .midi-tempo-popover {
 	left: auto;
 	right: 0;
 	transform-origin: top right;
-	min-width: 140px;
-	width: min(240px, calc(100vw - 16px));
+	min-width: 130px;
+	width: min(220px, calc(100vw - 24px));
 }
 
-/* Compact track */
-#custom-midi-player .player-track-container {
-	padding: 3px 6px;
-	gap: 2px;
+#custom-midi-player .cis-menu-popover {
+	left: auto;
+	right: 0;
+	transform-origin: top right;
+}
+
+/* Hide decorative elements that waste space */
+#custom-midi-player .custom-midi-player::before,
+#custom-midi-player .custom-midi-player::after,
+#custom-midi-player .custom-player-kicker-label,
+#custom-midi-player .custom-player-status-dot {
+	display: none;
+}
+
+/* ============================================================
+ * Mini Player — compact bottom bar
+ * ============================================================ */
+#mini-player.mini-player {
+	min-height: 48px;
+	padding: 4px 10px;
+	gap: 6px;
+}
+
+#mini-player .mini-transport {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+}
+
+#mini-player .mini-btn {
+	width: 28px;
+	height: 28px;
+}
+
+#mini-player .mini-player-info {
 	flex: 1 1 auto;
-	min-width: 60px;
+	min-width: 0;
+	overflow: hidden;
 }
 
-#custom-midi-player .seekbar-wrapper {
-	height: 16px;
+#mini-player #mini-title {
+	font-size: 0.75rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+#mini-player #mini-subtitle {
+	font-size: 0.62rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
