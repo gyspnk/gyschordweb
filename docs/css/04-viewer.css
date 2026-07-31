@@ -4186,7 +4186,9 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	z-index: 9999;
 	display: none;
 	flex-direction: column;
-	transition: opacity 0.25s ease, transform 0.25s ease;
+	transition:
+		opacity 0.25s ease,
+		transform 0.25s ease;
 }
 .lyrics-panel.fading-out {
 	opacity: 0;
@@ -4536,8 +4538,16 @@ body .mini-player-extras {
 	/* Semua kolom content-sized — jangan biarkan instrument (1fr) melar */
 	grid-template-columns: auto auto auto auto;
 }
+/* Kalahkan flex:1 1 0% (max-width:479px) & width:100% (max-width:430px)
+   di tailwind — wrapper instrument selebar isinya, bukan sisa ruang */
 body .mini-player-extras .instrument-selector-wrapper {
-	width: auto;
+	flex: 0 1 auto !important;
+	width: auto !important;
+	min-width: 0;
+}
+body .mini-player-extras .mini-instrument-capsule {
+	width: auto !important;
+	min-width: 0;
 }
 body .mini-transpose-controls .mini-key-btn,
 body .mini-transpose-controls .mini-transpose-btn {

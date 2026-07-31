@@ -471,9 +471,10 @@
 
 		var panel = qs("#lyrics-panel");
 		if (panel) {
-			// Cancel WAAPI animation, then force opacity back to 1 BEFORE
-			// adding .fading-out, otherwise the browser sees 0 -> 0 and
-			// skips the transition entirely (no exit animation).
+			// Batalkan WAAPI apa pun yang masih jalan, lalu reset ke kondisi
+			// terlihat penuh SEBELUM memulai animasi keluar sendiri (WAAPI).
+			// WAAPI dipakai untuk keluar (bukan CSS transition) supaya tidak
+			// bergantung pada urutan cancel/reflow yang rapuh.
 			if (typeof panel.getAnimations === "function") {
 				panel.getAnimations().forEach((a) => {
 					a.cancel();
@@ -481,12 +482,30 @@
 			}
 			panel.style.removeProperty("opacity");
 			panel.style.removeProperty("transform");
-			void panel.offsetWidth; // commit nilai awal (opacity 1) sebelum transisi
-			panel.classList.add("fading-out");
-			setTimeout(() => {
+			panel.style.display = "flex";
+			panel.classList.remove("fading-out");
+
+			if (typeof panel.animate === "function") {
+				var outAnim = panel.animate(
+					[
+						{ opacity: 1, transform: "translateY(0)" },
+						{ opacity: 0, transform: "translateY(10px)" },
+					],
+					{ duration: 250, easing: "ease" },
+				);
+				outAnim.onfinish = () => {
+					panel.style.display = "none";
+				};
+				// Safety net: kalau onfinish tidak sempat terpanggil (tab
+				// di background, animasi di-throttle), tetap sembunyikan.
+				setTimeout(() => {
+					if (outAnim.playState !== "finished") outAnim.cancel();
+					panel.style.display = "none";
+					panel.classList.remove("fading-out");
+				}, 350);
+			} else {
 				panel.style.display = "none";
-				panel.classList.remove("fading-out");
-			}, 250);
+			}
 		}
 
 		document.body.classList.remove("lyrics-mode");
