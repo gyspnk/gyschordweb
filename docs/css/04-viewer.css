@@ -2951,11 +2951,13 @@ body.measure-layout .midi-collapse .custom-midi-player::after {
 .midi-tempo-input::-webkit-outer-spin-button,
 .midi-tempo-input::-webkit-inner-spin-button {
 	-webkit-appearance: none;
+	appearance: none;
 	margin: 0;
 }
 
 .midi-tempo-input[type="number"] {
 	-moz-appearance: textfield;
+	appearance: textfield;
 }
 
 .midi-tempo-unit {
