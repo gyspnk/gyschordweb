@@ -4448,6 +4448,31 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	gap: 2px;
 }
 
+/* Force single-row: override grid layout */
+#custom-midi-player .custom-player-controls {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: 4px;
+}
+#custom-midi-player .custom-player-primary {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+#custom-midi-player .custom-player-actions {
+	flex-wrap: nowrap;
+	flex-shrink: 0;
+}
+#custom-midi-player .player-track-container {
+	flex: 1 1 auto;
+	min-width: 40px;
+}
+
 /* Mini player popups: force upward + high z-index to avoid clipping */
 .mini-player .instrument-selector-wrapper .cis-menu-popover {
 	top: auto !important;
