@@ -2385,8 +2385,8 @@ body.measure-layout .midi-collapse .custom-midi-player::after {
 .midi-tempo-popover {
   position: absolute;
   top: calc(100% + 10px);
-  left: 0;
-  right: auto;
+  left: auto;
+  right: 0;
   min-width: 250px;
   width: min(320px, calc(100vw - 24px));
   border-radius: 16px;
@@ -2400,7 +2400,7 @@ body.measure-layout .midi-collapse .custom-midi-player::after {
   visibility: hidden;
   pointer-events: none;
   transform: translateY(-8px) scale(0.96);
-  transform-origin: top left;
+  transform-origin: top right;
   transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.2, 0, 0, 1), visibility 0.2s;
   z-index: var(--z-layer-popover-surface);
 }
@@ -3007,8 +3007,8 @@ body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-toggl
 }
 
 body:not(.is-expanded-layout):not(.measure-layout) .midi-panel .midi-tempo-popover {
-  left: 0;
-  right: auto;
+  left: auto;
+  right: 0;
   min-width: 220px;
   width: min(280px, calc(100vw - 16px));
 }
