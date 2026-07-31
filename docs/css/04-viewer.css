@@ -4411,21 +4411,25 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	}
 }
 
-/* === MIDI Player: responsive single-row layout === */
+/* === MIDI Player: responsive single-row, no clip popovers === */
 
+#custom-midi-player .custom-player-controls {
+	flex-wrap: nowrap;
+	gap: 4px;
+}
 #custom-midi-player .custom-player-actions {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: nowrap;
 	align-items: center;
 	gap: 2px;
-	overflow: hidden;
+	overflow: visible;
 }
 #custom-midi-player .midi-action,
 #custom-midi-player .instrument-selector-wrapper {
 	flex: 0 1 auto;
 	min-width: 0;
-	overflow: hidden;
+	overflow: visible;
 }
 #custom-midi-player .instrument-capsule-btn,
 #custom-midi-player .midi-icon-btn.instrument-capsule-btn,
@@ -4460,3 +4464,10 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	right: 0;
 	transform-origin: top right;
 }
+
+/* Compact vertical: thin player in header */
+#custom-midi-player.custom-midi-player { padding: 3px 6px; }
+#custom-midi-player .seekbar-wrapper {
+	height: 10px;
+}
+#custom-midi-player .player-track-container { padding: 1px 6px; gap: 1px; }
