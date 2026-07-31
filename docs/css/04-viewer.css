@@ -4411,93 +4411,100 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	}
 }
 
-/* === MIDI Player — responsive layout consolidation ===
- * All MIDI action buttons are icon-only; text labels hide.
- * flex-wrap lets items naturally flow when space runs out.
- * Popovers open from the right edge so they never overflow rightward.
+/* === MIDI Player — consolidated responsive layout ===
+ * ID selector (#custom-midi-player) ensures specificity 1,0,0
+ * overrides all scattered layout-mode-specific rules.
+ * All action buttons are icon-only; flex-wrap handles overflow.
  */
-.custom-midi-player .custom-player-controls {
+#custom-midi-player.custom-midi-player {
+	min-width: 200px;
+	max-width: none;
+	padding: 4px 10px;
+	gap: 4px;
+}
+
+#custom-midi-player .custom-player-controls {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 6px;
+	gap: 4px;
 }
 
-.custom-midi-player .custom-player-primary {
+#custom-midi-player .custom-player-primary {
 	display: flex;
 	align-items: center;
-	gap: 6px;
+	gap: 4px;
 	flex: 1 1 auto;
 	min-width: 0;
 }
 
-.custom-midi-player .custom-player-actions {
+#custom-midi-player .custom-player-actions {
 	display: flex;
 	align-items: center;
-	gap: 4px;
+	gap: 3px;
 	flex: 0 0 auto;
 	flex-wrap: wrap;
 }
 
-/* Icon-only buttons in the MIDI player */
-.custom-midi-player .midi-action-btn .cis-label,
-.custom-midi-player .midi-action-btn .cis-chevron {
+/* Icon-only buttons */
+#custom-midi-player .midi-action-btn .cis-label,
+#custom-midi-player .midi-action-btn .cis-chevron {
 	display: none !important;
 }
 
-.custom-midi-player .midi-icon-btn.instrument-capsule-btn {
-	width: 32px;
-	min-width: 32px;
-	height: 32px;
+#custom-midi-player .midi-icon-btn.instrument-capsule-btn {
+	width: 30px;
+	min-width: 30px;
+	height: 30px;
 	padding: 0;
 	justify-content: center;
-	border-radius: 10px;
+	border-radius: 9px;
 }
 
-.custom-midi-player .midi-instrument-action {
+#custom-midi-player .midi-instrument-action {
 	flex: 0 0 auto;
 	min-width: 0;
 }
 
-/* Compact tempo button: icon + value only, no chevron/unit */
-.custom-midi-player .midi-tempo-chevron,
-.custom-midi-player .midi-tempo-toggle-unit {
+/* Tempo: icon + value only */
+#custom-midi-player .midi-tempo-chevron,
+#custom-midi-player .midi-tempo-toggle-unit {
 	display: none !important;
 }
 
-.custom-midi-player .midi-tempo-toggle-btn {
-	min-width: 52px;
-	height: 32px;
-	padding: 0 8px;
-	border-radius: 10px;
+#custom-midi-player .midi-tempo-toggle-btn {
+	min-width: 46px;
+	height: 30px;
+	padding: 0 6px;
+	border-radius: 9px;
 }
 
-.custom-midi-player .midi-tempo-icon {
-	font-size: 1rem;
+#custom-midi-player .midi-tempo-icon {
+	font-size: 0.9rem;
 }
 
-.custom-midi-player .midi-tempo-toggle-value {
-	font-size: 0.75rem;
+#custom-midi-player .midi-tempo-toggle-value {
+	font-size: 0.7rem;
 }
 
-.custom-midi-player .midi-tempo-popover {
+/* Popover: open from right edge */
+#custom-midi-player .midi-tempo-popover {
 	left: auto;
 	right: 0;
 	transform-origin: top right;
-	min-width: 150px;
-	width: min(260px, calc(100vw - 16px));
+	min-width: 140px;
+	width: min(240px, calc(100vw - 16px));
 }
 
-/* Compact seekbar */
-.custom-midi-player .player-track-container {
-	padding: 4px 8px;
-	gap: 3px;
+/* Compact track */
+#custom-midi-player .player-track-container {
+	padding: 3px 6px;
+	gap: 2px;
 	flex: 1 1 auto;
 	min-width: 60px;
 }
 
-.custom-midi-player .custom-seekbar-wrapper,
-.custom-midi-player .seekbar-wrapper {
-	height: 18px;
+#custom-midi-player .seekbar-wrapper {
+	height: 16px;
 }
