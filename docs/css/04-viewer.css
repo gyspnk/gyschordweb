@@ -4412,35 +4412,30 @@ body.lyrics-mode .pdf-viewer-page-controls {
 }
 
 /* ============================================================
- * MIDI Player & Mini Player — single-source responsive layout
- * ============================================================
- * #custom-midi-player ID selector (specificity 100) overrides
- * ALL scattered layout-mode rules in one place.
- *
- * Layout (works on all screen sizes):
- *   Row 1: [Play] [======== seekbar track ========]
- *   Row 2: [Tempo] [Inst] [AutoNext] [Loop] [Lyrics] [...]
- *
- * Buttons are always icon-only; flex-wrap handles overflow.
- */
+ * MIDI Player + Mini Player  —  clean responsive layout
+ * Uses #custom-midi-player ID selector (spec 100) to override
+ * ALL scattered legacy rules. Single source of truth.
+ * ============================================================ */
 
-/* --- Player container --- */
-#custom-midi-player.custom-midi-player {
-	position: relative;
-	min-width: 200px;
+#custom-midi-player.custom-midi-player,
+.midi-panel #custom-midi-player,
+.midi-collapse #custom-midi-player {
+	min-width: 0;
+	max-width: none;
 	width: 100%;
-	padding: 8px 10px;
-	gap: 8px;
+	padding: 6px 8px;
+	gap: 4px;
 }
 
-/* --- Controls: vertical flex instead of grid --- */
+/* Controls: column flex (play+track above, actions below) */
 #custom-midi-player .custom-player-controls {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
+	gap: 4px;
+	position: static;
 }
 
-/* --- Row 1: play + track --- */
+/* Row 1: primary */
 #custom-midi-player .custom-player-primary {
 	display: flex;
 	flex-direction: row;
@@ -4451,20 +4446,20 @@ body.lyrics-mode .pdf-viewer-page-controls {
 }
 
 #custom-midi-player .custom-player-play.player-btn {
-	width: 36px;
-	height: 36px;
-	border-radius: 12px;
+	width: 32px;
+	height: 32px;
+	border-radius: 10px;
 	flex-shrink: 0;
 }
 
 #custom-midi-player .player-track-container {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 2px;
+	padding: 2px 6px;
+	border-radius: 10px;
 	flex: 1 1 auto;
-	min-width: 60px;
-	padding: 3px 8px;
-	border-radius: 12px;
+	min-width: 40px;
 }
 
 #custom-midi-player .custom-player-heading {
@@ -4475,42 +4470,48 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	gap: 4px;
 }
 
-#custom-midi-player .custom-player-kicker {
+#custom-midi-player .custom-player-kicker,
+#custom-midi-player .custom-player-kicker-label,
+#custom-midi-player .custom-player-status-dot {
 	display: none;
 }
 
 #custom-midi-player .player-time {
-	font-size: 0.68rem !important;
-	padding: 0.1rem 0.5rem;
-	margin: 0;
+	font-size: 0.62rem;
+	padding: 0 4px;
 }
 
-#custom-midi-player .seekbar-wrapper {
-	height: 14px;
+#custom-midi-player .seekbar-wrapper,
+#custom-midi-player .custom-seekbar-wrapper {
+	height: 12px;
 }
 
-/* --- Row 2: action buttons --- */
+/* Row 2: actions - icon only, wraps naturally */
 #custom-midi-player .custom-player-actions {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 4px;
+	gap: 3px;
 	flex: 0 0 auto;
 }
 
-/* All action buttons: compact icons */
-#custom-midi-player .midi-action {
+/* Every action wrapper & button: tiny */
+#custom-midi-player .midi-action,
+#custom-midi-player .instrument-selector-wrapper {
 	flex: 0 0 auto;
 	min-width: 0;
+	margin: 0;
 }
 
-#custom-midi-player .instrument-capsule-btn {
-	width: 30px;
-	height: 30px;
-	min-width: 30px;
+#custom-midi-player .instrument-capsule-btn,
+#custom-midi-player .midi-icon-btn.instrument-capsule-btn,
+#custom-midi-player .midi-action-btn.instrument-capsule-btn {
+	width: 26px;
+	height: 26px;
+	min-width: 26px;
 	padding: 0;
-	border-radius: 9px;
+	border-radius: 8px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -4518,91 +4519,63 @@ body.lyrics-mode .pdf-viewer-page-controls {
 
 #custom-midi-player .midi-action-btn .cis-label,
 #custom-midi-player .midi-action-btn .cis-chevron {
-	display: none !important;
+	display: none;
 }
 
-/* Tempo button: icon + value only */
+/* Tempo: icon + value, no unit/chevron */
 #custom-midi-player .midi-tempo-toggle-btn {
-	min-width: 44px;
-	height: 28px;
-	padding: 0 6px;
-	gap: 3px;
-	border-radius: 9px;
+	min-width: 42px;
+	height: 26px;
+	padding: 0 5px;
+	gap: 2px;
+	border-radius: 8px;
 }
 
 #custom-midi-player .midi-tempo-chevron,
 #custom-midi-player .midi-tempo-toggle-unit {
-	display: none !important;
+	display: none;
 }
 
 #custom-midi-player .midi-tempo-icon {
-	font-size: 0.85rem;
+	font-size: 0.8rem;
 }
 
 #custom-midi-player .midi-tempo-toggle-value {
-	font-size: 0.68rem;
+	font-size: 0.65rem;
 }
 
-/* Popover: right-anchored, never overflows rightward */
-#custom-midi-player .midi-tempo-popover {
-	left: auto;
-	right: 0;
-	transform-origin: top right;
-	min-width: 130px;
-	width: min(220px, calc(100vw - 24px));
-}
-
+/* Popovers: always right-anchored */
+#custom-midi-player .midi-tempo-popover,
 #custom-midi-player .cis-menu-popover {
 	left: auto;
 	right: 0;
 	transform-origin: top right;
 }
 
-/* Hide decorative elements that waste space */
-#custom-midi-player .custom-midi-player::before,
-#custom-midi-player .custom-midi-player::after,
-#custom-midi-player .custom-player-kicker-label,
-#custom-midi-player .custom-player-status-dot {
-	display: none;
+#custom-midi-player .midi-tempo-popover {
+	min-width: 120px;
+	width: min(200px, calc(100vw - 16px));
+}
+
+/* Decorative: hide */
+#custom-midi-player.custom-midi-player::before,
+#custom-midi-player.custom-midi-player::after {
+	content: none;
 }
 
 /* ============================================================
- * Mini Player — compact bottom bar
+ * Mini Player
  * ============================================================ */
 #mini-player.mini-player {
-	min-height: 48px;
-	padding: 4px 10px;
-	gap: 6px;
+	min-height: 44px;
+	padding: 2px 10px;
 }
 
 #mini-player .mini-transport {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 4px;
+	gap: 3px;
 }
 
 #mini-player .mini-btn {
-	width: 28px;
-	height: 28px;
-}
-
-#mini-player .mini-player-info {
-	flex: 1 1 auto;
-	min-width: 0;
-	overflow: hidden;
-}
-
-#mini-player #mini-title {
-	font-size: 0.75rem;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-#mini-player #mini-subtitle {
-	font-size: 0.62rem;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	width: 26px;
+	height: 26px;
 }
