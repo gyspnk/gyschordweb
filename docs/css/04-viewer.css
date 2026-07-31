@@ -4444,6 +4444,7 @@ body.lyrics-mode .pdf-viewer-page-controls {
 #custom-midi-player .custom-player-actions .midi-action,
 #custom-midi-player .custom-player-actions .instrument-selector-wrapper {
 	flex: 0 1 auto;
+	width: auto !important; /* kalahkan width:100% khusus PDF viewer */
 	min-width: 0;
 }
 /* Player padding: hemat ruang (hanya mode dropdown/portrait) */
