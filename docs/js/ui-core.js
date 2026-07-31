@@ -49,7 +49,7 @@ async function init() {
 					if (typeof rebuildInstrumentSelectors === "function") {
 						rebuildInstrumentSelectors(sfUrl);
 					}
-					console.warn(
+					console.error(
 						"MidiEngine init deferred (will retry on first play):",
 						err.message,
 					);
@@ -64,7 +64,7 @@ async function init() {
 		await document.fonts.load('16px "GoudyOldStyleBT-Roman"');
 		await document.fonts.load('16px "AbadiMT-CondensedLight"');
 	} catch (err) {
-		console.warn("Gagal pre-load font PDF:", err);
+		console.error("Gagal pre-load font PDF:", err);
 	}
 
 	// Resume AudioContext on first user interaction
@@ -87,7 +87,7 @@ async function init() {
 		: null;
 	if (systemThemeMedia && typeof syncHeaderBranding === "function") {
 		systemThemeMedia.addEventListener("change", () => {
-			if (localStorage.getItem("dark-theme") == null) {
+			if (localStorage.getItem("dark-theme") === null) {
 				syncHeaderBranding();
 			}
 		});
@@ -156,16 +156,29 @@ function showUpdateBanner() {
 
 	var banner = document.createElement("div");
 	banner.id = "update-banner";
-	banner.innerHTML =
-		'<div class="update-banner-content">' +
-		'<span class="material-symbols-outlined update-banner-icon">system_update</span>' +
-		'<div class="update-banner-text">' +
-		"<strong>Pembaruan Tersedia</strong>" +
-		"<span>Versi baru telah tersedia. Perbarui untuk pengalaman terbaik.</span>" +
-		"</div>" +
-		'<button id="update-banner-btn" class="update-banner-action">Perbarui</button>' +
-		'<button id="update-banner-dismiss" class="update-banner-dismiss">&times;</button>' +
-		"</div>";
+	banner.className = "update-banner-content";
+	var icon = document.createElement("span");
+	icon.className = "material-symbols-outlined update-banner-icon";
+	icon.textContent = "system_update";
+	var text = document.createElement("div");
+	text.className = "update-banner-text";
+	var title = document.createElement("strong");
+	title.textContent = "Pembaruan Tersedia";
+	var desc = document.createElement("span");
+	desc.textContent =
+		"Versi baru telah tersedia. Perbarui untuk pengalaman terbaik.";
+	text.append(title, desc);
+	var btn = document.createElement("button");
+	btn.id = "update-banner-btn";
+	btn.className = "update-banner-action";
+	btn.type = "button";
+	btn.textContent = "Perbarui";
+	var dismiss = document.createElement("button");
+	dismiss.id = "update-banner-dismiss";
+	dismiss.className = "update-banner-dismiss";
+	dismiss.type = "button";
+	dismiss.textContent = "\u00d7";
+	banner.append(icon, text, btn, dismiss);
 	document.body.appendChild(banner);
 
 	// Animate in
@@ -554,7 +567,9 @@ function fitListTitles() {
 		_fontsWatchBound = true;
 		document.fonts.ready.then(() => requestAnimationFrame(run));
 		// Google Fonts dimuat lazy (media=print onload) — re-fit tiap font selesai
-		document.fonts.addEventListener("loadingdone", () => requestAnimationFrame(run));
+		document.fonts.addEventListener("loadingdone", () =>
+			requestAnimationFrame(run),
+		);
 	}
 }
 
@@ -783,7 +798,25 @@ function rebuildInstrumentSelectors(sfUrl) {
 		var wrapper = btn.closest(".instrument-selector-wrapper");
 		if (!wrapper) return;
 		var grid = wrapper.querySelector(".cis-menu-popover .cis-grid");
-		if (grid) grid.innerHTML = built.html;
+		if (grid && Array.isArray(built.list)) {
+			grid.replaceChildren();
+			built.list.forEach((item) => {
+				var prog = item[0];
+				var name = item[1];
+				var opt = document.createElement("button");
+				opt.type = "button";
+				opt.className =
+					"cis-option" +
+					(String(prog) === built.activeProgram ? " cis-default selected" : "");
+				opt.dataset.val = String(prog);
+				opt.title = String(name);
+				var optIcon = document.createElement("span");
+				optIcon.className = "material-symbols-outlined cis-menu-icon";
+				optIcon.textContent = getMidiInstrumentIcon(prog, name);
+				opt.append(optIcon, " " + name);
+				grid.appendChild(opt);
+			});
+		}
 	});
 
 	var titleText = built.activeLabel || "Memuat Instrumen...";
@@ -2081,20 +2114,28 @@ function handleSettingsChange(e) {
 		localStorage.setItem("prefs", JSON.stringify(prefs));
 		var countLabel = document.getElementById("preload-count-label");
 		if (countLabel) {
-			countLabel.innerHTML =
-				'<span class="material-symbols-outlined">queue_music</span><span>Jumlah Preload (' +
-				prefs.preloadCount +
-				" lagu sebelum &amp; sesudah)</span>";
+			countLabel.replaceChildren();
+			var cIcon = document.createElement("span");
+			cIcon.className = "material-symbols-outlined";
+			cIcon.textContent = "queue_music";
+			var cText = document.createElement("span");
+			cText.textContent =
+				"Jumlah Preload (" + prefs.preloadCount + " lagu sebelum & sesudah)";
+			countLabel.append(cIcon, cText);
 		}
 	} else if (targetId === "preload-cache-max-range") {
 		prefs.preloadCacheMax = Number.parseInt(e.target.value, 10) || 12;
 		localStorage.setItem("prefs", JSON.stringify(prefs));
 		var cacheMaxLabel = document.getElementById("preload-cache-max-label");
 		if (cacheMaxLabel) {
-			cacheMaxLabel.innerHTML =
-				'<span class="material-symbols-outlined">inventory_2</span><span>Maksimum Cache Preload (' +
-				prefs.preloadCacheMax +
-				" lagu)</span>";
+			cacheMaxLabel.replaceChildren();
+			var mIcon = document.createElement("span");
+			mIcon.className = "material-symbols-outlined";
+			mIcon.textContent = "inventory_2";
+			var mText = document.createElement("span");
+			mText.textContent =
+				"Maksimum Cache Preload (" + prefs.preloadCacheMax + " lagu)";
+			cacheMaxLabel.append(mIcon, mText);
 		}
 		if (
 			typeof MidiEngine !== "undefined" &&
@@ -2161,7 +2202,7 @@ function handleSettingsChange(e) {
 				.catch((err) => {
 					if (requestId !== soundfontSwitchRequestId) return;
 					isSoundfontSwitching = false;
-					console.warn("Gagal ganti SoundFont:", err);
+					console.error("Gagal ganti SoundFont:", err);
 					if (typeof showToast === "function") {
 						showToast("Gagal memuat SoundFont baru", "error");
 					}
