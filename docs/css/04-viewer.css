@@ -4534,19 +4534,34 @@ body:not(.is-expanded-layout):not(.measure-layout)
 
 /* === Mini player: extras rapi, content-sized === */
 body .mini-player-extras {
+	display: grid !important;
 	gap: 6px;
-	/* Semua kolom content-sized — jangan biarkan instrument (1fr) melar */
-	grid-template-columns: auto auto auto auto;
+	align-items: center;
+	width: 100%;
+	min-width: 0;
+	/* transpose & loop natural di kiri/kanan, tempo & instrument
+	   mengisi tengah — kiri dan kanan terisi, tombol adaptif */
+	grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
 }
-/* Kalahkan flex:1 1 0% (max-width:479px) & width:100% (max-width:430px)
-   di tailwind — wrapper instrument selebar isinya, bukan sisa ruang */
+/* Kalahkan flex:1 1 0% (max-width:479px) di tailwind — wrapper
+   instrument mengisi kolomnya, bukan melar ke seluruh baris */
 body .mini-player-extras .instrument-selector-wrapper {
 	flex: 0 1 auto !important;
-	width: auto !important;
+	width: 100% !important;
 	min-width: 0;
 }
 body .mini-player-extras .mini-instrument-capsule {
-	width: auto !important;
+	width: 100% !important;
+	min-width: 0;
+	overflow: hidden;
+}
+body .mini-player-extras .mini-cis-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+body .mini-player-extras .mini-tempo-toggle-btn {
+	width: 100% !important;
 	min-width: 0;
 }
 body .mini-transpose-controls .mini-key-btn,
