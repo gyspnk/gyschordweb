@@ -4450,17 +4450,17 @@ body.lyrics-mode .pdf-viewer-page-controls {
 
 /* Force single-row: override grid layout */
 #custom-midi-player .custom-player-controls {
-	display: flex;
-	flex-direction: row;
-	flex-wrap: nowrap;
+	display: flex !important;
+	flex-direction: row !important;
+	flex-wrap: nowrap !important;
 	align-items: center;
-	gap: 4px;
+	gap: 3px;
 }
 #custom-midi-player .custom-player-primary {
-	display: flex;
+	display: flex !important;
 	flex-direction: row;
 	align-items: center;
-	gap: 4px;
+	gap: 3px;
 	flex: 1 1 auto;
 	min-width: 0;
 }
@@ -4470,7 +4470,21 @@ body.lyrics-mode .pdf-viewer-page-controls {
 }
 #custom-midi-player .player-track-container {
 	flex: 1 1 auto;
-	min-width: 40px;
+	min-width: 30px;
+	overflow: hidden;
+}
+#custom-midi-player .custom-player-play.player-btn {
+	width: 28px; height: 28px;
+	border-radius: 8px;
+	flex-shrink: 0;
+}
+#custom-midi-player .custom-player-heading {
+	gap: 2px;
+}
+#custom-midi-player .player-time {
+	font-size: 0.6rem;
+	padding: 0 2px;
+	white-space: nowrap;
 }
 
 /* Mini player popups: force upward + high z-index to avoid clipping */
