@@ -4467,6 +4467,35 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	white-space: nowrap;
 }
 
+/* Input tempo yang bisa diketik (tombol +/- tetap tersedia) */
+.lyrics-tempo-input {
+	width: 58px;
+	min-width: 0;
+	padding: 4px 6px;
+	border-radius: 9px;
+	border: 1px solid var(--md-sys-color-outline-variant);
+	background: var(--md-sys-color-surface);
+	color: var(--md-sys-color-on-surface);
+	font-weight: 600;
+	text-align: center;
+}
+
+.lyrics-tempo-input::-webkit-outer-spin-button,
+.lyrics-tempo-input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.lyrics-tempo-input {
+	-moz-appearance: textfield;
+	appearance: textfield;
+}
+
+.lyrics-tempo-input:focus {
+	outline: 2px solid color-mix(in srgb, var(--md-sys-color-primary) 55%, transparent);
+	outline-offset: 1px;
+}
+
 .lyrics-key-group {
 	position: relative;
 }

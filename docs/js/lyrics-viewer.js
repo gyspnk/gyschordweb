@@ -10,8 +10,10 @@
 	var lyricsTransitionDir = 0; // 1=next, -1=prev
 	var lyricsShowChords = true; // chord di atas lirik (mode teks)
 	var _chordLayoutCache = new Map(); // fileHref -> Promise<{pages: {...}}>
+	var _verseChordFallbackCache = new Map(); // fileHref -> byIndex[]
 	var _verseRenderToken = 0; // penanda render untuk hasil async chord layout
 	var _lyricsResizeHandler = null;
+	var _lyricsTempoPollTimer = null;
 	var _lastSeenPdfDoc = null; // pdfDoc viewer yang terakhir dipakai (anti race)
 
 	function loadPrefs() {
@@ -494,8 +496,45 @@
 		wrap.append(p);
 	}
 
+	// Gabungkan chorded lines dari semua halaman layout
+	function flattenChordedLines(layout) {
+		var all = [];
+		if (!layout || !layout.pages) return all;
+		for (var pk in layout.pages) {
+			if (Array.isArray(layout.pages[pk])) {
+				all = all.concat(layout.pages[pk]);
+			}
+		}
+		return all;
+	}
+
+	// Fallback per-index baris: kidung rohani memakai melodi yang SAMA untuk
+	// semua bait, jadi baris ke-i bait mana pun seharusnya memakai chord yang
+	// sama dengan baris ke-i bait yang datanya tersedia (biasanya bait 1).
+	// byIndex[i] = chorded line untuk baris index i (dari bait pertama yang
+	// berhasil match teks). Baris bait lain yang tidak match teks memakai
+	// fallback ini sehingga chord tampil di SETIAP bait.
+	function buildVerseChordFallback(verses, layout) {
+		var byIndex = [];
+		if (!Array.isArray(verses) || verses.length === 0) return byIndex;
+		var all = flattenChordedLines(layout);
+		if (all.length === 0) return byIndex;
+		for (var b = 0; b < verses.length; b++) {
+			var lines = String(verses[b] || "")
+				.split("\n")
+				.map((l) => l.trim())
+				.filter((l) => l.length > 0);
+			for (var i = 0; i < lines.length; i++) {
+				if (byIndex[i]) continue;
+				var m = findChordedLine(lines[i], all);
+				if (m) byIndex[i] = m;
+			}
+		}
+		return byIndex;
+	}
+
 	// Render semua baris bait (dengan chord bila tersedia & aktif)
-	function renderVerseLines(verseText, lines, layout) {
+	function renderVerseLines(verseText, lines, layout, chordFallback) {
 		verseText.textContent = "";
 		// Kelas ini mengontrol visibilitas/animasi baris chord via CSS
 		verseText.classList.toggle("lyrics-chords-on", lyricsShowChords);
@@ -511,6 +550,11 @@
 						break;
 					}
 				}
+			}
+			// Fallback per-index: baris ini tidak match teks tapi melodi-nya
+			// sama dengan baris ke-i bait lain yang punya chord.
+			if (!chordedLine && chordFallback && chordFallback[i]) {
+				chordedLine = chordFallback[i];
 			}
 			renderLyricLine(wrap, lines[i], chordedLine);
 			verseText.append(wrap);
@@ -587,30 +631,81 @@
 		});
 	}
 
-	// Ubah ukuran font bait langsung (tanpa re-render) lalu autofit
+	// Ubah ukuran font bait langsung (tanpa re-render) lalu autofit.
+	// Ukuran dianimasikan (WAAPI) dari nilai lama ke hasil autofit.
 	function applyLyricsFontDelta(delta) {
+		var vt = qs("#lyrics-verse-text");
+		var oldPx =
+			vt && lyricsViewActive
+				? parseFloat(vt.style.fontSize) || lyricsFontSize
+				: lyricsFontSize;
 		lyricsFontSize = Math.max(14, Math.min(72, lyricsFontSize + delta));
 		savePrefs();
-		var vt = qs("#lyrics-verse-text");
 		if (vt && lyricsViewActive) {
 			vt.style.fontSize = lyricsFontSize + "px";
 			vt.style.lineHeight = String(lyricsLineSpacing);
 			autoFitLyricsVerse();
+			var finalPx = parseFloat(vt.style.fontSize) || lyricsFontSize;
+			if (
+				typeof vt.animate === "function" &&
+				Math.abs(finalPx - oldPx) > 0.5
+			) {
+				vt.animate(
+					[
+						{
+							fontSize: oldPx + "px",
+							lineHeight: oldPx * lyricsLineSpacing + "px",
+						},
+						{
+							fontSize: finalPx + "px",
+							lineHeight: finalPx * lyricsLineSpacing + "px",
+						},
+					],
+					{ duration: 220, easing: "ease" },
+				);
+			}
 		}
 	}
 
-	// Ubah jarak baris langsung (tanpa re-render) lalu autofit
+	// Ubah jarak baris langsung (tanpa re-render) lalu autofit, dengan
+	// animasi dari tinggi baris lama ke baru.
 	function applyLyricsSpacingDelta(delta) {
+		var vt = qs("#lyrics-verse-text");
+		var oldPx =
+			vt && lyricsViewActive
+				? parseFloat(vt.style.fontSize) || lyricsFontSize
+				: lyricsFontSize;
+		var oldLH =
+			vt && lyricsViewActive
+				? parseFloat(getComputedStyle(vt).lineHeight) || 0
+				: 0;
 		lyricsLineSpacing = Math.max(
 			1,
 			Math.min(3.5, +(lyricsLineSpacing + delta).toFixed(1)),
 		);
 		savePrefs();
-		var vt = qs("#lyrics-verse-text");
 		if (vt && lyricsViewActive) {
 			vt.style.fontSize = lyricsFontSize + "px";
 			vt.style.lineHeight = String(lyricsLineSpacing);
 			autoFitLyricsVerse();
+			var finalPx = parseFloat(vt.style.fontSize) || lyricsFontSize;
+			var finalLH =
+				parseFloat(getComputedStyle(vt).lineHeight) || 0;
+			if (
+				typeof vt.animate === "function" &&
+				(Math.abs(finalLH - oldLH) > 1 || finalPx !== oldPx)
+			) {
+				vt.animate(
+					[
+						{ fontSize: oldPx + "px", lineHeight: oldLH + "px" },
+						{
+							fontSize: finalPx + "px",
+							lineHeight: finalLH + "px",
+						},
+					],
+					{ duration: 220, easing: "ease" },
+				);
+			}
 		}
 	}
 
@@ -650,15 +745,48 @@
 		iw.append(isel);
 		bar.append(iw);
 
-		// Tempo
+		// Tempo: input bisa diketik + tombol +/- (dengan hold)
 		var tg = document.createElement("div");
 		tg.className = "lyrics-midi-group";
 		var tdn = mkMidiBtn("lyrics-tempo-down", "Kurangi tempo", "remove");
 		addHoldRepeat(tdn, () => onLyricsTempo(-2), { delay: 300, interval: 90 });
-		var tlb = document.createElement("span");
+		var tlb = document.createElement("input");
 		tlb.id = "lyrics-tempo-label";
-		tlb.className = "lyrics-midi-label";
-		tlb.textContent = "♩ —";
+		tlb.className = "lyrics-midi-label lyrics-tempo-input";
+		tlb.type = "number";
+		tlb.min = "30";
+		tlb.max = "220";
+		tlb.step = "1";
+		tlb.inputMode = "numeric";
+		tlb.title = "Ketik tempo (BPM)";
+		tlb.setAttribute("aria-label", "Tempo dalam BPM (bisa diketik)");
+		var commitTempoInput = () => {
+			tlb.dataset.tempoEditing = "0";
+			var v = parseInt(tlb.value, 10);
+			if (!Number.isFinite(v)) {
+				syncLyricsTempoLabel();
+				return;
+			}
+			if (typeof setMidiTempoBpm === "function") setMidiTempoBpm(v);
+			syncLyricsTempoLabel();
+		};
+		tlb.addEventListener("input", () => {
+			tlb.dataset.tempoEditing = "1";
+		});
+		tlb.addEventListener("change", commitTempoInput);
+		tlb.addEventListener("blur", commitTempoInput);
+		tlb.addEventListener("keydown", (e) => {
+			if (e.key === "Enter") {
+				e.preventDefault();
+				commitTempoInput();
+				tlb.blur();
+			} else if (e.key === "Escape") {
+				e.preventDefault();
+				tlb.dataset.tempoEditing = "0";
+				syncLyricsTempoLabel();
+				tlb.blur();
+			}
+		});
 		var tup = mkMidiBtn("lyrics-tempo-up", "Tambah tempo", "add");
 		addHoldRepeat(tup, () => onLyricsTempo(2), { delay: 300, interval: 90 });
 		tg.append(tdn, tlb, tup);
@@ -795,7 +923,43 @@
 			typeof getCurrentSongTempoBpm === "function"
 				? getCurrentSongTempoBpm()
 				: null;
-		el.textContent = bpm != null && Number.isFinite(bpm) ? "♩ " + bpm : "♩ —";
+		var text = bpm != null && Number.isFinite(bpm) ? String(bpm) : "";
+		// Jangan timpa saat user sedang mengetik
+		if (el.dataset.tempoEditing !== "1" && document.activeElement !== el) {
+			el.value = text;
+		}
+	}
+
+	// Saat pindah lagu, tempo default lagu baru diterapkan SETELAH MIDI
+	// selesai dimuat — polling ringan menjaga label/input tetap sinkron.
+	function startLyricsTempoPolling() {
+		stopLyricsTempoPolling();
+		_lyricsTempoPollTimer = setInterval(() => {
+			if (!lyricsViewActive) return;
+			var el = qs("#lyrics-tempo-label");
+			if (
+				!el ||
+				el.dataset.tempoEditing === "1" ||
+				document.activeElement === el
+			)
+				return;
+			var bpm =
+				typeof getCurrentSongTempoBpm === "function"
+					? getCurrentSongTempoBpm()
+					: null;
+			if (bpm != null && String(bpm) !== String(el.value)) {
+				syncLyricsTempoLabel();
+				syncLyricsTransposeLabel();
+				updateLyricsKeyButton();
+			}
+		}, 700);
+	}
+
+	function stopLyricsTempoPolling() {
+		if (_lyricsTempoPollTimer) {
+			clearInterval(_lyricsTempoPollTimer);
+			_lyricsTempoPollTimer = null;
+		}
 	}
 
 	function onLyricsTempo(delta) {
@@ -1025,7 +1189,29 @@
 							!verseText
 						)
 							return;
-						renderVerseLines(verseText, lines, layout);
+						// Fallback per-index (chord tiap bait sama): dihitung
+						// sekali per lagu dari semua bait.
+						var chordFallback = null;
+						if (
+							layout &&
+							!_verseChordFallbackCache.has(song.fileHref)
+						) {
+							_verseChordFallbackCache.set(
+								song.fileHref,
+								buildVerseChordFallback(entry.verses, layout),
+							);
+						}
+						if (layout) {
+							chordFallback = _verseChordFallbackCache.get(
+								song.fileHref,
+							);
+						}
+						renderVerseLines(
+							verseText,
+							lines,
+							layout,
+							chordFallback,
+						);
 						verseText.style.fontSize = lyricsFontSize + "px";
 						verseText.style.lineHeight = String(lyricsLineSpacing);
 						autoFitLyricsVerse();
@@ -1372,6 +1558,7 @@
 		}
 		updateLyricsVerse(0);
 		syncLyricsMidiControls();
+		startLyricsTempoPolling();
 
 		// Open animation: make visible with opacity 0, then WAAPI fade-in.
 		// inline opacity:0 prevents flash before animation takes over.
@@ -1415,6 +1602,7 @@
 	window.hideLyricsView = () => {
 		lyricsViewActive = false;
 		lyricsViewWasActive = false;
+		stopLyricsTempoPolling();
 
 		var contentEl = qs("#lyrics-content");
 		if (contentEl) {
