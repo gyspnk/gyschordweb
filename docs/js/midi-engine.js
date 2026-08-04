@@ -99,17 +99,20 @@ var MidiEngine = (function () {
     _ctx = new (window.AudioContext || window.webkitAudioContext)();
 
     // Chain: source → deckGain → masterGain → limiter → destination.
-    // The audio is already pre-rendered offline, so an always-on compressor here
-    // can add audible artifacts on bright/brassy presets.
+    // Buffer sudah dinormalisasi puncak saat render offline (target
+    // 0.94 / -0.5 dBFS), jadi limiter di sini hanya jaring pengaman:
+    // threshold di ATAS level render normal agar tidak pernah aktif
+    // (kompresor yang selalu aktif bisa menimbulkan artifact/crackling
+    // pada preset terang/brassy).
     _masterGain = _ctx.createGain();
     _masterGain.gain.value = _volume;
 
     _limiter = _ctx.createDynamicsCompressor();
-    _limiter.threshold.value = -2.5;
-    _limiter.ratio.value = 12;
-    _limiter.attack.value = 0.003;
-    _limiter.knee.value = 0;
-    _limiter.release.value = 0.04;
+    _limiter.threshold.value = -0.3;
+    _limiter.ratio.value = 20;
+    _limiter.attack.value = 0.002;
+    _limiter.knee.value = 0.5;
+    _limiter.release.value = 0.05;
 
     _masterGain.connect(_limiter);
     _limiter.connect(_ctx.destination);
@@ -146,7 +149,7 @@ var MidiEngine = (function () {
       }
 
       try {
-        var workerUrl = 'js/midi-render-worker.min.js?v=6';
+        var workerUrl = 'js/midi-render-worker.min.js?v=7';
         _worker = new Worker(workerUrl);
       } catch (err) {
         fail(new Error('Failed to create MIDI render worker: ' + err.message));

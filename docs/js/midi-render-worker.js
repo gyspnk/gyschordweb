@@ -387,7 +387,13 @@ function renderMidi(msg) {
         rightAll.set(chunks[i * 2 + 1], i * CHUNK);
       }
 
-      // Keep a little headroom so bright presets never hit the output limiter hard.
+      // Normalisasi puncak ke headroom -0.5 dBFS (0.94):
+      //  - Render yang pelan (velocity MIDI rendah) dinaikkan agar suara
+      //    tidak terlalu pelan (boost maks 8x / ~18 dB).
+      //  - Render yang terlalu keras diturunkan agar tidak peaking/clip.
+      // Hasilnya level output konsisten dan aman untuk limiter live.
+      var PEAK_TARGET = 0.94;
+      var MAX_BOOST = 8;
       var peak = 0;
       for (var sampleIndex = 0; sampleIndex < totalFrames; sampleIndex++) {
         var leftPeak = Math.abs(leftAll[sampleIndex]);
@@ -395,8 +401,9 @@ function renderMidi(msg) {
         if (leftPeak > peak) peak = leftPeak;
         if (rightPeak > peak) peak = rightPeak;
       }
-      if (peak > 0.98) {
-        var scale = 0.98 / peak;
+      if (peak > 0.0001) {
+        var scale = PEAK_TARGET / peak;
+        if (scale > MAX_BOOST) scale = MAX_BOOST;
         for (var normalizeIndex = 0; normalizeIndex < totalFrames; normalizeIndex++) {
           leftAll[normalizeIndex] *= scale;
           rightAll[normalizeIndex] *= scale;
