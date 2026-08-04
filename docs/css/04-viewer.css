@@ -4317,9 +4317,47 @@ body.lyrics-mode .pdf-viewer-page-controls {
 .lyrics-verse-text .lyrics-line {
 	margin: 0;
 	padding: 0;
+	/* Baris yang terlalu panjang membungkus ke baris berikutnya,
+	   bukan dipotong jadi titik-titik (...) */
+	white-space: normal;
+	overflow: visible;
+	text-overflow: clip;
+}
+
+/* Chord di atas lirik (mode teks) — posisi mengikuti layout PDF full */
+.lyrics-chorded-line {
+	position: relative;
+	/* Lebar wrapper mengikuti lebar alami baris lirik (bukan seluruh
+	   kontainer) supaya posisi chord (dalam %) tepat di atas teks
+	   yang di-center. */
+	width: fit-content;
+	max-width: 100%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.lyrics-chord-row {
+	position: relative;
+	height: 1.15em;
+	line-height: 1;
+}
+
+.lyrics-chord {
+	position: absolute;
+	top: 0;
+	transform: translateX(-50%);
 	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	font-weight: 700;
+	line-height: 1.2;
+	font-size: 0.72em;
+	letter-spacing: 0.02em;
+	border-radius: 5px;
+	padding: 0.05em 0.2em;
+}
+
+.lyrics-ctrl-btn.active {
+	opacity: 1;
+	color: var(--md-sys-color-primary);
 }
 
 .lyrics-empty {

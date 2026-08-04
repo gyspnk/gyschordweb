@@ -8,6 +8,10 @@
 	var lyricsViewWasActive = false;
 	var lyricsTransitioning = false;
 	var lyricsTransitionDir = 0; // 1=next, -1=prev
+	var lyricsShowChords = true; // chord di atas lirik (mode teks)
+	var _chordLayoutCache = new Map(); // fileHref -> Promise<{pages: {...}}>
+	var _verseRenderToken = 0; // penanda render untuk hasil async chord layout
+	var _lyricsResizeHandler = null;
 
 	function loadPrefs() {
 		try {
@@ -15,12 +19,15 @@
 			if (fs) lyricsFontSize = parseInt(fs, 10) || 28;
 			var ls = localStorage.getItem("lyrics-line-spacing");
 			if (ls) lyricsLineSpacing = parseFloat(ls) || 1.8;
+			var sc = localStorage.getItem("lyrics-show-chords");
+			if (sc !== null) lyricsShowChords = sc === "1";
 		} catch (e) {}
 	}
 
 	function savePrefs() {
 		localStorage.setItem("lyrics-font-size", String(lyricsFontSize));
 		localStorage.setItem("lyrics-line-spacing", String(lyricsLineSpacing));
+		localStorage.setItem("lyrics-show-chords", lyricsShowChords ? "1" : "0");
 	}
 
 	function getSongLyricData(song) {
@@ -55,6 +62,454 @@
 		for (var size = 1.05; size >= 0.65; size -= 0.05) {
 			el.style.fontSize = size + "rem";
 			if (el.scrollWidth <= el.clientWidth + 2) break;
+		}
+	}
+
+	/* ============ CHORD DI MODE TEKS ============
+	   Chord diambil dari file *.chord.json (note-aligned) yang sama dengan
+	   mode PDF full. Posisi chord (noteIdx -> xPct pada halaman PDF) dan
+	   posisi lirik (baris teks PDF) dideteksi dari layout PDF itu sendiri,
+	   sehingga peletakan chord di mode teks mengikuti posisi asli di PDF. */
+
+	function getCurrentSong() {
+		if (
+			typeof currentSongIndex === "undefined" ||
+			currentSongIndex < 0 ||
+			typeof pujianItems === "undefined" ||
+			!pujianItems[currentSongIndex]
+		)
+			return null;
+		return pujianItems[currentSongIndex];
+	}
+
+	function getChordedLinesForSong(song) {
+		if (!song || !song.fileHref) return Promise.resolve(null);
+		if (_chordLayoutCache.has(song.fileHref)) {
+			return _chordLayoutCache.get(song.fileHref);
+		}
+		var p = loadChordLayout(song).catch(() => null);
+		_chordLayoutCache.set(song.fileHref, p);
+		return p;
+	}
+
+	function resolveNoteChordUrl(song) {
+		if (typeof getNoteChordUrl === "function") return getNoteChordUrl(song);
+		var href = song.fileHref || "";
+		return href.replace(/\/pdf\//i, "/chord/").replace(/\.pdf$/i, ".chord.json");
+	}
+
+	async function loadChordLayout(song) {
+		var url = resolveNoteChordUrl(song);
+		var resp = await fetch(url, { cache: "no-store" });
+		if (!resp.ok) return { pages: {} };
+		var parsed = JSON.parse(await resp.text());
+		if (
+			!parsed ||
+			parsed.version !== 2 ||
+			parsed.type !== "note-aligned" ||
+			!parsed.pages ||
+			typeof parsed.pages !== "object"
+		)
+			return { pages: {} };
+
+		// Pakai pdfDoc viewer bila sedang membuka lagu yang sama, agar tidak
+		// fetch/decode PDF dua kali. Kalau tidak cocok, load dokumen sendiri.
+		var doc = null;
+		var ownDoc = false;
+		var viewerTitleEl = document.querySelector(
+			".pdf-viewer-title, #pdf-viewer-title",
+		);
+		var docMatchesSong =
+			typeof pdfDoc !== "undefined" &&
+			pdfDoc &&
+			typeof pdfDoc.getPage === "function" &&
+			viewerTitleEl &&
+			viewerTitleEl.textContent.trim() === (song.judul || "").trim();
+		if (docMatchesSong) {
+			doc = pdfDoc;
+		} else if (typeof pdfjsLib !== "undefined" && pdfjsLib.getDocument) {
+			var task = pdfjsLib.getDocument({
+				url: song.fileHref,
+				standardFontDataUrl:
+					"https://mozilla.github.io/pdf.js/standard_fonts/",
+			});
+			doc = await task.promise;
+			ownDoc = true;
+		} else {
+			return { pages: {} };
+		}
+
+		var result = { pages: {} };
+		try {
+			for (var p = 1; p <= doc.numPages; p++) {
+				var page = await doc.getPage(p);
+				var pageKey = String(p);
+				var entries = parsed.pages[pageKey] || [];
+				if (!Array.isArray(entries) || entries.length === 0) continue;
+				var noteData =
+					typeof extractPageNotes === "function"
+						? await extractPageNotes(page)
+						: null;
+				var lyricLines = await extractLyricLines(page);
+				if (!noteData || !noteData.notes || noteData.notes.length === 0)
+					continue;
+				var chorded = buildChordedLines(
+					noteData.notes,
+					noteData.noteRows || [],
+					lyricLines,
+					entries,
+				);
+				if (chorded.length > 0) result.pages[pageKey] = chorded;
+			}
+		} finally {
+			if (ownDoc && doc && typeof doc.destroy === "function") {
+				try {
+					doc.destroy();
+				} catch (e) {}
+			}
+		}
+		return result;
+	}
+
+	// Baris lirik dari teks PDF: item teks (bukan digit not 1-7) yang
+	// dikelompokkan per baris (nilai y hampir sama), diurutkan dari kiri.
+	async function extractLyricLines(page) {
+		var content = await page.getTextContent();
+		var viewport = page.getViewport({ scale: 1 });
+		var pageW = viewport.width;
+		var digitRe = /^[0-7.\s]+$/;
+		var items = content.items
+			.map((it) => ({
+				str: String(it.str || "").trim(),
+				x: it.transform[4],
+				y: it.transform[5],
+				w: it.width,
+			}))
+			.filter((it) => it.str.length > 0 && !digitRe.test(it.str));
+
+		var groups = [];
+		var sorted = [...items].sort((a, b) => b.y - a.y);
+		for (var i = 0; i < sorted.length; i++) {
+			var it = sorted[i];
+			var g = groups.find((gr) => Math.abs(gr.y - it.y) < 2);
+			if (g) {
+				g.items.push(it);
+			} else {
+				groups.push({ y: it.y, items: [it] });
+			}
+		}
+
+		return groups
+			.filter((g) => g.items.some((it) => /[A-Za-z]/.test(it.str)))
+			.map((g) => {
+				var its = [...g.items].sort((a, b) => a.x - b.x);
+				var text = its.map((it) => it.str).join(" ");
+				var startX = its[0].x;
+				var endX = Math.max(...its.map((it) => it.x + it.w));
+				var startPct = (startX / pageW) * 100;
+				var widthPct = Math.max(1, ((endX - startX) / pageW) * 100);
+				return { y: g.y, text, startPct, widthPct };
+			});
+	}
+
+	// Pasangkan chord (noteIdx) ke baris lirik PDF: baris lirik terdekat di
+	// BAWAH deretan digit not. Posisi chord = posisi x not relatif terhadap
+	// rentang teks baris lirik (0..1), dipakai sebagai left:% di mode teks.
+	function buildChordedLines(notes, noteRows, lyricLines, entries) {
+		var out = [];
+		if (!Array.isArray(entries) || entries.length === 0) return out;
+		for (var r = 0; r < noteRows.length; r++) {
+			var row = noteRows[r];
+			var lyr = null;
+			var bestDist = Infinity;
+			for (var l = 0; l < lyricLines.length; l++) {
+				var ll = lyricLines[l];
+				if (ll.y < row.y && row.y - ll.y <= 45) {
+					var d = row.y - ll.y;
+					if (d < bestDist) {
+						bestDist = d;
+						lyr = ll;
+					}
+				}
+			}
+			if (!lyr) continue;
+			var chords = [];
+			for (var e = 0; e < entries.length; e++) {
+				var entry = entries[e];
+				if (
+					!Number.isFinite(entry.noteIdx) ||
+					entry.noteIdx < row.firstIdx ||
+					entry.noteIdx > row.lastIdx
+				)
+					continue;
+				var note = notes[entry.noteIdx];
+				if (!note) continue;
+				var pos = Math.max(
+					0,
+					Math.min(1, (note.xPct - lyr.startPct) / lyr.widthPct),
+				);
+				chords.push({ chord: entry.chord, pos });
+			}
+			if (chords.length === 0) continue;
+			out.push({ text: lyr.text, chords });
+		}
+		return out;
+	}
+
+	function normalizeLine(s) {
+		return String(s || "")
+			.toLowerCase()
+			.replace(/[^a-z0-9]/g, "");
+	}
+
+	// Buang label bait ("1.", "Reff.", "(2)", dsb.) di awal baris PDF/JSON
+	function stripVerseLabel(s) {
+		return String(s || "").replace(
+			/^\s*(?:reff?|refrain|chorus|ulangan|[(（]?[0-9]+[)）]?[.\s]*)+/i,
+			"",
+		);
+	}
+
+	// Cari baris PDF ber-chord yang paling cocok dengan baris JSON mode teks
+	function findChordedLine(jsonLine, chordedLines) {
+		var target = normalizeLine(stripVerseLabel(jsonLine));
+		if (!target || !Array.isArray(chordedLines) || chordedLines.length === 0)
+			return null;
+		var best = null;
+		var bestScore = 0;
+		for (var i = 0; i < chordedLines.length; i++) {
+			var cand = normalizeLine(stripVerseLabel(chordedLines[i].text));
+			if (!cand) continue;
+			if (cand === target) return chordedLines[i];
+			var score = 0;
+			if (cand.includes(target) || target.includes(cand)) {
+				var lenRatio =
+					Math.min(cand.length, target.length) /
+					Math.max(cand.length, target.length);
+				score = 0.85 * lenRatio;
+			} else {
+				var j = 0;
+				while (
+					j < cand.length &&
+					j < target.length &&
+					cand[j] === target[j]
+				)
+					j++;
+				score = j / Math.max(cand.length, target.length);
+			}
+			if (score > bestScore) {
+				bestScore = score;
+				best = chordedLines[i];
+			}
+		}
+		return bestScore >= 0.6 ? best : null;
+	}
+
+	function parseHex(c) {
+		var h = String(c || "").trim().replace(/^#/, "");
+		if (h.length === 3)
+			h = h
+				.split("")
+				.map((x) => x + x)
+				.join("");
+		var n = parseInt(h, 16);
+		if (!Number.isFinite(n) || h.length !== 6) return null;
+		return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+	}
+
+	function mixHexWithWhite(hex, pct) {
+		var c = parseHex(hex);
+		if (!c) return hex;
+		var p = Math.max(0, Math.min(1, pct));
+		var mix = (v) => Math.round(v * p + 255 * (1 - p));
+		return `rgb(${mix(c.r)}, ${mix(c.g)}, ${mix(c.b)})`;
+	}
+
+	// Terapkan warna/fill chord sesuai chordUiPrefs (sama dengan mode PDF)
+	function applyLyricsChordStyle(el) {
+		if (typeof chordUiPrefs === "undefined") return;
+		var themeColor = "#0b4c99";
+		try {
+			if (chordUiPrefs.syncThemeWithAccent) {
+				themeColor =
+					getComputedStyle(document.body)
+						.getPropertyValue("--accent")
+						.trim() || themeColor;
+			} else if (
+				typeof CHORD_THEME_PRESETS !== "undefined" &&
+				Array.isArray(CHORD_THEME_PRESETS)
+			) {
+				var t = CHORD_THEME_PRESETS.find(
+					(p) => p.key === chordUiPrefs.theme,
+				);
+				if (t) themeColor = t.color;
+			}
+		} catch (e) {}
+		el.style.color = themeColor;
+
+		var fill = chordUiPrefs.fill || "none";
+		if (fill !== "none") {
+			var fc = "#b9d8ff";
+			try {
+				if (chordUiPrefs.syncFillWithAccent) {
+					fc =
+						getComputedStyle(document.body)
+							.getPropertyValue("--accent")
+							.trim() || fc;
+				} else if (
+					typeof CHORD_FILL_PRESETS !== "undefined" &&
+					Array.isArray(CHORD_FILL_PRESETS)
+				) {
+					var f = CHORD_FILL_PRESETS.find(
+						(p) => p.key === chordUiPrefs.fillColor,
+					);
+					if (f) fc = f.color;
+				}
+			} catch (e) {}
+			var opacity =
+				(typeof chordUiPrefs.fillOpacityPercent === "number"
+					? chordUiPrefs.fillOpacityPercent
+					: 70) / 100;
+			var mixPct = fill === "solid" ? 0.65 : 0.32;
+			var base = mixHexWithWhite(fc, mixPct);
+			// samakan dengan CSS: color-mix(in srgb, base <opacity>, transparent)
+			var rgb = base.match(/\d+/g);
+			if (rgb && rgb.length >= 3) {
+				el.style.backgroundColor = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${opacity})`;
+			}
+			el.style.borderRadius = "6px";
+		} else {
+			el.style.backgroundColor = "transparent";
+		}
+	}
+
+	function renderLyricLine(wrap, lineText, chordedLine) {
+		if (
+			lyricsShowChords &&
+			chordedLine &&
+			Array.isArray(chordedLine.chords) &&
+			chordedLine.chords.length > 0
+		) {
+			var row = document.createElement("div");
+			row.className = "lyrics-chord-row";
+			for (var c = 0; c < chordedLine.chords.length; c++) {
+				var chord = chordedLine.chords[c];
+				var span = document.createElement("span");
+				span.className = "lyrics-chord";
+				span.style.left = (chord.pos * 100).toFixed(2) + "%";
+				span.textContent =
+					typeof formatChordForDisplay === "function"
+						? formatChordForDisplay(chord.chord)
+						: chord.chord;
+				applyLyricsChordStyle(span);
+				row.append(span);
+			}
+			wrap.append(row);
+		}
+		var p = document.createElement("p");
+		p.className = "lyrics-line";
+		p.style.cssText = "margin:0;padding:0";
+		p.textContent = lineText;
+		wrap.append(p);
+	}
+
+	// Render semua baris bait (dengan chord bila tersedia & aktif)
+	function renderVerseLines(verseText, lines, layout) {
+		verseText.textContent = "";
+		for (var i = 0; i < lines.length; i++) {
+			var wrap = document.createElement("div");
+			wrap.className = "lyrics-chorded-line";
+			var chordedLine = null;
+			if (layout && layout.pages) {
+				for (var pk in layout.pages) {
+					var cl = findChordedLine(lines[i], layout.pages[pk]);
+					if (cl) {
+						chordedLine = cl;
+						break;
+					}
+				}
+			}
+			renderLyricLine(wrap, lines[i], chordedLine);
+			verseText.append(wrap);
+		}
+	}
+
+	// Anti-tabrakan: chord yang posisinya (dari PDF) terlalu berdekatan
+	// digeser ke kanan secukupnya agar tidak saling menimpa. Posisi asli
+	// tetap dipertahankan selama tidak terjadi tumpang tindih.
+	function fixLyricsChordCollisions() {
+		var rows = document.querySelectorAll(".lyrics-chord-row");
+		for (var r = 0; r < rows.length; r++) {
+			var row = rows[r];
+			var spans = row.querySelectorAll(".lyrics-chord");
+			if (spans.length < 2) continue;
+			var rowW = row.clientWidth || 1;
+			var prevRightPx = -Infinity;
+			for (var i = 0; i < spans.length; i++) {
+				var leftPx = (parseFloat(spans[i].style.left) || 0) / 100 * rowW;
+				var halfW = spans[i].offsetWidth / 2;
+				var minLeft = prevRightPx + halfW + 4;
+				if (leftPx < minLeft) {
+					leftPx = minLeft;
+					var maxLeft = Math.max(halfW + 2, rowW - halfW - 2);
+					if (leftPx > maxLeft) leftPx = maxLeft;
+					spans[i].style.left = (leftPx / rowW * 100).toFixed(2) + "%";
+				}
+				prevRightPx = leftPx + halfW;
+			}
+		}
+	}
+
+	/* ============ AUTOFIT FONT BAIT ============
+	   Ukuran font bait di-autofit di awal: pakai preferensi user sebagai
+	   ukuran maksimal, lalu turunkan (binary search) sampai seluruh baris
+	   bait (termasuk baris chord) muat di area konten. Kalau masih lebih
+	   tinggi dari ukuran minimum, area konten menjadi scrollable. */
+	var LYRICS_AUTOFIT_MIN = 14;
+
+	function autoFitLyricsVerse() {
+		var content = qs("#lyrics-content");
+		var vt = qs("#lyrics-verse-text");
+		var vc = qs("#lyrics-verse-container");
+		if (!content || !vt || !vc) return;
+		var availH = Math.max(60, content.clientHeight - 12);
+		var maxSize = Math.max(LYRICS_AUTOFIT_MIN, lyricsFontSize);
+		var prevTransition = vt.style.transition;
+		vt.style.transition = "none";
+		try {
+			var lo = LYRICS_AUTOFIT_MIN;
+			var hi = maxSize;
+			// Default ke ukuran minimum: bila tidak ada ukuran yang muat
+			// (bait sangat panjang), pakai minimum + area konten scrollable.
+			var best = LYRICS_AUTOFIT_MIN;
+			function measure(px) {
+				vt.style.fontSize = px + "px";
+				vt.style.lineHeight = String(lyricsLineSpacing);
+				return vc.scrollHeight <= availH;
+			}
+			if (measure(maxSize)) {
+				best = maxSize;
+			} else {
+				while (lo <= hi) {
+					var mid = Math.round((lo + hi) / 2);
+					if (measure(mid)) {
+						best = mid;
+						lo = mid + 1;
+					} else {
+						hi = mid - 1;
+					}
+				}
+			}
+			vt.style.fontSize = best + "px";
+			vt.style.lineHeight = String(lyricsLineSpacing);
+			var overflowing = vc.scrollHeight > availH + 1;
+			content.style.alignItems = overflowing ? "flex-start" : "center";
+			content.style.overflowY = overflowing ? "auto" : "";
+			// Ukuran font final sudah pasti — baru aman menggeser chord yang
+			// saling menimpa (lebar chord tergantung font-size).
+			fixLyricsChordCollisions();
+		} finally {
+			vt.style.transition = prevTransition;
 		}
 	}
 
@@ -95,6 +550,33 @@
 
 		var verse = entry.verses[lyricsVerseIndex];
 		var lines = verse.split("\n").filter((l) => l.trim().length > 0);
+		_verseRenderToken++;
+		var token = _verseRenderToken;
+
+		function finishRender() {
+			verseText.style.fontSize = lyricsFontSize + "px";
+			verseText.style.lineHeight = String(lyricsLineSpacing);
+			autoFitLyricsVerse();
+			// Pasang chord dari layout PDF (async) bila masih bait yang sama
+			if (lyricsShowChords) {
+				var song = getCurrentSong();
+				if (song) {
+					getChordedLinesForSong(song).then((layout) => {
+						if (
+							_verseRenderToken !== token ||
+							!lyricsViewActive ||
+							!verseText
+						)
+							return;
+						renderVerseLines(verseText, lines, layout);
+						verseText.style.fontSize = lyricsFontSize + "px";
+						verseText.style.lineHeight = String(lyricsLineSpacing);
+						autoFitLyricsVerse();
+					});
+				}
+			}
+		}
+
 		if (verseText) {
 			if (animateDir && animateDir !== 0 && container) {
 				// Phase 1: slide OLD content out
@@ -104,16 +586,8 @@
 				container.style.opacity = "0";
 				setTimeout(() => {
 					// Phase 2: swap to NEW content while invisible
-					verseText.textContent = "";
-					for (var i = 0; i < lines.length; i++) {
-						var p = document.createElement("p");
-						p.className = "lyrics-line";
-						p.style.cssText = "margin:0;padding:0";
-						p.textContent = lines[i];
-						verseText.append(p);
-					}
-					verseText.style.fontSize = lyricsFontSize + "px";
-					verseText.style.lineHeight = String(lyricsLineSpacing);
+					renderVerseLines(verseText, lines, null);
+					finishRender();
 					// Set starting position for slide-in (opposite side)
 					container.style.transition = "none";
 					container.style.transform =
@@ -130,16 +604,8 @@
 				}, 200);
 			} else {
 				// Direct update, no animation
-				verseText.textContent = "";
-				for (var i = 0; i < lines.length; i++) {
-					var p = document.createElement("p");
-					p.className = "lyrics-line";
-					p.style.cssText = "margin:0;padding:0";
-					p.textContent = lines[i];
-					verseText.append(p);
-				}
-				verseText.style.fontSize = lyricsFontSize + "px";
-				verseText.style.lineHeight = String(lyricsLineSpacing);
+				renderVerseLines(verseText, lines, null);
+				finishRender();
 			}
 		}
 		if (indicator)
@@ -265,6 +731,22 @@
 			updateLyricsVerse();
 		});
 		ha.append(su);
+		var ctg = mkCtrlBtn(
+			"lyrics-chord-toggle-btn",
+			lyricsShowChords ? "Sembunyikan chord" : "Tampilkan chord",
+			"music_note",
+		);
+		ctg.setAttribute("aria-pressed", lyricsShowChords ? "true" : "false");
+		if (lyricsShowChords) ctg.classList.add("active");
+		ctg.addEventListener("click", () => {
+			lyricsShowChords = !lyricsShowChords;
+			savePrefs();
+			ctg.setAttribute("aria-pressed", lyricsShowChords ? "true" : "false");
+			ctg.title = lyricsShowChords ? "Sembunyikan chord" : "Tampilkan chord";
+			ctg.classList.toggle("active", lyricsShowChords);
+			updateLyricsVerse();
+		});
+		ha.append(ctg);
 		var cb = mkCtrlBtn("lyrics-close-btn", "Kembali ke PDF", "close");
 		cb.addEventListener("click", () => {
 			window.hideLyricsView();
@@ -389,13 +871,25 @@
 					}
 				}
 			} else {
-				if (absDy > 40) navigateLyricsVerse(dy > 0 ? -1 : 1);
+				if (absDy > 40) {
+					// Saat konten lirik bisa di-scroll (bait terlalu tinggi),
+					// swipe vertikal dipakai untuk scroll, bukan ganti bait.
+					var scrollable =
+						ct.scrollHeight > ct.clientHeight + 1 &&
+						ct.style.overflowY === "auto";
+					if (!scrollable) navigateLyricsVerse(dy > 0 ? -1 : 1);
+				}
 			}
-		});
+			});
 		ct.addEventListener(
 			"wheel",
 			(e) => {
 				if (Math.abs(e.deltaY) > 30) {
+					// Bila konten bisa di-scroll, wheel untuk scroll, bukan ganti bait
+					var scrollable =
+						ct.scrollHeight > ct.clientHeight + 1 &&
+						ct.style.overflowY === "auto";
+					if (scrollable) return;
 					e.preventDefault();
 					navigateLyricsVerse(e.deltaY > 0 ? 1 : -1);
 				}
@@ -468,6 +962,13 @@
 	window.hideLyricsView = () => {
 		lyricsViewActive = false;
 		lyricsViewWasActive = false;
+
+		var contentEl = qs("#lyrics-content");
+		if (contentEl) {
+			contentEl.scrollTop = 0;
+			contentEl.style.overflowY = "";
+			contentEl.style.alignItems = "center";
+		}
 
 		var panel = qs("#lyrics-panel");
 		if (panel) {
@@ -669,4 +1170,11 @@
 		injectLyricsToggleButton();
 		loadPrefs();
 	}, 2000); /* ponytail: only loads prefs now; lyrics JSON fetched on first toggle */
+
+	// Autofit ulang saat ukuran layar/orientasi berubah (mode lirik aktif)
+	_lyricsResizeHandler = () => {
+		if (lyricsViewActive) autoFitLyricsVerse();
+	};
+	window.addEventListener("resize", _lyricsResizeHandler);
+	window.addEventListener("orientationchange", _lyricsResizeHandler);
 })();

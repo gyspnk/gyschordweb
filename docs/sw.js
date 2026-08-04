@@ -1,5 +1,5 @@
-const CACHE_NAME = "gys-cache-v71";
-const APP_VERSION = "3.8.17";
+const CACHE_NAME = "gys-cache-v72";
+const APP_VERSION = "3.8.18";
 
 self.addEventListener("install", (_event) => {
 	self.skipWaiting();
