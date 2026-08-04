@@ -8,24 +8,114 @@ const PLAYLIST_STORAGE_KEY = "kidung_playlists";
 const PLAYLIST_ACTIVE_KEY = "kidung_active_playlist";
 const PLAYLIST_AUTONEXT_KEY = "kidung_autonext_mode";
 
+// Backup playlist ke IndexedDB (database terpisah "gys-playlist-backup").
+// localStorage bisa hilang bila browser melakukan storage eviction (mis.
+// quota penuh karena soundfont besar), sehingga backup ini menjaga
+// playlist tidak terbuang setelah update/eviction.
+window.__playlistBackupCache = null;
+
+function backupPlaylistsToIDB(playlists) {
+  const payload = () => ({
+    playlists,
+    active: localStorage.getItem(PLAYLIST_ACTIVE_KEY),
+    auto: localStorage.getItem(PLAYLIST_AUTONEXT_KEY),
+    savedAt: Date.now(),
+  });
+  const write = (db) => {
+    const tx = db.transaction("kv", "readwrite");
+    tx.objectStore("kv").put(payload(), "playlists");
+  };
+  try {
+    const req = indexedDB.open("gys-playlist-backup", 1);
+    req.onupgradeneeded = (e) => {
+      e.target.result.createObjectStore("kv");
+    };
+    req.onsuccess = () => {
+      const db = req.result;
+      // Self-heal: bila store "kv" hilang (DB korup/dari versi lama),
+      // tutup lalu buka ulang dengan version+1 untuk membuat store.
+      if (!db.objectStoreNames.contains("kv")) {
+        const nextVersion = db.version || 1;
+        db.close();
+        const req2 = indexedDB.open("gys-playlist-backup", nextVersion + 1);
+        req2.onupgradeneeded = (e) => {
+          e.target.result.createObjectStore("kv");
+        };
+        req2.onsuccess = () => write(req2.result);
+        return;
+      }
+      write(db);
+    };
+  } catch (_e) {}
+}
+
+function restorePlaylistsFromIDB() {
+  try {
+    const req = indexedDB.open("gys-playlist-backup", 1);
+    req.onupgradeneeded = (e) => {
+      e.target.result.createObjectStore("kv");
+    };
+    req.onsuccess = () => {
+      const db = req.result;
+      // Self-heal: buat store dulu bila hilang, lalu coba lagi.
+      if (!db.objectStoreNames.contains("kv")) {
+        const nextVersion = db.version || 1;
+        db.close();
+        const req2 = indexedDB.open("gys-playlist-backup", nextVersion + 1);
+        req2.onupgradeneeded = (e) => {
+          e.target.result.createObjectStore("kv");
+        };
+        req2.onsuccess = () => restorePlaylistsFromIDB();
+        return;
+      }
+      const tx = db.transaction("kv", "readonly");
+      const get = tx.objectStore("kv").get("playlists");
+      get.onsuccess = () => {
+        const backup = get.result;
+        if (!backup || !backup.playlists) return;
+        window.__playlistBackupCache = backup;
+        // Hanya restore bila localStorage kosong (data asli hilang)
+        if (!localStorage.getItem(PLAYLIST_STORAGE_KEY)) {
+          localStorage.setItem(
+            PLAYLIST_STORAGE_KEY,
+            JSON.stringify(backup.playlists),
+          );
+          if (backup.active)
+            localStorage.setItem(PLAYLIST_ACTIVE_KEY, backup.active);
+          if (backup.auto)
+            localStorage.setItem(PLAYLIST_AUTONEXT_KEY, backup.auto);
+          if (typeof renderPlaylistView === "function") renderPlaylistView();
+        }
+      };
+    };
+  } catch (_e) {}
+}
+
 const PlaylistManager = {
   /**
-   * Get all playlists from localStorage.
+   * Get all playlists from localStorage (fallback ke backup IndexedDB
+   * bila localStorage kosong).
    * @returns {Array} Array of playlist objects
    */
   getAll() {
     try {
-      return JSON.parse(localStorage.getItem(PLAYLIST_STORAGE_KEY)) || [];
+      const cached = JSON.parse(localStorage.getItem(PLAYLIST_STORAGE_KEY));
+      if (cached) return cached;
+      if (window.__playlistBackupCache && window.__playlistBackupCache.playlists)
+        return window.__playlistBackupCache.playlists;
     } catch {
-      return [];
+      // lanjut ke fallback
     }
+    return [];
   },
 
   /**
-   * Save all playlists to localStorage.
+   * Save all playlists to localStorage + mirror ke IndexedDB.
    */
   _save(playlists) {
     localStorage.setItem(PLAYLIST_STORAGE_KEY, JSON.stringify(playlists));
+    if (typeof backupPlaylistsToIDB === "function")
+      backupPlaylistsToIDB(playlists);
   },
 
   /**

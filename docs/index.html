@@ -68,7 +68,7 @@
     <link rel="stylesheet" href="./css/tailwind.css?v=10" />
     <link rel="stylesheet" href="./css/04-viewer.css?v=18" />
     <link rel="stylesheet" href="./css/runtime-fixes.css?v=10" />
-    <link rel="preload" href="./js/app.bundle.min.js?v=20" as="script" />
+    <link rel="preload" href="./js/app.bundle.min.js?v=21" as="script" />
     <link
       rel="prefetch"
       href="./js/midi-render-worker.min.js?v=7"
@@ -104,7 +104,7 @@
         <div class="app-loading-bar" role="progressbar" aria-label="Memuat">
           <div class="app-loading-bar-fill"></div>
         </div>
-        <div class="app-loading-label">Memuat…</div>
+        <div class="app-loading-label">Memuat… 0%</div>
       </div>
       <style>
         #app-loading-screen {
@@ -146,10 +146,10 @@
         }
         .app-loading-bar-fill {
           height: 100%;
-          width: 40%;
+          width: 0%;
           border-radius: 999px;
           background: #8d6e3f;
-          animation: app-loading-slide 1.1s ease-in-out infinite;
+          transition: width 0.35s ease;
         }
         .app-loading-label {
           font-family: system-ui, -apple-system, "Segoe UI", Roboto,
@@ -157,14 +157,7 @@
           font-size: 0.8rem;
           letter-spacing: 0.06em;
           color: rgba(60, 50, 40, 0.55);
-        }
-        @keyframes app-loading-slide {
-          0% {
-            transform: translateX(-110%);
-          }
-          100% {
-            transform: translateX(430%);
-          }
+          font-variant-numeric: tabular-nums;
         }
         @media (prefers-color-scheme: dark) {
           #app-loading-screen {
@@ -193,16 +186,28 @@
       // Sembunyikan loading screen setelah elemen utama siap: window load
       // (semua aset statis) + font/icon (Material Symbols & Google Fonts)
       // + daftar pujian ter-render. MIDI TIDAK ditunggu di sini.
+      // Loading bar menampilkan PERSENTASE progres (estimasi bertahap).
       (function () {
         var el = document.getElementById("app-loading-screen");
         if (!el) return;
+        var fill = el.querySelector(".app-loading-bar-fill");
+        var label = el.querySelector(".app-loading-label");
         var startedAt = Date.now();
         var MIN_SHOW_MS = 600;
-        var MAX_WAIT_MS = 8000;
+        var MAX_WAIT_MS = 9000;
         var hidden = false;
+        var progress = 0;
+
+        function setProgress(p) {
+          progress = Math.max(progress, Math.min(100, p));
+          if (fill) fill.style.width = progress + "%";
+          if (label) label.textContent = "Memuat… " + Math.round(progress) + "%";
+        }
+
         function hide() {
           if (hidden) return;
           hidden = true;
+          setProgress(100);
           var waited = Date.now() - startedAt;
           var delay = Math.max(0, MIN_SHOW_MS - waited);
           setTimeout(function () {
@@ -212,10 +217,20 @@
             }, 520);
           }, delay);
         }
+
         function listReady() {
           var list = document.getElementById("pujian-list");
           return !!(list && list.children.length > 0);
         }
+
+        // Progres bertahap (estimasi): DOM siap = 25%, window load = 55%,
+        // font/icon siap = 75%, daftar pujian = 90%. Merayap +2%/150ms
+        // sampai 88% agar terasa hidup saat aset masih dimuat.
+        setProgress(4);
+        var creep = setInterval(function () {
+          if (!hidden && progress < 88) setProgress(progress + 2);
+        }, 150);
+
         function ready() {
           var fontsReady =
             document.fonts && document.fonts.ready
@@ -224,16 +239,38 @@
           var assetsReady = new Promise(function (resolve) {
             var t0 = Date.now();
             (function poll() {
-              if (listReady() || Date.now() - t0 > 6000) resolve();
-              else setTimeout(poll, 120);
+              if (listReady()) {
+                setProgress(90);
+                resolve();
+              } else if (Date.now() - t0 > 6000) {
+                resolve();
+              } else {
+                setTimeout(poll, 120);
+              }
             })();
           });
-          Promise.all([fontsReady, assetsReady]).then(hide);
+          Promise.all([fontsReady, assetsReady]).then(function () {
+            clearInterval(creep);
+            setProgress(96);
+            setTimeout(hide, 150);
+          });
         }
+
         if (document.readyState === "complete") ready();
-        else window.addEventListener("load", ready);
+        else {
+          document.addEventListener("DOMContentLoaded", function () {
+            setProgress(25);
+          });
+          window.addEventListener("load", function () {
+            setProgress(55);
+            ready();
+          });
+        }
         // Jaring pengaman: bagaimanapun juga loading screen pasti hilang.
-        setTimeout(hide, MAX_WAIT_MS);
+        setTimeout(function () {
+          clearInterval(creep);
+          hide();
+        }, MAX_WAIT_MS);
       })();
     </script>
   </body>

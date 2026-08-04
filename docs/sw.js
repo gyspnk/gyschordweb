@@ -1,5 +1,5 @@
-const CACHE_NAME = "gys-cache-v77";
-const APP_VERSION = "3.8.23";
+const CACHE_NAME = "gys-cache-v78";
+const APP_VERSION = "3.8.24";
 
 self.addEventListener("install", (_event) => {
 	self.skipWaiting();
@@ -56,7 +56,13 @@ self.addEventListener("fetch", (event) => {
 		url.pathname.includes("/chord/") ||
 		url.pathname.includes("assets-list.json") ||
 		url.pathname.includes("assets-lyrics.json") ||
-		url.pathname.includes("assets-chord-list.json")
+		url.pathname.includes("assets-chord-list.json") ||
+		// SoundFont besar (bisa ratusan MB) TIDAK di-cache di Cache API —
+		// ia dikelola sendiri via IndexedDB (gys-sf-cache). Cache ganda
+		// membuat quota storage cepat penuh dan browser bisa meng-evict
+		// seluruh origin storage (termasuk localStorage playlist).
+		url.pathname.endsWith(".sf2") ||
+		url.pathname.endsWith(".sf3")
 	) {
 		event.respondWith(fetch(event.request));
 		return;
