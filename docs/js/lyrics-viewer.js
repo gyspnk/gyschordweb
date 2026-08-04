@@ -384,19 +384,20 @@
 	}
 
 	function renderLyricLine(wrap, lineText, chordedLine) {
+		var row = document.createElement("div");
+		row.className = "lyrics-chord-row";
 		if (
-			lyricsShowChords &&
 			chordedLine &&
 			Array.isArray(chordedLine.chords) &&
 			chordedLine.chords.length > 0
 		) {
-			var row = document.createElement("div");
-			row.className = "lyrics-chord-row";
+			row.classList.add("has-chords");
 			for (var c = 0; c < chordedLine.chords.length; c++) {
 				var chord = chordedLine.chords[c];
 				var span = document.createElement("span");
 				span.className = "lyrics-chord";
 				span.style.left = (chord.pos * 100).toFixed(2) + "%";
+				span.dataset.raw = chord.chord;
 				span.textContent =
 					typeof formatChordForDisplay === "function"
 						? formatChordForDisplay(chord.chord)
@@ -404,8 +405,8 @@
 				applyLyricsChordStyle(span);
 				row.append(span);
 			}
-			wrap.append(row);
 		}
+		wrap.append(row);
 		var p = document.createElement("p");
 		p.className = "lyrics-line";
 		p.style.cssText = "margin:0;padding:0";
@@ -416,6 +417,8 @@
 	// Render semua baris bait (dengan chord bila tersedia & aktif)
 	function renderVerseLines(verseText, lines, layout) {
 		verseText.textContent = "";
+		// Kelas ini mengontrol visibilitas/animasi baris chord via CSS
+		verseText.classList.toggle("lyrics-chords-on", lyricsShowChords);
 		for (var i = 0; i < lines.length; i++) {
 			var wrap = document.createElement("div");
 			wrap.className = "lyrics-chorded-line";
@@ -458,6 +461,380 @@
 				prevRightPx = leftPx + halfW;
 			}
 		}
+	}
+
+	// Perbarui teks chord yang sudah dirender (dipakai setelah transpose /
+	// ganti nada dasar, agar tidak perlu re-render seluruh bait)
+	function refreshLyricsChordTexts() {
+		if (typeof formatChordForDisplay !== "function") return;
+		document.querySelectorAll(".lyrics-chord").forEach((el) => {
+			el.textContent = formatChordForDisplay(
+				el.dataset.raw || el.textContent,
+			);
+		});
+	}
+
+	// Hold-to-repeat: tahan tombol -> aksi dijalankan terus menerus
+	function addHoldRepeat(btn, action, opts) {
+		if (!btn || typeof action !== "function") return;
+		var delay = (opts && opts.delay) || 380;
+		var interval = (opts && opts.interval) || 120;
+		var timer = null;
+		var iv = null;
+		function stop() {
+			if (timer) clearTimeout(timer);
+			if (iv) clearInterval(iv);
+			timer = null;
+			iv = null;
+		}
+		function start(e) {
+			if (e && e.cancelable) e.preventDefault();
+			stop();
+			action();
+			timer = setTimeout(function () {
+				iv = setInterval(action, interval);
+			}, delay);
+		}
+		btn.addEventListener("pointerdown", start);
+		btn.addEventListener("pointerup", stop);
+		btn.addEventListener("pointerleave", stop);
+		btn.addEventListener("pointercancel", stop);
+		btn.addEventListener("keydown", (e) => {
+			if (e.key === "Enter" || e.key === " ") {
+				e.preventDefault();
+				action();
+			}
+		});
+	}
+
+	// Ubah ukuran font bait langsung (tanpa re-render) lalu autofit
+	function applyLyricsFontDelta(delta) {
+		lyricsFontSize = Math.max(14, Math.min(72, lyricsFontSize + delta));
+		savePrefs();
+		var vt = qs("#lyrics-verse-text");
+		if (vt && lyricsViewActive) {
+			vt.style.fontSize = lyricsFontSize + "px";
+			vt.style.lineHeight = String(lyricsLineSpacing);
+			autoFitLyricsVerse();
+		}
+	}
+
+	// Ubah jarak baris langsung (tanpa re-render) lalu autofit
+	function applyLyricsSpacingDelta(delta) {
+		lyricsLineSpacing = Math.max(
+			1,
+			Math.min(3.5, +(lyricsLineSpacing + delta).toFixed(1)),
+		);
+		savePrefs();
+		var vt = qs("#lyrics-verse-text");
+		if (vt && lyricsViewActive) {
+			vt.style.fontSize = lyricsFontSize + "px";
+			vt.style.lineHeight = String(lyricsLineSpacing);
+			autoFitLyricsVerse();
+		}
+	}
+
+	/* ============ KONTROL MIDI DI MODE TEKS ============
+	   Instrument selector, tempo, transpose, dan nada dasar (key) tetap
+	   tersedia saat mode lirik aktif — memakai fungsi/state yang sama
+	   dengan viewer (MidiEngine, transposeStep, dll.). */
+
+	function mkMidiBtn(id, title, icon) {
+		var b = document.createElement("button");
+		b.id = id;
+		b.type = "button";
+		b.className = "lyrics-midi-btn";
+		b.title = title;
+		b.setAttribute("aria-label", title);
+		var s = document.createElement("span");
+		s.className = "material-symbols-outlined";
+		s.textContent = icon;
+		b.append(s);
+		return b;
+	}
+
+	function buildLyricsMidiBar(inn) {
+		var bar = document.createElement("div");
+		bar.className = "lyrics-midi-bar";
+		bar.id = "lyrics-midi-bar";
+
+		// Instrument
+		var iw = document.createElement("div");
+		iw.className = "lyrics-midi-group lyrics-midi-instrument-wrap";
+		var isel = document.createElement("select");
+		isel.id = "lyrics-instrument-select";
+		isel.className = "lyrics-midi-select";
+		isel.title = "Pilih alat musik";
+		isel.setAttribute("aria-label", "Pilih alat musik");
+		isel.addEventListener("change", onLyricsInstrumentChange);
+		iw.append(isel);
+		bar.append(iw);
+
+		// Tempo
+		var tg = document.createElement("div");
+		tg.className = "lyrics-midi-group";
+		var tdn = mkMidiBtn("lyrics-tempo-down", "Kurangi tempo", "remove");
+		addHoldRepeat(tdn, () => onLyricsTempo(-2), { delay: 300, interval: 90 });
+		var tlb = document.createElement("span");
+		tlb.id = "lyrics-tempo-label";
+		tlb.className = "lyrics-midi-label";
+		tlb.textContent = "♩ —";
+		var tup = mkMidiBtn("lyrics-tempo-up", "Tambah tempo", "add");
+		addHoldRepeat(tup, () => onLyricsTempo(2), { delay: 300, interval: 90 });
+		tg.append(tdn, tlb, tup);
+		bar.append(tg);
+
+		// Nada dasar (key) + dropdown 12 nada
+		var kg = document.createElement("div");
+		kg.className = "lyrics-midi-group lyrics-key-group";
+		var kbtn = document.createElement("button");
+		kbtn.id = "lyrics-key-btn";
+		kbtn.type = "button";
+		kbtn.className = "lyrics-midi-btn lyrics-key-btn";
+		kbtn.title = "Pilih nada dasar";
+		kbtn.setAttribute("aria-label", "Pilih nada dasar");
+		kbtn.textContent = "—";
+		var kdd = document.createElement("div");
+		kdd.className = "lyrics-key-dropdown";
+		kdd.id = "lyrics-key-dropdown";
+		kdd.setAttribute("role", "listbox");
+		kbtn.addEventListener("click", (e) => {
+			e.stopPropagation();
+			kdd.classList.toggle("is-open");
+		});
+		kdd.addEventListener("click", (e) => {
+			var opt = e.target.closest(".lyrics-key-option");
+			if (!opt) return;
+			var idx = parseInt(opt.dataset.index, 10);
+			if (Number.isFinite(idx)) applyLyricsKey(idx);
+			kdd.classList.remove("is-open");
+		});
+		kg.append(kbtn, kdd);
+		bar.append(kg);
+
+		// Transpose
+		var trg = document.createElement("div");
+		trg.className = "lyrics-midi-group";
+		var trd = mkMidiBtn("lyrics-transpose-down", "Turunkan nada", "south");
+		addHoldRepeat(trd, () => onLyricsTranspose(-1), { delay: 300, interval: 90 });
+		var trl = document.createElement("span");
+		trl.id = "lyrics-transpose-label";
+		trl.className = "lyrics-midi-label lyrics-transpose-label";
+		trl.textContent = "Transpose 0";
+		var tru = mkMidiBtn("lyrics-transpose-up", "Naikkan nada", "north");
+		addHoldRepeat(tru, () => onLyricsTranspose(1), { delay: 300, interval: 90 });
+		trg.append(trd, trl, tru);
+		bar.append(trg);
+
+		inn.append(bar);
+
+		// Tutup dropdown key saat klik di luar
+		document.addEventListener("pointerdown", (e) => {
+			if (!e.target.closest(".lyrics-key-group")) {
+				var dd = qs("#lyrics-key-dropdown");
+				if (dd) dd.classList.remove("is-open");
+			}
+		});
+	}
+
+	function populateLyricsInstrumentSelect() {
+		var sel = qs("#lyrics-instrument-select");
+		if (!sel) return;
+		var sf =
+			(typeof prefs !== "undefined" && prefs && prefs.midiSoundfont) ||
+			(typeof MIDI_SF2_URL !== "undefined" ? MIDI_SF2_URL : "");
+		var list =
+			typeof getSoundfontInstrumentList === "function"
+				? getSoundfontInstrumentList(sf)
+				: [];
+		sel.textContent = "";
+		if (!list.length) {
+			// Fallback: reuse options dari select viewer (bila sudah terisi)
+			if (
+				typeof customInstrumentSelect !== "undefined" &&
+				customInstrumentSelect &&
+				customInstrumentSelect.options
+			) {
+				for (var i = 0; i < customInstrumentSelect.options.length; i++) {
+					var o = document.createElement("option");
+					o.value = customInstrumentSelect.options[i].value;
+					o.textContent = customInstrumentSelect.options[i].textContent;
+					sel.append(o);
+				}
+			}
+		} else {
+			for (var j = 0; j < list.length; j++) {
+				var opt = document.createElement("option");
+				opt.value = list[j][0];
+				opt.textContent = list[j][1];
+				sel.append(opt);
+			}
+		}
+		var wrap = document.querySelector(".lyrics-midi-instrument-wrap");
+		if (wrap) wrap.style.display = sel.options.length ? "" : "none";
+		var active =
+			(typeof prefs !== "undefined" && prefs && prefs.midiInstrument != null)
+				? String(prefs.midiInstrument)
+				: typeof customInstrumentSelect !== "undefined" &&
+					  customInstrumentSelect &&
+					  customInstrumentSelect.dataset.value
+					? String(customInstrumentSelect.dataset.value)
+					: "";
+		if (active && sel.options.length) {
+			var matched = false;
+			for (var k = 0; k < sel.options.length; k++) {
+				if (sel.options[k].value === active) {
+					matched = true;
+					break;
+				}
+			}
+			if (matched) sel.value = active;
+		}
+	}
+
+	function onLyricsInstrumentChange() {
+		var sel = qs("#lyrics-instrument-select");
+		if (!sel) return;
+		var val = sel.value;
+		if (typeof prefs !== "undefined" && prefs) {
+			prefs.midiInstrument = parseInt(val, 10);
+		}
+		if (
+			typeof customInstrumentSelect !== "undefined" &&
+			customInstrumentSelect
+		) {
+			customInstrumentSelect.dataset.value = val;
+		}
+		if (typeof changeInstrument === "function") changeInstrument();
+	}
+
+	function syncLyricsTempoLabel() {
+		var el = qs("#lyrics-tempo-label");
+		if (!el) return;
+		var bpm =
+			typeof getCurrentSongTempoBpm === "function"
+				? getCurrentSongTempoBpm()
+				: null;
+		el.textContent = bpm != null && Number.isFinite(bpm) ? "♩ " + bpm : "♩ —";
+	}
+
+	function onLyricsTempo(delta) {
+		var cur =
+			typeof getCurrentSongTempoBpm === "function"
+				? getCurrentSongTempoBpm()
+				: 100;
+		var next = Math.max(20, Math.min(300, cur + delta));
+		if (typeof setMidiTempoBpm === "function") setMidiTempoBpm(next);
+		syncLyricsTempoLabel();
+	}
+
+	function syncLyricsTransposeLabel() {
+		var el = qs("#lyrics-transpose-label");
+		if (!el) return;
+		var step =
+			typeof transposeStep !== "undefined" ? transposeStep : 0;
+		el.textContent = "Transpose " + (step > 0 ? "+" : "") + step;
+	}
+
+	function onLyricsTranspose(delta) {
+		if (typeof onTranspose === "function") onTranspose(delta);
+		refreshLyricsChordTexts();
+		updateLyricsKeyButton();
+		syncLyricsTransposeLabel();
+	}
+
+	function getLyricsKeyNotes() {
+		return typeof accidentalMode !== "undefined" && accidentalMode === "flat"
+			? typeof NOTE_NAMES_FLAT !== "undefined"
+				? NOTE_NAMES_FLAT
+				: ["C", "D♭", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"]
+			: typeof NOTE_NAMES_SHARP !== "undefined"
+				? NOTE_NAMES_SHARP
+				: ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+	}
+
+	function buildLyricsKeyDropdown() {
+		var dd = qs("#lyrics-key-dropdown");
+		if (!dd) return;
+		dd.textContent = "";
+		var notes = getLyricsKeyNotes();
+		var currentSemi = null;
+		if (typeof originalFamilyChord !== "undefined" && originalFamilyChord) {
+			var parsed = parseChordToken(originalFamilyChord);
+			if (parsed) {
+				currentSemi = wrapSemitone(
+					parsed.semitone + transposeStep + baseTransposeOffset,
+				);
+			}
+		}
+		notes.forEach((note, index) => {
+			var opt = document.createElement("button");
+			opt.type = "button";
+			opt.className = "lyrics-key-option";
+			opt.dataset.index = String(index);
+			opt.textContent = note;
+			if (currentSemi === index) opt.classList.add("selected");
+			dd.append(opt);
+		});
+	}
+
+	function updateLyricsKeyButton() {
+		var btn = qs("#lyrics-key-btn");
+		if (!btn) return;
+		var isMinor = false;
+		var base = null;
+		if (typeof originalFamilyChord !== "undefined" && originalFamilyChord) {
+			isMinor = originalFamilyChord.endsWith("m");
+			var parsed = parseChordToken(originalFamilyChord);
+			if (parsed) base = parsed.semitone;
+		} else if (typeof originalPdfKey !== "undefined" && originalPdfKey) {
+			isMinor = originalPdfKey.toLowerCase().endsWith("m");
+			if (typeof parsePdfKeyToSemitone === "function") {
+				base = parsePdfKeyToSemitone(originalPdfKey);
+			}
+		}
+		if (base === null) {
+			btn.textContent = "—";
+			btn.disabled = true;
+			return;
+		}
+		btn.disabled = false;
+		var semi = wrapSemitone(base + transposeStep + baseTransposeOffset);
+		var notes = getLyricsKeyNotes();
+		btn.textContent = notes[semi] + (isMinor ? "m" : "");
+		buildLyricsKeyDropdown();
+	}
+
+	function applyLyricsKey(index) {
+		if (typeof originalFamilyChord === "undefined" || !originalFamilyChord)
+			return;
+		var parsedObj = parseChordToken(originalFamilyChord);
+		if (!parsedObj) return;
+		var delta = index - parsedObj.semitone - baseTransposeOffset;
+		delta = delta % 12;
+		if (delta > 6) delta -= 12;
+		if (delta < -5) delta += 12;
+		transposeStep = delta;
+		if (typeof updateTransposeUI === "function") updateTransposeUI();
+		if (typeof refreshVisibleChordMarkers === "function")
+			refreshVisibleChordMarkers();
+		refreshLyricsChordTexts();
+		updateLyricsKeyButton();
+		syncLyricsTransposeLabel();
+	}
+
+	function syncLyricsMidiControls() {
+		if (typeof MidiEngine === "undefined") {
+			var bar = qs("#lyrics-midi-bar");
+			if (bar) bar.style.display = "none";
+			return;
+		}
+		var bar2 = qs("#lyrics-midi-bar");
+		if (bar2) bar2.style.display = "";
+		populateLyricsInstrumentSelect();
+		syncLyricsTempoLabel();
+		updateLyricsKeyButton();
+		syncLyricsTransposeLabel();
 	}
 
 	/* ============ AUTOFIT FONT BAIT ============
@@ -700,35 +1077,23 @@
 		}
 
 		var fd = mkCtrlBtn("lyrics-font-down", "Perkecil font", "text_decrease");
-		fd.addEventListener("click", () => {
-			lyricsFontSize = Math.max(14, lyricsFontSize - 4);
-			savePrefs();
-			updateLyricsVerse();
-		});
+		addHoldRepeat(fd, () => applyLyricsFontDelta(-4));
 		ha.append(fd);
 		var fu = mkCtrlBtn("lyrics-font-up", "Perbesar font", "text_increase");
-		fu.addEventListener("click", () => {
-			lyricsFontSize = Math.min(72, lyricsFontSize + 4);
-			savePrefs();
-			updateLyricsVerse();
-		});
+		addHoldRepeat(fu, () => applyLyricsFontDelta(4));
 		ha.append(fu);
 		var sd = mkCtrlBtn(
 			"lyrics-spacing-down",
 			"Rapatkan teks",
 			"format_line_spacing",
 		);
-		sd.addEventListener("click", () => {
-			lyricsLineSpacing = Math.max(1, +(lyricsLineSpacing - 0.2).toFixed(1));
-			savePrefs();
-			updateLyricsVerse();
+		addHoldRepeat(sd, () => applyLyricsSpacingDelta(-0.2), {
+			interval: 100,
 		});
 		ha.append(sd);
 		var su = mkCtrlBtn("lyrics-spacing-up", "Renggangkan teks", "line_weight");
-		su.addEventListener("click", () => {
-			lyricsLineSpacing = Math.min(3.5, +(lyricsLineSpacing + 0.2).toFixed(1));
-			savePrefs();
-			updateLyricsVerse();
+		addHoldRepeat(su, () => applyLyricsSpacingDelta(0.2), {
+			interval: 100,
 		});
 		ha.append(su);
 		var ctg = mkCtrlBtn(
@@ -744,7 +1109,13 @@
 			ctg.setAttribute("aria-pressed", lyricsShowChords ? "true" : "false");
 			ctg.title = lyricsShowChords ? "Sembunyikan chord" : "Tampilkan chord";
 			ctg.classList.toggle("active", lyricsShowChords);
-			updateLyricsVerse();
+			// Tanpa re-render: class di #lyrics-verse-text memicu transisi
+			// height/opacity baris chord (expand/collapse + fade) via CSS.
+			var vt = qs("#lyrics-verse-text");
+			if (vt) vt.classList.toggle("lyrics-chords-on", lyricsShowChords);
+			// Autofit ulang SETELAH animasi selesai (tinggi konten berubah)
+			clearTimeout(window.__lyricsChordsFitTimer);
+			window.__lyricsChordsFitTimer = setTimeout(autoFitLyricsVerse, 360);
 		});
 		ha.append(ctg);
 		var cb = mkCtrlBtn("lyrics-close-btn", "Kembali ke PDF", "close");
@@ -754,6 +1125,7 @@
 		ha.append(cb);
 		hd.append(ha);
 		inn.append(hd);
+		buildLyricsMidiBar(inn);
 
 		// Content
 		var ct = document.createElement("div");
@@ -919,6 +1291,7 @@
 			}
 		}
 		updateLyricsVerse(0);
+		syncLyricsMidiControls();
 
 		// Open animation: make visible with opacity 0, then WAAPI fade-in.
 		// inline opacity:0 prevents flash before animation takes over.
@@ -1105,6 +1478,7 @@
 		}
 		lyricsVerseIndex = 0;
 		updateLyricsVerse(0);
+		syncLyricsMidiControls();
 		// Crossfade animation for song change
 		var vt = qs("#lyrics-verse-text");
 		if (vt && typeof vt.animate === "function") {
