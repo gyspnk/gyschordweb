@@ -466,6 +466,20 @@
 	}
 
 	function renderLyricLine(wrap, lineText, chordedLine) {
+		// Simpan data chord & teks asli untuk layout adaptif saat baris
+		// membungkus (wrap): posisi ulang chord per baris visual.
+		wrap.dataset.lyricsText = lineText;
+		if (
+			chordedLine &&
+			Array.isArray(chordedLine.chords) &&
+			chordedLine.chords.length > 0
+		) {
+			wrap.dataset.lyricsChords = JSON.stringify(
+				chordedLine.chords.map((c) => ({ chord: c.chord, pos: c.pos })),
+			);
+		} else {
+			delete wrap.dataset.lyricsChords;
+		}
 		var row = document.createElement("div");
 		row.className = "lyrics-chord-row";
 		if (
@@ -494,6 +508,235 @@
 		p.style.cssText = "margin:0;padding:0";
 		p.textContent = lineText;
 		wrap.append(p);
+	}
+
+	// Ukur posisi tiap kata baris lirik (Range API) untuk mendeteksi baris
+	// visual hasil wrap dan menempelkan chord ke kata/baris yang benar.
+	function measureLyricsWordRects(p) {
+		var node = p.firstChild;
+		if (!node || node.nodeType !== 3) return null;
+		var text = node.nodeValue;
+		var words = text.split(/\s+/).filter(Boolean);
+		if (words.length < 2) return null;
+		var rects = [];
+		var searchFrom = 0;
+		var doc = p.ownerDocument;
+		for (var i = 0; i < words.length; i++) {
+			var idx = text.indexOf(words[i], searchFrom);
+			if (idx < 0) {
+				searchFrom = 0;
+				idx = text.indexOf(words[i], searchFrom);
+				if (idx < 0) return null;
+			}
+			searchFrom = idx + words[i].length;
+			var range = doc.createRange();
+			range.setStart(node, idx);
+			range.setEnd(node, idx + words[i].length);
+			var r = range.getBoundingClientRect();
+			rects.push({
+				word: words[i],
+				left: r.left,
+				right: r.right,
+				width: r.width,
+				top: r.top,
+			});
+		}
+		return rects;
+	}
+
+	// Layout adaptif saat baris lirik membungkus ke 2+ baris visual:
+	// - pecah teks menjadi satu <p> per baris visual (white-space nowrap
+	//   agar stabil terhadap autofit),
+	// - chord dikelompokkan ke baris visual KATA terdekatnya dan posisinya
+	//   dihitung ulang relatif lebar baris itu (mengikuti posisi teks).
+	function layoutWrappedChords() {
+		var wraps = document.querySelectorAll(".lyrics-chorded-line");
+		wraps.forEach((wrap) => {
+			var chordsData = null;
+			try {
+				chordsData = JSON.parse(wrap.dataset.lyricsChords || "null");
+			} catch (e) {}
+			if (!Array.isArray(chordsData) || chordsData.length === 0) return;
+
+			var ps = wrap.querySelectorAll(".lyrics-line");
+			var p = ps[0];
+			if (!p) return;
+			var isMulti = ps.length > 1;
+
+			// Baris yang SUDAH dipecah: perbarui lebar row chord agar
+			// mengikuti lebar baris teks saat ini (font bisa berubah oleh
+			// autofit); bila teks melebar melebihi kontainer (font
+			// membesar), reset & pecah ulang dari teks asli.
+			if (isMulti) {
+				var containerW = wrap.clientWidth || 0;
+				var needsResplit = false;
+				ps.forEach((pp) => {
+					if (pp.getBoundingClientRect().width > containerW + 2)
+						needsResplit = true;
+				});
+				if (!needsResplit) {
+					var rows = wrap.querySelectorAll(".lyrics-chord-row");
+					ps.forEach((pp, i) => {
+						var row = rows[i];
+						if (!row) return;
+						var pw = pp.getBoundingClientRect().width;
+						if (pw > 0) row.style.width = pw + "px";
+					});
+					return;
+				}
+				// Reset ke struktur satu baris, lalu pecah ulang di bawah
+				var text = wrap.dataset.lyricsText || "";
+				if (!text) return;
+				wrap.innerHTML = "";
+				var row0 = document.createElement("div");
+				row0.className =
+					"lyrics-chord-row" +
+					(chordsData.length ? " has-chords" : "");
+				chordsData.forEach((ch) => {
+					var sp = document.createElement("span");
+					sp.className = "lyrics-chord";
+					sp.style.left = (ch.pos * 100).toFixed(2) + "%";
+					sp.dataset.raw = ch.chord;
+					sp.textContent =
+						typeof formatChordForDisplay === "function"
+							? formatChordForDisplay(ch.chord)
+							: ch.chord;
+					applyLyricsChordStyle(sp);
+					row0.append(sp);
+				});
+				wrap.append(row0);
+				var p0b = document.createElement("p");
+				p0b.className = "lyrics-line";
+				p0b.style.cssText = "margin:0;padding:0";
+				p0b.textContent = text;
+				wrap.append(p0b);
+				p = p0b;
+			}
+
+			// Deteksi wrap: tinggi elemen > tinggi SATU baris (line-height).
+			// scrollWidth/scrollHeight tidak bisa dipakai untuk teks wrap
+			// (selalu sama dengan clientWidth/clientHeight).
+			var lh = parseFloat(getComputedStyle(p).lineHeight) || 0;
+			if (lh <= 0 || p.scrollHeight <= lh + 2) return; // tidak wrap
+
+			var rects = measureLyricsWordRects(p);
+			if (!rects || rects.length < 2) return;
+
+			// Kelompokkan kata berdasarkan baris visual (top)
+			var visualRows = [];
+			rects.forEach((r) => {
+				var g = visualRows.find((gr) => Math.abs(gr.top - r.top) < 3);
+				if (g) g.items.push(r);
+				else visualRows.push({ top: r.top, items: [r] });
+			});
+			visualRows.sort((a, b) => a.top - b.top);
+
+			// Kumulatif lebar kata (tanpa spasi) — pemetaan proporsional
+			var cum = [];
+			var total = 0;
+			rects.forEach((r, i) => {
+				cum.push(total);
+				total += r.width;
+			});
+			if (total <= 0) return;
+
+			// Tempatkan tiap chord ke baris visual kata terdekat
+			var chordGroups = visualRows.map(() => []);
+			chordsData.forEach((ch) => {
+				var xFrac = Math.max(0, Math.min(1, ch.pos)) * total;
+				var bestI = 0;
+				var bestD = Infinity;
+				for (var i = 0; i < rects.length; i++) {
+					var center = cum[i] + rects[i].width / 2;
+					var d = Math.abs(center - xFrac);
+					if (d < bestD) {
+						bestD = d;
+						bestI = i;
+					}
+				}
+				var w = rects[bestI];
+				var fracInWord =
+					w.width > 0
+						? Math.max(
+								0,
+								Math.min(1, (xFrac - cum[bestI]) / w.width),
+							)
+						: 0;
+				var xAbs = w.left + fracInWord * w.width;
+				var rowIdx = visualRows.findIndex(
+					(g) => Math.abs(g.top - w.top) < 3,
+				);
+				if (rowIdx < 0) rowIdx = visualRows.length - 1;
+				var row = visualRows[rowIdx];
+				var leftB = Math.min.apply(
+					null,
+					row.items.map((it) => it.left),
+				);
+				var rightB = Math.max.apply(
+					null,
+					row.items.map((it) => it.right),
+				);
+				var widthB = Math.max(1, rightB - leftB);
+				var posInBaris = Math.max(
+					0,
+					Math.min(1, (xAbs - leftB) / widthB),
+				);
+				chordGroups[rowIdx].push({ chord: ch.chord, pos: posInBaris });
+			});
+
+			// Rebuild: satu baris visual = row chord (selebar baris teks)
+			// + <p> nowrap, semuanya rata kiri (wrap alami browser).
+			var frag = document.createDocumentFragment();
+			visualRows.forEach((vr, ri) => {
+				var leftB = Math.min.apply(
+					null,
+					vr.items.map((it) => it.left),
+				);
+				var rightB = Math.max.apply(
+					null,
+					vr.items.map((it) => it.right),
+				);
+				var widthB = Math.max(1, rightB - leftB);
+				var rowEl = document.createElement("div");
+				rowEl.className =
+					"lyrics-chord-row" +
+					(chordGroups[ri].length ? " has-chords" : "");
+				rowEl.style.width = Math.round(widthB) + "px";
+				chordGroups[ri].forEach((ch) => {
+					var span = document.createElement("span");
+					span.className = "lyrics-chord";
+					span.style.left = (ch.pos * 100).toFixed(2) + "%";
+					span.dataset.raw = ch.chord;
+					span.textContent =
+						typeof formatChordForDisplay === "function"
+							? formatChordForDisplay(ch.chord)
+							: ch.chord;
+					applyLyricsChordStyle(span);
+					rowEl.append(span);
+				});
+				frag.append(rowEl);
+				var pEl = document.createElement("p");
+				pEl.className = "lyrics-line";
+				pEl.style.cssText = "margin:0;padding:0;white-space:nowrap";
+				pEl.textContent = vr.items.map((it) => it.word).join(" ");
+				frag.append(pEl);
+			});
+			wrap.replaceChildren(frag);
+		});
+		fixLyricsChordCollisions();
+	}
+
+	// Re-layout wrap dengan debounce (dipakai saat font/spacing berubah —
+	// termasuk saat tombol ditahan) agar tidak berat.
+	var _lyricsRelayoutTimer = null;
+	function scheduleLyricsRelayout() {
+		if (_lyricsRelayoutTimer) clearTimeout(_lyricsRelayoutTimer);
+		_lyricsRelayoutTimer = setTimeout(() => {
+			_lyricsRelayoutTimer = null;
+			layoutWrappedChords();
+			autoFitLyricsVerse();
+			layoutWrappedChords();
+		}, 180);
 	}
 
 	// Gabungkan chorded lines dari semua halaman layout
@@ -645,6 +888,7 @@
 			vt.style.fontSize = lyricsFontSize + "px";
 			vt.style.lineHeight = String(lyricsLineSpacing);
 			autoFitLyricsVerse();
+			scheduleLyricsRelayout();
 			var finalPx = parseFloat(vt.style.fontSize) || lyricsFontSize;
 			if (
 				typeof vt.animate === "function" &&
@@ -688,6 +932,7 @@
 			vt.style.fontSize = lyricsFontSize + "px";
 			vt.style.lineHeight = String(lyricsLineSpacing);
 			autoFitLyricsVerse();
+			scheduleLyricsRelayout();
 			var finalPx = parseFloat(vt.style.fontSize) || lyricsFontSize;
 			var finalLH =
 				parseFloat(getComputedStyle(vt).lineHeight) || 0;
@@ -1178,6 +1423,11 @@
 			verseText.style.fontSize = lyricsFontSize + "px";
 			verseText.style.lineHeight = String(lyricsLineSpacing);
 			autoFitLyricsVerse();
+			// Layout adaptif baris wrap: pecah baris & posisikan chord
+			// per baris visual, lalu autofit ulang sampai stabil.
+			layoutWrappedChords();
+			autoFitLyricsVerse();
+			layoutWrappedChords();
 			// Pasang chord dari layout PDF (async) bila masih bait yang sama
 			if (lyricsShowChords) {
 				var song = getCurrentSong();
@@ -1215,6 +1465,9 @@
 						verseText.style.fontSize = lyricsFontSize + "px";
 						verseText.style.lineHeight = String(lyricsLineSpacing);
 						autoFitLyricsVerse();
+						layoutWrappedChords();
+						autoFitLyricsVerse();
+						layoutWrappedChords();
 					});
 				}
 			}
@@ -1815,7 +2068,9 @@
 
 	// Autofit ulang saat ukuran layar/orientasi berubah (mode lirik aktif)
 	_lyricsResizeHandler = () => {
-		if (lyricsViewActive) autoFitLyricsVerse();
+		if (!lyricsViewActive) return;
+		autoFitLyricsVerse();
+		scheduleLyricsRelayout();
 	};
 	window.addEventListener("resize", _lyricsResizeHandler);
 	window.addEventListener("orientationchange", _lyricsResizeHandler);
