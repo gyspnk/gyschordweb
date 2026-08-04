@@ -13,6 +13,7 @@
 	var _verseChordFallbackCache = new Map(); // fileHref -> byIndex[]
 	var _verseRenderToken = 0; // penanda render untuk hasil async chord layout
 	var _lyricsResizeHandler = null;
+	var _lastFitFontPx = 0; // font terakhir hasil autofit (histeresis anti-osilasi)
 	var _lyricsTempoPollTimer = null;
 	var _lastSeenPdfDoc = null; // pdfDoc viewer yang terakhir dipakai (anti race)
 
@@ -544,6 +545,30 @@
 		return rects;
 	}
 
+	// Ukur lebar teks (satu baris, nowrap) dengan font yang sama dengan
+	// elemen acuan — dipakai untuk memutuskan "gabung kembali" baris yang
+	// sudah dipecah saat ruang melebar (zoom out).
+	function measureLyricsTextWidth(text, refEl) {
+		var cs = getComputedStyle(refEl);
+		var s = document.createElement("span");
+		s.style.cssText =
+			"position:absolute;visibility:hidden;white-space:nowrap;pointer-events:none;" +
+			"font-size:" +
+			cs.fontSize +
+			";font-family:" +
+			cs.fontFamily +
+			";font-weight:" +
+			cs.fontWeight +
+			";letter-spacing:" +
+			cs.letterSpacing +
+			";";
+		s.textContent = text;
+		document.body.appendChild(s);
+		var w = s.getBoundingClientRect().width;
+		s.remove();
+		return w;
+	}
+
 	// Layout adaptif saat baris lirik membungkus ke 2+ baris visual:
 	// - pecah teks menjadi satu <p> per baris visual (white-space nowrap
 	//   agar stabil terhadap autofit),
@@ -566,15 +591,22 @@
 			// Baris yang SUDAH dipecah: perbarui lebar row chord agar
 			// mengikuti lebar baris teks saat ini (font bisa berubah oleh
 			// autofit); bila teks melebar melebihi kontainer (font
-			// membesar), reset & pecah ulang dari teks asli.
+			// membesar) atau teks asli kini muat satu baris (zoom out),
+			// reset & proses ulang dari teks asli.
 			if (isMulti) {
 				var containerW = wrap.clientWidth || 0;
-				var needsResplit = false;
+				var needsReset = false;
 				ps.forEach((pp) => {
 					if (pp.getBoundingClientRect().width > containerW + 2)
-						needsResplit = true;
+						needsReset = true;
 				});
-				if (!needsResplit) {
+				// Gabung kembali bila seluruh baris kini muat 1 baris
+				var origText = wrap.dataset.lyricsText || "";
+				if (!needsReset && origText) {
+					var origW = measureLyricsTextWidth(origText, p);
+					if (origW <= containerW + 2) needsReset = true;
+				}
+				if (!needsReset) {
 					var rows = wrap.querySelectorAll(".lyrics-chord-row");
 					ps.forEach((pp, i) => {
 						var row = rows[i];
@@ -584,8 +616,8 @@
 					});
 					return;
 				}
-				// Reset ke struktur satu baris, lalu pecah ulang di bawah
-				var text = wrap.dataset.lyricsText || "";
+				// Reset ke struktur satu baris, lalu proses ulang di bawah
+				var text = origText;
 				if (!text) return;
 				wrap.innerHTML = "";
 				var row0 = document.createElement("div");
@@ -726,15 +758,34 @@
 		fixLyricsChordCollisions();
 	}
 
-	// Re-layout wrap dengan debounce (dipakai saat font/spacing berubah —
-	// termasuk saat tombol ditahan) agar tidak berat.
+	// Re-layout wrap dengan debounce (dipakai saat font/spacing/ukuran
+	// berubah — termasuk saat tombol ditahan dan zoom) agar tidak berat.
+	// Iterasi dijalankan sampai KONVERGEN (maks 3) agar tidak berosilasi
+	// besar-kecil: autofit menurunkan font -> layout mengubah tinggi ->
+	// autofit menyesuaikan lagi, dst.
 	var _lyricsRelayoutTimer = null;
+	function lyricsLayoutSignature() {
+		var vt = qs("#lyrics-verse-text");
+		var content = qs("#lyrics-content");
+		if (!vt || !content) return "x";
+		return [
+			Math.round(parseFloat(vt.style.fontSize) || 0),
+			lyricsLineSpacing,
+			Math.round(content.clientWidth),
+			Math.round(content.clientHeight),
+		].join("|");
+	}
 	function scheduleLyricsRelayout() {
 		if (_lyricsRelayoutTimer) clearTimeout(_lyricsRelayoutTimer);
 		_lyricsRelayoutTimer = setTimeout(() => {
 			_lyricsRelayoutTimer = null;
-			layoutWrappedChords();
-			autoFitLyricsVerse();
+			for (var iter = 0; iter < 3; iter++) {
+				var s1 = lyricsLayoutSignature();
+				layoutWrappedChords();
+				autoFitLyricsVerse();
+				var s2 = lyricsLayoutSignature();
+				if (s2 === s1) break; // stabil
+			}
 			layoutWrappedChords();
 		}, 180);
 	}
@@ -779,6 +830,8 @@
 	// Render semua baris bait (dengan chord bila tersedia & aktif)
 	function renderVerseLines(verseText, lines, layout, chordFallback) {
 		verseText.textContent = "";
+		// Reset histeresis autofit — konten berubah total saat ganti bait
+		_lastFitFontPx = 0;
 		// Kelas ini mengontrol visibilitas/animasi baris chord via CSS
 		verseText.classList.toggle("lyrics-chords-on", lyricsShowChords);
 		for (var i = 0; i < lines.length; i++) {
@@ -1339,6 +1392,9 @@
 		var vc = qs("#lyrics-verse-container");
 		if (!content || !vt || !vc) return;
 		var availH = Math.max(60, content.clientHeight - 12);
+		// Toleransi pengukuran ~1.5px: menghindari osilasi besar-kecil saat
+		// ukuran tepat di batas (subpixel/scrollbar) — terutama saat zoom.
+		var FIT_TOLERANCE = 1.5;
 		var maxSize = Math.max(LYRICS_AUTOFIT_MIN, lyricsFontSize);
 		var prevTransition = vt.style.transition;
 		vt.style.transition = "none";
@@ -1351,7 +1407,7 @@
 			function measure(px) {
 				vt.style.fontSize = px + "px";
 				vt.style.lineHeight = String(lyricsLineSpacing);
-				return vc.scrollHeight <= availH;
+				return vc.scrollHeight <= availH + FIT_TOLERANCE;
 			}
 			if (measure(maxSize)) {
 				best = maxSize;
@@ -1368,7 +1424,17 @@
 			}
 			vt.style.fontSize = best + "px";
 			vt.style.lineHeight = String(lyricsLineSpacing);
-			var overflowing = vc.scrollHeight > availH + 1;
+			// Histeresis: perubahan 1px bolak-balik (akibat pembulatan)
+			// ditahan — pakai nilai yang sudah dipakai agar tidak bergetar.
+			if (
+				_lastFitFontPx >= LYRICS_AUTOFIT_MIN &&
+				Math.abs(best - _lastFitFontPx) <= 1
+			) {
+				best = _lastFitFontPx;
+				vt.style.fontSize = best + "px";
+			}
+			_lastFitFontPx = best;
+			var overflowing = vc.scrollHeight > availH + FIT_TOLERANCE;
 			content.style.alignItems = overflowing ? "flex-start" : "center";
 			content.style.overflowY = overflowing ? "auto" : "";
 			// Ukuran font final sudah pasti — baru aman menggeser chord yang
@@ -2066,12 +2132,34 @@
 		loadPrefs();
 	}, 2000); /* ponytail: only loads prefs now; lyrics JSON fetched on first toggle */
 
-	// Autofit ulang saat ukuran layar/orientasi berubah (mode lirik aktif)
+	// Autofit ulang saat ukuran layar/orientasi/zoom berubah (mode lirik
+	// aktif). Zoom browser & pinch zoom memicu event visualViewport
+	// (resize/scroll), bukan window resize — keduanya dilistener.
+	var _lyricsResizeBusy = false;
 	_lyricsResizeHandler = () => {
-		if (!lyricsViewActive) return;
-		autoFitLyricsVerse();
-		scheduleLyricsRelayout();
+		if (!lyricsViewActive || _lyricsResizeBusy) return;
+		_lyricsResizeBusy = true;
+		try {
+			autoFitLyricsVerse();
+			scheduleLyricsRelayout();
+		} finally {
+			// lepaskan kunci pada tick berikutnya agar event beruntun
+			// (zoom berkelanjutan) tetap masuk satu per satu
+			setTimeout(() => {
+				_lyricsResizeBusy = false;
+			}, 0);
+		}
 	};
 	window.addEventListener("resize", _lyricsResizeHandler);
 	window.addEventListener("orientationchange", _lyricsResizeHandler);
+	if (window.visualViewport) {
+		window.visualViewport.addEventListener(
+			"resize",
+			_lyricsResizeHandler,
+		);
+		window.visualViewport.addEventListener(
+			"scroll",
+			_lyricsResizeHandler,
+		);
+	}
 })();
