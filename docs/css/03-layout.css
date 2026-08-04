@@ -14,6 +14,12 @@ body {
   user-select: none;
   letter-spacing: 0.01em;
 }
+/* Form controls & tombol ikut font tema (--font-body). Tanpa ini,
+   browser memakai font default (Arial) sehingga perubahan font tidak
+   merata ke seluruh elemen UI. */
+button, input, select, textarea {
+  font-family: inherit;
+}
 html:has(body.dark-theme) {
   background-color: #12110e;
 }

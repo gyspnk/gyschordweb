@@ -11,6 +11,11 @@
   --source-burgundy: #6d2c41;
   --source-ivory: #f5f0e8;
   --source-deep-navy: #1a2332;
+
+  /* Aksen default — didefinisikan di :root agar var(--accent) di sini
+     selalu ter-resolve (sebelumnya hanya ada di body, sehingga
+     --md-sys-color-primary di :root jatuh ke fallback gold). */
+  --accent: var(--source-gold);
   
   /* Variabel UI Global */
   --bottom-nav-height: 72px;
@@ -74,6 +79,13 @@
   --md-sys-color-shadow: #000000;
   --md-sys-color-error: #ba1a1a;
   --md-sys-state-layer-primary: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+  /* Token Material yang sebelumnya tidak pernah didefinisikan — dipakai
+     oleh beberapa komponen (note-target-sentinel, section-accented-banner,
+     hover option) dengan fallback kecoklatan (#7c5800) atau invalid.
+     Sekarang mengikuti aksen utama. */
+  --md-sys-color-secondary: var(--md-sys-color-primary);
+  --md-sys-color-tertiary: var(--md-sys-color-primary);
+  --md-sys-color-surface-container-highest: var(--md-sys-color-surface-container-high);
   --pdf-viewer-header-height: 56px;
   --pdf-viewer-footer-height: 72px;
   --mini-player-reserved-height: 142px;
@@ -168,6 +180,9 @@ body.dark-theme {
   --md-sys-color-outline: var(--scheme-dark-outline);
   --md-sys-color-outline-variant: var(--scheme-dark-outline-variant);
   --md-sys-state-layer-primary: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
+  --md-sys-color-secondary: var(--md-sys-color-primary);
+  --md-sys-color-tertiary: var(--md-sys-color-primary);
+  --md-sys-color-surface-container-highest: var(--md-sys-color-surface-container-high);
   --app-shell-background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent), transparent 36%),
     linear-gradient(
@@ -218,6 +233,9 @@ body.dark-theme {
     --md-sys-color-outline: var(--scheme-dark-outline);
     --md-sys-color-outline-variant: var(--scheme-dark-outline-variant);
     --md-sys-state-layer-primary: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
+    --md-sys-color-secondary: var(--md-sys-color-primary);
+    --md-sys-color-tertiary: var(--md-sys-color-primary);
+    --md-sys-color-surface-container-highest: var(--md-sys-color-surface-container-high);
     --app-shell-background:
       radial-gradient(circle at top right, color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent), transparent 36%),
       linear-gradient(
@@ -264,6 +282,28 @@ body[data-accent="brown"] { --accent: var(--source-brown); } body[data-accent="g
 body[data-accent="indigo"] { --accent: var(--source-indigo); } body[data-accent="cyan"] { --accent: var(--source-cyan); }
 body[data-accent="burgundy"] { --accent: var(--source-burgundy); }
 body[data-accent="custom"] { --accent: var(--source-custom); }
+
+/* PENTING: --accent juga harus tersedia di level :root, karena banyak
+   variabel shell (--md-sys-color-primary dll.) didefinisikan di :root
+   dan me-referensi var(--accent). Tanpa ini, saat aksen diganti, elemen
+   yang memakai --md-sys-color-primary tetap berwarna gold default
+   (kecoklatan). :has() dipakai agar atribut di body tetap menjadi
+   satu-satunya sumber kebenaran. */
+:root:has(body[data-accent="gold"]) { --accent: var(--source-gold); }
+:root:has(body[data-accent="blue"]) { --accent: var(--source-blue); }
+:root:has(body[data-accent="red"]) { --accent: var(--source-red); }
+:root:has(body[data-accent="green"]) { --accent: var(--source-green); }
+:root:has(body[data-accent="yellow"]) { --accent: var(--source-yellow); }
+:root:has(body[data-accent="purple"]) { --accent: var(--source-purple); }
+:root:has(body[data-accent="pink"]) { --accent: var(--source-pink); }
+:root:has(body[data-accent="teal"]) { --accent: var(--source-teal); }
+:root:has(body[data-accent="orange"]) { --accent: var(--source-orange); }
+:root:has(body[data-accent="brown"]) { --accent: var(--source-brown); }
+:root:has(body[data-accent="gray"]) { --accent: var(--source-gray); }
+:root:has(body[data-accent="indigo"]) { --accent: var(--source-indigo); }
+:root:has(body[data-accent="cyan"]) { --accent: var(--source-cyan); }
+:root:has(body[data-accent="burgundy"]) { --accent: var(--source-burgundy); }
+:root:has(body[data-accent="custom"]) { --accent: var(--source-custom); }
 
 html[data-color-scheme="warm"] {
   --scheme-light-surface: #faf8f4;

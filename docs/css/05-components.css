@@ -514,7 +514,10 @@
 
 .appearance-control-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  /* auto-fit: track kosong diciutkan agar subcard (tema/tuning/font)
+     membentang rata kiri-kanan mengisi kartu, tidak menyisakan kolom
+     kosong di kanan seperti auto-fill. */
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 0.75rem;
 }
 
@@ -981,7 +984,7 @@
   padding: 1.25rem 1.5rem;
   background: linear-gradient(135deg,
     color-mix(in srgb, var(--md-sys-color-primary) 14%, var(--panel-surface)) 0%,
-    color-mix(in srgb, var(--md-sys-color-tertiary, var(--md-sys-color-secondary)) 8%, var(--panel-surface)) 100%
+    color-mix(in srgb, var(--md-sys-color-primary) 8%, var(--panel-surface)) 100%
   );
   border-bottom: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--panel-border));
 }
@@ -1369,7 +1372,11 @@ body[data-layout-style="spacious"] .settings-subcard {
 
   .appearance-control-grid {
     grid-column: 1 / -1;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    /* Tepat 3 subcard (chord-style, tuning, font) — pakai 3 kolom eksplisit
+       agar membentang rata kiri-kanan. (auto-fit tidak menciutkan track
+       ke-4 karena subcard shell memakai grid-column: 1/-1 sehingga track
+       itu dianggap terisi.) */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     align-items: start;
   }
 
@@ -1591,7 +1598,7 @@ body[data-layout-style="spacious"] .settings-subcard {
   }
 
   body[data-layout-style="focused"] .appearance-control-grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   body[data-layout-style="focused"] .dependency-credit-grid,
@@ -1606,7 +1613,7 @@ body[data-layout-style="spacious"] .settings-subcard {
 
 @media (min-width: 1280px) {
   .appearance-control-grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .settings-subcard--tuning {
@@ -1614,7 +1621,7 @@ body[data-layout-style="spacious"] .settings-subcard {
   }
 
   body[data-layout-style="compact"] .appearance-control-grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   body[data-layout-style="spacious"] .dependency-credit-grid {

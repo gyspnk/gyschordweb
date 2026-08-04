@@ -291,7 +291,7 @@ body.measure-layout #pdf-viewer-number {
 	transform: translate(-50%, -50%);
 	display: inline-flex;
 	align-items: center;
-	font-family: "Roboto", sans-serif;
+	font-family: var(--font-body, "Roboto", sans-serif);
 	font-size: var(--chord-font-size, 0.65rem);
 	font-weight: 700;
 	line-height: 1.25;
