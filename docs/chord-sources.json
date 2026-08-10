@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "bookCode": "KR",
+      "path": "assets/chord"
+    }
+  ]
+}

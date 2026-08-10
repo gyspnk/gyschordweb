@@ -1,0 +1,1396 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "e36f15ee414e9f0bbe69757167cc6f232258a33f",
+  "files": [
+    {
+      "id": "KR:001",
+      "bookCode": "KR",
+      "songNumber": "001",
+      "title": "Pujilah Allah Yang Maha Esa",
+      "path": "docs/assets/chord/001_Pujilah Allah Yang Maha Esa.chord.json",
+      "formatVersion": 2,
+      "size": 1435,
+      "sha256": "af73bbe941833964e7b250bfe4b6f2014f42295000495343d4f3043ba5dd0028"
+    },
+    {
+      "id": "KR:002",
+      "bookCode": "KR",
+      "songNumber": "002",
+      "title": "Pujilah Allah Yang Mahakudus",
+      "path": "docs/assets/chord/002_Pujilah Allah Yang Mahakudus.chord.json",
+      "formatVersion": 2,
+      "size": 670,
+      "sha256": "f45c4cea5560d8ed6d74c226f8ff81509bef6f259ae8dca1b789ebe06b22f12f"
+    },
+    {
+      "id": "KR:003",
+      "bookCode": "KR",
+      "songNumber": "003",
+      "title": "Pujilah Allah Yang Benar",
+      "path": "docs/assets/chord/003_Pujilah Allah Yang Benar.chord.json",
+      "formatVersion": 2,
+      "size": 611,
+      "sha256": "71236b76c00e313a847a0d39cf106f95d4a1387cfe64b7dc7e574fb929400e75"
+    },
+    {
+      "id": "KR:004",
+      "bookCode": "KR",
+      "songNumber": "004",
+      "title": "Pujilah Bapa Yang di Surga",
+      "path": "docs/assets/chord/004_Pujilah Bapa Yang di Surga.chord.json",
+      "formatVersion": 2,
+      "size": 867,
+      "sha256": "56733284749cd83bd3524323d9f4cd310cacb722bc15a2cfe305dabeb051be4f"
+    },
+    {
+      "id": "KR:005",
+      "bookCode": "KR",
+      "songNumber": "005",
+      "title": "Segala Sesuatu Memuji Allah",
+      "path": "docs/assets/chord/005_Segala Sesuatu Memuji Allah.chord.json",
+      "formatVersion": 2,
+      "size": 1663,
+      "sha256": "483ee487a75efb4a2d51b68086b5f12ed4b276297bf15c08c5c2f9fa6cad511c"
+    },
+    {
+      "id": "KR:006",
+      "bookCode": "KR",
+      "songNumber": "006",
+      "title": "Pujilah Ciptaan-Nya",
+      "path": "docs/assets/chord/006_Pujilah Ciptaan-Nya.chord.json",
+      "formatVersion": 2,
+      "size": 2154,
+      "sha256": "c277e08ad5b962119ad3775e6c0a6e688c6e8a6fc310fff4922754d1e75d044c"
+    },
+    {
+      "id": "KR:007",
+      "bookCode": "KR",
+      "songNumber": "007",
+      "title": "Segala Sesuatu Memuji Tuhan",
+      "path": "docs/assets/chord/007_Segala Sesuatu Memuji Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1533,
+      "sha256": "4d7b316b3ab915160c3c1671ab7e0d078bba8941fc6e70a8ac3b34fa97aea443"
+    },
+    {
+      "id": "KR:008",
+      "bookCode": "KR",
+      "songNumber": "008",
+      "title": "Pujilah Allah",
+      "path": "docs/assets/chord/008_Pujilah Allah.chord.json",
+      "formatVersion": 2,
+      "size": 1010,
+      "sha256": "efe431b84b04eb960f6ba2996035e6e4d3313e487b881c1e3c63ad4daaa5a1fc"
+    },
+    {
+      "id": "KR:009",
+      "bookCode": "KR",
+      "songNumber": "009",
+      "title": "Bersorak Bagi Tuhan",
+      "path": "docs/assets/chord/009_Bersorak Bagi Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 998,
+      "sha256": "0bd1b19ba17e2556fc44404152be5de0848d22a2669ae4bae4fb812cafdaf893"
+    },
+    {
+      "id": "KR:010",
+      "bookCode": "KR",
+      "songNumber": "010",
+      "title": "Muliakanlah Yesus",
+      "path": "docs/assets/chord/010_Muliakanlah Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 1069,
+      "sha256": "dd2aa74df0a9ede90a9c59f259575bbdb839a4646fa1f4e72fc8dcd24c2723c4"
+    },
+    {
+      "id": "KR:011",
+      "bookCode": "KR",
+      "songNumber": "011",
+      "title": "Gembira di Dalam Tuhan",
+      "path": "docs/assets/chord/011_Gembira di Dalam Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 878,
+      "sha256": "7c4cbe81eabf4920698eb5d35e89a3f6cfe49e13a4e450f72f1fb5149e867487"
+    },
+    {
+      "id": "KR:012",
+      "bookCode": "KR",
+      "songNumber": "012",
+      "title": "Mulia Nama Yesus",
+      "path": "docs/assets/chord/012_Mulia Nama Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 1802,
+      "sha256": "73484348b5684143c6f6edc2087ceefdbec21d56db14f2e5f6afcd6df3fdbe0b"
+    },
+    {
+      "id": "KR:013",
+      "bookCode": "KR",
+      "songNumber": "013",
+      "title": "Tiada yang Seperti Yesus",
+      "path": "docs/assets/chord/013_Tiada yang Seperti Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 1664,
+      "sha256": "1438a8b161302971ad5f5b0ebbe2a03a4fc2f95a6a563028b7a37a27721fe0ef"
+    },
+    {
+      "id": "KR:014",
+      "bookCode": "KR",
+      "songNumber": "014",
+      "title": "Kristus Maharaja",
+      "path": "docs/assets/chord/014_Kristus Maharaja.chord.json",
+      "formatVersion": 2,
+      "size": 1479,
+      "sha256": "6317b37eff7e5fc6a74e1e0ea531b16d1881ce0a4b2cc31befa940e97b86c9ef"
+    },
+    {
+      "id": "KR:015",
+      "bookCode": "KR",
+      "songNumber": "015",
+      "title": "Pujilah Yesus",
+      "path": "docs/assets/chord/015_Pujilah Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 1205,
+      "sha256": "aa0131a30b4d82d1ebc136b285b995146f32a964d8511b60b8bee978c20b9887"
+    },
+    {
+      "id": "KR:016",
+      "bookCode": "KR",
+      "songNumber": "016",
+      "title": "Sembahlah Tuhan Langit dan Bumi",
+      "path": "docs/assets/chord/016_Sembahlah Tuhan Langit dan Bumi.chord.json",
+      "formatVersion": 2,
+      "size": 1596,
+      "sha256": "c4ba77c81b46c532accaba11e02fca0abe3d8c3c2e1526579e7add0d7bd553d4"
+    },
+    {
+      "id": "KR:017",
+      "bookCode": "KR",
+      "songNumber": "017",
+      "title": "Pujilah Kasih Tuhan",
+      "path": "docs/assets/chord/017_Pujilah Kasih Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1681,
+      "sha256": "84bb4b7e9aa31e2eda5638406f61d4d6ca062fe6d780874c778face78aaa95ee"
+    },
+    {
+      "id": "KR:018",
+      "bookCode": "KR",
+      "songNumber": "018",
+      "title": "Pujilah Anugerah Tuhan",
+      "path": "docs/assets/chord/018_Pujilah Anugerah Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1555,
+      "sha256": "d10e799eb238841c857a523c93070dbc82eb255ce59642f6b6d8ceab3df44f35"
+    },
+    {
+      "id": "KR:019",
+      "bookCode": "KR",
+      "songNumber": "019",
+      "title": "Hosana",
+      "path": "docs/assets/chord/019_Hosana.chord.json",
+      "formatVersion": 2,
+      "size": 2297,
+      "sha256": "2e81c29303d83307515569982de528f4ad6e9485ba75628defe430ca45d93cae"
+    },
+    {
+      "id": "KR:020",
+      "bookCode": "KR",
+      "songNumber": "020",
+      "title": "Pujilah Tuhan Sang Raja",
+      "path": "docs/assets/chord/020_Pujilah Tuhan Sang Raja.chord.json",
+      "formatVersion": 2,
+      "size": 1398,
+      "sha256": "defcd73ee4673cdb3bb66aa1b6de2a71e26e141b7726e82fa758f5b553b411de"
+    },
+    {
+      "id": "KR:021",
+      "bookCode": "KR",
+      "songNumber": "021",
+      "title": "Yesus Terelok",
+      "path": "docs/assets/chord/021_Yesus Terelok.chord.json",
+      "formatVersion": 2,
+      "size": 1349,
+      "sha256": "70f9d926e0442e2e022289da172e7deed3995b103c8218c75ac07acca01bfa14"
+    },
+    {
+      "id": "KR:022",
+      "bookCode": "KR",
+      "songNumber": "022",
+      "title": "Pujilah Alkitab",
+      "path": "docs/assets/chord/022_Pujilah Alkitab.chord.json",
+      "formatVersion": 2,
+      "size": 1011,
+      "sha256": "f7afbe24186392cb9b1d72cb510d28c0c59837a9509c2eb615d6a7cb7a3df454"
+    },
+    {
+      "id": "KR:023",
+      "bookCode": "KR",
+      "songNumber": "023",
+      "title": "Firman Tuhan Sungguh Indah",
+      "path": "docs/assets/chord/023_Firman Tuhan Sungguh Indah.chord.json",
+      "formatVersion": 2,
+      "size": 1014,
+      "sha256": "0e72585adf4a973565a5418ef24ce5fcf610c8801c9a571091c3e26a9a36451b"
+    },
+    {
+      "id": "KR:024",
+      "bookCode": "KR",
+      "songNumber": "024",
+      "title": "Firman Kehidupan",
+      "path": "docs/assets/chord/024_Firman Kehidupan.chord.json",
+      "formatVersion": 2,
+      "size": 2074,
+      "sha256": "d9cb5b732ae29b64cf9e5d421df4ec1c252edef636793475816ad3fd32ff68bd"
+    },
+    {
+      "id": "KR:025",
+      "bookCode": "KR",
+      "songNumber": "025",
+      "title": "Firman Allah Murni",
+      "path": "docs/assets/chord/025_Firman Allah Murni.chord.json",
+      "formatVersion": 2,
+      "size": 1681,
+      "sha256": "1707dd812a2a701a9e9676f214913d49c635b2e4b17157c42d57a94b46bd6ae0"
+    },
+    {
+      "id": "KR:026",
+      "bookCode": "KR",
+      "songNumber": "026",
+      "title": "Tuhan! Berfirmanlah Padaku",
+      "path": "docs/assets/chord/026_Tuhan! Berfirmanlah Padaku.chord.json",
+      "formatVersion": 2,
+      "size": 948,
+      "sha256": "47e3bdd6201b4db494c0bfc1d1b0b60ec68eeb1ab9ea5791287e50d5f0cae1e4"
+    },
+    {
+      "id": "KR:027",
+      "bookCode": "KR",
+      "songNumber": "027",
+      "title": "Yesus Cintaku",
+      "path": "docs/assets/chord/027_Yesus Cintaku.chord.json",
+      "formatVersion": 2,
+      "size": 1820,
+      "sha256": "ce6a5788b520a42d37296f9deb6357c1cfbb3a4be579862da7c2be5642cae328"
+    },
+    {
+      "id": "KR:028",
+      "bookCode": "KR",
+      "songNumber": "028",
+      "title": "Yesus Pengasih",
+      "path": "docs/assets/chord/028_Yesus Pengasih.chord.json",
+      "formatVersion": 2,
+      "size": 1150,
+      "sha256": "4d9d1e5f3fd58be6cef5d08721bfef7c20befc41955e5f1466cc78e320a084af"
+    },
+    {
+      "id": "KR:029",
+      "bookCode": "KR",
+      "songNumber": "029",
+      "title": "Tuhan Mencari Domba yang Hilang",
+      "path": "docs/assets/chord/029_Tuhan Mencari Domba yang Hilang.chord.json",
+      "formatVersion": 2,
+      "size": 1767,
+      "sha256": "d7f5862e22aa16cbefdf8260b1be2790b21bf9638f3d6338c4ba5d01d8f3a2c9"
+    },
+    {
+      "id": "KR:030",
+      "bookCode": "KR",
+      "songNumber": "030",
+      "title": "Kasih Tuhan Mencariku",
+      "path": "docs/assets/chord/030_Kasih Tuhan Mencariku.chord.json",
+      "formatVersion": 2,
+      "size": 2369,
+      "sha256": "6b0fdab2aff39031a3e3a334bdf91541944e9abf8441cb799cc7d4eaf447236f"
+    },
+    {
+      "id": "KR:031",
+      "bookCode": "KR",
+      "songNumber": "031",
+      "title": "Semuanya Demiku",
+      "path": "docs/assets/chord/031_Semuanya Demiku.chord.json",
+      "formatVersion": 2,
+      "size": 1680,
+      "sha256": "95a27d86eaaf2af55e9ce2df02c8e6098e6f059a4e89ff0f86be74a3e37965b9"
+    },
+    {
+      "id": "KR:033",
+      "bookCode": "KR",
+      "songNumber": "033",
+      "title": "Ke Yerusalem Baru",
+      "path": "docs/assets/chord/033_Ke Yerusalem Baru.chord.json",
+      "formatVersion": 2,
+      "size": 1884,
+      "sha256": "5bfcc1233c8f1dc0fa936c88c0c88d6700f9f3dcb6ed948b434f82100fbf5140"
+    },
+    {
+      "id": "KR:036",
+      "bookCode": "KR",
+      "songNumber": "036",
+      "title": "Suara Pengharapan",
+      "path": "docs/assets/chord/036_Suara Pengharapan.chord.json",
+      "formatVersion": 2,
+      "size": 2556,
+      "sha256": "ec14013ecabe72d3f09e1edc85a8623e0f358cd8e5bca36ede3b3291c8a5a319"
+    },
+    {
+      "id": "KR:054",
+      "bookCode": "KR",
+      "songNumber": "054",
+      "title": "Bebas Dari Gelap Menuju Terang",
+      "path": "docs/assets/chord/054_Bebas Dari Gelap Menuju Terang.chord.json",
+      "formatVersion": 2,
+      "size": 2007,
+      "sha256": "dc72b38d52f02cdcb9c589ab2dbf67ef5780541c9b254490eec19286ae4ed77d"
+    },
+    {
+      "id": "KR:059",
+      "bookCode": "KR",
+      "songNumber": "059",
+      "title": "Mohon Pimpinan Tuhan",
+      "path": "docs/assets/chord/059_Mohon Pimpinan Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1949,
+      "sha256": "bdaf86d16b50f90d9a0d3ba92df314b4f02fefc322431e38f5d9174c6815b764"
+    },
+    {
+      "id": "KR:067",
+      "bookCode": "KR",
+      "songNumber": "067",
+      "title": "Tuhan Tuntunlah Aku",
+      "path": "docs/assets/chord/067_Tuhan Tuntunlah Aku.chord.json",
+      "formatVersion": 2,
+      "size": 1068,
+      "sha256": "1402b6d920b37181d925d6e11ad79591c9df3166b4b21c409aef21273896fac3"
+    },
+    {
+      "id": "KR:084",
+      "bookCode": "KR",
+      "songNumber": "084",
+      "title": "Menyambut Rajaku",
+      "path": "docs/assets/chord/084_Menyambut Rajaku.chord.json",
+      "formatVersion": 2,
+      "size": 2091,
+      "sha256": "799f258905a19420f9932f9da1131f46f0b4cdd28f631d317d1efe9db6bc06bb"
+    },
+    {
+      "id": "KR:085",
+      "bookCode": "KR",
+      "songNumber": "085",
+      "title": "Tuhan Segera Datang",
+      "path": "docs/assets/chord/085_Tuhan Segera Datang.chord.json",
+      "formatVersion": 2,
+      "size": 1693,
+      "sha256": "7837491c30a9a1ca914d61c9afb373c6ad42234b378269fa0fae9000a9f55608"
+    },
+    {
+      "id": "KR:089",
+      "bookCode": "KR",
+      "songNumber": "089",
+      "title": "AnugerahNya Berlimpah",
+      "path": "docs/assets/chord/089_AnugerahNya Berlimpah.chord.json",
+      "formatVersion": 2,
+      "size": 1669,
+      "sha256": "27fea9775069adfbfd96d64f625dfd578a6a29828088bfa6df3150709276563d"
+    },
+    {
+      "id": "KR:090",
+      "bookCode": "KR",
+      "songNumber": "090",
+      "title": "Hitunglah BerkatNya",
+      "path": "docs/assets/chord/090_Hitunglah BerkatNya.chord.json",
+      "formatVersion": 2,
+      "size": 1490,
+      "sha256": "8498940ea69803e66b7d8c92419bc902423d1a148c13fb6002fe05ce6eef9037"
+    },
+    {
+      "id": "KR:091",
+      "bookCode": "KR",
+      "songNumber": "091",
+      "title": "Tuhan Pimpin Jalanku",
+      "path": "docs/assets/chord/091_Tuhan Pimpin Jalanku.chord.json",
+      "formatVersion": 2,
+      "size": 2430,
+      "sha256": "50a592fe9f99ae421325614e4e8f2c1082adc85f0b67dcc04882c5e900c3afa3"
+    },
+    {
+      "id": "KR:101",
+      "bookCode": "KR",
+      "songNumber": "101",
+      "title": "Hanya Cinta Yesus",
+      "path": "docs/assets/chord/101_Hanya Cinta Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 1134,
+      "sha256": "22b14154c318b7aad7fad8d872cd038ecc4e1614e7b31a7b8773f0801d3d6f4e"
+    },
+    {
+      "id": "KR:103",
+      "bookCode": "KR",
+      "songNumber": "103",
+      "title": "Lebih Baik Ada Yesus",
+      "path": "docs/assets/chord/103_Lebih Baik Ada Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 1801,
+      "sha256": "1c1368f210102d27b5ddbcf9d4555776a0fc608c6584be37b55b7335df5c6f2f"
+    },
+    {
+      "id": "KR:122",
+      "bookCode": "KR",
+      "songNumber": "122",
+      "title": "Saling Mengasihi",
+      "path": "docs/assets/chord/122_Saling Mengasihi.chord.json",
+      "formatVersion": 2,
+      "size": 1005,
+      "sha256": "557abeb6a3dcb9027472d9b5a4374159637c62f9a0b092a8ff7f832137080529"
+    },
+    {
+      "id": "KR:126",
+      "bookCode": "KR",
+      "songNumber": "126",
+      "title": "Mengasihi Sesama Saudara",
+      "path": "docs/assets/chord/126_Mengasihi Sesama Saudara.chord.json",
+      "formatVersion": 2,
+      "size": 1434,
+      "sha256": "6c89e261433dfe74bdbd4f90842e1b96683e4585cdf80f9b5d1bd7ce01b9a806"
+    },
+    {
+      "id": "KR:129",
+      "bookCode": "KR",
+      "songNumber": "129",
+      "title": "Peringati Hari Kudus",
+      "path": "docs/assets/chord/129_Peringati Hari Kudus.chord.json",
+      "formatVersion": 2,
+      "size": 1330,
+      "sha256": "f521edf070a84bde06f27284619d6d9e6b8020d2abce89829e5ecb75e14b9bfa"
+    },
+    {
+      "id": "KR:130",
+      "bookCode": "KR",
+      "songNumber": "130",
+      "title": "Sabat Kudus",
+      "path": "docs/assets/chord/130_Sabat Kudus.chord.json",
+      "formatVersion": 2,
+      "size": 1082,
+      "sha256": "e595669f63e81036dea8c37e8998c710bca63c48accf3cdf7fd74b72a9658316"
+    },
+    {
+      "id": "KR:131",
+      "bookCode": "KR",
+      "songNumber": "131",
+      "title": "Girang Berhari Sabat",
+      "path": "docs/assets/chord/131_Girang Berhari Sabat.chord.json",
+      "formatVersion": 2,
+      "size": 1673,
+      "sha256": "281860d10231ebace470b85d15e046298f49eb6852d5c84b8f77644a8ac6b656"
+    },
+    {
+      "id": "KR:133",
+      "bookCode": "KR",
+      "songNumber": "133",
+      "title": "Yesus Takkan Berubah",
+      "path": "docs/assets/chord/133_Yesus Takkan Berubah.chord.json",
+      "formatVersion": 2,
+      "size": 2754,
+      "sha256": "a6a91e1a1892d3c0286d439469de56262310b0e71d06adcc37fe42937212975f"
+    },
+    {
+      "id": "KR:134",
+      "bookCode": "KR",
+      "songNumber": "134",
+      "title": "Pandanglah Tuhan",
+      "path": "docs/assets/chord/134_Pandanglah Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1419,
+      "sha256": "64a69acf756098bcf3dbc54bdc9f4c91fc299876ecd29ad0260990579a95cbbe"
+    },
+    {
+      "id": "KR:137",
+      "bookCode": "KR",
+      "songNumber": "137",
+      "title": "Yesus Sahabatku",
+      "path": "docs/assets/chord/137_Yesus Sahabatku.chord.json",
+      "formatVersion": 2,
+      "size": 1625,
+      "sha256": "b5778004db910284eff4d8aea8ba6b628ac2b27982f26b8947de8aae68431a26"
+    },
+    {
+      "id": "KR:138",
+      "bookCode": "KR",
+      "songNumber": "138",
+      "title": "Bila Menolak Almasih",
+      "path": "docs/assets/chord/138_Bila Menolak Almasih.chord.json",
+      "formatVersion": 2,
+      "size": 1953,
+      "sha256": "b54e33de5ba23bb95715a0287475fb838034f3a53e16586625a3b397c196ed2f"
+    },
+    {
+      "id": "KR:145",
+      "bookCode": "KR",
+      "songNumber": "145",
+      "title": "Bersandar Pada Yesus",
+      "path": "docs/assets/chord/145_Bersandar Pada Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 2063,
+      "sha256": "a4c684af9c2829041fa435ad66b256769b8a0765c9a47662fa6fe2770cc78744"
+    },
+    {
+      "id": "KR:146",
+      "bookCode": "KR",
+      "songNumber": "146",
+      "title": "Sandar Tuhan Setiap Waktu",
+      "path": "docs/assets/chord/146_Sandar Tuhan Setiap Waktu.chord.json",
+      "formatVersion": 2,
+      "size": 1135,
+      "sha256": "890ba085ec9d3975b157b96634e2244d4ec92559408db29f03b77202ce694110"
+    },
+    {
+      "id": "KR:149",
+      "bookCode": "KR",
+      "songNumber": "149",
+      "title": "Tenteram di Bawah Lengan Tuhan",
+      "path": "docs/assets/chord/149_Tenteram di Bawah Lengan Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1681,
+      "sha256": "f863c4b50b7a05f1e4be9cd68e7e514091c96fa14aea6a3f5dcef2c5a162258a"
+    },
+    {
+      "id": "KR:155",
+      "bookCode": "KR",
+      "songNumber": "155",
+      "title": "Tuhan Selalu Menjagaku",
+      "path": "docs/assets/chord/155_Tuhan Selalu Menjagaku.chord.json",
+      "formatVersion": 2,
+      "size": 1430,
+      "sha256": "e0d8f67e0cc10983c6d6e4b8285d66a7dc5fc93a1484c0496976813713347f2d"
+    },
+    {
+      "id": "KR:158",
+      "bookCode": "KR",
+      "songNumber": "158",
+      "title": "Berjalan di Jalan Tuhan",
+      "path": "docs/assets/chord/158_Berjalan di Jalan Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1399,
+      "sha256": "9688460131393f2efb15b6c1e6ad8a4032f827d189ce07e88414d740c8362045"
+    },
+    {
+      "id": "KR:161",
+      "bookCode": "KR",
+      "songNumber": "161",
+      "title": "Di Bawah Naungan Tuhan",
+      "path": "docs/assets/chord/161_Di Bawah Naungan Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1073,
+      "sha256": "1736f76229d098db35789120fe88eb3e25ff1f9bd3f85e8c36fc20f050d2238d"
+    },
+    {
+      "id": "KR:165",
+      "bookCode": "KR",
+      "songNumber": "165",
+      "title": "Yesus Memeluk Aku",
+      "path": "docs/assets/chord/165_Yesus Memeluk Aku.chord.json",
+      "formatVersion": 2,
+      "size": 1640,
+      "sha256": "374f2717e3f602d6c74bb9c6702e1d8e7d50efbe7a6c88baf96f4b0b382ea8ab"
+    },
+    {
+      "id": "KR:179",
+      "bookCode": "KR",
+      "songNumber": "179",
+      "title": "Bersiap Masuk Surga",
+      "path": "docs/assets/chord/179_Bersiap Masuk Surga.chord.json",
+      "formatVersion": 2,
+      "size": 1598,
+      "sha256": "c1ddad1f13ff5036f4fd8050173b56c0386022a8a8bdb19cddfa61d6892d3817"
+    },
+    {
+      "id": "KR:200",
+      "bookCode": "KR",
+      "songNumber": "200",
+      "title": "Merindukan Rumah di Surga",
+      "path": "docs/assets/chord/200_Merindukan Rumah di Surga.chord.json",
+      "formatVersion": 2,
+      "size": 1597,
+      "sha256": "9b7966184724fe2352569d42ad35e18e11354e9724a31d0b3ac675cd1d4310ad"
+    },
+    {
+      "id": "KR:201",
+      "bookCode": "KR",
+      "songNumber": "201",
+      "title": "Kemuliaan Kekal",
+      "path": "docs/assets/chord/201_Kemuliaan Kekal.chord.json",
+      "formatVersion": 2,
+      "size": 1814,
+      "sha256": "c3cc15fb3aa55a196e26e91d34e7731b3742b0426512060c6255e5663ee8f831"
+    },
+    {
+      "id": "KR:202",
+      "bookCode": "KR",
+      "songNumber": "202",
+      "title": "Surga Tempat Bahagia",
+      "path": "docs/assets/chord/202_Surga Tempat Bahagia.chord.json",
+      "formatVersion": 2,
+      "size": 1614,
+      "sha256": "2e281453ec73b67a968ee802bc13c23ed15666d7fd9f7cc3d609e896f52af4d8"
+    },
+    {
+      "id": "KR:203",
+      "bookCode": "KR",
+      "songNumber": "203",
+      "title": "Bunga Bakung",
+      "path": "docs/assets/chord/203_Bunga Bakung.chord.json",
+      "formatVersion": 2,
+      "size": 3361,
+      "sha256": "abf602d8abe01ff67beeaf0db435fc11b1d9ac7b76a0143689a9fac0ee671af7"
+    },
+    {
+      "id": "KR:204",
+      "bookCode": "KR",
+      "songNumber": "204",
+      "title": "Berpengharapan Karena Iman",
+      "path": "docs/assets/chord/204_Berpengharapan Karena Iman.chord.json",
+      "formatVersion": 2,
+      "size": 1134,
+      "sha256": "df0edd957ba29a1ff4a68b184392cbb7492b10a749d28d22f9bedc20ca3a9fc7"
+    },
+    {
+      "id": "KR:205",
+      "bookCode": "KR",
+      "songNumber": "205",
+      "title": "Di Dalam Kristus Pasti Bangkit",
+      "path": "docs/assets/chord/205_Di Dalam Kristus Pasti Bangkit.chord.json",
+      "formatVersion": 2,
+      "size": 2190,
+      "sha256": "e03e8a770367f79ec5c5ae59ee210d79f3fee8941fdcba2c67903d04c8b276e3"
+    },
+    {
+      "id": "KR:206",
+      "bookCode": "KR",
+      "songNumber": "206",
+      "title": "Aku Pasti Berjumpa Dengan Tuhan",
+      "path": "docs/assets/chord/206_Aku Pasti Berjumpa Dengan Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1591,
+      "sha256": "9800bfe8c1f41034b96011c7ecdd0b059553465f780975ebf14875d50f650903"
+    },
+    {
+      "id": "KR:207",
+      "bookCode": "KR",
+      "songNumber": "207",
+      "title": "Merindukan Kedatangan Tuhan",
+      "path": "docs/assets/chord/207_Merindukan Kedatangan Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1689,
+      "sha256": "2eca7c8aee3f0b747338726920caba5f0203f1dda15f3f2d575bd470dc333c9c"
+    },
+    {
+      "id": "KR:208",
+      "bookCode": "KR",
+      "songNumber": "208",
+      "title": "Umat Kudus Diangkat",
+      "path": "docs/assets/chord/208_Umat Kudus Diangkat.chord.json",
+      "formatVersion": 2,
+      "size": 1571,
+      "sha256": "781cf79c3582f8522061e283e6cd3b0db7f5e333aecc8242837e8f6f2a290f86"
+    },
+    {
+      "id": "KR:209",
+      "bookCode": "KR",
+      "songNumber": "209",
+      "title": "Aku Akan Melihat Tuhan",
+      "path": "docs/assets/chord/209_Aku Akan Melihat Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1798,
+      "sha256": "b189686f5698f970974a9c9443ce6f3712fecbd535330f7c0896466c2c4555b8"
+    },
+    {
+      "id": "KR:210",
+      "bookCode": "KR",
+      "songNumber": "210",
+      "title": "Di Kala Hidup Ini Berakhir",
+      "path": "docs/assets/chord/210_Di Kala Hidup Ini Berakhir.chord.json",
+      "formatVersion": 2,
+      "size": 1695,
+      "sha256": "48ba0e8784dcc3b0726c5fb3e33b27ba74ea82a9c8ca2d01dfb80f6b2fa4f100"
+    },
+    {
+      "id": "KR:211",
+      "bookCode": "KR",
+      "songNumber": "211",
+      "title": "Allah Mengawasi",
+      "path": "docs/assets/chord/211_Allah Mengawasi.chord.json",
+      "formatVersion": 2,
+      "size": 1350,
+      "sha256": "6f3f037814abcbbb7e912ec3f1c51219984dd7539e2335a1247d57594a2ea87a"
+    },
+    {
+      "id": "KR:212",
+      "bookCode": "KR",
+      "songNumber": "212",
+      "title": "Bersinar Bagi Tuhan",
+      "path": "docs/assets/chord/212_Bersinar Bagi Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 871,
+      "sha256": "f0353991b01111be84328439ceac2b108c07c291ed20124c172a4d929c2a3e7b"
+    },
+    {
+      "id": "KR:213",
+      "bookCode": "KR",
+      "songNumber": "213",
+      "title": "Walau Sedikit Namun Berarti",
+      "path": "docs/assets/chord/213_Walau Sedikit Namun Berarti.chord.json",
+      "formatVersion": 2,
+      "size": 940,
+      "sha256": "a01e740d02b9e93b94d5edf82a9854e452c2a4c197a73451f22a4c40d3c0c003"
+    },
+    {
+      "id": "KR:214",
+      "bookCode": "KR",
+      "songNumber": "214",
+      "title": "Delapan Kebahagiaan",
+      "path": "docs/assets/chord/214_Delapan Kebahagiaan.chord.json",
+      "formatVersion": 2,
+      "size": 1465,
+      "sha256": "7dce4fe3afbaf53f79c079a07fcb23e3d21446a71a930a327330ac0f23be31d7"
+    },
+    {
+      "id": "KR:215",
+      "bookCode": "KR",
+      "songNumber": "215",
+      "title": "Akhlak Gereja Benar",
+      "path": "docs/assets/chord/215_Akhlak Gereja Benar.chord.json",
+      "formatVersion": 2,
+      "size": 998,
+      "sha256": "7ff54f497ad7a985bd2ebaa24aa2ca0aad7100765158c1114a180a3e7a060701"
+    },
+    {
+      "id": "KR:216",
+      "bookCode": "KR",
+      "songNumber": "216",
+      "title": "Budi Pekerti Umat Suci",
+      "path": "docs/assets/chord/216_Budi Pekerti Umat Suci.chord.json",
+      "formatVersion": 2,
+      "size": 1070,
+      "sha256": "9b9db722b2466df14bf04c63d4ecdc08c04332399b49732c3ed8c9a8222be690"
+    },
+    {
+      "id": "KR:217",
+      "bookCode": "KR",
+      "songNumber": "217",
+      "title": "Melakukan Firman Tuhan",
+      "path": "docs/assets/chord/217_Melakukan Firman Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1348,
+      "sha256": "215b0720741ae889a542149eab27dfbee7e32ae44a84d37fe2ea44086bf923fd"
+    },
+    {
+      "id": "KR:218",
+      "bookCode": "KR",
+      "songNumber": "218",
+      "title": "Buah Roh Kudus",
+      "path": "docs/assets/chord/218_Buah Roh Kudus.chord.json",
+      "formatVersion": 2,
+      "size": 1678,
+      "sha256": "a0be944c5b425d98a4a3333142cc9d856a9c7af85c6056dd4904acda354d46b9"
+    },
+    {
+      "id": "KR:219",
+      "bookCode": "KR",
+      "songNumber": "219",
+      "title": "Di mana Saja Bersinar",
+      "path": "docs/assets/chord/219_Di mana Saja Bersinar.chord.json",
+      "formatVersion": 2,
+      "size": 1612,
+      "sha256": "e60b34daccc5e7cc7aaf98a68cb8a57532849de105d8dc24101347ef2bed7799"
+    },
+    {
+      "id": "KR:220",
+      "bookCode": "KR",
+      "songNumber": "220",
+      "title": "Api Pengujian",
+      "path": "docs/assets/chord/220_Api Pengujian.chord.json",
+      "formatVersion": 2,
+      "size": 1545,
+      "sha256": "7013b22a0ceade2bfa524e93787749924c6a616f1da97f3759aa304429c00fda"
+    },
+    {
+      "id": "KR:221",
+      "bookCode": "KR",
+      "songNumber": "221",
+      "title": "Taklukkan Keinginan Daging",
+      "path": "docs/assets/chord/221_Taklukkan Keinginan Daging.chord.json",
+      "formatVersion": 2,
+      "size": 1142,
+      "sha256": "a5f717874c6dfd9de53abfae3cf88360432cd2d917f0ffe7e6e07968b31ac6a9"
+    },
+    {
+      "id": "KR:222",
+      "bookCode": "KR",
+      "songNumber": "222",
+      "title": "Berbahagialah Yang Suci Hatinya",
+      "path": "docs/assets/chord/222_Berbahagialah Yang Suci Hatinya.chord.json",
+      "formatVersion": 2,
+      "size": 673,
+      "sha256": "0dca6ec98e5fca12680d1411dd74474131c419218d87dea037c3b7546e653824"
+    },
+    {
+      "id": "KR:223",
+      "bookCode": "KR",
+      "songNumber": "223",
+      "title": "Kidung Umat Pilihan",
+      "path": "docs/assets/chord/223_Kidung Umat Pilihan.chord.json",
+      "formatVersion": 2,
+      "size": 2129,
+      "sha256": "42d04c7fe3280bbdfc63392e379e2a2dbaac8394c8ba7dbdf7c3cd65d889b131"
+    },
+    {
+      "id": "KR:224",
+      "bookCode": "KR",
+      "songNumber": "224",
+      "title": "Mohon Tuhan Selidiki",
+      "path": "docs/assets/chord/224_Mohon Tuhan Selidiki.chord.json",
+      "formatVersion": 2,
+      "size": 1742,
+      "sha256": "b3dc8cf2ae73c32a6a2425f7739943e7dc6fb583f9971cea7dd2a431c372dbcf"
+    },
+    {
+      "id": "KR:225",
+      "bookCode": "KR",
+      "songNumber": "225",
+      "title": "Turut Roh Kudus",
+      "path": "docs/assets/chord/225_Turut Roh Kudus.chord.json",
+      "formatVersion": 2,
+      "size": 1599,
+      "sha256": "42fa7788a81d9e065b55d72d9f526a06eee1f93660be5a375f3afecb816ce5f9"
+    },
+    {
+      "id": "KR:226",
+      "bookCode": "KR",
+      "songNumber": "226",
+      "title": "Jadilah Kehendak Tuhan",
+      "path": "docs/assets/chord/226_Jadilah Kehendak Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1532,
+      "sha256": "c814d0b2453c02b72e038f996a07a2d6a4078c49089743cfbbd401eeb62ec20c"
+    },
+    {
+      "id": "KR:227",
+      "bookCode": "KR",
+      "songNumber": "227",
+      "title": "Berbahagialah Yang Mendengar PerintahNya",
+      "path": "docs/assets/chord/227_Berbahagialah Yang Mendengar PerintahNya.chord.json",
+      "formatVersion": 2,
+      "size": 1076,
+      "sha256": "dd183446f9374d0a75d8ab25174bae7210325e88f8e439c59ae4c191ca126032"
+    },
+    {
+      "id": "KR:228",
+      "bookCode": "KR",
+      "songNumber": "228",
+      "title": "Berbahagialah Yang Turut PerintahNya",
+      "path": "docs/assets/chord/228_Berbahagialah Yang Turut PerintahNya.chord.json",
+      "formatVersion": 2,
+      "size": 1686,
+      "sha256": "3ccda0e73cd07888073a801dc994193d026700cd751128b8bd29413011a3e9f8"
+    },
+    {
+      "id": "KR:229",
+      "bookCode": "KR",
+      "songNumber": "229",
+      "title": "Sepuluh Perintah Allah",
+      "path": "docs/assets/chord/229_Sepuluh Perintah Allah.chord.json",
+      "formatVersion": 2,
+      "size": 1380,
+      "sha256": "7fe0379abe849a20c4750f2f864327b975d0e2e3c08a3e0c5e554df08b486ecc"
+    },
+    {
+      "id": "KR:230",
+      "bookCode": "KR",
+      "songNumber": "230",
+      "title": "Berbahagialah Orang yang Benar",
+      "path": "docs/assets/chord/230_Berbahagialah Orang yang Benar.chord.json",
+      "formatVersion": 2,
+      "size": 1073,
+      "sha256": "20702d7033a6d19ffbb31e125c3430ed0481d6879350fedba87b667e1b9d15f2"
+    },
+    {
+      "id": "KR:231",
+      "bookCode": "KR",
+      "songNumber": "231",
+      "title": "Jadilah Seperti Kehendak-Mu",
+      "path": "docs/assets/chord/231_Jadilah Seperti Kehendak-Mu.chord.json",
+      "formatVersion": 2,
+      "size": 1531,
+      "sha256": "1c83fd216bd552320421525a372c22de257aec87acb1d7d9a8b3dbfd5d9f3f0d"
+    },
+    {
+      "id": "KR:232",
+      "bookCode": "KR",
+      "songNumber": "232",
+      "title": "Seperti Yesus",
+      "path": "docs/assets/chord/232_Seperti Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 1872,
+      "sha256": "766b71c98eef980b94969bf087f866e9d78eb82bf8a337955e906b1b1c506ce5"
+    },
+    {
+      "id": "KR:233",
+      "bookCode": "KR",
+      "songNumber": "233",
+      "title": "Milik Yesus",
+      "path": "docs/assets/chord/233_Milik Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 802,
+      "sha256": "a9833b109787f2c4c8dbf39f316c09a6fa600bef45f77d2eee447324a4cac6ea"
+    },
+    {
+      "id": "KR:234",
+      "bookCode": "KR",
+      "songNumber": "234",
+      "title": "Ingin Lebih Dekat Tuhan",
+      "path": "docs/assets/chord/234_Ingin Lebih Dekat Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1814,
+      "sha256": "330b069cab3d30f2895c0d0efd1b43d642e6d9cbbde792dc49db3df4b2419598"
+    },
+    {
+      "id": "KR:235",
+      "bookCode": "KR",
+      "songNumber": "235",
+      "title": "Tuhan dan Aku Satu Tubuh",
+      "path": "docs/assets/chord/235_Tuhan dan Aku Satu Tubuh.chord.json",
+      "formatVersion": 2,
+      "size": 1871,
+      "sha256": "9052f89872d1ab5b6d6a1d22ab2312450c3ade995e89320c19f31d93383b23a4"
+    },
+    {
+      "id": "KR:236",
+      "bookCode": "KR",
+      "songNumber": "236",
+      "title": "Aku Milik Yesus",
+      "path": "docs/assets/chord/236_Aku Milik Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 1887,
+      "sha256": "8afbc1ff1dd4bce9fad1c473734fd805139135100825ef0f9f9485a2c718332b"
+    },
+    {
+      "id": "KR:237",
+      "bookCode": "KR",
+      "songNumber": "237",
+      "title": "Sejak Yesus di Hatiku",
+      "path": "docs/assets/chord/237_Sejak Yesus di Hatiku.chord.json",
+      "formatVersion": 2,
+      "size": 1605,
+      "sha256": "04f66170e656da71ac6030cea2417120ee2599fa3ca2ba032054b7c5cd5b2e31"
+    },
+    {
+      "id": "KR:238",
+      "bookCode": "KR",
+      "songNumber": "238",
+      "title": "Yesus, Tinggallah di Hatiku",
+      "path": "docs/assets/chord/238_Yesus, Tinggallah di Hatiku.chord.json",
+      "formatVersion": 2,
+      "size": 1792,
+      "sha256": "0bcf1f9207d9b2bdc8e416b7e16c9d578cbe106264982eb269f3087e0a0f6ef0"
+    },
+    {
+      "id": "KR:239",
+      "bookCode": "KR",
+      "songNumber": "239",
+      "title": "Tuhan, Tinggallah Bersamaku",
+      "path": "docs/assets/chord/239_Tuhan, Tinggallah Bersamaku.chord.json",
+      "formatVersion": 2,
+      "size": 1741,
+      "sha256": "1d2c03bca0c2550bc147c7790a84a513e155ffd04b40541e02d973b426d3226e"
+    },
+    {
+      "id": "KR:240",
+      "bookCode": "KR",
+      "songNumber": "240",
+      "title": "Girang Bersama Tuhan",
+      "path": "docs/assets/chord/240_Girang Bersama Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1869,
+      "sha256": "6049752060ab74af4accdaf5f78b5a017813da633974fedfab4ef1313097b3d1"
+    },
+    {
+      "id": "KR:241",
+      "bookCode": "KR",
+      "songNumber": "241",
+      "title": "Raja Jiwaku",
+      "path": "docs/assets/chord/241_Raja Jiwaku.chord.json",
+      "formatVersion": 2,
+      "size": 1015,
+      "sha256": "8a09973cb8fef1eb118cfaba80b524b33187348a522504aa47c418fb8d531bd1"
+    },
+    {
+      "id": "KR:242",
+      "bookCode": "KR",
+      "songNumber": "242",
+      "title": "Tuhan Menanti di Luar Pintu",
+      "path": "docs/assets/chord/242_Tuhan Menanti di Luar Pintu.chord.json",
+      "formatVersion": 2,
+      "size": 1610,
+      "sha256": "77213a87d0c1178c74b939c11a5596b866ef161ea13f7c1a8dc9ccd0a734419a"
+    },
+    {
+      "id": "KR:243",
+      "bookCode": "KR",
+      "songNumber": "243",
+      "title": "Dekatkanlah Aku PadaMu",
+      "path": "docs/assets/chord/243_Dekatkanlah Aku PadaMu.chord.json",
+      "formatVersion": 2,
+      "size": 1933,
+      "sha256": "c829aa476e515c04d7b78b88f51ad0b3e868d6b7f447c325ec5c653d07465d3e"
+    },
+    {
+      "id": "KR:244",
+      "bookCode": "KR",
+      "songNumber": "244",
+      "title": "Tuhan, Aku Mau Seperti-Mu",
+      "path": "docs/assets/chord/244_Tuhan, Aku Mau Seperti-Mu.chord.json",
+      "formatVersion": 2,
+      "size": 1550,
+      "sha256": "02b5f20cf62ad503845158d245b5a74441be02bf75bc287727c6b2c56b175cf9"
+    },
+    {
+      "id": "KR:245",
+      "bookCode": "KR",
+      "songNumber": "245",
+      "title": "Tinggal Bersama Tuhan",
+      "path": "docs/assets/chord/245_Tinggal Bersama Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1081,
+      "sha256": "72e89d75f13998987267b1f26bd5c6b457ccac076a9ea53188f6ae80364c0dcf"
+    },
+    {
+      "id": "KR:246",
+      "bookCode": "KR",
+      "songNumber": "246",
+      "title": "Memohon Roh Kudus",
+      "path": "docs/assets/chord/246_Memohon Roh Kudus.chord.json",
+      "formatVersion": 2,
+      "size": 929,
+      "sha256": "f5d9545f6a390b5905cdcf22de066fc9e00bb57658dd85a563e38b7b0acb8a85"
+    },
+    {
+      "id": "KR:247",
+      "bookCode": "KR",
+      "songNumber": "247",
+      "title": "Kuasa Roh Kudus",
+      "path": "docs/assets/chord/247_Kuasa Roh Kudus.chord.json",
+      "formatVersion": 2,
+      "size": 1940,
+      "sha256": "28e1cbeb21827adb8feabee2c27bbc9c8d591f54c8d1abb8bb1eb0b511414881"
+    },
+    {
+      "id": "KR:248",
+      "bookCode": "KR",
+      "songNumber": "248",
+      "title": "Mohon Roh Kudus",
+      "path": "docs/assets/chord/248_Mohon Roh Kudus.chord.json",
+      "formatVersion": 2,
+      "size": 1078,
+      "sha256": "540ace58d77480062e76b9b52f79c4e38c7fdc3cd20431fe1e4d33ab911982c9"
+    },
+    {
+      "id": "KR:249",
+      "bookCode": "KR",
+      "songNumber": "249",
+      "title": "Roh Kudus Baptis Semua",
+      "path": "docs/assets/chord/249_Roh Kudus Baptis Semua.chord.json",
+      "formatVersion": 2,
+      "size": 1951,
+      "sha256": "1f4c6326aaaceb872c4e931fdaad3d93ba39b1cde0503e928f82045c0335a91b"
+    },
+    {
+      "id": "KR:250",
+      "bookCode": "KR",
+      "songNumber": "250",
+      "title": "Mendapat Kekuatan Baru",
+      "path": "docs/assets/chord/250_Mendapat Kekuatan Baru.chord.json",
+      "formatVersion": 2,
+      "size": 943,
+      "sha256": "b30a96385a57fc70385ae406ff3a47ec32b3803c26cf8febff8d2cf63c5b83b9"
+    },
+    {
+      "id": "KR:259",
+      "bookCode": "KR",
+      "songNumber": "259",
+      "title": "Tekun Berdoa",
+      "path": "docs/assets/chord/259_Tekun Berdoa.chord.json",
+      "formatVersion": 2,
+      "size": 1872,
+      "sha256": "64350b4270a235880fb1d9e4001f9cd83bcb0d88f31b93a80c91c4467155e128"
+    },
+    {
+      "id": "KR:262",
+      "bookCode": "KR",
+      "songNumber": "262",
+      "title": "Bersekutu Dalam Roh Dengan Tuhan",
+      "path": "docs/assets/chord/262_Bersekutu Dalam Roh Dengan Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1499,
+      "sha256": "1a1fc06efb7afd8f380c393bc1f6a082850e3e322dc90adde088e0b190b6f024"
+    },
+    {
+      "id": "KR:330",
+      "bookCode": "KR",
+      "songNumber": "330",
+      "title": "Damai, Anugerah Tuhan",
+      "path": "docs/assets/chord/330_Damai, Anugerah Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1541,
+      "sha256": "e7d724a42d3936633fcb5a167168a8292c4264083f7b0b9a5fa883e3fdf8bf18"
+    },
+    {
+      "id": "KR:332",
+      "bookCode": "KR",
+      "songNumber": "332",
+      "title": "Kasih Allah",
+      "path": "docs/assets/chord/332_Kasih Allah.chord.json",
+      "formatVersion": 2,
+      "size": 1824,
+      "sha256": "98c9e258b1aeeec5bcae73dc6627bb1be6a38c7f32088a6e329f4bebf73f7c9a"
+    },
+    {
+      "id": "KR:358",
+      "bookCode": "KR",
+      "songNumber": "358",
+      "title": "Roh Kudus, Penuhilah Aku",
+      "path": "docs/assets/chord/358_Roh Kudus, Penuhilah Aku.chord.json",
+      "formatVersion": 2,
+      "size": 1947,
+      "sha256": "9ae2d116f0ee318b24eba5c09438a145d5649dcd37b0daa48227d75ba8095d38"
+    },
+    {
+      "id": "KR:368",
+      "bookCode": "KR",
+      "songNumber": "368",
+      "title": "Ku Tahu Siapa Pegang Hari Esok",
+      "path": "docs/assets/chord/368_Ku Tahu Siapa Pegang Hari Esok.chord.json",
+      "formatVersion": 2,
+      "size": 1883,
+      "sha256": "8ebfa0a1f719b246d1769194db1c19fdddf6b7b6a82516cd4799eab7587c6383"
+    },
+    {
+      "id": "KR:370",
+      "bookCode": "KR",
+      "songNumber": "370",
+      "title": "Bila Tuhan Beserta Kita",
+      "path": "docs/assets/chord/370_Bila Tuhan Beserta Kita.chord.json",
+      "formatVersion": 2,
+      "size": 2001,
+      "sha256": "1227b684fc3ac7398fb1aa55849f5683514ce6fe1419d0c13a7e426834ed3fdf"
+    },
+    {
+      "id": "KR:373",
+      "bookCode": "KR",
+      "songNumber": "373",
+      "title": "Percayalah",
+      "path": "docs/assets/chord/373_Percayalah.chord.json",
+      "formatVersion": 2,
+      "size": 2001,
+      "sha256": "a28679b65456375a3705575444f91fac53f29aa876811a876c9fa65827ad4553"
+    },
+    {
+      "id": "KR:377",
+      "bookCode": "KR",
+      "songNumber": "377",
+      "title": "Tuhan Kau Mengingatku",
+      "path": "docs/assets/chord/377_Tuhan Kau Mengingatku.chord.json",
+      "formatVersion": 2,
+      "size": 1335,
+      "sha256": "d125e8a996971bc200e37fa6ab5b0c9a45259b2dfbaf93cc8165177dc3eeb56f"
+    },
+    {
+      "id": "KR:393",
+      "bookCode": "KR",
+      "songNumber": "393",
+      "title": "Terima Kasih, Tuhan",
+      "path": "docs/assets/chord/393_Terima Kasih, Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1825,
+      "sha256": "b1b02e71857721fa3d63b3aef83d7e8b7b22f5f119b9421cd5caf86e81f8149b"
+    },
+    {
+      "id": "KR:394",
+      "bookCode": "KR",
+      "songNumber": "394",
+      "title": "Terima Kasih Pada Tuhan",
+      "path": "docs/assets/chord/394_Terima Kasih Pada Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1404,
+      "sha256": "2a6b8e74f52eda22373886cc8fb9cf2b3da0a1bbb548572ecb6455aab3ed0512"
+    },
+    {
+      "id": "KR:405",
+      "bookCode": "KR",
+      "songNumber": "405",
+      "title": "Berdoakah Engkau",
+      "path": "docs/assets/chord/405_Berdoakah Engkau_.chord.json",
+      "formatVersion": 2,
+      "size": 1951,
+      "sha256": "0dbfe9c63724bc34e19bb1cfb39a55683155208d207089da91383d2c92dcb593"
+    },
+    {
+      "id": "KR:411",
+      "bookCode": "KR",
+      "songNumber": "411",
+      "title": "Taman Doa Nan indah",
+      "path": "docs/assets/chord/411_Taman Doa Nan indah.chord.json",
+      "formatVersion": 2,
+      "size": 1518,
+      "sha256": "656d916bc9bb04d209fba53f54c7c173b0dfc3cb562546a48ef3cd4714eb7bdf"
+    },
+    {
+      "id": "KR:412",
+      "bookCode": "KR",
+      "songNumber": "412",
+      "title": "Indahnya Saat Berdoa",
+      "path": "docs/assets/chord/412_Indahnya Saat Berdoa.chord.json",
+      "formatVersion": 2,
+      "size": 1584,
+      "sha256": "fdaa56884f689381b3223e4b5167c98259c4a444ef8d20e2d153ba233a4e477f"
+    },
+    {
+      "id": "KR:416",
+      "bookCode": "KR",
+      "songNumber": "416",
+      "title": "Kau Sanggupkah Tanya Yesus",
+      "path": "docs/assets/chord/416_Kau Sanggupkah Tanya Yesus_.chord.json",
+      "formatVersion": 2,
+      "size": 2198,
+      "sha256": "7f2cd830641ba134ca6ba3fc6a947eadd811c9ececd5b06593b860af0d0e79c4"
+    },
+    {
+      "id": "KR:422",
+      "bookCode": "KR",
+      "songNumber": "422",
+      "title": "Beritakan KasihNya",
+      "path": "docs/assets/chord/422_Beritakan KasihNya.chord.json",
+      "formatVersion": 2,
+      "size": 1489,
+      "sha256": "f3a8b5e6a0fd69f4407154c3608c6f55696d056280f1eb24a337cb8ebceb70e9"
+    },
+    {
+      "id": "KR:433",
+      "bookCode": "KR",
+      "songNumber": "433",
+      "title": "Damai Nan Ajaib",
+      "path": "docs/assets/chord/433_Damai Nan Ajaib.chord.json",
+      "formatVersion": 2,
+      "size": 1876,
+      "sha256": "73c26370740969ca03f5e6e5a238cd4c6899969e2c57dedf9572b6f3182ce8d6"
+    },
+    {
+      "id": "KR:434",
+      "bookCode": "KR",
+      "songNumber": "434",
+      "title": "Di Suatu Negeri Yang Mulia",
+      "path": "docs/assets/chord/434_Di Suatu Negeri Yang Mulia.chord.json",
+      "formatVersion": 2,
+      "size": 1818,
+      "sha256": "faeff50cd43c990d33cd2015ea51d468de21de48003b09d81871a0f8a278b6bf"
+    },
+    {
+      "id": "KR:435",
+      "bookCode": "KR",
+      "songNumber": "435",
+      "title": "Dia Mengampuni Semua Dosaku",
+      "path": "docs/assets/chord/435_Dia Mengampuni Semua Dosaku.chord.json",
+      "formatVersion": 2,
+      "size": 2368,
+      "sha256": "678f772e2ac8f02ede7adf303a6c0bec09c13121e2e8d99419f48aaf8b2a985a"
+    },
+    {
+      "id": "KR:443",
+      "bookCode": "KR",
+      "songNumber": "443",
+      "title": "Iman Umat-Umat Kudus",
+      "path": "docs/assets/chord/443_Iman Umat-Umat Kudus.chord.json",
+      "formatVersion": 2,
+      "size": 1462,
+      "sha256": "a71cecf4a8d29003574043fc08900e46d358a741d849670ff99c62cb4e3494d5"
+    },
+    {
+      "id": "KR:450",
+      "bookCode": "KR",
+      "songNumber": "450",
+      "title": "Serukanlah Perang",
+      "path": "docs/assets/chord/450_Serukanlah Perang.chord.json",
+      "formatVersion": 2,
+      "size": 1732,
+      "sha256": "de2487724e3fd9b0bfc6cc1164555d342a71cdc597e2cf9ed06c799d14f14f09"
+    },
+    {
+      "id": "KR:452",
+      "bookCode": "KR",
+      "songNumber": "452",
+      "title": "Jadilah Visiku",
+      "path": "docs/assets/chord/452_Jadilah Visiku.chord.json",
+      "formatVersion": 2,
+      "size": 1185,
+      "sha256": "8733159ee4879b51b117c7ea603d51e13ee2aaf0fa978ff14233155bc3113387"
+    },
+    {
+      "id": "KR:454",
+      "bookCode": "KR",
+      "songNumber": "454",
+      "title": "Oh Datanglah, Imanuel",
+      "path": "docs/assets/chord/454_Oh Datanglah, Imanuel.chord.json",
+      "formatVersion": 2,
+      "size": 1433,
+      "sha256": "fc6a422b2b3a2f522783642b2452558c844d36a3e746eb2978bb88c182567df0"
+    },
+    {
+      "id": "KR:468",
+      "bookCode": "KR",
+      "songNumber": "468",
+      "title": "Kristus Hidup di Dalam Ku",
+      "path": "docs/assets/chord/468_Kristus Hidup di Dalam Ku.chord.json",
+      "formatVersion": 2,
+      "size": 1621,
+      "sha256": "471dc0d77d670b8a6c45bc410ff9c8a9f0df6c995db29c9b300c41eb0e8582d4"
+    },
+    {
+      "id": "KR:483",
+      "bookCode": "KR",
+      "songNumber": "483",
+      "title": "Hanya Satu Rencana",
+      "path": "docs/assets/chord/483_Hanya Satu Rencana.chord.json",
+      "formatVersion": 2,
+      "size": 2348,
+      "sha256": "4add7a5e46a56631f4116334c8ccbfa3b4ba3547309fa1e5c26d41eb8dbabf53"
+    },
+    {
+      "id": "KR:516",
+      "bookCode": "KR",
+      "songNumber": "516",
+      "title": "Aku Bertekad",
+      "path": "docs/assets/chord/516_Aku Bertekad.chord.json",
+      "formatVersion": 2,
+      "size": 1481,
+      "sha256": "e84ded7678cdf708a27905b8291015f7ba10fc3559afb34aa4588a15bb74a9d3"
+    },
+    {
+      "id": "KR:521",
+      "bookCode": "KR",
+      "songNumber": "521",
+      "title": "Akulah DombaNya",
+      "path": "docs/assets/chord/521_Akulah DombaNya.chord.json",
+      "formatVersion": 2,
+      "size": 1272,
+      "sha256": "7d1d340810566e959cf289062399cda90f8ef28884183c78cd2af8dd0f60a0e6"
+    },
+    {
+      "id": "KR:528",
+      "bookCode": "KR",
+      "songNumber": "528",
+      "title": "Dia Segalanya Bagiku",
+      "path": "docs/assets/chord/528_Dia Segalanya Bagiku.chord.json",
+      "formatVersion": 2,
+      "size": 3482,
+      "sha256": "634cc61bca2bacd1aaafa1c988970cffbd093c11fab9359e3419b94e47944179"
+    }
+  ]
+}
