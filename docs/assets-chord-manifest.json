@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "b2da4ae5353e082defe857454950b445a9bffcea",
+  "sourceCommit": "a24212fb20606b298111e349bcead2a38b8950d9",
   "files": [
     {
       "id": "KR:001",
@@ -1153,6 +1153,16 @@
       "sha256": "6f30150324880b0ff0d8bf5ea2a66cb84101e518059ef0f4e4468db4dfe281ee"
     },
     {
+      "id": "KR:356",
+      "bookCode": "KR",
+      "songNumber": "356",
+      "title": "Imanlah Kemenangan",
+      "path": "docs/assets/chord/356_Imanlah Kemenangan.chord.json",
+      "formatVersion": 2,
+      "size": 2165,
+      "sha256": "2bcf382db9e4725f96677f0c216297fb15fdcab4057be25fb495b333237dc6d5"
+    },
+    {
       "id": "KR:358",
       "bookCode": "KR",
       "songNumber": "358",
@@ -1161,6 +1171,16 @@
       "formatVersion": 2,
       "size": 1828,
       "sha256": "ef22c12ffc0d200ffce0513f0c0343db75cd666c0da7239cfb1fce1fc8b04bac"
+    },
+    {
+      "id": "KR:366",
+      "bookCode": "KR",
+      "songNumber": "366",
+      "title": "Berimanlah Kepada Tuhan",
+      "path": "docs/assets/chord/366_Berimanlah Kepada Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1768,
+      "sha256": "94c746042874a3c24285e49b15a725ebd34596814fa7a42e010db616d848d72b"
     },
     {
       "id": "KR:368",
@@ -1223,6 +1243,16 @@
       "sha256": "d54a735913897b639dcb90f2d8d320787c2a7afcc69a3404ac6d9d7bfa58e9c5"
     },
     {
+      "id": "KR:395",
+      "bookCode": "KR",
+      "songNumber": "395",
+      "title": "Di Tempat yang Lebih Tinggi",
+      "path": "docs/assets/chord/395_Di Tempat yang Lebih Tinggi.chord.json",
+      "formatVersion": 2,
+      "size": 1065,
+      "sha256": "c9f8a8e4d626e682dd52e9f7319a66e60c4ce79f59dda59e4c222d4824c3f585"
+    },
+    {
       "id": "KR:405",
       "bookCode": "KR",
       "songNumber": "405",
@@ -1271,6 +1301,16 @@
       "formatVersion": 2,
       "size": 1398,
       "sha256": "4265e45a09029a5080b77c4a29a070bdb083a63319fccb14a668286e1624fa9a"
+    },
+    {
+      "id": "KR:432",
+      "bookCode": "KR",
+      "songNumber": "432",
+      "title": "Pengertian Yang Mendalam",
+      "path": "docs/assets/chord/432_Pengertian Yang Mendalam.chord.json",
+      "formatVersion": 2,
+      "size": 1579,
+      "sha256": "f06fabe179b6f4de5324a997d5269d629a3c89f7a33fcb1f40487c9bee713432"
     },
     {
       "id": "KR:433",
