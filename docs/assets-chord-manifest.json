@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "a24212fb20606b298111e349bcead2a38b8950d9",
+  "sourceCommit": "af0bf93b2f943adabc825d1618dade56a98d8e47",
   "files": [
     {
       "id": "KR:001",
@@ -1133,6 +1133,16 @@
       "sha256": "1a1fc06efb7afd8f380c393bc1f6a082850e3e322dc90adde088e0b190b6f024"
     },
     {
+      "id": "KR:322",
+      "bookCode": "KR",
+      "songNumber": "322",
+      "title": "Kemuliaan Untuk Tuhan",
+      "path": "docs/assets/chord/322_Kemuliaan Untuk Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1999,
+      "sha256": "779821a6af90868b7952d440fda1ec641ddd2b4190abd8533e976d6c0abe469e"
+    },
+    {
       "id": "KR:330",
       "bookCode": "KR",
       "songNumber": "330",
@@ -1251,6 +1261,16 @@
       "formatVersion": 2,
       "size": 1065,
       "sha256": "c9f8a8e4d626e682dd52e9f7319a66e60c4ce79f59dda59e4c222d4824c3f585"
+    },
+    {
+      "id": "KR:398",
+      "bookCode": "KR",
+      "songNumber": "398",
+      "title": "Hidup Untuk Yesus",
+      "path": "docs/assets/chord/398_Hidup Untuk Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 2155,
+      "sha256": "c112c12cac217631ab50faf490ad55ebf8d2934a781ddf199541086e6b9496e3"
     },
     {
       "id": "KR:405",
@@ -1381,6 +1401,16 @@
       "formatVersion": 2,
       "size": 1346,
       "sha256": "2b7056cf07eddf37bc9d5ce4982cdb1ee44a10b533fbcdc1d65df2ed433d51b5"
+    },
+    {
+      "id": "KR:467",
+      "bookCode": "KR",
+      "songNumber": "467",
+      "title": "Percayalah Pada Yesus",
+      "path": "docs/assets/chord/467_Percayalah Pada Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 1616,
+      "sha256": "72897f907cae6637d1636c727d4f12af7129e2a1b16d2d30cf401c489ed5fc1e"
     },
     {
       "id": "KR:468",
