@@ -119,7 +119,7 @@ var _gysHadServiceWorkerController =
 	!!navigator.serviceWorker.controller;
 // Versi build yang tertanam di bundle ini — pembanding utama vs versi SW.
 // HARUS sama dengan APP_VERSION di docs/sw.js (naikkan bersama).
-const GYS_CLIENT_BUILD = "3.8.30";
+const GYS_CLIENT_BUILD = "3.8.31";
 
 function checkForAppUpdate() {
 	if (!("serviceWorker" in navigator)) return;

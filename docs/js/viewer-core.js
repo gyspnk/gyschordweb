@@ -2,11 +2,73 @@
 
 /* SOURCE: 07-pdf-viewer.js */
 // --- 6. PDF Viewer ---
+
+// ── Pemulihan mandiri runtime PDF ──
+// Gejala: setelah lama tak dibuka, "PDF gagal muat" terus-menerus sampai
+// hard refresh / hapus data situs. Penyebab: entri rusak di Cache API untuk
+// modul pdf.mjs / pdf.worker.mjs (dulu dilayani cache-first selamanya).
+// Solusi: purge entri cache tsb via service worker, lalu reload satu kali.
+function _postSwMessage(msg) {
+  return new Promise((resolve) => {
+    try {
+      if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+        resolve(null);
+        return;
+      }
+      var ch = new MessageChannel();
+      var timer = setTimeout(() => resolve(null), 1500);
+      ch.port1.onmessage = (e) => {
+        clearTimeout(timer);
+        resolve(e.data);
+      };
+      navigator.serviceWorker.controller.postMessage(msg, [ch.port2]);
+    } catch (_e) {
+      resolve(null);
+    }
+  });
+}
+
+async function _recoverPdfStack() {
+  // Maksimal sekali per sesi tab dalam jendela 2 menit (anti loop reload).
+  let recent = null;
+  try {
+    recent = sessionStorage.getItem("gys-pdf-recover-at");
+  } catch (_e) {}
+  const now = Date.now();
+  if (recent && now - parseInt(recent, 10) < 120000) return false;
+  try {
+    sessionStorage.setItem("gys-pdf-recover-at", String(now));
+  } catch (_e2) {}
+  await _postSwMessage({
+    type: "PURGE_URLS",
+    urls: ["pdf.mjs", "pdf.worker.mjs"],
+  });
+  console.warn("[PDF] Cache PDF.js dibersihkan — memuat ulang otomatis...");
+  return true;
+}
+
+function _pdfLibIsBroken() {
+  try {
+    return !window.pdfjsLib || typeof window.pdfjsLib.getDocument !== "function";
+  } catch (_e) {
+    return true;
+  }
+}
+
 async function openPdfViewer(songId, backgroundLoad = false) {
   // Guard against rapid prev/next navigation: each call gets a generation number.
   // After the animation delay, stale calls (superseded by a newer navigation) abort
   // before touching any shared audio/MIDI/PDF state, preventing race conditions.
   const thisOpenGeneration = ++_openPdfViewerGeneration;
+
+  // Library PDF.js tidak terpasang (modul CDN gagal/rusak) → pulihkan.
+  if (!backgroundLoad && _pdfLibIsBroken()) {
+    const recovered = await _recoverPdfStack();
+    if (recovered) {
+      window.location.reload();
+      return;
+    }
+  }
 
   currentSongIndex = parseInt(songId, 10);
   localStorage.setItem("GysLastPlayedSongIndex", currentSongIndex);
@@ -532,6 +594,12 @@ async function openPdfViewer(songId, backgroundLoad = false) {
     songTitleWrapper.classList.remove("is-navigating");
     canvasWrapper.classList.remove("is-navigating");
     console.error(`Gagal memuat PDF: ${reason}`);
+    // Self-healing: purge cache modul PDF.js yang mungkin terpoisoning lalu
+    // reload otomatis sekali — pengguna tidak perlu hard refresh manual.
+    if (await _recoverPdfStack()) {
+      window.location.reload();
+      return;
+    }
     alert("Gagal memuat PDF.");
     closePdfViewer();
   }

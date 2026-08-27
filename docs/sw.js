@@ -1,5 +1,5 @@
-﻿const CACHE_NAME = "gys-cache-v84";
-const APP_VERSION = "3.8.30";
+﻿const CACHE_NAME = "gys-cache-v85";
+const APP_VERSION = "3.8.31";
 
 self.addEventListener("install", (_event) => {
 	self.skipWaiting();
@@ -37,6 +37,49 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("message", (event) => {
+	if (event.data && event.data.type === "PURGE_URLS") {
+		// Hapus entri cache yang cocok (substring pada URL) di SEMUA cache.
+		// Dipakai untuk pemulihan mandiri saat entri terpoisoning (mis.
+		// pdf.mjs / pdf.worker.mjs rusak sehingga PDF gagal muat terus).
+		const needles = Array.isArray(event.data.urls) ? event.data.urls : [];
+		caches
+			.keys()
+			.then((cacheNames) =>
+				Promise.all(
+					cacheNames.map((name) =>
+						caches.open(name).then((cache) =>
+							cache.keys().then((requests) =>
+								Promise.all(
+									requests.map((req) => {
+										const u = req.url || "";
+										if (
+											needles.some((n) =>
+												u.indexOf(n) !== -1,
+											)
+										) {
+											return cache.delete(req);
+										}
+										return Promise.resolve(false);
+									}),
+								),
+							),
+						),
+					),
+				),
+			)
+			.then(() => {
+				if (event.ports && event.ports[0]) {
+					try {
+						event.ports[0].postMessage({ type: "PURGED" });
+					} catch (_) {}
+				}
+				if (event.source) {
+					try {
+						event.source.postMessage({ type: "PURGED" });
+					} catch (_) {}
+				}
+			});
+	}
 	if (event.data && event.data.type === "GET_VERSION") {
 		// Balas lewat port MessageChannel bila ada, dan tetap ke
 		// event.source demi kompatibilitas dengan pola lama.
@@ -160,7 +203,38 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
-	// All other assets (CDN scripts, fonts, images): cache-first
+	// Modul/script CDN (pdf.mjs, pdf.worker.mjs, dsb): stale-while-revalidate.
+	// Cache-first murni berbahaya — entri rusak di cache akan menyebabkan
+	// "PDF gagal muat" permanen sampai hapus data situs. Dengan SWR, salinan
+	// segar dari jaringan selalu memperbarui cache untuk muat berikutnya.
+	var isCdnScript =
+		url.origin !== self.location.origin &&
+		(url.pathname.endsWith(".js") || url.pathname.endsWith(".mjs"));
+	if (isCdnScript) {
+		event.respondWith(
+			caches.open(CACHE_NAME).then((cache) =>
+				cache.match(event.request).then((cachedResponse) => {
+					var network = fetch(event.request)
+						.then((networkResponse) => {
+							if (
+								networkResponse &&
+								(networkResponse.status === 200 ||
+									networkResponse.type === "opaque")
+							) {
+								cache.put(event.request, networkResponse.clone());
+							}
+							return networkResponse;
+						})
+						.catch(() => null);
+					if (cachedResponse) return cachedResponse;
+					return network.then((r) => r || Response.error());
+				}),
+			),
+		);
+		return;
+	}
+
+	// All other assets (fonts, images, audio): cache-first
 	event.respondWith(
 		caches.match(event.request).then((cachedResponse) => {
 			if (cachedResponse) {
