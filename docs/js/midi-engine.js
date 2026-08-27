@@ -22,6 +22,7 @@ var MidiEngine = (function () {
   var _ctx = null;              // AudioContext
   var _masterGain = null;       // GainNode: master volume
   var _limiter = null;          // DynamicsCompressorNode (as limiter)
+  var _softClipper = null;      // WaveShaperNode: transparent anti-hard-clip
 
   // A/B deck system
   var _deckA = null;            // { source, gain, buffer, startTime, offset }
@@ -96,9 +97,20 @@ var MidiEngine = (function () {
 
   function _ensureContext() {
     if (_ctx) return _ctx;
-    _ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // latencyHint 'playback' memakai buffer audio perangkat yang lebih
+    // besar (>100 ms) sehingga rendering PDF/browser yang berat di thread
+    // utama tidak membuat output kehabisan sampel (underrun = suara
+    // kretek-kretek/crackling). Latensi start sedikit naik, tapi untuk
+    // musik latar ini tidak terasa.
+    try {
+      _ctx = new (window.AudioContext || window.webkitAudioContext)({
+        latencyHint: 'playback'
+      });
+    } catch (_e) {
+      _ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
 
-    // Chain: source → deckGain → masterGain → limiter → destination.
+    // Chain: source → deckGain → masterGain → softClip → limiter → destination.
     // Buffer sudah dinormalisasi puncak saat render offline (target
     // 0.94 / -0.5 dBFS), jadi limiter di sini hanya jaring pengaman:
     // threshold di ATAS level render normal agar tidak pernah aktif
@@ -107,6 +119,32 @@ var MidiEngine = (function () {
     _masterGain = _ctx.createGain();
     _masterGain.gain.value = _volume;
 
+    // Soft-clip transparan: identitas di bawah 0.97 (level musik normal
+    // peak 0.94 tidak tersentuh = tidak ada penurunan volume/distorsi),
+    // melengkung lembut mendekati 0.999 untuk sampel ekstrem — mencegah
+    // hard-clip digital (kretek tajam) jika suatu saat level terlewat.
+    _softClipper = _ctx.createWaveShaper();
+    _softClipper.curve = (function () {
+      var N = 2048;
+      var curve = new Float32Array(N);
+      var THRESH = 0.97;
+      var CEIL = 0.999;
+      for (var i = 0; i < N; i++) {
+        var x = (i / (N - 1)) * 2 - 1;
+        var ax = Math.abs(x);
+        if (ax <= THRESH) {
+          curve[i] = x;
+        } else {
+          var t = (ax - THRESH) / (1 - THRESH);       // 0..1+ (clamp pada 1)
+          if (t > 1) t = 1;
+          var y = THRESH + (CEIL - THRESH) * Math.tanh(t * 1.6) / Math.tanh(1.6);
+          curve[i] = x < 0 ? -y : y;
+        }
+      }
+      return curve;
+    })();
+    _softClipper.oversample = '2x';
+
     _limiter = _ctx.createDynamicsCompressor();
     _limiter.threshold.value = -0.3;
     _limiter.ratio.value = 20;
@@ -114,7 +152,8 @@ var MidiEngine = (function () {
     _limiter.knee.value = 0.5;
     _limiter.release.value = 0.05;
 
-    _masterGain.connect(_limiter);
+    _masterGain.connect(_softClipper);
+    _softClipper.connect(_limiter);
     _limiter.connect(_ctx.destination);
 
     return _ctx;
@@ -927,8 +966,13 @@ var MidiEngine = (function () {
 
   function _startPlayback(offset, fadeInMs) {
     return _resumeContext().then(function () {
-      // Stop any existing deck
-      if (_deckA) {
+      // Ganti deck secara halus: fade-out mikro (~18 ms) pada deck lama
+      // daripada memotong instan. Pemotongan instan di tengah gelombang
+      // menghasilkan diskontinuitas = klik/kretek yang jelas terdengar
+      // (tiap ganti lagu & tiap gerakan slider seek).
+      if (_deckA && !_deckA.ended) {
+        _stopDeck(_deckA, 18);
+      } else if (_deckA) {
         try { _deckA.source.stop(); } catch (_e) {}
         try { _deckA.gain.disconnect(); } catch (_e2) {}
       }
@@ -988,7 +1032,7 @@ var MidiEngine = (function () {
         });
       } else {
         // Not playing — just update buffer
-        if (_deckA) _stopDeck(_deckA, 0);
+        if (_deckA) _stopDeck(_deckA, 30);
         _deckA = null;
         _currentTime = Math.min(pausedTime, _duration);
         if (_onStateChange) _onStateChange(false, _currentTime, _duration);
@@ -1039,7 +1083,10 @@ var MidiEngine = (function () {
 
     if (_onStateChange) _onStateChange(false, 0, _duration);
 
-    return _stopDeck(_deckA, fadeMs || 0).then(function () {
+    // Default fade pendek bila pemanggil tidak menentukan — hindari klik
+    // pemotongan instan. Pemanggil yang butuh instan bisa kirim 0 eksplisit.
+    var fade = fadeMs === undefined || fadeMs === null ? 60 : fadeMs;
+    return _stopDeck(_deckA, fade).then(function () {
       _deckA = null;
     });
   }
@@ -1503,7 +1550,14 @@ var MidiEngine = (function () {
   function reset() {
     _clearPendingTempoApply();
 
-    if (_deckA) { try { _deckA.source.stop(); } catch (_e) {} try { _deckA.gain.disconnect(); } catch (_e2) {} }
+    // Fade mikro alih-alih potong instan (anti-klik); state tetap dibersihkan
+    // seketika, node audio lama dibersihkan oleh timer _stopDeck.
+    if (_deckA && !_deckA.ended) {
+      _stopDeck(_deckA, 18);
+    } else if (_deckA) {
+      try { _deckA.source.stop(); } catch (_e) {}
+      try { _deckA.gain.disconnect(); } catch (_e2) {}
+    }
     _deckA = null;
     _playing = false;
     _currentTime = 0;
