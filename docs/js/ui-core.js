@@ -117,11 +117,25 @@ var _gysHadServiceWorkerController =
 	typeof navigator !== "undefined" &&
 	navigator.serviceWorker &&
 	!!navigator.serviceWorker.controller;
-// Versi build yang tertanam di bundle ini — pembanding utama vs versi SW
-const GYS_CLIENT_BUILD = "3.8.27";
+// Versi build yang tertanam di bundle ini — pembanding utama vs versi SW.
+// HARUS sama dengan APP_VERSION di docs/sw.js (naikkan bersama).
+const GYS_CLIENT_BUILD = "3.8.28";
 
 function checkForAppUpdate() {
 	if (!("serviceWorker" in navigator)) return;
+
+	// SW versi baru aktif dan memberi tahu halaman (broadcast saat activate).
+	// Bila versinya beda dengan build klien, jalankan pembaruan otomatis.
+	navigator.serviceWorker.addEventListener("message", (event) => {
+		if (
+			event.data &&
+			event.data.type === "SW_ACTIVATED" &&
+			event.data.version &&
+			event.data.version !== GYS_CLIENT_BUILD
+		) {
+			beginAppUpdate(event.data.version);
+		}
+	});
 
 	// Service worker baru mengambil alih halaman yang sedang berjalan → update.
 	navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -163,6 +177,10 @@ function checkForAppUpdate() {
 						beginAppUpdate(swVersion);
 						return;
 					}
+					// Versi sudah sinkron — reset pembatas percobaan update.
+					try {
+						sessionStorage.removeItem("gys-upd-attempts");
+					} catch (e) {}
 					localStorage.setItem("gys-app-version", swVersion);
 				}
 			};
@@ -184,6 +202,13 @@ function checkForAppUpdate() {
  * playlist), lalu reload setelah service worker selesai / timeout.
  */
 function beginAppUpdate(version) {
+	// Batasi jumlah auto-update per sesi tab agar deploy parsial (versi SW
+	// vs build klien tak pernah cocok) tidak menyebabkan reload tanpa henti.
+	try {
+		var attempts = parseInt(sessionStorage.getItem("gys-upd-attempts") || "0", 10);
+		if (attempts >= 2) return;
+		sessionStorage.setItem("gys-upd-attempts", String(attempts + 1));
+	} catch (e) {}
 	if (_gysAutoUpdateStarted) return;
 	_gysAutoUpdateStarted = true;
 	try {

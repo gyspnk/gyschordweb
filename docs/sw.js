@@ -1,5 +1,5 @@
-const CACHE_NAME = "gys-cache-v81";
-const APP_VERSION = "3.8.27";
+﻿const CACHE_NAME = "gys-cache-v82";
+const APP_VERSION = "3.8.28";
 
 self.addEventListener("install", (_event) => {
 	self.skipWaiting();
@@ -18,7 +18,21 @@ self.addEventListener("activate", (event) => {
 					}),
 				);
 			})
-			.then(() => self.clients.claim()),
+			.then(() => self.clients.claim())
+			// Beri tahu semua halaman yang terbuka bahwa SW baru aktif agar
+			// halaman dengan versi lama bisa menjalankan pembaruan otomatis.
+			.then(() =>
+				self.clients.matchAll({ includeUncontrolled: true }).then((clients) => {
+					clients.forEach((client) => {
+						try {
+							client.postMessage({
+								type: "SW_ACTIVATED",
+								version: APP_VERSION,
+							});
+						} catch (_) {}
+					});
+				}),
+			),
 	);
 });
 
@@ -74,7 +88,7 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
-	// NEVER cache dynamic assets — always network
+	// NEVER cache dynamic assets â€” always network
 	if (
 		url.pathname.includes("/midi/") ||
 		url.pathname.includes("/pdf/") ||
@@ -82,7 +96,7 @@ self.addEventListener("fetch", (event) => {
 		url.pathname.includes("assets-list.json") ||
 		url.pathname.includes("assets-lyrics.json") ||
 		url.pathname.includes("assets-chord-list.json") ||
-		// SoundFont besar (bisa ratusan MB) TIDAK di-cache di Cache API —
+		// SoundFont besar (bisa ratusan MB) TIDAK di-cache di Cache API â€”
 		// ia dikelola sendiri via IndexedDB (gys-sf-cache). Cache ganda
 		// membuat quota storage cepat penuh dan browser bisa meng-evict
 		// seluruh origin storage (termasuk localStorage playlist).
@@ -103,6 +117,30 @@ self.addEventListener("fetch", (event) => {
 			url.pathname.endsWith("/"));
 
 	if (isLocalAppFile) {
+		// Aset ber-parameter versi (?v=N): stale-while-revalidate â€” balas
+		// instan dari cache, sementara jaringan menyegarkan cache untuk
+		// boot berikutnya. Aman karena konvensi repo menaikkan ?v= setiap
+		// kali file diubah; index.html tetap network-first sehingga selalu
+		// melihat URL ?v= terbaru.
+		if (/[?&]v=/.test(url.search)) {
+			event.respondWith(
+				caches.open(CACHE_NAME).then((cache) =>
+					cache.match(event.request).then((cachedResponse) => {
+						var network = fetch(event.request)
+							.then((networkResponse) => {
+								if (networkResponse && networkResponse.status === 200) {
+									cache.put(event.request, networkResponse.clone());
+								}
+								return networkResponse;
+							})
+							.catch(() => null);
+						if (cachedResponse) return cachedResponse;
+						return network.then((r) => r || Response.error());
+					}),
+				),
+			);
+			return;
+		}
 		event.respondWith(
 			caches.open(CACHE_NAME).then((cache) =>
 				fetch(event.request)

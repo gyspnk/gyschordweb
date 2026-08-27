@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
@@ -68,7 +68,7 @@
     <link rel="stylesheet" href="./css/tailwind.css?v=10" />
     <link rel="stylesheet" href="./css/04-viewer.css?v=18" />
     <link rel="stylesheet" href="./css/runtime-fixes.css?v=10" />
-    <link rel="preload" href="./js/app.bundle.min.js?v=22" as="script" />
+    <link rel="preload" href="./js/app.bundle.min.js?v=23" as="script" />
     <link
       rel="prefetch"
       href="./js/midi-render-worker.min.js?v=7"
@@ -85,7 +85,7 @@
   </head>
   <body>
     <!-- Loading screen: tampil sampai elemen utama (font/icon + daftar
-         pujian) selesai dimuat. MIDI tidak ditunggu — ia punya loading
+         pujian) selesai dimuat. MIDI tidak ditunggu â€” ia punya loading
          bar sendiri. -->
     <div id="app-loading-screen" aria-hidden="true">
       <div class="app-loading-inner">
@@ -104,7 +104,7 @@
         <div class="app-loading-bar" role="progressbar" aria-label="Memuat">
           <div class="app-loading-bar-fill"></div>
         </div>
-        <div class="app-loading-label">Memuat… 0%</div>
+        <div class="app-loading-label">Memuatâ€¦ 0%</div>
       </div>
       <style>
         #app-loading-screen {
@@ -201,7 +201,7 @@
         function setProgress(p) {
           progress = Math.max(progress, Math.min(100, p));
           if (fill) fill.style.width = progress + "%";
-          if (label) label.textContent = "Memuat… " + Math.round(progress) + "%";
+          if (label) label.textContent = "Memuatâ€¦ " + Math.round(progress) + "%";
         }
 
         function hide() {
