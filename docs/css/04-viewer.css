@@ -127,6 +127,73 @@ body.measure-layout #pdf-viewer-number {
 	opacity: 0;
 }
 
+/* Tombol hide-chord saat memuat chord: ikon berputar pelan */
+.hide-chord-btn.is-loading {
+	opacity: 0.7;
+	pointer-events: none;
+}
+
+.hide-chord-btn.is-loading .material-symbols-outlined {
+	animation: gysChordSpin 1.4s linear infinite;
+}
+
+@keyframes gysChordSpin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+/* ── Animasi masuk setelah konten siap ──
+   Teks judul: fade murni. Box judul: scaling LEBAR saja (scaleX) —
+   terasa box "membuka" dari tengah. Kanvas: fade+scale halus. */
+.song-title-wrapper {
+	transition:
+		opacity 0.15s ease-out,
+		transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+	transform-origin: center;
+}
+
+.song-title-wrapper:not(.is-navigating) {
+	animation: gysTitleBoxIn 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.song-title-wrapper.is-navigating .song-navigation h2,
+.song-title-wrapper.is-navigating #pdf-viewer-number {
+	opacity: 0;
+}
+
+.song-title-wrapper:not(.is-navigating) .song-navigation h2 {
+	animation: gysTitleTextIn 0.3s ease-out;
+}
+
+.song-title-wrapper:not(.is-navigating) #pdf-viewer-number {
+	animation: gysTitleTextIn 0.3s ease-out 0.05s backwards;
+}
+
+@keyframes gysTitleBoxIn {
+	from {
+		transform: scaleX(0.82);
+	}
+	to {
+		transform: scaleX(1);
+	}
+}
+
+@keyframes gysTitleTextIn {
+	from {
+		opacity: 0;
+		transform: translateY(3px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.canvas-wrapper.is-navigating {
+	opacity: 0;
+	transform: scale(0.98);
+}
+
 .song-navigation h2 {
 	margin: 0;
 	font-size: clamp(1rem, 2vw, 1.125rem);
@@ -195,10 +262,6 @@ body.measure-layout #pdf-viewer-number {
 .canvas-wrapper.vertical-scroll {
 	flex-direction: column;
 	align-items: center;
-}
-.canvas-wrapper.is-navigating {
-	opacity: 0;
-	transform: scale(0.98);
 }
 
 .canvas-wrapper.zoom-animating {

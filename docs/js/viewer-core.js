@@ -167,10 +167,15 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   }
 
   if (!_canReuseDoc) {
-    // SEAMLESS: JANGAN fade-out konten lama di awal navigasi. Konten lama
-    // tetap tampil sampai halaman baru siap, lalu diganti seketika (swap).
-    // Ini menghilangkan kesan "hilang → muncul" dan keskip nomor lagu.
-    // Abort if a newer navigation started.
+    // ── SEKUENS TRANSISI ──
+    // 1) Fade-OUT judul + box konten lama (animasi keluar)
+    songTitleWrapper.classList.add("is-navigating");
+    canvasWrapper.classList.add("is-navigating");
+    // Beri waktu animasi fade-out berjalan (150ms transisi CSS), lalu
+    // lanjut memuat konten baru saat layar masih pudar.
+    await new Promise((resolve) => setTimeout(resolve, 160));
+
+    // Abort if a newer navigation started during the fade.
     if (_openPdfViewerGeneration !== thisOpenGeneration) {
       if (loadingTask) {
         try { loadingTask.destroy(); } catch (_err) {}
@@ -556,24 +561,48 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       });
 
       if (!isSameSong) {
-        // Chord config dimuat PARALEL dengan persiapan render — tidak
-        // memblokir tampilnya halaman. Overlay chord menyusul begitu siap.
-        const chordCfgPromise = (async () => {
-          await loadChordConfigurationForSong(song);
-          if (_openPdfViewerGeneration !== thisOpenGeneration) return;
-          if (typeof loadNoteChordConfiguration === "function") {
-            pageNotesCache = {}; // Clear note cache for new song
-            await loadNoteChordConfiguration(song);
-            if (_openPdfViewerGeneration !== thisOpenGeneration) return;
-            if (hasNoteAlignedChords()) {
-              detectNoteAlignedFamilyChord();
-            }
-          }
+        // ── Chord config: hormati preferensi toggle chord user ──
+        // Bila chord disembunyikan user (lyrics-show-chords = 0), JANGAN
+        // fetch otomatis — cukup tandai "skip". Bila diinginkan, muat
+        // paralel (tidak memblokir render halaman) lalu segarkan overlay
+        // + tombol hide-chord begitu siap.
+        const chordsWanted = (() => {
+          try {
+            const stored = localStorage.getItem("lyrics-show-chords");
+            if (stored !== null) return stored === "1";
+          } catch (_e) {}
+          return true; // default: chord aktif
         })();
-        // Tetap tunggu untuk sinkronisasi transpose UI, TAPI tidak menahan
-        // render halaman (render di-schedule setelah promise beres via
-        // refreshVisibleChordMarkers di dalam loadNoteChordConfiguration).
-        chordCfgPromise.catch(() => {});
+        let chordCfgPromise = Promise.resolve();
+        if (chordsWanted) {
+          if (typeof setChordStatus === "function") setChordStatus("loading");
+          chordCfgPromise = (async () => {
+            await loadChordConfigurationForSong(song);
+            if (_openPdfViewerGeneration !== thisOpenGeneration) return;
+            if (typeof loadNoteChordConfiguration === "function") {
+              pageNotesCache = {}; // Clear note cache for new song
+              await loadNoteChordConfiguration(song);
+              if (_openPdfViewerGeneration !== thisOpenGeneration) return;
+              if (hasNoteAlignedChords()) {
+                detectNoteAlignedFamilyChord();
+              }
+            }
+            if (typeof setChordStatus === "function") setChordStatus("ready");
+            // Chord siap — tampilkan tombol hide-chord & gambar overlay
+            if (typeof updateHideChordButton === "function") {
+              updateHideChordButton();
+            }
+            if (typeof refreshVisibleChordMarkers === "function") {
+              refreshVisibleChordMarkers();
+            }
+          })();
+          chordCfgPromise.catch(() => {
+            if (typeof setChordStatus === "function") setChordStatus("none");
+          });
+        } else {
+          // User mematikan chord - jangan load otomatis; tombol disembunyikan
+          if (typeof setChordStatus === "function") setChordStatus("off");
+        }
         currentPageNum = 1;
         currentViewMode =
           pdfDoc.numPages > 1 && prefs.defaultTwoPage ? "double" : "single";
@@ -584,9 +613,13 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       }
 
       updateViewerUI();
-      updateHideChordButton();
-      // Render halaman baru — konten lama masih tampil sampai wrapper baru
-      // siap; renderPage melakukan swap wrapper seketika saat selesai.
+      if (typeof updateHideChordButton === "function") updateHideChordButton();
+      // ── 3) Fade-IN: konten baru sudah siap dirender ──
+      // renderPage menukar wrapper seketika saat kanvas siap; animasi
+      // masuk: teks judul fade, box scaling-lebar (CSS: lhBoxIn).
+      void canvasWrapper.offsetWidth;
+      canvasWrapper.classList.remove("is-navigating");
+      songTitleWrapper.classList.remove("is-navigating");
       await renderPage(currentPageNum);
       if (_openPdfViewerGeneration !== thisOpenGeneration) return;
       updateSongNavButtons();

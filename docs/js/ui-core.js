@@ -2437,11 +2437,23 @@ function updateChordSettingsLabels() {
 }
 
 // --- Toggle Hide Chord ---
+// Status chord per lagu: "loading" | "ready" | "none" | "off" (preferensi user)
+let _chordStatus = "none";
+
 function onToggleChordsHidden() {
 	chordsHidden = !chordsHidden;
 	document.querySelectorAll(".chord-layer").forEach((layer) => {
 		layer.classList.toggle("is-hidden", chordsHidden);
 	});
+	// Simpan preferensi — dipakai openPdfViewer untuk memutuskan memuat chord
+	try {
+		localStorage.setItem("lyrics-show-chords", chordsHidden ? "0" : "1");
+	} catch (e) {}
+	updateHideChordButton();
+}
+
+function setChordStatus(status) {
+	_chordStatus = status;
 	updateHideChordButton();
 }
 
@@ -2450,19 +2462,29 @@ function updateHideChordButton() {
 	const hasOldChords = chordConfig && Object.keys(chordConfig.pages).length > 0;
 	const hasNewChords =
 		typeof hasNoteAlignedChords === "function" && hasNoteAlignedChords();
+	const loading = _chordStatus === "loading";
 	const shouldShow =
 		document.body.classList.contains("viewer-active") &&
-		(hasOldChords || hasNewChords);
+		(hasOldChords || hasNewChords || loading);
 
 	hideChordBtns.forEach((btn) => {
 		btn.style.display = shouldShow ? "" : "none";
+		btn.classList.toggle("is-loading", loading && !hasNewChords && !hasOldChords);
 		const icon = btn.querySelector(".material-symbols-outlined");
 		if (icon) {
-			icon.textContent = chordsHidden ? "music_off" : "music_note";
+			icon.textContent = loading && !hasNewChords && !hasOldChords
+				? "hourglass_top"
+				: chordsHidden
+					? "music_off"
+					: "music_note";
 		}
 		btn.setAttribute(
 			"aria-label",
-			chordsHidden ? "Tampilkan chord" : "Sembunyikan chord",
+			loading && !hasNewChords && !hasOldChords
+				? "Memuat chord..."
+				: chordsHidden
+					? "Tampilkan chord"
+					: "Sembunyikan chord",
 		);
 	});
 }
