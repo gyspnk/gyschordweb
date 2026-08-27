@@ -4397,13 +4397,12 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	color: var(--md-sys-color-primary);
 }
 
-/* ─── Header ringkas mode lirik: semua kontrol (teks + MIDI) ─── */
+/* ─── Header SATU BARIS mode lirik + area collapsible ─── */
 .lyrics-header {
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
-	gap: 3px;
-	padding: 6px 10px 5px;
+	padding: 5px 10px;
 	flex-shrink: 0;
 	border-bottom: 1px solid var(--md-sys-color-outline-variant);
 	background: color-mix(
@@ -4416,7 +4415,7 @@ body.lyrics-mode .pdf-viewer-page-controls {
 .lh-line {
 	display: flex;
 	align-items: center;
-	gap: 5px;
+	gap: 4px;
 	min-width: 0;
 	width: 100%;
 }
@@ -4424,6 +4423,34 @@ body.lyrics-mode .pdf-viewer-page-controls {
 .lh-title {
 	min-width: 0;
 	padding: 0 2px;
+}
+
+/* Baris utama tidak membesar — judul & kontrol menyesuaikan */
+.lh-main {
+	gap: 3px;
+}
+
+.lh-main .lh-title h2 {
+	font-size: 0.95rem;
+}
+
+/* Area collapsible: baris luar disembunyikan via max-height (animasi) */
+.lyrics-extra {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	max-height: 200px; /* cukup untuk 3 baris kontrol */
+	overflow: hidden;
+	opacity: 1;
+	transition: max-height 0.25s ease, opacity 0.2s ease, margin-top 0.25s ease;
+	margin-top: 4px;
+}
+
+.lyrics-header.is-collapsed .lyrics-extra {
+	max-height: 0;
+	opacity: 0;
+	margin-top: 0;
+	pointer-events: none;
 }
 
 /* Tanpa MIDI: sembunyikan baris transport + tuning */
@@ -4437,6 +4464,7 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	width: 27px;
 	height: 27px;
 	border-radius: 8px;
+	flex-shrink: 0;
 }
 
 .lyrics-hdr-btn .material-symbols-outlined {
@@ -4457,6 +4485,24 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	color: var(--md-sys-color-on-primary);
 	border-color: transparent;
 	flex-shrink: 0;
+}
+
+/* Tombol collapse berputar saat terbuka */
+.lyrics-collapse-btn .material-symbols-outlined {
+	transition: transform 0.25s ease;
+}
+
+.lyrics-header:not(.is-collapsed) .lyrics-collapse-btn .material-symbols-outlined {
+	transform: rotate(180deg);
+}
+
+/* Waktu di baris utama ringkas */
+.lh-main .lyrics-time-label {
+	min-width: 30px;
+	font-size: 0.68rem;
+	color: var(--md-sys-color-on-surface-variant);
+	flex-shrink: 0;
+	font-variant-numeric: tabular-nums;
 }
 
 /* Transport inline (bukan baris penuh) */
@@ -4502,21 +4548,23 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	font-size: 0.72rem;
 }
 
-.lyrics-header .lyrics-verse-indicator {
-	min-width: 0;
-	font-size: 0.7rem;
-	margin: 0 2px;
-	white-space: nowrap;
+/* Baris teks & media rata kiri rapat */
+.lh-textline,
+.lh-media {
+	gap: 4px;
 }
 
-.lyrics-verse-group {
-	margin-left: auto; /* nav bait menempel di ujung kanan */
+.lh-textline {
+	justify-content: flex-start;
+}
+
+.lh-media .lyrics-midi-seek {
+	flex: 1;
 }
 
 @media (max-width: 420px) {
 	.lyrics-header {
-		gap: 2px;
-		padding: 5px 8px 4px;
+		padding: 4px 7px;
 	}
 	.lh-line {
 		gap: 3px;
