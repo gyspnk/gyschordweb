@@ -167,20 +167,10 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   }
 
   if (!_canReuseDoc) {
-    // Animate title/canvas only when actually switching content.
-    // Delay dibuat sangat pendek — cukup untuk mencegah flicker lintas-
-    // navigasi, tanpa membuat buka PDF terasa lambat. PDF yang sudah
-    // ter-cache (decoded/prefetch) langsung render tanpa jeda.
-    songTitleWrapper.classList.add("is-navigating");
-    canvasWrapper.classList.add("is-navigating");
-    const navDelayMs = _earlyTargetIsPreloaded || _cachedDoc ? 0 : 40;
-    if (navDelayMs > 0) {
-      await new Promise((resolve) => setTimeout(resolve, navDelayMs));
-    }
-
-    // Abort if a newer navigation started during the animation delay.
-    // This prevents multiple rapid prev/next presses from concurrently
-    // corrupting shared MIDI/PDF state.
+    // SEAMLESS: JANGAN fade-out konten lama di awal navigasi. Konten lama
+    // tetap tampil sampai halaman baru siap, lalu diganti seketika (swap).
+    // Ini menghilangkan kesan "hilang → muncul" dan keskip nomor lagu.
+    // Abort if a newer navigation started.
     if (_openPdfViewerGeneration !== thisOpenGeneration) {
       if (loadingTask) {
         try { loadingTask.destroy(); } catch (_err) {}
@@ -191,9 +181,6 @@ async function openPdfViewer(songId, backgroundLoad = false) {
 
   pdfViewerTitle.textContent = song.judul;
   pdfViewerNumber.textContent = `No. ${song.nomor}`;
-  if (!_canReuseDoc) {
-    songTitleWrapper.classList.remove("is-navigating");
-  }
   fitViewerTitle();
 
   if (!backgroundLoad && !document.body.classList.contains("viewer-active")) {
@@ -569,17 +556,24 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       });
 
       if (!isSameSong) {
-        await loadChordConfigurationForSong(song);
-        if (_openPdfViewerGeneration !== thisOpenGeneration) return;
-        // Also load note-aligned chord config
-        if (typeof loadNoteChordConfiguration === "function") {
-          pageNotesCache = {}; // Clear note cache for new song
-          await loadNoteChordConfiguration(song);
+        // Chord config dimuat PARALEL dengan persiapan render — tidak
+        // memblokir tampilnya halaman. Overlay chord menyusul begitu siap.
+        const chordCfgPromise = (async () => {
+          await loadChordConfigurationForSong(song);
           if (_openPdfViewerGeneration !== thisOpenGeneration) return;
-          if (hasNoteAlignedChords()) {
-            detectNoteAlignedFamilyChord();
+          if (typeof loadNoteChordConfiguration === "function") {
+            pageNotesCache = {}; // Clear note cache for new song
+            await loadNoteChordConfiguration(song);
+            if (_openPdfViewerGeneration !== thisOpenGeneration) return;
+            if (hasNoteAlignedChords()) {
+              detectNoteAlignedFamilyChord();
+            }
           }
-        }
+        })();
+        // Tetap tunggu untuk sinkronisasi transpose UI, TAPI tidak menahan
+        // render halaman (render di-schedule setelah promise beres via
+        // refreshVisibleChordMarkers di dalam loadNoteChordConfiguration).
+        chordCfgPromise.catch(() => {});
         currentPageNum = 1;
         currentViewMode =
           pdfDoc.numPages > 1 && prefs.defaultTwoPage ? "double" : "single";
@@ -591,12 +585,8 @@ async function openPdfViewer(songId, backgroundLoad = false) {
 
       updateViewerUI();
       updateHideChordButton();
-      // Angkat fade SEBELUM render halaman pertama: halaman digambar di atas
-      // wrapper yang sudah terlihat (render progresif), jadi pengguna melihat
-      // konten secepat kanvas siap — tanpa layar kosong selama render berat.
-      void canvasWrapper.offsetWidth;
-      canvasWrapper.classList.remove("is-navigating");
-      songTitleWrapper.classList.remove("is-navigating");
+      // Render halaman baru — konten lama masih tampil sampai wrapper baru
+      // siap; renderPage melakukan swap wrapper seketika saat selesai.
       await renderPage(currentPageNum);
       if (_openPdfViewerGeneration !== thisOpenGeneration) return;
       updateSongNavButtons();
