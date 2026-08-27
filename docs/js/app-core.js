@@ -76,6 +76,231 @@ if (pdfjsLib) {
   pdfjsLib.verbosity = pdfjsLib.VerbosityLevel.ERRORS;
 }
 
+/* SOURCE: 01a-data-cache.js */
+// --- Cache persisten data JSON (IndexedDB) ---
+// Daftar pujian, daftar chord, dan seluruh lirik disimpan ke IndexedDB
+// sehingga tetap tersedia saat offline / saat app dibuka lagi, serta
+// otomatis diperbarui di latar belakang (stale-while-revalidate) tanpa
+// perlu tombol update manual.
+const GYS_DATA_CACHE_DB = "gys-data-cache";
+const GYS_DATA_CACHE_STORE = "kv";
+const GYS_JSON_REVALIDATE_MS = 30000;
+const GYS_DATA_UPDATED_EVENT = "gys-data-updated";
+
+var _gysDataCacheDbPromise = null;
+var _gysJsonRefreshState = {}; // cacheKey -> { startedAt, promise }
+
+function openGysDataCacheDb() {
+  if (!globalThis.indexedDB) return Promise.reject(new Error("IndexedDB tidak tersedia"));
+  if (!_gysDataCacheDbPromise) {
+    _gysDataCacheDbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(GYS_DATA_CACHE_DB, 1);
+      req.onupgradeneeded = (event) => {
+        event.target.result.createObjectStore(GYS_DATA_CACHE_STORE);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+      req.onblocked = () => reject(new Error("IndexedDB terblokir"));
+    });
+    _gysDataCacheDbPromise.catch(() => {
+      _gysDataCacheDbPromise = null;
+    });
+  }
+  return _gysDataCacheDbPromise;
+}
+
+function gysDataCacheGet(key) {
+  return openGysDataCacheDb().then(
+    (db) =>
+      new Promise((resolve, reject) => {
+        let tx;
+        try {
+          tx = db.transaction(GYS_DATA_CACHE_STORE, "readonly");
+        } catch (e) {
+          reject(e);
+          return;
+        }
+        const req = tx.objectStore(GYS_DATA_CACHE_STORE).get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      })
+  );
+}
+
+function gysDataCacheSet(key, value) {
+  return openGysDataCacheDb().then(
+    (db) =>
+      new Promise((resolve, reject) => {
+        let tx;
+        try {
+          tx = db.transaction(GYS_DATA_CACHE_STORE, "readwrite");
+        } catch (e) {
+          reject(e);
+          return;
+        }
+        tx.objectStore(GYS_DATA_CACHE_STORE).put(value, key);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      })
+  );
+}
+
+function gysStableStringify(value) {
+  try {
+    return JSON.stringify(value);
+  } catch (e) {
+    return null;
+  }
+}
+
+// Ambil versi terbaru dari jaringan sekali (di-dedup dalam jendela waktu
+// singkat), simpan ke IndexedDB, dan umumkan lewat event bila datanya berubah.
+function gysFetchJsonCached(cacheKey, url) {
+  const state = (_gysJsonRefreshState[cacheKey] =
+    _gysJsonRefreshState[cacheKey] || {});
+  const now = Date.now();
+  if (state.promise && now - (state.startedAt || 0) < GYS_JSON_REVALIDATE_MS) {
+    return state.promise;
+  }
+  state.startedAt = now;
+  state.promise = (async () => {
+    let cached = null;
+    try {
+      cached = await gysDataCacheGet(cacheKey);
+    } catch (e) {}
+    let fresh = null;
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (res.ok) fresh = await res.json();
+    } catch (e) {}
+    if (fresh != null) {
+      const changed = gysStableStringify(fresh) !== gysStableStringify(cached);
+      if (changed) {
+        gysDataCacheSet(cacheKey, fresh).catch(() => {});
+        if (cached != null && typeof window !== "undefined") {
+          try {
+            window.dispatchEvent(
+              new CustomEvent(GYS_DATA_UPDATED_EVENT, {
+                detail: { key: cacheKey, data: fresh },
+              })
+            );
+          } catch (e) {}
+        }
+      }
+      return fresh;
+    }
+    return cached != null ? cached : [];
+  })();
+  // Hindari unhandled rejection bila pemanggil tak menunggu promise ini
+  state.promise.catch(() => {});
+  return state.promise;
+}
+
+// Konsumsi data JSON dengan cache persisten: callback pertama menerima data
+// dari cache (instan, bisa lebih dari sekali jika data terbarui), lalu
+// pembaruan dari jaringan dikirim lagi ke callback yang sama.
+function gysUseCachedJson(cacheKey, url, onData) {
+  let deliveredJson = null;
+  const deliver = (data) => {
+    if (data == null) return;
+    const json = gysStableStringify(data);
+    if (deliveredJson !== null && json === deliveredJson) return;
+    deliveredJson = json;
+    try {
+      onData(data);
+    } catch (e) {}
+  };
+  gysDataCacheGet(cacheKey)
+    .then((cached) => {
+      if (cached != null) deliver(cached);
+      return gysFetchJsonCached(cacheKey, url).then(deliver);
+    })
+    .catch(() => gysFetchJsonCached(cacheKey, url).then(deliver).catch(() => {}));
+}
+
+// Loader lirik bersama — dipakai viewer PDF maupun lyrics-viewer standalone.
+function gysLoadLyricsData(onData) {
+  gysUseCachedJson("assets-lyrics", "assets-lyrics.json", (data) => {
+    if (typeof onData === "function") onData(Array.isArray(data) ? data : []);
+  });
+}
+
+// --- Indeks pencarian lirik ---
+let _pujianLyricsSource = null;
+let _pujianLyricIndex = null;
+
+function getPujianLyricIndex() {
+  if (_pujianLyricIndex) return _pujianLyricIndex;
+  _pujianLyricIndex = new Map();
+  if (Array.isArray(_pujianLyricsSource)) {
+    _pujianLyricsSource.forEach((entry) => {
+      if (!entry) return;
+      const numKey =
+        String(entry.number == null ? "" : entry.number).replace(/^0+/, "") || "?";
+      const parts = [entry.number, entry.title];
+      if (Array.isArray(entry.verses)) {
+        for (const verse of entry.verses) parts.push(verse);
+      }
+      _pujianLyricIndex.set(numKey, normalizeLyricSearchText(parts.join("\n")));
+    });
+  }
+  return _pujianLyricIndex;
+}
+
+function normalizeLyricSearchText(text) {
+  return String(text == null ? "" : text)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ");
+}
+
+// Indeks pencarian lirik dibangun ulang saat lirik tersedia/diperbarui.
+// Event ini memberi tahu UI bahwa indeks lirik siap dipakai lagi.
+const GYS_LYRICS_READY_EVENT = "gys-lyrics-ready";
+
+function gysPrimeLyricsForSearch() {
+  gysLoadLyricsData((data) => {
+    _pujianLyricsSource = data;
+    _pujianLyricIndex = null; // bangun ulang pada akses berikutnya
+    try {
+      window.dispatchEvent(
+        new CustomEvent(GYS_LYRICS_READY_EVENT, { detail: { key: "assets-lyrics" } })
+      );
+    } catch (e) {}
+  });
+}
+
+// Saat lirik/daftar diperbarui di latar belakang, bangun ulang indeks dan
+// segarkan hasil filter pencarian yang sedang aktif.
+function refilterPujianIfSearching() {
+  try {
+    if (
+      typeof searchInput !== "undefined" &&
+      searchInput &&
+      searchInput.value &&
+      searchInput.value.trim() &&
+      typeof filterPujianList === "function"
+    ) {
+      filterPujianList();
+    }
+  } catch (err) {}
+}
+
+window.addEventListener(GYS_DATA_UPDATED_EVENT, (e) => {
+  const detail = e.detail || {};
+  if (detail.key === "assets-lyrics") {
+    _pujianLyricsSource = Array.isArray(detail.data)
+      ? detail.data
+      : _pujianLyricsSource;
+    _pujianLyricIndex = null;
+    refilterPujianIfSearching();
+  }
+});
+
+window.addEventListener(GYS_LYRICS_READY_EVENT, () => {
+  refilterPujianIfSearching();
+});
+
 const EDITOR_STORAGE_KEY = "chord-editor-enabled";
 const CHORD_UI_STORAGE_KEY = "chord-ui-prefs";
 const CHORD_ACCIDENTAL_STORAGE_KEY = "chord-accidental-mode";
@@ -1687,56 +1912,67 @@ function navigateTo(page) {
   }
 }
 
+function applyPujianData(files, chordFiles) {
+  if (!Array.isArray(files)) {
+    console.error("Error memuat daftar pujian:", new Error("Format data tidak valid"));
+    mainContent.innerHTML =
+      '<p class="welcome-text">Gagal memuat daftar pujian.</p>';
+    return false;
+  }
+  // Build chord availability Set from base filenames
+  chordAvailableSet = new Set(
+    Array.isArray(chordFiles) ? chordFiles.map((c) => String(c).toLowerCase()) : []
+  );
+  pujianItems = files.map((file, index) => {
+    const rawName = decodeURIComponent(String(file).replace(".pdf", ""));
+    const match = rawName.match(/^([0-9A-Za-z]+)[_.\s]*(.*)$/);
+    return {
+      id: index,
+      nomor: match ? match[1] : "?",
+      judul: match ? match[2].replace(/_/g, " ") : rawName.replace(/_/g, " "),
+      fileHref: `assets/pdf/${file}`,
+      fileBase: rawName
+    };
+  });
+  displayPujian(pujianItems);
+
+  // Auto-load last played song or first song (001) into miniplayer on first boot
+  if (typeof currentSongIndex !== 'undefined' && currentSongIndex === -1 && pujianItems.length > 0) {
+    let lastSongStr = localStorage.getItem('GysLastPlayedSongIndex');
+    let initialSongIndex = 0; // Default to 001
+    if (lastSongStr !== null) {
+      let parsed = parseInt(lastSongStr, 10);
+      if (!isNaN(parsed) && parsed >= 0 && parsed < pujianItems.length) {
+        initialSongIndex = parsed;
+      }
+    }
+    if (typeof openPdfViewer === 'function') {
+      openPdfViewer(initialSongIndex, true);
+    }
+  }
+  return true;
+}
+
 function renderPujianList() {
   if (pujianItems.length > 0) {
     displayPujian(pujianItems);
     return;
   }
 
-  // Fetch both PDF list and chord list in parallel
-  Promise.all([
-    fetch("assets-list.json").then((r) => (r.ok ? r.json() : Promise.reject("Gagal memuat daftar pujian"))),
-    fetch("assets-chord-list.json").then((r) => (r.ok ? r.json() : [])).catch(() => [])
-  ])
-    .then(([files, chordFiles]) => {
-      if (!Array.isArray(files)) {
-        throw new Error("Format data tidak valid");
-      }
-      // Build chord availability Set from base filenames
-      chordAvailableSet = new Set(
-        Array.isArray(chordFiles) ? chordFiles.map((c) => c.toLowerCase()) : []
-      );
-      pujianItems = files.map((file, index) => {
-        const rawName = decodeURIComponent(file.replace(".pdf", ""));
-        const match = rawName.match(/^([0-9A-Za-z]+)[_.\s]*(.*)$/);
-        return {
-          id: index,
-          nomor: match ? match[1] : "?",
-          judul: match ? match[2].replace(/_/g, " ") : rawName.replace(/_/g, " "),
-          fileHref: `assets/pdf/${file}`,
-          fileBase: rawName
-        };
-      });        displayPujian(pujianItems);
-        
-        // Auto-load last played song or first song (001) into miniplayer on first boot
-        if (typeof currentSongIndex !== 'undefined' && currentSongIndex === -1 && pujianItems.length > 0) {
-            let lastSongStr = localStorage.getItem('GysLastPlayedSongIndex');
-            let initialSongIndex = 0; // Default to 001
-            if (lastSongStr !== null) {
-                let parsed = parseInt(lastSongStr, 10);
-                if (!isNaN(parsed) && parsed >= 0 && parsed < pujianItems.length) {
-                    initialSongIndex = parsed;
-                }
-            }
-            if (typeof openPdfViewer === 'function') {
-                openPdfViewer(initialSongIndex, true);
-            }
-        }
-      })
-    .catch((error) => {
-      console.error("Error memuat daftar pujian:", error);
-      mainContent.innerHTML = '<p class="welcome-text">Gagal memuat daftar pujian.</p>';
-    });
+  // Muat dari cache persisten (instan / offline), lalu segarkan otomatis.
+  const pending = { files: undefined, chords: undefined };
+  const settle = () => {
+    if (pending.files === undefined) return;
+    applyPujianData(pending.files, pending.chords);
+  };
+  gysUseCachedJson("assets-list", "assets-list.json", (data) => {
+    pending.files = data;
+    settle();
+  });
+  gysUseCachedJson("assets-chord-list", "assets-chord-list.json", (data) => {
+    pending.chords = data;
+    settle();
+  });
 }
 
 function displayPujian(items) {

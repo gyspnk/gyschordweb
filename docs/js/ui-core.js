@@ -107,23 +107,47 @@ async function init() {
 }
 
 /**
- * App update detection — checks if the service worker has a newer version.
- * Shows a non-intrusive banner if an update is available.
+ * App update detection — otomatis. Saat versi baru terdeteksi (service
+ * worker baru aktif / versi SW berubah), pembaruan langsung dijalankan
+ * tanpa perlu menekan tombol apa pun: tampil loading bar "Updating…",
+ * cache dibersihkan, lalu halaman di-reload.
  */
+var _gysAutoUpdateStarted = false;
+var _gysHadServiceWorkerController =
+	typeof navigator !== "undefined" &&
+	navigator.serviceWorker &&
+	!!navigator.serviceWorker.controller;
+// Versi build yang tertanam di bundle ini — pembanding utama vs versi SW
+const GYS_CLIENT_BUILD = "3.8.27";
+
 function checkForAppUpdate() {
 	if (!("serviceWorker" in navigator)) return;
 
-	const APP_VERSION_KEY = "gys-app-version";
-	const savedVersion = localStorage.getItem(APP_VERSION_KEY);
+	// Service worker baru mengambil alih halaman yang sedang berjalan → update.
+	navigator.serviceWorker.addEventListener("controllerchange", () => {
+		if (_gysHadServiceWorkerController) {
+			beginAppUpdate();
+		} else {
+			_gysHadServiceWorkerController = true;
+		}
+	});
+
+	document.addEventListener("visibilitychange", () => {
+		if (document.visibilityState === "visible") {
+			navigator.serviceWorker.ready
+				.then((registration) => registration.update())
+				.catch(() => {});
+		}
+	});
 
 	navigator.serviceWorker.ready.then((registration) => {
-		// Listen for new service worker installing
+		// Listen for new service worker installing (bukan installasi pertama)
 		registration.addEventListener("updatefound", () => {
 			const newWorker = registration.installing;
 			if (!newWorker) return;
 			newWorker.addEventListener("statechange", () => {
-				if (newWorker.state === "activated") {
-					showUpdateBanner();
+				if (newWorker.state === "activated" && _gysHadServiceWorkerController) {
+					beginAppUpdate();
 				}
 			});
 		});
@@ -134,10 +158,12 @@ function checkForAppUpdate() {
 			msgChannel.port1.onmessage = (event) => {
 				if (event.data && event.data.type === "VERSION") {
 					var swVersion = event.data.version;
-					if (savedVersion && savedVersion !== swVersion) {
-						showUpdateBanner();
+					// Versi SW beda dengan build klien → jalankan pembaruan otomatis.
+					if (swVersion && swVersion !== GYS_CLIENT_BUILD) {
+						beginAppUpdate(swVersion);
+						return;
 					}
-					localStorage.setItem(APP_VERSION_KEY, swVersion);
+					localStorage.setItem("gys-app-version", swVersion);
 				}
 			};
 			registration.active.postMessage({ type: "GET_VERSION" }, [
@@ -145,79 +171,123 @@ function checkForAppUpdate() {
 			]);
 		}
 
-		// Check for updates (non-blocking)
-		registration.update().catch(() => {});
+		// Check for updates (non-blocking), berkala tiap 5 menit
+		var pollForUpdate = () => registration.update().catch(() => {});
+		pollForUpdate();
+		setInterval(pollForUpdate, 5 * 60 * 1000);
 	});
 }
 
-function showUpdateBanner() {
-	// Don't show duplicate banners
-	if (document.getElementById("update-banner")) return;
+/**
+ * Jalankan pembaruan secara otomatis: tampilkan loading bar "Updating…",
+ * bersihkan cache via service worker (dan localStorage kecuali data
+ * playlist), lalu reload setelah service worker selesai / timeout.
+ */
+function beginAppUpdate(version) {
+	if (_gysAutoUpdateStarted) return;
+	_gysAutoUpdateStarted = true;
+	try {
+		localStorage.setItem("gys-app-version", version || "");
+	} catch (e) {}
+	showUpdatingOverlay();
 
-	var banner = document.createElement("div");
-	banner.id = "update-banner";
-	banner.className = "update-banner-content";
-	var icon = document.createElement("span");
-	icon.className = "material-symbols-outlined update-banner-icon";
-	icon.textContent = "system_update";
-	var text = document.createElement("div");
-	text.className = "update-banner-text";
-	var title = document.createElement("strong");
-	title.textContent = "Pembaruan Tersedia";
-	var desc = document.createElement("span");
-	desc.textContent =
-		"Versi baru telah tersedia. Perbarui untuk pengalaman terbaik.";
-	text.append(title, desc);
-	var btn = document.createElement("button");
-	btn.id = "update-banner-btn";
-	btn.className = "update-banner-action";
-	btn.type = "button";
-	btn.textContent = "Perbarui";
-	var dismiss = document.createElement("button");
-	dismiss.id = "update-banner-dismiss";
-	dismiss.className = "update-banner-dismiss";
-	dismiss.type = "button";
-	dismiss.textContent = "\u00d7";
-	banner.append(icon, text, btn, dismiss);
-	document.body.appendChild(banner);
-
-	// Animate in
-	requestAnimationFrame(() => {
-		banner.classList.add("is-visible");
-	});
-
-	document.getElementById("update-banner-btn").addEventListener("click", () => {
-		// Preserve playlists before clearing
-		var playlistData = localStorage.getItem("playlists");
-		var activePlaylist = localStorage.getItem("active-playlist-id");
-
-		// Ask SW to clear all caches
-		if (navigator.serviceWorker.controller) {
-			navigator.serviceWorker.controller.postMessage({ type: "CLEAR_CACHE" });
-		}
-
-		// Clear localStorage except playlists
-		var keysToKeep = {};
-		if (playlistData) keysToKeep["playlists"] = playlistData;
-		if (activePlaylist) keysToKeep["active-playlist-id"] = activePlaylist;
-
-		localStorage.clear();
-		Object.keys(keysToKeep).forEach((k) => {
-			localStorage.setItem(k, keysToKeep[k]);
-		});
-
-		// Hard reload
+	var reloadDone = false;
+	var doReload = function () {
+		if (reloadDone) return;
+		reloadDone = true;
+		try {
+			// Pertahankan playlist saat membersihkan localStorage
+			var keysToKeep = {};
+			[
+				"kidung_playlists",
+				"kidung_active_playlist",
+				"kidung_autonext_mode",
+				"playlists",
+				"active-playlist-id",
+			].forEach((k) => {
+				var v = localStorage.getItem(k);
+				if (v !== null) keysToKeep[k] = v;
+			});
+			localStorage.clear();
+			Object.keys(keysToKeep).forEach((k) => {
+				localStorage.setItem(k, keysToKeep[k]);
+			});
+		} catch (e) {}
 		window.location.reload(true);
+	};
+
+	// Minta service worker membersihkan semua cache, reload saat selesai
+	try {
+		if (navigator.serviceWorker.controller) {
+			var msgChannel = new MessageChannel();
+			msgChannel.port1.onmessage = (event) => {
+				if (event.data && event.data.type === "CACHE_CLEARED") {
+					setTimeout(doReload, 150);
+				}
+			};
+			navigator.serviceWorker.controller.postMessage(
+				{ type: "CLEAR_CACHE" },
+				[msgChannel.port2],
+			);
+		}
+	} catch (e) {}
+
+	// Jaring pengaman: reload tetap terjadi walau service worker tak menjawab
+	setTimeout(doReload, 3000);
+}
+
+/**
+ * Loading bar layar penuh bertuliskan "Updating…" selama pembaruan otomatis.
+ */
+function showUpdatingOverlay() {
+	var existing = document.getElementById("app-updating-overlay");
+	if (existing) return existing;
+
+	var style = document.createElement("style");
+	style.id = "app-updating-overlay-style";
+	style.textContent = [
+		"#app-updating-overlay{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:#faf8f4;opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}",
+		"#app-updating-overlay.is-visible{opacity:1;visibility:visible}",
+		".app-updating-inner{display:flex;flex-direction:column;align-items:center;gap:18px}",
+		".app-updating-icon{font-size:44px;width:44px;height:44px;color:#8d6e3f;animation:app-updating-spin 1.6s linear infinite;overflow:hidden}",
+		"@keyframes app-updating-spin{to{transform:rotate(360deg)}}",
+		".app-updating-bar{width:168px;height:5px;border-radius:999px;background:rgba(141,110,63,.18);overflow:hidden}",
+		".app-updating-bar-fill{height:100%;width:0%;border-radius:999px;background:#8d6e3f;transition:width .35s ease}",
+		".app-updating-label{font-size:.85rem;letter-spacing:.08em;color:rgba(60,50,40,.55);font-variant-numeric:tabular-nums}",
+		"@media (prefers-color-scheme:dark){#app-updating-overlay{background:#1a1714}.app-updating-icon{color:#c9a227}.app-updating-bar{background:rgba(201,162,39,.22)}.app-updating-bar-fill{background:#c9a227}.app-updating-label{color:rgba(235,225,210,.55)}}",
+	].join("");
+	document.head.appendChild(style);
+
+	var overlay = document.createElement("div");
+	overlay.id = "app-updating-overlay";
+	overlay.setAttribute("role", "status");
+	overlay.setAttribute("aria-label", "Updating");
+	overlay.innerHTML =
+		'<div class="app-updating-inner">' +
+		'<span class="material-symbols-outlined app-updating-icon">system_update</span>' +
+		'<div class="app-updating-bar"><div class="app-updating-bar-fill"></div></div>' +
+		'<div class="app-updating-label">Updating\u2026</div>' +
+		"</div>";
+	document.body.appendChild(overlay);
+
+	requestAnimationFrame(() => {
+		overlay.classList.add("is-visible");
 	});
 
-	document
-		.getElementById("update-banner-dismiss")
-		.addEventListener("click", () => {
-			banner.classList.remove("is-visible");
-			setTimeout(() => {
-				banner.remove();
-			}, 300);
-		});
+	// Bar merayap seperti loading screen awal (maksimum 88% sampai reload)
+	var fill = overlay.querySelector(".app-updating-bar-fill");
+	var progress = 0;
+	overlay._creepTimer = setInterval(function () {
+		if (!document.body.contains(overlay)) {
+			clearInterval(overlay._creepTimer);
+			return;
+		}
+		if (progress < 88) {
+			progress += 2;
+			fill.style.width = progress + "%";
+		}
+	}, 150);
+	return overlay;
 }
 
 /* SOURCE: 09-ui-helpers.js */
@@ -2051,18 +2121,49 @@ function clearSearch() {
 	handleSearch();
 }
 
+var _pujianLyricsPrimed = false;
+
+// Minta indeks lirik dibangun (sekali saja). Saat siap, event
+// gys-lyrics-ready akan memicu refilter otomatis dari app-core.
+function primeLyricsForSearch() {
+	if (_pujianLyricsPrimed) return;
+	_pujianLyricsPrimed = true;
+	if (typeof gysPrimeLyricsForSearch === "function") {
+		gysPrimeLyricsForSearch();
+	}
+}
+
 function filterPujianList() {
 	const query = searchInput.value.trim().toLowerCase();
 	const keywords = query.split(/\s+/).filter(Boolean);
 	const listElement = document.getElementById("pujian-list");
 	if (!listElement) return;
 
+	let lyricIndex = null;
+	if (keywords.length) {
+		primeLyricsForSearch();
+		lyricIndex =
+			typeof getPujianLyricIndex === "function" ? getPujianLyricIndex() : null;
+	}
+
 	Array.from(listElement.children).forEach((li) => {
 		const nomor = li.dataset.nomor || "";
 		const judul = li.dataset.judul || "";
-		const isMatch = keywords.every(
-			(kw) => nomor.includes(kw) || judul.includes(kw),
-		);
+		let lyricHaystack = "";
+		if (lyricIndex) {
+			lyricHaystack =
+				lyricIndex.get(nomor.replace(/^0+/, "") || "?") || "";
+		}
+		const isMatch = keywords.every((kw) => {
+			const token = normalizeLyricSearchText
+				? normalizeLyricSearchText(kw)
+				: kw;
+			return (
+				nomor.includes(kw) ||
+				judul.includes(kw) ||
+				(!!token && lyricHaystack.includes(token))
+			);
+		});
 		li.style.display = isMatch ? "flex" : "none";
 	});
 	fitListTitles();

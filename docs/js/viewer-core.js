@@ -3429,7 +3429,11 @@ function toggleLyricsView() {
     hideLyricsView();
   } else {
     if (!lyricsData) {
-      fetch(getLyricsUrl()).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }).then(function (data) { lyricsData = data; showLyricsView(); });
+      (typeof gysLoadLyricsData === "function"
+        ? gysLoadLyricsData
+        : function (cb) { fetch(getLyricsUrl()).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }).then(cb); })(
+        function (data) { lyricsData = data; showLyricsView(); }
+      );
     } else {
       showLyricsView();
     }
@@ -3457,6 +3461,10 @@ function injectLyricsToggleButton() {
 
 function preloadLyricsData() {
   if (lyricsData) return;
+  if (typeof gysLoadLyricsData === "function") {
+    gysLoadLyricsData(function (data) { lyricsData = data; });
+    return;
+  }
   fetch(getLyricsUrl()).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }).then(function (data) { lyricsData = data; });
 }
 
@@ -3472,7 +3480,11 @@ openPdfViewer = async function(songId, backgroundLoad) {
       // Restore lyrics view if it was active before song change
       if (wasActive || lyricsViewWasActive) {
         if (!lyricsData) {
-          fetch(getLyricsUrl()).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }).then(function (data) { lyricsData = data; showLyricsView(); });
+          (typeof gysLoadLyricsData === "function"
+            ? gysLoadLyricsData
+            : function (cb) { fetch(getLyricsUrl()).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }).then(cb); })(
+            function (data) { lyricsData = data; showLyricsView(); }
+          );
         } else {
           showLyricsView();
         }

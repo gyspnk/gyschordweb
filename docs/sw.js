@@ -1,5 +1,5 @@
-const CACHE_NAME = "gys-cache-v80";
-const APP_VERSION = "3.8.26";
+const CACHE_NAME = "gys-cache-v81";
+const APP_VERSION = "3.8.27";
 
 self.addEventListener("install", (_event) => {
 	self.skipWaiting();
@@ -24,7 +24,21 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("message", (event) => {
 	if (event.data && event.data.type === "GET_VERSION") {
-		event.source.postMessage({ type: "VERSION", version: APP_VERSION });
+		// Balas lewat port MessageChannel bila ada, dan tetap ke
+		// event.source demi kompatibilitas dengan pola lama.
+		if (event.ports && event.ports[0]) {
+			try {
+				event.ports[0].postMessage({
+					type: "VERSION",
+					version: APP_VERSION,
+				});
+			} catch (_) {}
+		}
+		if (event.source) {
+			try {
+				event.source.postMessage({ type: "VERSION", version: APP_VERSION });
+			} catch (_) {}
+		}
 	}
 	if (event.data && event.data.type === "CLEAR_CACHE") {
 		caches
@@ -33,7 +47,18 @@ self.addEventListener("message", (event) => {
 				return Promise.all(cacheNames.map((name) => caches.delete(name)));
 			})
 			.then(() => {
-				event.source.postMessage({ type: "CACHE_CLEARED" });
+				// Balas lewat MessageChannel port bila ada (auto-update),
+				// dan tetap ke event.source demi kompatibilitas.
+				if (event.ports && event.ports[0]) {
+					try {
+						event.ports[0].postMessage({ type: "CACHE_CLEARED" });
+					} catch (_) {}
+				}
+				if (event.source) {
+					try {
+						event.source.postMessage({ type: "CACHE_CLEARED" });
+					} catch (_) {}
+				}
 			});
 	}
 });

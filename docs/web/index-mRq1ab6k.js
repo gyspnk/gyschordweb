@@ -11737,7 +11737,7 @@ const e0 = `\uFEFF<header class="app-header">\r
       <input\r
         id="search-input"\r
         type="text"\r
-        placeholder="Cari judul atau nomor..."\r
+        placeholder="Cari judul, nomor, atau lirik..."\r
         autocomplete="off"\r
       />\r
       <button\r
@@ -12600,8 +12600,8 @@ const e0 = `\uFEFF<header class="app-header">\r
     </div>\r
 `,
 	Us = "https://mozilla.github.io/pdf.js/build/pdf.mjs",
-	_s = "./js/app.bundle.min.js?v=19",
-	i0 = "./sw.min.js?v=14";
+	_s = "./js/app.bundle.min.js?v=22",
+	i0 = "./sw.min.js?v=15";
 let cn = null;
 const hu = new Map();
 function Hs({ id: l, src: a, type: t = "text/javascript" }) {

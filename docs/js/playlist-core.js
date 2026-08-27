@@ -1312,10 +1312,18 @@ async function ensurePujianItemsForPlaylist() {
     return pujianItems;
   }
 
-  const response = await fetch("assets-list.json");
-  if (!response.ok) throw new Error("Gagal memuat daftar pujian");
-  const files = await response.json();
-  if (!Array.isArray(files)) throw new Error("Format daftar pujian tidak valid");
+  // Pakai cache persisten bila tersedia (bisa offline), fallback ke fetch biasa.
+  let files = null;
+  if (typeof gysFetchJsonCached === "function") {
+    files = await gysFetchJsonCached("assets-list", "assets-list.json");
+  } else {
+    const response = await fetch("assets-list.json");
+    if (!response.ok) throw new Error("Gagal memuat daftar pujian");
+    files = await response.json();
+  }
+  if (!Array.isArray(files) || files.length === 0) {
+    throw new Error("Gagal memuat daftar pujian");
+  }
 
   pujianItems = files.map((file, index) => {
     const rawName = decodeURIComponent(file.replace(".pdf", ""));

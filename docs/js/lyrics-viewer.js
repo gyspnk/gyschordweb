@@ -1973,6 +1973,17 @@
 		syncLyricsToggleButtons();
 	};
 
+	function loadLyricsDataCached(cb) {
+		if (typeof window.gysLoadLyricsData === "function") {
+			window.gysLoadLyricsData(cb);
+			return;
+		}
+		fetch("assets-lyrics.json")
+			.then((r) => (r.ok ? r.json() : []))
+			.catch(() => [])
+			.then(cb);
+	}
+
 	function toggleLyricsView() {
 		if (lyricsViewActive) {
 			window.hideLyricsView();
@@ -1980,13 +1991,10 @@
 			if (lyricsData) {
 				showLyricsView();
 			} else {
-				fetch("assets-lyrics.json")
-					.then((r) => (r.ok ? r.json() : []))
-					.catch(() => [])
-					.then((data) => {
-						lyricsData = data;
-						showLyricsView();
-					});
+				loadLyricsDataCached((data) => {
+					lyricsData = data;
+					showLyricsView();
+				});
 			}
 		}
 	}
@@ -2096,14 +2104,11 @@
 					if (lyricsData) {
 						_updateLyricsContentAfterSongChange();
 					} else {
-						fetch("assets-lyrics.json")
-							.then((r) => (r.ok ? r.json() : []))
-							.catch(() => [])
-							.then((data) => {
-								lyricsData = data;
-								currentSongIndex = parseInt(songId, 10);
-								_updateLyricsContentAfterSongChange();
-							});
+						loadLyricsDataCached((data) => {
+							lyricsData = data;
+							currentSongIndex = parseInt(songId, 10);
+							_updateLyricsContentAfterSongChange();
+						});
 					}
 				}
 				// In lyrics mode, skip full PDF render — audio + lyrics is enough.
