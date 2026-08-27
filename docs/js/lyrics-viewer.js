@@ -1031,6 +1031,72 @@
 		bar.className = "lyrics-midi-bar";
 		bar.id = "lyrics-midi-bar";
 
+		// Transport: play/pause + waktu + seek — kontrol pemutar lengkap
+		// langsung dari mode lirik.
+		var playBtn = mkMidiBtn("lyrics-play-btn", "Putar / jeda", "play_arrow");
+		playBtn.classList.add("lyrics-play-toggle");
+		playBtn.addEventListener("click", (e) => {
+			e.stopPropagation();
+			if (typeof window.toggleMidiPlayback === "function") {
+				window.toggleMidiPlayback();
+			} else if (
+				typeof MidiEngine !== "undefined" &&
+				typeof MidiEngine.resumeContext === "function"
+			) {
+				MidiEngine.resumeContext();
+				if (MidiEngine.isPlaying()) MidiEngine.pause();
+				else MidiEngine.play();
+			}
+			syncLyricsTransportUI();
+		});
+
+		var curLabel = document.createElement("span");
+		curLabel.id = "lyrics-time-cur";
+		curLabel.className = "lyrics-midi-label lyrics-time-label";
+		curLabel.textContent = "0:00";
+
+		var seek = document.createElement("input");
+		seek.id = "lyrics-seek";
+		seek.className = "lyrics-midi-seek";
+		seek.type = "range";
+		seek.min = "0";
+		seek.max = "1000";
+		seek.step = "1";
+		seek.value = "0";
+		seek.title = "Geser posisi lagu";
+		seek.setAttribute("aria-label", "Posisi lagu");
+		var durCache = 0;
+		seek.addEventListener("input", () => {
+			seek.dataset.seekEditing = "1";
+			if (!durCache) return;
+			var frac = parseInt(seek.value, 10) / 1000;
+			curLabel.textContent = _fmtTime(frac * durCache);
+		});
+		var commitSeek = () => {
+			seek.dataset.seekEditing = "0";
+			if (typeof MidiEngine === "undefined") return;
+			durCache = MidiEngine.getDuration() || durCache;
+			if (!durCache) return;
+			var t = (parseInt(seek.value, 10) / 1000) * durCache;
+			MidiEngine.seek(t);
+			syncLyricsTransportUI();
+		};
+		seek.addEventListener("change", commitSeek);
+		seek.addEventListener("pointerup", () => {
+			if (seek.dataset.seekEditing === "1") commitSeek();
+		});
+		seek.addEventListener("keydown", (e) => e.stopPropagation());
+
+		var endLabel = document.createElement("span");
+		endLabel.id = "lyrics-time-end";
+		endLabel.className = "lyrics-midi-label lyrics-time-label";
+		endLabel.textContent = "0:00";
+
+		var tsg = document.createElement("div");
+		tsg.className = "lyrics-midi-group lyrics-transport-group";
+		tsg.append(playBtn, curLabel, seek, endLabel);
+		bar.append(tsg);
+
 		// Instrument
 		var iw = document.createElement("div");
 		iw.className = "lyrics-midi-group lyrics-midi-instrument-wrap";
@@ -1230,27 +1296,74 @@
 
 	// Saat pindah lagu, tempo default lagu baru diterapkan SETELAH MIDI
 	// selesai dimuat — polling ringan menjaga label/input tetap sinkron.
+	function _fmtTime(sec) {
+		sec = Math.max(0, Math.floor(Number(sec) || 0));
+		var m = Math.floor(sec / 60);
+		return m + ":" + String(sec % 60).padStart(2, "0");
+	}
+
+	function syncLyricsTransportUI() {
+		if (typeof MidiEngine === "undefined") return;
+		var btn = qs("#lyrics-play-btn");
+		var seek = qs("#lyrics-seek");
+		var cur = qs("#lyrics-time-cur");
+		var end = qs("#lyrics-time-end");
+		if (!btn || !seek) return;
+
+		var playing = typeof MidiEngine.isPlaying === "function" && MidiEngine.isPlaying();
+		var icon = playing ? "pause" : "play_arrow";
+		if (btn._iconState !== icon) {
+			btn._iconState = icon;
+			var sp = btn.querySelector(".material-symbols-outlined");
+			if (sp) sp.textContent = icon;
+			btn.classList.toggle("is-playing", playing);
+		}
+
+		var dur = 0, t = 0;
+		try {
+			dur = MidiEngine.getDuration() || 0;
+			t = MidiEngine.getTime() || 0;
+		} catch (e) {}
+
+		var hasTrack = !!MidiEngine.getCurrentMidiUrl();
+		seek.disabled = !hasTrack || !dur || dur <= 0;
+		if (end) {
+			var endText = hasTrack ? _fmtTime(dur) : "0:00";
+			if (end.textContent !== endText) end.textContent = endText;
+		}
+		if (cur && seek.dataset.seekEditing !== "1") {
+			var curText = _fmtTime(t);
+			if (cur.textContent !== curText) cur.textContent = curText;
+		}
+		if (seek.dataset.seekEditing !== "1" && dur > 0) {
+			var frac = Math.round(Math.max(0, Math.min(1, t / dur)) * 1000);
+			if (String(seek.value) !== String(frac)) seek.value = frac;
+		}
+	}
+
 	function startLyricsTempoPolling() {
 		stopLyricsTempoPolling();
+		syncLyricsTransportUI();
 		_lyricsTempoPollTimer = setInterval(() => {
 			if (!lyricsViewActive) return;
 			var el = qs("#lyrics-tempo-label");
 			if (
-				!el ||
-				el.dataset.tempoEditing === "1" ||
-				document.activeElement === el
-			)
-				return;
-			var bpm =
-				typeof getCurrentSongTempoBpm === "function"
-					? getCurrentSongTempoBpm()
-					: null;
-			if (bpm != null && String(bpm) !== String(el.value)) {
-				syncLyricsTempoLabel();
-				syncLyricsTransposeLabel();
-				updateLyricsKeyButton();
+				el &&
+				el.dataset.tempoEditing !== "1" &&
+				document.activeElement !== el
+			) {
+				var bpm =
+					typeof getCurrentSongTempoBpm === "function"
+						? getCurrentSongTempoBpm()
+						: null;
+				if (bpm != null && String(bpm) !== String(el.value)) {
+					syncLyricsTempoLabel();
+					syncLyricsTransposeLabel();
+					updateLyricsKeyButton();
+				}
 			}
-		}, 700);
+			syncLyricsTransportUI();
+		}, 500);
 	}
 
 	function stopLyricsTempoPolling() {
@@ -1918,7 +2031,7 @@
 		syncLyricsToggleButtons();
 	}
 
-	window.hideLyricsView = () => {
+	function hideLyricsViewImpl() {
 		lyricsViewActive = false;
 		lyricsViewWasActive = false;
 		stopLyricsTempoPolling();
@@ -1971,7 +2084,13 @@
 
 		document.body.classList.remove("lyrics-mode");
 		syncLyricsToggleButtons();
-	};
+	}
+
+	// Ekspos ke window SEKARANG dan re-assert SETELAH bundle utama selesai
+	// dimuat (hookOpenPdfViewer). Tanpa re-assert, copy lama di dalam bundle
+	// yang dimuat belakangan menimpa global ini dengan versi instan tanpa
+	// animasi (fade-out menghilang).
+	window.hideLyricsView = hideLyricsViewImpl;
 
 	function loadLyricsDataCached(cb) {
 		if (typeof window.gysLoadLyricsData === "function") {
@@ -2093,6 +2212,10 @@
 
 	function hookOpenPdfViewer() {
 		if (typeof openPdfViewer !== "undefined") {
+			// Bundle utama baru saja terdeteksi siap — pada titik ini copy lama
+			// di dalam bundle telah menimpa global milik file ini. Re-assert
+			// agar versi dengan animasi selalu yang aktif.
+			window.hideLyricsView = hideLyricsViewImpl;
 			var _orig = openPdfViewer;
 			openPdfViewer = async (songId, backgroundLoad) => {
 				var wasActive = lyricsViewActive;

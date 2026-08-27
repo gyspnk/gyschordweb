@@ -4467,6 +4467,48 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	white-space: nowrap;
 }
 
+/* ─── Transport mode lirik: play/pause, waktu, seek ─── */
+.lyrics-transport-group {
+	flex: 1 1 100%;
+	gap: 8px;
+	order: -1; /* transport di baris atas bar */
+}
+
+.lyrics-play-toggle {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: var(--md-sys-color-primary);
+	color: var(--md-sys-color-on-primary);
+	border-color: transparent;
+	flex-shrink: 0;
+}
+
+.lyrics-play-toggle .material-symbols-outlined {
+	font-size: 20px;
+}
+
+.lyrics-time-label {
+	min-width: 34px;
+	font-size: 0.72rem;
+	font-variant-numeric: tabular-nums;
+	flex-shrink: 0;
+}
+
+.lyrics-midi-seek {
+	flex: 1;
+	min-width: 60px;
+	height: 26px;
+	accent-color: var(--md-sys-color-primary);
+	cursor: pointer;
+}
+
+.lyrics-midi-seek:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+
 /* Input tempo yang bisa diketik (tombol +/- tetap tersedia) */
 .lyrics-tempo-input {
 	width: 58px;
