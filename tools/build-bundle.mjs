@@ -39,7 +39,7 @@ for (const [name, content] of [["app.bundle.min.js", bundle]]) {
 writeFileSync(join(root, "js/app.bundle.min.js"), bundle);
 console.log(`app.bundle.min.js ${(bundle.length / 1024).toFixed(1)}kb`);
 
-for (const name of ["sw.js"]) {
+for (const name of ["sw.js", "js/midi-render-worker.js"]) {
   const out = transformSync(readFileSync(join(root, name), "utf8"), {
     minify: true,
     charset: "utf8",

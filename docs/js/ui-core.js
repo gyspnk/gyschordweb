@@ -1,4 +1,4 @@
-﻿/* Auto-merged runtime source. Legacy split snapshot archived under archive/docs-js/legacy. */
+/* Auto-merged runtime source. Legacy split snapshot archived under archive/docs-js/legacy. */
 
 /* SOURCE: 04-init.js */
 // --- 3. Init ---
@@ -959,6 +959,13 @@ async function closePdfViewer() {
 	lastIndicatorTapEl = null;
 	chordsHidden = false;
 	closeTransposeCollapse();
+	if (typeof _chordBtnFadeTimer !== "undefined" && _chordBtnFadeTimer) {
+		clearTimeout(_chordBtnFadeTimer);
+		_chordBtnFadeTimer = null;
+	}
+	if (typeof _chordButtonVisible !== "undefined") {
+		_chordButtonVisible = null;
+	}
 	updateHideChordButton();
 
 	// Auto-exit fullscreen when leaving PDF viewer
@@ -2437,18 +2444,17 @@ function updateChordSettingsLabels() {
 }
 
 // --- Toggle Hide Chord ---
+// --- Toggle Hide Chord ---
 // Status chord per lagu: "loading" | "ready" | "none" | "off" (preferensi user)
 let _chordStatus = "none";
+let _chordButtonVisible = null; // null: uninitialized/closed, true: visible, false: hidden
+let _chordBtnFadeTimer = null;
 
 function onToggleChordsHidden() {
 	chordsHidden = !chordsHidden;
 	document.querySelectorAll(".chord-layer").forEach((layer) => {
 		layer.classList.toggle("is-hidden", chordsHidden);
 	});
-	// Simpan preferensi — dipakai openPdfViewer untuk memutuskan memuat chord
-	try {
-		localStorage.setItem("lyrics-show-chords", chordsHidden ? "0" : "1");
-	} catch (e) {}
 	updateHideChordButton();
 }
 
@@ -2458,35 +2464,141 @@ function setChordStatus(status) {
 }
 
 function updateHideChordButton() {
-	// Show button only when viewer is active and there are chord pages (either format)
-	const hasOldChords = chordConfig && Object.keys(chordConfig.pages).length > 0;
+	const viewerActive = document.body.classList.contains("viewer-active");
+	if (!viewerActive) {
+		if (_chordBtnFadeTimer) {
+			clearTimeout(_chordBtnFadeTimer);
+			_chordBtnFadeTimer = null;
+		}
+		_chordButtonVisible = null;
+		if (typeof hideChordBtns !== "undefined") {
+			hideChordBtns.forEach((btn) => {
+				btn.classList.remove("is-fading-out", "is-fading-in", "is-loading");
+				btn.classList.add("is-hidden");
+				btn.style.display = "none";
+			});
+		}
+		return;
+	}
+
+	const hasOldChords =
+		chordConfig &&
+		Object.keys(chordConfig.pages).length > 0 &&
+		Object.values(chordConfig.pages).some(
+			(p) => Array.isArray(p) && p.length > 0,
+		);
 	const hasNewChords =
 		typeof hasNoteAlignedChords === "function" && hasNoteAlignedChords();
-	const loading = _chordStatus === "loading";
-	const shouldShow =
-		document.body.classList.contains("viewer-active") &&
-		(hasOldChords || hasNewChords || loading);
+	const hasChords = !!(hasOldChords || hasNewChords || chordEditorEnabled);
 
+	if (typeof hideChordBtns === "undefined" || !hideChordBtns.length) return;
+
+	// Selalu sinkronkan ikon dan accessibility text tanpa merusak transisi
 	hideChordBtns.forEach((btn) => {
-		btn.style.display = shouldShow ? "" : "none";
-		btn.classList.toggle("is-loading", loading && !hasNewChords && !hasOldChords);
+		btn.classList.remove("is-loading");
 		const icon = btn.querySelector(".material-symbols-outlined");
 		if (icon) {
-			icon.textContent = loading && !hasNewChords && !hasOldChords
-				? "hourglass_top"
-				: chordsHidden
-					? "music_off"
-					: "music_note";
+			icon.textContent = chordsHidden ? "music_off" : "music_note";
 		}
 		btn.setAttribute(
 			"aria-label",
-			loading && !hasNewChords && !hasOldChords
-				? "Memuat chord..."
-				: chordsHidden
-					? "Tampilkan chord"
-					: "Sembunyikan chord",
+			chordsHidden ? "Tampilkan chord" : "Sembunyikan chord",
 		);
 	});
+
+	// Kasus 1: State awal saat pertama kali buka viewer dari list lagu
+	if (_chordButtonVisible === null) {
+		_chordButtonVisible = hasChords;
+		if (_chordBtnFadeTimer) {
+			clearTimeout(_chordBtnFadeTimer);
+			_chordBtnFadeTimer = null;
+		}
+		hideChordBtns.forEach((btn) => {
+			btn.classList.remove("is-fading-out", "is-fading-in");
+			if (hasChords) {
+				btn.classList.remove("is-hidden");
+				btn.style.display = "";
+			} else {
+				btn.classList.add("is-hidden");
+				btn.style.display = "none";
+			}
+		});
+		return;
+	}
+
+	// Kasus 2 & 5: Lagu baru MEMILIKI chord (hasChords === true)
+	if (hasChords) {
+		if (_chordButtonVisible === true) {
+			// Ada -> Ada: Tombol tetap tampil stabil tanpa kedip / transisi
+			if (_chordBtnFadeTimer) {
+				clearTimeout(_chordBtnFadeTimer);
+				_chordBtnFadeTimer = null;
+			}
+			hideChordBtns.forEach((btn) => {
+				btn.classList.remove("is-fading-out", "is-fading-in", "is-hidden");
+				btn.style.display = "";
+			});
+		} else {
+			// Tidak Ada -> Ada (atau sedang fading-out lalu dibatalkan): Fade in halus
+			_chordButtonVisible = true;
+			if (_chordBtnFadeTimer) {
+				clearTimeout(_chordBtnFadeTimer);
+				_chordBtnFadeTimer = null;
+			}
+			hideChordBtns.forEach((btn) => {
+				btn.classList.remove("is-fading-out", "is-hidden");
+				btn.style.display = "";
+				btn.classList.add("is-fading-in");
+			});
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					hideChordBtns.forEach((btn) => {
+						btn.classList.remove("is-fading-in");
+					});
+				});
+			});
+		}
+		return;
+	}
+
+	// Kasus 3 & 4: Lagu baru TIDAK memiliki chord (hasChords === false)
+	if (!hasChords) {
+		if (_chordButtonVisible === false) {
+			// Tidak Ada -> Tidak Ada: Tetap tersembunyi tanpa transisi
+			if (_chordBtnFadeTimer) {
+				clearTimeout(_chordBtnFadeTimer);
+				_chordBtnFadeTimer = null;
+			}
+			hideChordBtns.forEach((btn) => {
+				btn.classList.remove("is-fading-out", "is-fading-in");
+				btn.classList.add("is-hidden");
+				btn.style.display = "none";
+			});
+		} else if (_chordButtonVisible === "fading-out") {
+			// Sedang dalam proses fade-out, biarkan timer menyelesaikan transisi
+			return;
+		} else if (_chordButtonVisible === true) {
+			// Ada -> Tidak Ada: Jalankan animasi fade-out halus
+			_chordButtonVisible = "fading-out";
+			if (_chordBtnFadeTimer) clearTimeout(_chordBtnFadeTimer);
+			hideChordBtns.forEach((btn) => {
+				btn.classList.remove("is-fading-in", "is-hidden");
+				btn.classList.add("is-fading-out");
+			});
+			_chordBtnFadeTimer = setTimeout(() => {
+				_chordBtnFadeTimer = null;
+				if (_chordButtonVisible === "fading-out") {
+					_chordButtonVisible = false;
+					hideChordBtns.forEach((btn) => {
+						btn.classList.remove("is-fading-out");
+						btn.classList.add("is-hidden");
+						btn.style.display = "none";
+					});
+				}
+			}, 280);
+		}
+		return;
+	}
 }
 
 function applyStoredPreferences() {

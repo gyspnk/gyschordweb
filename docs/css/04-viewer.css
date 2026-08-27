@@ -1,4 +1,4 @@
-﻿.pdf-viewer-overlay {
+.pdf-viewer-overlay {
 	position: fixed;
 	inset: 0;
 	z-index: var(--z-layer-viewer-overlay);
@@ -103,8 +103,12 @@ body.measure-layout .pdf-viewer-footer * {
 	);
 	border: 1px solid
 		color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
-	transition: opacity 0.15s ease-out;
 	cursor: pointer;
+	transform-origin: center center;
+	transition:
+		max-width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+		width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+		padding 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 body.is-expanded-layout .song-title-wrapper,
@@ -123,11 +127,85 @@ body.is-expanded-layout #pdf-viewer-number,
 body.measure-layout #pdf-viewer-number {
 	font-size: 0.7rem;
 }
+
+/* Box judul tetap terlihat (tidak hilang); hanya teks judul dan nomor yang fade out/in */
 .song-title-wrapper.is-navigating {
-	opacity: 0;
+	opacity: 1 !important;
+	transform: none !important;
+	pointer-events: none;
 }
 
-/* Tombol hide-chord saat memuat chord: ikon berputar pelan */
+.song-title-wrapper h2,
+.song-title-wrapper #pdf-viewer-title,
+.song-title-wrapper #pdf-viewer-number {
+	transition:
+		opacity 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+		transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.song-title-wrapper.is-navigating h2,
+.song-title-wrapper.is-navigating #pdf-viewer-title,
+.song-title-wrapper.is-navigating #pdf-viewer-number {
+	opacity: 0 !important;
+	transform: translateY(4px) !important;
+	transition:
+		opacity 0.16s ease-out,
+		transform 0.16s ease-out;
+}
+
+/* Tombol hide-chord transisi fade-in / fade-out & smooth sliding untuk elemen di sampingnya (box transpose) */
+.hide-chord-btn {
+	overflow: hidden !important;
+	max-width: 48px;
+	width: 48px;
+	min-width: 0;
+	box-sizing: border-box;
+	margin-left: 0;
+	margin-right: 0;
+	padding: 0;
+	transition:
+		opacity 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+		max-width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+		width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+		min-width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+		margin-left 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+		margin-right 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+		padding 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+		transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+	will-change: opacity, max-width, width, margin-left, transform;
+}
+
+.hide-chord-btn .material-symbols-outlined {
+	flex-shrink: 0;
+	pointer-events: none;
+}
+
+.hide-chord-btn.is-hidden {
+	display: none !important;
+}
+
+.landscape-controls .hide-chord-btn-landscape {
+	--item-gap: 1rem;
+}
+body.is-expanded-layout .landscape-controls .hide-chord-btn-landscape,
+body.measure-layout .landscape-controls .hide-chord-btn-landscape {
+	--item-gap: 0.68rem;
+}
+
+.hide-chord-btn.is-fading-out,
+.hide-chord-btn.is-fading-in {
+	opacity: 0 !important;
+	max-width: 0 !important;
+	width: 0 !important;
+	min-width: 0 !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+	margin-left: calc(-1 * var(--item-gap, 0.35rem)) !important;
+	margin-right: 0 !important;
+	transform: scale(0.75) !important;
+	pointer-events: none !important;
+}
+
 .hide-chord-btn.is-loading {
 	opacity: 0.7;
 	pointer-events: none;
@@ -142,56 +220,14 @@ body.measure-layout #pdf-viewer-number {
 		transform: rotate(360deg);
 	}
 }
-/* ── Animasi masuk setelah konten siap ──
-   Teks judul: fade murni. Box judul: scaling LEBAR saja (scaleX) —
-   terasa box "membuka" dari tengah. Kanvas: fade+scale halus. */
-.song-title-wrapper {
-	transition:
-		opacity 0.15s ease-out,
-		transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
-	transform-origin: center;
-}
-
-.song-title-wrapper:not(.is-navigating) {
-	animation: gysTitleBoxIn 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.song-title-wrapper.is-navigating .song-navigation h2,
-.song-title-wrapper.is-navigating #pdf-viewer-number {
-	opacity: 0;
-}
-
-.song-title-wrapper:not(.is-navigating) .song-navigation h2 {
-	animation: gysTitleTextIn 0.3s ease-out;
-}
-
-.song-title-wrapper:not(.is-navigating) #pdf-viewer-number {
-	animation: gysTitleTextIn 0.3s ease-out 0.05s backwards;
-}
-
-@keyframes gysTitleBoxIn {
-	from {
-		transform: scaleX(0.82);
-	}
-	to {
-		transform: scaleX(1);
-	}
-}
-
-@keyframes gysTitleTextIn {
-	from {
-		opacity: 0;
-		transform: translateY(3px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
 
 .canvas-wrapper.is-navigating {
-	opacity: 0;
-	transform: scale(0.98);
+	opacity: 0 !important;
+	transform: scale(0.95) !important;
+	pointer-events: none;
+	transition:
+		opacity 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+		transform 0.26s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .song-navigation h2 {
@@ -207,12 +243,11 @@ body.measure-layout #pdf-viewer-number {
 	letter-spacing: -0.01em;
 }
 #pdf-viewer-number {
+	margin: 0;
 	font-size: 0.75rem;
-	color: color-mix(
-		in srgb,
-		var(--md-sys-color-primary) 58%,
-		var(--md-sys-color-on-surface-variant)
-	);
+	font-weight: 500;
+	color: var(--viewer-number-accent);
+	line-height: 1.1;
 }
 .pdf-viewer-controls-main {
 	display: flex;
@@ -226,18 +261,17 @@ body.measure-layout #pdf-viewer-number {
 }
 
 .pdf-viewer-content {
-	position: relative;
-	flex-grow: 1;
-	min-height: 0;
-	height: var(--viewer-content-height);
-	overflow: scroll;
-	scrollbar-gutter: stable both-edges;
-	overscroll-behavior: contain;
+	flex: 1;
+	overflow: auto;
 	display: flex;
-	align-items: flex-start;
 	justify-content: center;
-	padding: 0;
-	box-sizing: border-box;
+	align-items: flex-start;
+	background-color: var(--viewer-bg);
+	min-height: 0;
+	scroll-behavior: auto;
+	-webkit-overflow-scrolling: touch;
+	touch-action: pan-x pan-y pinch-zoom;
+	position: relative;
 }
 
 .pdf-viewer-content.is-overflowing {
@@ -254,9 +288,11 @@ body.measure-layout #pdf-viewer-number {
 	align-items: center;
 	gap: 1rem;
 	margin: 1rem;
+	transform-origin: center center;
 	transition:
-		opacity 0.15s ease-out,
-		transform 0.15s ease-out;
+		opacity 0.28s cubic-bezier(0.0, 0, 0.2, 1),
+		transform 0.28s cubic-bezier(0.0, 0, 0.2, 1);
+	will-change: opacity, transform;
 }
 
 .canvas-wrapper.vertical-scroll {
@@ -742,14 +778,15 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
 	}
 	.song-title-wrapper {
 		position: static;
-		flex: 1 1 0;
+		flex: 0 1 auto;
+		width: auto;
 		min-width: 0;
+		max-width: min(calc(100% - 64px), 320px);
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		transform: none;
-		max-width: none;
 		pointer-events: auto;
 		z-index: auto;
 	}
@@ -3489,9 +3526,10 @@ body.measure-layout .custom-midi-player .player-slider::-moz-range-thumb {
 	}
 
 	.song-title-wrapper {
-		flex: 1 1 0;
+		flex: 0 1 auto;
+		width: auto;
 		min-width: 0;
-		max-width: 100%;
+		max-width: min(calc(100% - 64px), 320px);
 		text-align: center;
 		pointer-events: auto;
 	}
@@ -4922,13 +4960,13 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	flex-direction: row !important;
 	flex-wrap: nowrap !important;
 	align-items: center;
-	gap: 6px;
+	gap: 8px !important;
 }
 #custom-midi-player .custom-player-primary {
 	display: flex !important;
 	flex-direction: row !important;
 	align-items: center;
-	gap: 6px;
+	gap: 8px !important;
 	flex: 1 1 auto;
 	min-width: 0;
 }
@@ -4937,27 +4975,31 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	flex-direction: row !important;
 	flex-wrap: nowrap !important;
 	align-items: center;
-	gap: 3px;
-	flex: 0 1 auto;
-	min-width: 0;
+	gap: 7px !important;
+	flex: 0 0 auto !important;
+	flex-shrink: 0 !important;
+	min-width: max-content !important;
 }
 #custom-midi-player .custom-player-actions .midi-action,
 #custom-midi-player .custom-player-actions .instrument-selector-wrapper {
-	flex: 0 1 auto;
-	width: auto !important; /* kalahkan width:100% khusus PDF viewer */
-	min-width: 0;
+	flex: 0 0 auto !important;
+	flex-shrink: 0 !important;
+	width: auto !important;
+	min-width: max-content !important;
+	margin: 0 !important;
 }
 /* Player padding: hemat ruang (hanya mode dropdown/portrait) */
 body:not(.is-expanded-layout):not(.measure-layout)
 #custom-midi-player.custom-midi-player {
-	padding: 4px 8px;
+	padding: 5px 10px;
 }
 /* Play: kompak tapi tetap tap-friendly */
 #custom-midi-player .custom-player-play.player-btn {
-	width: 28px !important;
-	height: 28px !important;
-	border-radius: 8px;
-	flex-shrink: 0;
+	width: 32px !important;
+	height: 32px !important;
+	border-radius: 9px;
+	flex-shrink: 0 !important;
+	margin-right: 0;
 }
 /* Track: seekbar adaptif, boleh menyusut tapi tidak hilang */
 #custom-midi-player .player-track-container {
@@ -4974,17 +5016,23 @@ body:not(.is-expanded-layout):not(.measure-layout)
 	padding: 0 2px;
 	white-space: nowrap;
 }
-/* Semua icon button: content-sized, min 30px tap-friendly */
+/* Semua icon button: content-sized, dengan margin dan gap yang rapi dan tidak bertabrakan */
 #custom-midi-player .instrument-capsule-btn,
 #custom-midi-player .midi-icon-btn.instrument-capsule-btn,
-#custom-midi-player .midi-action-btn.instrument-capsule-btn {
+#custom-midi-player .midi-action-btn.instrument-capsule-btn,
+#custom-midi-player .lyrics-toggle-btn,
+#custom-midi-player #midi-lyrics-toggle-btn,
+#custom-midi-player .midi-fullscreen-btn {
 	width: auto !important;
-	min-width: 30px;
-	height: 26px !important;
-	padding: 0 6px !important;
+	min-width: 32px !important;
+	height: 28px !important;
+	padding: 0 7px !important;
 	justify-content: center;
-	border-radius: 7px;
-	flex: 0 1 auto;
+	border-radius: 8px;
+	flex: 0 0 auto !important;
+	flex-shrink: 0 !important;
+	margin: 0 !important;
+	box-sizing: border-box !important;
 }
 #custom-midi-player .midi-action-btn .cis-label,
 #custom-midi-player .midi-action-btn .cis-chevron {
@@ -4992,12 +5040,16 @@ body:not(.is-expanded-layout):not(.measure-layout)
 }
 /* Tempo: icon + angka, content-sized */
 #custom-midi-player .midi-tempo-toggle-btn {
-	min-width: 40px;
-	height: 26px !important;
+	width: auto !important;
+	min-width: 44px !important;
+	height: 28px !important;
 	padding: 0 6px !important;
-	border-radius: 7px;
+	border-radius: 8px;
 	gap: 2px;
-	flex: 0 1 auto;
+	flex: 0 0 auto !important;
+	flex-shrink: 0 !important;
+	margin: 0 !important;
+	box-sizing: border-box !important;
 }
 #custom-midi-player .midi-tempo-chevron,
 #custom-midi-player .midi-tempo-toggle-unit {

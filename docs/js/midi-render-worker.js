@@ -288,7 +288,7 @@ function renderMidi(msg) {
       reverbActive: true,
       chorusActive: true,
       initialGain: 1.0,
-      polyphony: 512
+      polyphony: 256
     });
 
     // Load soundfont — must copy buffer since it may be neutered

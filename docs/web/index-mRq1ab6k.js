@@ -1,4 +1,4 @@
-﻿import { r as pu, a as Or } from "./react-GsrUiVJy.js";
+import { r as pu, a as Or } from "./react-GsrUiVJy.js";
 (() => {
 	const a = document.createElement("link").relList;
 	if (a && a.supports && a.supports("modulepreload")) return;
@@ -12600,7 +12600,7 @@ const e0 = `\uFEFF<header class="app-header">\r
     </div>\r
 `,
 	Us = "https://mozilla.github.io/pdf.js/build/pdf.mjs",
-	_s = "./js/app.bundle.min.js?v=28",
+	_s = "./js/app.bundle.min.js?v=38",
 	i0 = "./sw.min.js?v=20";
 let cn = null;
 const hu = new Map();

@@ -1,4 +1,4 @@
-﻿/* Auto-merged runtime source. Legacy split snapshot archived under archive/docs-js/legacy. */
+/* Auto-merged runtime source. Legacy split snapshot archived under archive/docs-js/legacy. */
 
 /* SOURCE: 07-pdf-viewer.js */
 // --- 6. PDF Viewer ---
@@ -74,6 +74,9 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   localStorage.setItem("GysLastPlayedSongIndex", currentSongIndex);
   const song = pujianItems[currentSongIndex];
   if (!song) return;
+
+  const _wasViewerActive = document.body.classList.contains('viewer-active');
+  const _isInitialOpenFromList = !_wasViewerActive && !backgroundLoad;
 
   // Mark body as viewer-active IMMEDIATELY so the mini player hides before
   // any async delays (avoids race with syncMiniPlayerUI's 500ms interval).
@@ -167,26 +170,65 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   }
 
   if (!_canReuseDoc) {
-    // ── SEKUENS TRANSISI ──
-    // 1) Fade-OUT judul + box konten lama (animasi keluar)
-    songTitleWrapper.classList.add("is-navigating");
-    canvasWrapper.classList.add("is-navigating");
-    // Beri waktu animasi fade-out berjalan (150ms transisi CSS), lalu
-    // lanjut memuat konten baru saat layar masih pudar.
-    await new Promise((resolve) => setTimeout(resolve, 160));
-
-    // Abort if a newer navigation started during the fade.
-    if (_openPdfViewerGeneration !== thisOpenGeneration) {
-      if (loadingTask) {
-        try { loadingTask.destroy(); } catch (_err) {}
-      }
-      return;
+    const activeCanvas = document.querySelector(".canvas-wrapper") || canvasWrapper;
+    if (activeCanvas) {
+      canvasWrapper = activeCanvas;
     }
-  }
 
-  pdfViewerTitle.textContent = song.judul;
-  pdfViewerNumber.textContent = `No. ${song.nomor}`;
-  fitViewerTitle();
+    if (_isInitialOpenFromList) {
+      // ── BUKA PERTAMA DARI LIST: State Blank langsung (tanpa fade-out lagu lama) ──
+      songTitleWrapper.classList.add("is-navigating");
+      canvasWrapper.classList.add("is-navigating");
+      pdfViewerTitle.textContent = song.judul;
+      pdfViewerNumber.textContent = `No. ${song.nomor}`;
+      fitViewerTitle();
+    } else {
+      // ── NAVIGASI INTRA-VIEWER (Next/Prev/Playlist): Sekuens Fade-Out + Morphing ──
+      // 1) Fade-OUT teks judul dan canvas konten lama (animasi keluar)
+      songTitleWrapper.classList.add("is-navigating");
+      canvasWrapper.classList.add("is-navigating");
+      await new Promise((resolve) => setTimeout(resolve, 260));
+
+      // Abort if a newer navigation started during the fade.
+      if (_openPdfViewerGeneration !== thisOpenGeneration) {
+        if (loadingTask) {
+          try { loadingTask.destroy(); } catch (_err) {}
+        }
+        return;
+      }
+
+      // 2) Morphing Resize untuk kotak judul & pergeseran tombol navigasi secara mulus
+      if (songTitleWrapper && pdfViewerTitle && pdfViewerNumber) {
+        const oldWidth = songTitleWrapper.getBoundingClientRect().width;
+
+        pdfViewerTitle.textContent = song.judul;
+        pdfViewerNumber.textContent = `No. ${song.nomor}`;
+        fitViewerTitle();
+
+        songTitleWrapper.style.width = 'auto';
+        songTitleWrapper.style.maxWidth = 'none';
+        songTitleWrapper.style.flex = '0 1 auto';
+        const targetWidth = songTitleWrapper.getBoundingClientRect().width;
+
+        if (oldWidth > 0 && targetWidth > 0 && Math.abs(oldWidth - targetWidth) >= 1) {
+          songTitleWrapper.style.width = `${oldWidth}px`;
+          void songTitleWrapper.offsetWidth; // Force reflow
+
+          songTitleWrapper.style.transition = 'width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)';
+          songTitleWrapper.style.width = `${targetWidth}px`;
+
+          // Tunggu animasi morph selesai secara visual
+          await new Promise((resolve) => setTimeout(resolve, 280));
+        } else {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+      }
+    }
+  } else {
+    pdfViewerTitle.textContent = song.judul;
+    pdfViewerNumber.textContent = `No. ${song.nomor}`;
+    fitViewerTitle();
+  }
 
   if (!backgroundLoad && !document.body.classList.contains("viewer-active")) {
     document.body.classList.add("viewer-active");
@@ -561,48 +603,23 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       });
 
       if (!isSameSong) {
-        // ── Chord config: hormati preferensi toggle chord user ──
-        // Bila chord disembunyikan user (lyrics-show-chords = 0), JANGAN
-        // fetch otomatis — cukup tandai "skip". Bila diinginkan, muat
-        // paralel (tidak memblokir render halaman) lalu segarkan overlay
-        // + tombol hide-chord begitu siap.
-        const chordsWanted = (() => {
-          try {
-            const stored = localStorage.getItem("lyrics-show-chords");
-            if (stored !== null) return stored === "1";
-          } catch (_e) {}
-          return true; // default: chord aktif
-        })();
-        let chordCfgPromise = Promise.resolve();
-        if (chordsWanted) {
-          if (typeof setChordStatus === "function") setChordStatus("loading");
-          chordCfgPromise = (async () => {
-            await loadChordConfigurationForSong(song);
+        // Muat konfigurasi chord sebelum render halaman agar marker chord
+        // langsung terbentuk di DOM dan deteksi nada dasar akurat.
+        try {
+          await loadChordConfigurationForSong(song);
+          if (_openPdfViewerGeneration !== thisOpenGeneration) return;
+          if (typeof loadNoteChordConfiguration === "function") {
+            pageNotesCache = {}; // Clear note cache for new song
+            await loadNoteChordConfiguration(song);
             if (_openPdfViewerGeneration !== thisOpenGeneration) return;
-            if (typeof loadNoteChordConfiguration === "function") {
-              pageNotesCache = {}; // Clear note cache for new song
-              await loadNoteChordConfiguration(song);
-              if (_openPdfViewerGeneration !== thisOpenGeneration) return;
-              if (hasNoteAlignedChords()) {
-                detectNoteAlignedFamilyChord();
-              }
+            if (hasNoteAlignedChords()) {
+              detectNoteAlignedFamilyChord();
             }
-            if (typeof setChordStatus === "function") setChordStatus("ready");
-            // Chord siap — tampilkan tombol hide-chord & gambar overlay
-            if (typeof updateHideChordButton === "function") {
-              updateHideChordButton();
-            }
-            if (typeof refreshVisibleChordMarkers === "function") {
-              refreshVisibleChordMarkers();
-            }
-          })();
-          chordCfgPromise.catch(() => {
-            if (typeof setChordStatus === "function") setChordStatus("none");
-          });
-        } else {
-          // User mematikan chord - jangan load otomatis; tombol disembunyikan
-          if (typeof setChordStatus === "function") setChordStatus("off");
+          }
+        } catch (chordErr) {
+          console.warn("Gagal memuat chord:", chordErr);
         }
+
         currentPageNum = 1;
         currentViewMode =
           pdfDoc.numPages > 1 && prefs.defaultTwoPage ? "double" : "single";
@@ -613,15 +630,32 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       }
 
       updateViewerUI();
-      if (typeof updateHideChordButton === "function") updateHideChordButton();
-      // ── 3) Fade-IN: konten baru sudah siap dirender ──
-      // renderPage menukar wrapper seketika saat kanvas siap; animasi
-      // masuk: teks judul fade, box scaling-lebar (CSS: lhBoxIn).
-      void canvasWrapper.offsetWidth;
-      canvasWrapper.classList.remove("is-navigating");
-      songTitleWrapper.classList.remove("is-navigating");
+
+      // ── 3) Render halaman baru saat wrapper masih pudar (is-navigating) ──
+      // renderPage menukar wrapper seketika; elemen baru mewarisi status is-navigating.
       await renderPage(currentPageNum);
       if (_openPdfViewerGeneration !== thisOpenGeneration) return;
+
+      // ── 4) Fade-IN: konten baru sudah siap sepenuhnya di DOM ──
+      // Terapkan perubahan status tombol chord & transisi pergeseran box transpose saat konten baru mulai muncul
+      if (typeof setChordStatus === "function") {
+        setChordStatus(hasNoteAlignedChords() ? "ready" : "none");
+      } else if (typeof updateHideChordButton === "function") {
+        updateHideChordButton();
+      }
+
+      if (songTitleWrapper) {
+        songTitleWrapper.style.width = '';
+        songTitleWrapper.style.maxWidth = '';
+        songTitleWrapper.style.flex = '';
+        songTitleWrapper.style.transition = '';
+      }
+      void canvasWrapper.offsetWidth;
+      void songTitleWrapper.offsetWidth;
+      await new Promise((r) => requestAnimationFrame(r));
+      canvasWrapper.classList.remove("is-navigating");
+      songTitleWrapper.classList.remove("is-navigating");
+
       updateSongNavButtons();
       fitViewerTitle();
     }
@@ -647,13 +681,18 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   }
 }
 
-async function animateViewChange(renderFunction, duration = 150) {
+async function animateViewChange(renderFunction, duration = 220) {
+  const activeCanvas = document.querySelector(".canvas-wrapper") || canvasWrapper;
+  if (activeCanvas) {
+    canvasWrapper = activeCanvas;
+  }
   canvasWrapper.classList.add("is-navigating");
   await new Promise((resolve) => setTimeout(resolve, duration));
   if (renderFunction) await renderFunction();
 
   // Force a reflow to ensure the initial 'is-navigating' state is registered by the browser
   void canvasWrapper.offsetWidth;
+  await new Promise((r) => requestAnimationFrame(r));
 
   canvasWrapper.classList.remove("is-navigating");
 }
@@ -1947,7 +1986,6 @@ async function loadChordConfigurationForSong(song) {
   // viewer wait on the obsolete loader before applying the JSON chord state.
   chordConfig = createDefaultChordConfig();
   originalFamilyChord = null;
-  updateTransposeVisibility();
 }
 
 function parsePdfKeyToSemitone(keyStr) {
@@ -1981,17 +2019,10 @@ function updateTransposeVisibility() {
   const hasNoteChords = typeof hasNoteAlignedChords === "function" && hasNoteAlignedChords();
   const hasMidi = typeof midiToggleBtn !== "undefined" && midiToggleBtn && midiToggleBtn.style.display !== "none";
   const showTranspose = hasChords || hasNoteChords || chordEditorEnabled || hasMidi;
-  // Only show hide-chord buttons when actual chords exist (not just MIDI)
-  const showHideChord = hasChords || hasNoteChords || chordEditorEnabled;
 
   document.querySelectorAll('.transpose-collapse').forEach(el => {
     el.style.display = showTranspose ? '' : 'none';
   });
-  if (typeof hideChordBtns !== "undefined") {
-    hideChordBtns.forEach(btn => {
-      btn.style.display = showHideChord ? '' : 'none';
-    });
-  }
 
   updateTransposeUI();
 }

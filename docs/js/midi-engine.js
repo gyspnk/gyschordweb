@@ -501,8 +501,8 @@ var MidiEngine = (function () {
     // Render at a stable higher-quality rate even before the AudioContext exists.
     // This avoids the first render being locked to 44.1 kHz on devices that later
     // play back at much higher sample rates.
-    var preferredRate = _ctx ? _ctx.sampleRate : 48000;
-    var sampleRate = opts.sampleRate || Math.max(48000, Math.min(96000, preferredRate));
+    var preferredRate = _ctx ? _ctx.sampleRate : 44100;
+    var sampleRate = opts.sampleRate || Math.min(48000, Math.max(22050, preferredRate));
     var tempoRate = Number(opts.tempoRate);
     if (!Number.isFinite(tempoRate) || tempoRate <= 0) tempoRate = 1;
     // Apply optional global transpose offset from config.
