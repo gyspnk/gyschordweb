@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = "gys-cache-v83";
+const CACHE_NAME = "gys-cache-v83";
 const APP_VERSION = "3.8.29";
 
 self.addEventListener("install", (_event) => {
@@ -88,7 +88,7 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
-	// NEVER cache dynamic assets â€” always network
+	// NEVER cache dynamic assets — always network
 	if (
 		url.pathname.includes("/midi/") ||
 		url.pathname.includes("/pdf/") ||
@@ -96,7 +96,7 @@ self.addEventListener("fetch", (event) => {
 		url.pathname.includes("assets-list.json") ||
 		url.pathname.includes("assets-lyrics.json") ||
 		url.pathname.includes("assets-chord-list.json") ||
-		// SoundFont besar (bisa ratusan MB) TIDAK di-cache di Cache API â€”
+		// SoundFont besar (bisa ratusan MB) TIDAK di-cache di Cache API —
 		// ia dikelola sendiri via IndexedDB (gys-sf-cache). Cache ganda
 		// membuat quota storage cepat penuh dan browser bisa meng-evict
 		// seluruh origin storage (termasuk localStorage playlist).
@@ -117,7 +117,7 @@ self.addEventListener("fetch", (event) => {
 			url.pathname.endsWith("/"));
 
 	if (isLocalAppFile) {
-		// Aset ber-parameter versi (?v=N): stale-while-revalidate â€” balas
+		// Aset ber-parameter versi (?v=N): stale-while-revalidate — balas
 		// instan dari cache, sementara jaringan menyegarkan cache untuk
 		// boot berikutnya. Aman karena konvensi repo menaikkan ?v= setiap
 		// kali file diubah; index.html tetap network-first sehingga selalu

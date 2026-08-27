@@ -1,4 +1,4 @@
-﻿/* Auto-merged runtime source. Legacy split snapshot archived under archive/docs-js/legacy. */
+/* Auto-merged runtime source. Legacy split snapshot archived under archive/docs-js/legacy. */
 
 /* SOURCE: 04-init.js */
 // --- 3. Init ---
@@ -107,9 +107,9 @@ async function init() {
 }
 
 /**
- * App update detection â€” otomatis. Saat versi baru terdeteksi (service
+ * App update detection — otomatis. Saat versi baru terdeteksi (service
  * worker baru aktif / versi SW berubah), pembaruan langsung dijalankan
- * tanpa perlu menekan tombol apa pun: tampil loading bar "Updatingâ€¦",
+ * tanpa perlu menekan tombol apa pun: tampil loading bar "Updating…",
  * cache dibersihkan, lalu halaman di-reload.
  */
 var _gysAutoUpdateStarted = false;
@@ -117,7 +117,7 @@ var _gysHadServiceWorkerController =
 	typeof navigator !== "undefined" &&
 	navigator.serviceWorker &&
 	!!navigator.serviceWorker.controller;
-// Versi build yang tertanam di bundle ini â€” pembanding utama vs versi SW.
+// Versi build yang tertanam di bundle ini — pembanding utama vs versi SW.
 // HARUS sama dengan APP_VERSION di docs/sw.js (naikkan bersama).
 const GYS_CLIENT_BUILD = "3.8.29";
 
@@ -137,7 +137,7 @@ function checkForAppUpdate() {
 		}
 	});
 
-	// Service worker baru mengambil alih halaman yang sedang berjalan â†’ update.
+	// Service worker baru mengambil alih halaman yang sedang berjalan → update.
 	navigator.serviceWorker.addEventListener("controllerchange", () => {
 		if (_gysHadServiceWorkerController) {
 			beginAppUpdate();
@@ -172,12 +172,12 @@ function checkForAppUpdate() {
 			msgChannel.port1.onmessage = (event) => {
 				if (event.data && event.data.type === "VERSION") {
 					var swVersion = event.data.version;
-					// Versi SW beda dengan build klien â†’ jalankan pembaruan otomatis.
+					// Versi SW beda dengan build klien → jalankan pembaruan otomatis.
 					if (swVersion && swVersion !== GYS_CLIENT_BUILD) {
 						beginAppUpdate(swVersion);
 						return;
 					}
-					// Versi sudah sinkron â€” reset pembatas percobaan update.
+					// Versi sudah sinkron — reset pembatas percobaan update.
 					try {
 						sessionStorage.removeItem("gys-upd-attempts");
 					} catch (e) {}
@@ -197,7 +197,7 @@ function checkForAppUpdate() {
 }
 
 /**
- * Jalankan pembaruan secara otomatis: tampilkan loading bar "Updatingâ€¦",
+ * Jalankan pembaruan secara otomatis: tampilkan loading bar "Updating…",
  * bersihkan cache via service worker (dan localStorage kecuali data
  * playlist), lalu reload setelah service worker selesai / timeout.
  */
@@ -262,7 +262,7 @@ function beginAppUpdate(version) {
 }
 
 /**
- * Loading bar layar penuh bertuliskan "Updatingâ€¦" selama pembaruan otomatis.
+ * Loading bar layar penuh bertuliskan "Updating…" selama pembaruan otomatis.
  */
 function showUpdatingOverlay() {
 	var existing = document.getElementById("app-updating-overlay");
@@ -661,7 +661,7 @@ function fitListTitles() {
 	if (document.fonts && !_fontsWatchBound) {
 		_fontsWatchBound = true;
 		document.fonts.ready.then(() => requestAnimationFrame(run));
-		// Google Fonts dimuat lazy (media=print onload) â€” re-fit tiap font selesai
+		// Google Fonts dimuat lazy (media=print onload) — re-fit tiap font selesai
 		document.fonts.addEventListener("loadingdone", () =>
 			requestAnimationFrame(run),
 		);
@@ -949,7 +949,7 @@ function rebuildInstrumentSelectors(sfUrl) {
 async function closePdfViewer() {
 	document.body.classList.remove("viewer-active");
 	// Keep pdfDoc alive so reopening the same song from the mini player can skip
-	// re-decoding and re-rendering ï¿½ avoids main-thread jank that dips the audio.
+	// re-decoding and re-rendering � avoids main-thread jank that dips the audio.
 	// pdfDoc is replaced automatically when a different song is loaded.
 	// Do NOT reset currentSongIndex so the Mini Player remains globally synced.
 	titleTapCount = 0;
@@ -2474,7 +2474,7 @@ function applyStoredPreferences() {
 		document.body.classList.remove("light-theme-forced");
 	} else if (darkPref === "0") {
 		document.body.classList.remove("dark-theme");
-		// Explicitly chose light mode â€” force it on dark-scheme devices
+		// Explicitly chose light mode — force it on dark-scheme devices
 		document.body.classList.add("light-theme-forced");
 	}
 	// If darkPref is null (never set), respect OS preference (no classes added)

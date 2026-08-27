@@ -26,9 +26,15 @@ const bundle = transformSync(concat, {
   charset: "utf8",
   loader: "js",
 }).code;
-if (/â[™œž\u0080-\u00bf]/.test(bundle)) {
-  console.error("FATAL: indikasi mojibake UTF-8 pada bundle!");
-  process.exit(1);
+const MOJIBAKE_RE =
+  // Pola hasil salah-dekode UTF-8 sebagai cp1252: 'â'/'Ã'/'Â' diikuti
+  // karakter high-Latin/typografis palsu (menangkap â€¦, â€", â†', â™¯ dst).
+  /[ÂÃâ][\u0080-\u00ff\u20ac\u201a\u0192\u201e\u2020\u2021\u02c6\u2030\u2039\u0152\u017d\u2018\u2019\u201c\u201d\u2022\u2013\u2014\u02dc\u2122\u0160\u0161\u203a\u0153\u017e]/;
+for (const [name, content] of [["app.bundle.min.js", bundle]]) {
+  if (MOJIBAKE_RE.test(content)) {
+    console.error(`FATAL: indikasi mojibake UTF-8 pada ${name}!`);
+    process.exit(1);
+  }
 }
 writeFileSync(join(root, "js/app.bundle.min.js"), bundle);
 console.log(`app.bundle.min.js ${(bundle.length / 1024).toFixed(1)}kb`);
