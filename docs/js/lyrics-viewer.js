@@ -1,4 +1,4 @@
-/* Lyrics-Only View Mode - standalone module */
+﻿/* Lyrics-Only View Mode - standalone module */
 (() => {
 	var lyricsData = null;
 	var lyricsVerseIndex = 0;
@@ -1025,190 +1025,6 @@
 		b.append(s);
 		return b;
 	}
-
-	function buildLyricsMidiBar(inn) {
-		var bar = document.createElement("div");
-		bar.className = "lyrics-midi-bar";
-		bar.id = "lyrics-midi-bar";
-
-		// Transport: play/pause + waktu + seek — kontrol pemutar lengkap
-		// langsung dari mode lirik.
-		var playBtn = mkMidiBtn("lyrics-play-btn", "Putar / jeda", "play_arrow");
-		playBtn.classList.add("lyrics-play-toggle");
-		playBtn.addEventListener("click", (e) => {
-			e.stopPropagation();
-			if (typeof window.toggleMidiPlayback === "function") {
-				window.toggleMidiPlayback();
-			} else if (
-				typeof MidiEngine !== "undefined" &&
-				typeof MidiEngine.resumeContext === "function"
-			) {
-				MidiEngine.resumeContext();
-				if (MidiEngine.isPlaying()) MidiEngine.pause();
-				else MidiEngine.play();
-			}
-			syncLyricsTransportUI();
-		});
-
-		var curLabel = document.createElement("span");
-		curLabel.id = "lyrics-time-cur";
-		curLabel.className = "lyrics-midi-label lyrics-time-label";
-		curLabel.textContent = "0:00";
-
-		var seek = document.createElement("input");
-		seek.id = "lyrics-seek";
-		seek.className = "lyrics-midi-seek";
-		seek.type = "range";
-		seek.min = "0";
-		seek.max = "1000";
-		seek.step = "1";
-		seek.value = "0";
-		seek.title = "Geser posisi lagu";
-		seek.setAttribute("aria-label", "Posisi lagu");
-		var durCache = 0;
-		seek.addEventListener("input", () => {
-			seek.dataset.seekEditing = "1";
-			if (!durCache) return;
-			var frac = parseInt(seek.value, 10) / 1000;
-			curLabel.textContent = _fmtTime(frac * durCache);
-		});
-		var commitSeek = () => {
-			seek.dataset.seekEditing = "0";
-			if (typeof MidiEngine === "undefined") return;
-			durCache = MidiEngine.getDuration() || durCache;
-			if (!durCache) return;
-			var t = (parseInt(seek.value, 10) / 1000) * durCache;
-			MidiEngine.seek(t);
-			syncLyricsTransportUI();
-		};
-		seek.addEventListener("change", commitSeek);
-		seek.addEventListener("pointerup", () => {
-			if (seek.dataset.seekEditing === "1") commitSeek();
-		});
-		seek.addEventListener("keydown", (e) => e.stopPropagation());
-
-		var endLabel = document.createElement("span");
-		endLabel.id = "lyrics-time-end";
-		endLabel.className = "lyrics-midi-label lyrics-time-label";
-		endLabel.textContent = "0:00";
-
-		var tsg = document.createElement("div");
-		tsg.className = "lyrics-midi-group lyrics-transport-group";
-		tsg.append(playBtn, curLabel, seek, endLabel);
-		bar.append(tsg);
-
-		// Instrument
-		var iw = document.createElement("div");
-		iw.className = "lyrics-midi-group lyrics-midi-instrument-wrap";
-		var isel = document.createElement("select");
-		isel.id = "lyrics-instrument-select";
-		isel.className = "lyrics-midi-select";
-		isel.title = "Pilih alat musik";
-		isel.setAttribute("aria-label", "Pilih alat musik");
-		isel.addEventListener("change", onLyricsInstrumentChange);
-		iw.append(isel);
-		bar.append(iw);
-
-		// Tempo: input bisa diketik + tombol +/- (dengan hold)
-		var tg = document.createElement("div");
-		tg.className = "lyrics-midi-group";
-		var tdn = mkMidiBtn("lyrics-tempo-down", "Kurangi tempo", "remove");
-		addHoldRepeat(tdn, () => onLyricsTempo(-2), { delay: 300, interval: 90 });
-		var tlb = document.createElement("input");
-		tlb.id = "lyrics-tempo-label";
-		tlb.className = "lyrics-midi-label lyrics-tempo-input";
-		tlb.type = "number";
-		tlb.min = "30";
-		tlb.max = "220";
-		tlb.step = "1";
-		tlb.inputMode = "numeric";
-		tlb.title = "Ketik tempo (BPM)";
-		tlb.setAttribute("aria-label", "Tempo dalam BPM (bisa diketik)");
-		var commitTempoInput = () => {
-			tlb.dataset.tempoEditing = "0";
-			var v = parseInt(tlb.value, 10);
-			if (!Number.isFinite(v)) {
-				syncLyricsTempoLabel();
-				return;
-			}
-			if (typeof setMidiTempoBpm === "function") setMidiTempoBpm(v);
-			syncLyricsTempoLabel();
-		};
-		tlb.addEventListener("input", () => {
-			tlb.dataset.tempoEditing = "1";
-		});
-		tlb.addEventListener("change", commitTempoInput);
-		tlb.addEventListener("blur", commitTempoInput);
-		tlb.addEventListener("keydown", (e) => {
-			if (e.key === "Enter") {
-				e.preventDefault();
-				commitTempoInput();
-				tlb.blur();
-			} else if (e.key === "Escape") {
-				e.preventDefault();
-				tlb.dataset.tempoEditing = "0";
-				syncLyricsTempoLabel();
-				tlb.blur();
-			}
-		});
-		var tup = mkMidiBtn("lyrics-tempo-up", "Tambah tempo", "add");
-		addHoldRepeat(tup, () => onLyricsTempo(2), { delay: 300, interval: 90 });
-		tg.append(tdn, tlb, tup);
-		bar.append(tg);
-
-		// Nada dasar (key) + dropdown 12 nada
-		var kg = document.createElement("div");
-		kg.className = "lyrics-midi-group lyrics-key-group";
-		var kbtn = document.createElement("button");
-		kbtn.id = "lyrics-key-btn";
-		kbtn.type = "button";
-		kbtn.className = "lyrics-midi-btn lyrics-key-btn";
-		kbtn.title = "Pilih nada dasar";
-		kbtn.setAttribute("aria-label", "Pilih nada dasar");
-		kbtn.textContent = "—";
-		var kdd = document.createElement("div");
-		kdd.className = "lyrics-key-dropdown";
-		kdd.id = "lyrics-key-dropdown";
-		kdd.setAttribute("role", "listbox");
-		kbtn.addEventListener("click", (e) => {
-			e.stopPropagation();
-			kdd.classList.toggle("is-open");
-		});
-		kdd.addEventListener("click", (e) => {
-			var opt = e.target.closest(".lyrics-key-option");
-			if (!opt) return;
-			var idx = parseInt(opt.dataset.index, 10);
-			if (Number.isFinite(idx)) applyLyricsKey(idx);
-			kdd.classList.remove("is-open");
-		});
-		kg.append(kbtn, kdd);
-		bar.append(kg);
-
-		// Transpose
-		var trg = document.createElement("div");
-		trg.className = "lyrics-midi-group";
-		var trd = mkMidiBtn("lyrics-transpose-down", "Turunkan nada", "south");
-		addHoldRepeat(trd, () => onLyricsTranspose(-1), { delay: 300, interval: 90 });
-		var trl = document.createElement("span");
-		trl.id = "lyrics-transpose-label";
-		trl.className = "lyrics-midi-label lyrics-transpose-label";
-		trl.textContent = "Transpose 0";
-		var tru = mkMidiBtn("lyrics-transpose-up", "Naikkan nada", "north");
-		addHoldRepeat(tru, () => onLyricsTranspose(1), { delay: 300, interval: 90 });
-		trg.append(trd, trl, tru);
-		bar.append(trg);
-
-		inn.append(bar);
-
-		// Tutup dropdown key saat klik di luar
-		document.addEventListener("pointerdown", (e) => {
-			if (!e.target.closest(".lyrics-key-group")) {
-				var dd = qs("#lyrics-key-dropdown");
-				if (dd) dd.classList.remove("is-open");
-			}
-		});
-	}
-
 	function populateLyricsInstrumentSelect() {
 		var sel = qs("#lyrics-instrument-select");
 		if (!sel) return;
@@ -1388,7 +1204,7 @@
 		if (!el) return;
 		var step =
 			typeof transposeStep !== "undefined" ? transposeStep : 0;
-		el.textContent = "Transpose " + (step > 0 ? "+" : "") + step;
+		el.textContent = (step > 0 ? "+" : "") + step;
 	}
 
 	function onLyricsTranspose(delta) {
@@ -1479,13 +1295,13 @@
 	}
 
 	function syncLyricsMidiControls() {
+		var header = qs("#lyrics-header");
 		if (typeof MidiEngine === "undefined") {
-			var bar = qs("#lyrics-midi-bar");
-			if (bar) bar.style.display = "none";
+			// Tanpa MIDI: sembunyikan baris transport & tuning di header
+			if (header) header.classList.add("is-no-midi");
 			return;
 		}
-		var bar2 = qs("#lyrics-midi-bar");
-		if (bar2) bar2.style.display = "";
+		if (header) header.classList.remove("is-no-midi");
 		populateLyricsInstrumentSelect();
 		syncLyricsTempoLabel();
 		updateLyricsKeyButton();
@@ -1736,50 +1552,137 @@
 		inn.style.cssText =
 			"position:relative;z-index:1;display:flex;flex-direction:column;width:100%;height:100%;margin:0 auto";
 
-		// Header
+		// ── Header ringkas: SEMUA kontrol (teks + MIDI) dalam satu blok ──
 		var hd = document.createElement("div");
-		hd.style.cssText =
-			"display:flex;align-items:center;justify-content:space-between;padding:10px 16px;flex-shrink:0;gap:8px";
-		var si = document.createElement("div");
-		si.style.cssText =
-			"display:flex;align-items:baseline;gap:2px;min-width:0;flex:1";
-		var sn = document.createElement("span");
-		sn.id = "lyrics-song-number";
-		sn.style.cssText =
-			"font-size:0.75rem;font-weight:600;color:var(--md-sys-color-primary);white-space:nowrap";
-		si.append(sn);
-		var st = document.createElement("h2");
-		st.id = "lyrics-song-title";
-		st.style.cssText =
-			"font-family:var(--font-display);font-size:1.05rem;font-weight:700;color:var(--md-sys-color-on-surface);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";
-		si.append(st);
-		hd.append(si);
+		hd.id = "lyrics-header";
+		hd.className = "lyrics-header";
 
-		var ha = document.createElement("div");
-		ha.style.cssText = "display:flex;gap:2px;flex-shrink:0";
-
-		function mkCtrlBtn(id, title, icon) {
+		function mkHdrBtn(id, title, icon) {
 			var b = document.createElement("button");
 			b.id = id;
-			b.className = "icon-button lyrics-ctrl-btn";
+			b.type = "button";
+			b.className = "lyrics-midi-btn lyrics-hdr-btn";
 			b.title = title;
 			b.setAttribute("aria-label", title);
-			b.style.cssText =
-				"width:32px;height:32px;border-radius:10px;opacity:0.5;display:flex;align-items:center;justify-content:center";
 			var s = document.createElement("span");
 			s.className = "material-symbols-outlined";
-			s.style.fontSize = "18px";
 			s.textContent = icon;
 			b.append(s);
 			return b;
 		}
+		function mkCtrlBtn(id, title, icon) {
+			var b = mkHdrBtn(id, title, icon);
+			b.classList.add("lyrics-ctrl-btn");
+			return b;
+		}
+
+		/* Baris 1 — navigasi lagu + play + judul */
+		var lMain = document.createElement("div");
+		lMain.className = "lh-line lh-main";
+		var pv = mkHdrBtn("lyrics-song-prev", "Lagu sebelumnya", "skip_previous");
+		pv.addEventListener("click", (e) => {
+			e.stopPropagation();
+			if (typeof onPrevSong === "function") onPrevSong(_midiIsPlaying(), false);
+		});
+		lMain.append(pv);
+
+		var playBtn = mkHdrBtn("lyrics-play-btn", "Putar / jeda", "play_arrow");
+		playBtn.classList.add("lyrics-play-toggle");
+		playBtn.addEventListener("click", (e) => {
+			e.stopPropagation();
+			if (typeof window.toggleMidiPlayback === "function") {
+				window.toggleMidiPlayback();
+			} else if (
+				typeof MidiEngine !== "undefined" &&
+				typeof MidiEngine.resumeContext === "function"
+			) {
+				MidiEngine.resumeContext();
+				if (MidiEngine.isPlaying()) MidiEngine.pause();
+				else MidiEngine.play();
+			}
+			syncLyricsTransportUI();
+		});
+		lMain.append(playBtn);
+
+		var si = document.createElement("div");
+		si.className = "lh-title";
+		si.style.cssText =
+			"display:flex;align-items:baseline;gap:2px;min-width:0;flex:1;justify-content:center";
+		var sn = document.createElement("span");
+		sn.id = "lyrics-song-number";
+		sn.style.cssText =
+			"font-size:0.72rem;font-weight:600;color:var(--md-sys-color-primary);white-space:nowrap";
+		si.append(sn);
+		var st = document.createElement("h2");
+		st.id = "lyrics-song-title";
+		st.style.cssText =
+			"font-family:var(--font-display);font-size:1.02rem;font-weight:700;color:var(--md-sys-color-on-surface);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";
+		si.append(st);
+		lMain.append(si);
+
+		var nv = mkHdrBtn("lyrics-song-next", "Lagu berikutnya", "skip_next");
+		nv.addEventListener("click", (e) => {
+			e.stopPropagation();
+			if (typeof onNextSong === "function") onNextSong(_midiIsPlaying());
+		});
+		lMain.append(nv);
+		hd.append(lMain);
+
+		/* Baris 2 — transport seek + pengaturan teks + tutup */
+		var lMedia = document.createElement("div");
+		lMedia.id = "lyrics-media-line";
+		lMedia.className = "lh-line lh-media";
+
+		var curLabel = document.createElement("span");
+		curLabel.id = "lyrics-time-cur";
+		curLabel.className = "lyrics-midi-label lyrics-time-label";
+		curLabel.textContent = "0:00";
+
+		var seek = document.createElement("input");
+		seek.id = "lyrics-seek";
+		seek.className = "lyrics-midi-seek";
+		seek.type = "range";
+		seek.min = "0";
+		seek.max = "1000";
+		seek.step = "1";
+		seek.value = "0";
+		seek.title = "Geser posisi lagu";
+		seek.setAttribute("aria-label", "Posisi lagu");
+		var durCache = 0;
+		seek.addEventListener("input", () => {
+			seek.dataset.seekEditing = "1";
+			if (!durCache) return;
+			var frac = parseInt(seek.value, 10) / 1000;
+			curLabel.textContent = _fmtTime(frac * durCache);
+		});
+		var commitSeek = () => {
+			seek.dataset.seekEditing = "0";
+			if (typeof MidiEngine === "undefined") return;
+			durCache = MidiEngine.getDuration() || durCache;
+			if (!durCache) return;
+			var t = (parseInt(seek.value, 10) / 1000) * durCache;
+			MidiEngine.seek(t);
+			syncLyricsTransportUI();
+		};
+		seek.addEventListener("change", commitSeek);
+		seek.addEventListener("pointerup", () => {
+			if (seek.dataset.seekEditing === "1") commitSeek();
+		});
+		seek.addEventListener("keydown", (e) => e.stopPropagation());
+
+		var endLabel = document.createElement("span");
+		endLabel.id = "lyrics-time-end";
+		endLabel.className = "lyrics-midi-label lyrics-time-label";
+		endLabel.textContent = "0:00";
+
+		lMedia.append(curLabel, seek, endLabel);
 
 		var fd = mkCtrlBtn("lyrics-font-down", "Perkecil font", "text_decrease");
 		addHoldRepeat(fd, () => applyLyricsFontDelta(-4));
-		ha.append(fd);
+		lMedia.append(fd);
 		var fu = mkCtrlBtn("lyrics-font-up", "Perbesar font", "text_increase");
 		addHoldRepeat(fu, () => applyLyricsFontDelta(4));
-		ha.append(fu);
+		lMedia.append(fu);
 		var sd = mkCtrlBtn(
 			"lyrics-spacing-down",
 			"Rapatkan teks",
@@ -1788,12 +1691,12 @@
 		addHoldRepeat(sd, () => applyLyricsSpacingDelta(-0.2), {
 			interval: 100,
 		});
-		ha.append(sd);
+		lMedia.append(sd);
 		var su = mkCtrlBtn("lyrics-spacing-up", "Renggangkan teks", "line_weight");
 		addHoldRepeat(su, () => applyLyricsSpacingDelta(0.2), {
 			interval: 100,
 		});
-		ha.append(su);
+		lMedia.append(su);
 		var ctg = mkCtrlBtn(
 			"lyrics-chord-toggle-btn",
 			lyricsShowChords ? "Sembunyikan chord" : "Tampilkan chord",
@@ -1815,17 +1718,155 @@
 			clearTimeout(window.__lyricsChordsFitTimer);
 			window.__lyricsChordsFitTimer = setTimeout(autoFitLyricsVerse, 360);
 		});
-		ha.append(ctg);
+		lMedia.append(ctg);
 		var cb = mkCtrlBtn("lyrics-close-btn", "Kembali ke PDF", "close");
 		cb.addEventListener("click", () => {
 			window.hideLyricsView();
 		});
-		ha.append(cb);
-		hd.append(ha);
-		inn.append(hd);
-		buildLyricsMidiBar(inn);
+		lMedia.append(cb);
+		hd.append(lMedia);
 
-		// Content
+		/* Baris 3 — instrumen, tempo, nada dasar, transpose, navigasi bait */
+		var lTune = document.createElement("div");
+		lTune.id = "lyrics-tune-line";
+		lTune.className = "lh-line lh-tune";
+
+		// Instrument
+		var iw = document.createElement("div");
+		iw.className = "lyrics-midi-group lyrics-midi-instrument-wrap";
+		var isel = document.createElement("select");
+		isel.id = "lyrics-instrument-select";
+		isel.className = "lyrics-midi-select";
+		isel.title = "Pilih alat musik";
+		isel.setAttribute("aria-label", "Pilih alat musik");
+		isel.addEventListener("change", onLyricsInstrumentChange);
+		iw.append(isel);
+		lTune.append(iw);
+
+		// Tempo: input bisa diketik + tombol +/- (dengan hold)
+		var tg = document.createElement("div");
+		tg.className = "lyrics-midi-group";
+		var tdn = mkHdrBtn("lyrics-tempo-down", "Kurangi tempo", "remove");
+		addHoldRepeat(tdn, () => onLyricsTempo(-2), { delay: 300, interval: 90 });
+		var tlb = document.createElement("input");
+		tlb.id = "lyrics-tempo-label";
+		tlb.className = "lyrics-midi-label lyrics-tempo-input";
+		tlb.type = "number";
+		tlb.min = "30";
+		tlb.max = "220";
+		tlb.step = "1";
+		tlb.inputMode = "numeric";
+		tlb.title = "Ketik tempo (BPM)";
+		tlb.setAttribute("aria-label", "Tempo dalam BPM (bisa diketik)");
+		var commitTempoInput = () => {
+			tlb.dataset.tempoEditing = "0";
+			var v = parseInt(tlb.value, 10);
+			if (!Number.isFinite(v)) {
+				syncLyricsTempoLabel();
+				return;
+			}
+			if (typeof setMidiTempoBpm === "function") setMidiTempoBpm(v);
+			syncLyricsTempoLabel();
+		};
+		tlb.addEventListener("input", () => {
+			tlb.dataset.tempoEditing = "1";
+		});
+		tlb.addEventListener("change", commitTempoInput);
+		tlb.addEventListener("blur", commitTempoInput);
+		tlb.addEventListener("keydown", (e) => {
+			if (e.key === "Enter") {
+				e.preventDefault();
+				commitTempoInput();
+				tlb.blur();
+			} else if (e.key === "Escape") {
+				e.preventDefault();
+				tlb.dataset.tempoEditing = "0";
+				syncLyricsTempoLabel();
+				tlb.blur();
+			}
+		});
+		var tup = mkHdrBtn("lyrics-tempo-up", "Tambah tempo", "add");
+		addHoldRepeat(tup, () => onLyricsTempo(2), { delay: 300, interval: 90 });
+		tg.append(tdn, tlb, tup);
+		lTune.append(tg);
+
+		// Nada dasar (key) + dropdown 12 nada
+		var kg = document.createElement("div");
+		kg.className = "lyrics-midi-group lyrics-key-group";
+		var kbtn = document.createElement("button");
+		kbtn.id = "lyrics-key-btn";
+		kbtn.type = "button";
+		kbtn.className = "lyrics-midi-btn lyrics-key-btn";
+		kbtn.title = "Pilih nada dasar";
+		kbtn.setAttribute("aria-label", "Pilih nada dasar");
+		kbtn.textContent = "—";
+		var kdd = document.createElement("div");
+		kdd.className = "lyrics-key-dropdown";
+		kdd.id = "lyrics-key-dropdown";
+		kdd.setAttribute("role", "listbox");
+		kbtn.addEventListener("click", (e) => {
+			e.stopPropagation();
+			kdd.classList.toggle("is-open");
+		});
+		kdd.addEventListener("click", (e) => {
+			var opt = e.target.closest(".lyrics-key-option");
+			if (!opt) return;
+			var idx = parseInt(opt.dataset.index, 10);
+			if (Number.isFinite(idx)) applyLyricsKey(idx);
+			kdd.classList.remove("is-open");
+		});
+		kg.append(kbtn, kdd);
+		lTune.append(kg);
+
+		// Transpose
+		var trg = document.createElement("div");
+		trg.className = "lyrics-midi-group";
+		var trd = mkHdrBtn("lyrics-transpose-down", "Turunkan nada", "south");
+		addHoldRepeat(trd, () => onLyricsTranspose(-1), { delay: 300, interval: 90 });
+		var trl = document.createElement("span");
+		trl.id = "lyrics-transpose-label";
+		trl.className = "lyrics-midi-label lyrics-transpose-label";
+		trl.textContent = "0";
+		var tru = mkHdrBtn("lyrics-transpose-up", "Naikkan nada", "north");
+		addHoldRepeat(tru, () => onLyricsTranspose(1), { delay: 300, interval: 90 });
+		trg.append(trd, trl, tru);
+		lTune.append(trg);
+
+		// Navigasi bait ringkas
+		var vg = document.createElement("div");
+		vg.className = "lyrics-midi-group lyrics-verse-group";
+		var vb = mkHdrBtn("lyrics-prev-verse", "Bait sebelumnya", "arrow_upward");
+		vb.addEventListener("click", () => {
+			navigateLyricsVerse(-1);
+		});
+		vg.append(vb);
+		var vi = document.createElement("span");
+		vi.id = "lyrics-verse-indicator";
+		vi.className = "lyrics-verse-indicator";
+		vi.textContent = "Bait 1/1";
+		vg.append(vi);
+		var va = mkHdrBtn("lyrics-next-verse", "Bait berikutnya", "arrow_downward");
+		va.addEventListener("click", () => {
+			navigateLyricsVerse(1);
+		});
+		vg.append(va);
+		lTune.append(vg);
+		hd.append(lTune);
+
+		// Tutup dropdown key saat klik di luar
+		document.addEventListener("pointerdown", (e) => {
+			if (!e.target.closest(".lyrics-key-group")) {
+				var dd = qs("#lyrics-key-dropdown");
+				if (dd) dd.classList.remove("is-open");
+			}
+		});
+
+		inn.append(hd);
+		p.append(inn);
+		document.body.append(p);
+
+		// Content: area bait lirik (swipe vertikal = ganti bait,
+		// horizontal = ganti lagu)
 		var ct = document.createElement("div");
 		ct.id = "lyrics-content";
 		ct.style.cssText =
@@ -1842,70 +1883,6 @@
 		vc.append(vt);
 		ct.append(vc);
 		inn.append(ct);
-
-		// Footer
-		var ft = document.createElement("div");
-		ft.style.cssText =
-			"display:flex;align-items:center;padding:8px 16px 16px;flex-shrink:0";
-		var fl = document.createElement("div");
-		fl.style.cssText = "flex:1;display:flex";
-		var fc = document.createElement("div");
-		fc.style.cssText = "display:flex;align-items:center;gap:10px";
-		var fr = document.createElement("div");
-		fr.style.cssText = "flex:1;display:flex;justify-content:flex-end";
-
-		function mkNavBtn(id, title, icon) {
-			var b = document.createElement("button");
-			b.id = id;
-			b.className = "icon-button lyrics-nav-btn";
-			b.title = title;
-			b.setAttribute("aria-label", title);
-			b.style.cssText =
-				"width:38px;height:38px;border-radius:12px;background:var(--md-sys-color-surface-container-highest);display:flex;align-items:center;justify-content:center;transition:opacity 0.2s,transform 0.12s";
-			var s = document.createElement("span");
-			s.className = "material-symbols-outlined";
-			s.style.fontSize = "22px";
-			s.textContent = icon;
-			b.append(s);
-			return b;
-		}
-
-		var pv = mkNavBtn("lyrics-song-prev", "Lagu sebelumnya", "skip_previous");
-		pv.addEventListener("click", (e) => {
-			e.stopPropagation();
-			if (typeof onPrevSong === "function") onPrevSong(_midiIsPlaying(), false);
-		});
-		fl.append(pv);
-		var nv = mkNavBtn("lyrics-song-next", "Lagu berikutnya", "skip_next");
-		nv.addEventListener("click", (e) => {
-			e.stopPropagation();
-			if (typeof onNextSong === "function") onNextSong(_midiIsPlaying());
-		});
-		fr.append(nv);
-		var vb = mkNavBtn("lyrics-prev-verse", "Bait sebelumnya", "arrow_upward");
-		vb.addEventListener("click", () => {
-			navigateLyricsVerse(-1);
-		});
-		fc.append(vb);
-		var vi = document.createElement("span");
-		vi.id = "lyrics-verse-indicator";
-		vi.className = "lyrics-verse-indicator";
-		vi.style.cssText =
-			"font-size:0.82rem;font-weight:600;color:var(--md-sys-color-on-surface-variant);min-width:110px;text-align:center;white-space:nowrap";
-		vi.textContent = "Bait 1 dari 1";
-		fc.append(vi);
-		var va = mkNavBtn("lyrics-next-verse", "Bait berikutnya", "arrow_downward");
-		va.addEventListener("click", () => {
-			navigateLyricsVerse(1);
-		});
-		fc.append(va);
-
-		ft.append(fl);
-		ft.append(fc);
-		ft.append(fr);
-		inn.append(ft);
-		p.append(inn);
-		document.body.append(p);
 
 		// Gestures: vertical swipe = verse nav, horizontal swipe = song nav
 		var tsX = 0,
@@ -2094,13 +2071,25 @@
 
 	function loadLyricsDataCached(cb) {
 		if (typeof window.gysLoadLyricsData === "function") {
-			window.gysLoadLyricsData(cb);
+			window.gysLoadLyricsData((data) => {
+				try {
+					cb(data);
+				} catch (e) {
+					console.error("[lyrics] render gagal:", e);
+				}
+			});
 			return;
 		}
 		fetch("assets-lyrics.json")
 			.then((r) => (r.ok ? r.json() : []))
 			.catch(() => [])
-			.then(cb);
+			.then((data) => {
+				try {
+					cb(data);
+				} catch (e) {
+					console.error("[lyrics] render gagal (fallback):", e);
+				}
+			});
 	}
 
 	function toggleLyricsView() {

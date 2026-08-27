@@ -1,4 +1,4 @@
-/* Auto-merged runtime source. Legacy split snapshot archived under archive/docs-js/legacy. */
+﻿/* Auto-merged runtime source. Legacy split snapshot archived under archive/docs-js/legacy. */
 
 /* SOURCE: 04-init.js */
 // --- 3. Init ---
@@ -119,7 +119,7 @@ var _gysHadServiceWorkerController =
 	!!navigator.serviceWorker.controller;
 // Versi build yang tertanam di bundle ini — pembanding utama vs versi SW.
 // HARUS sama dengan APP_VERSION di docs/sw.js (naikkan bersama).
-const GYS_CLIENT_BUILD = "3.8.29";
+const GYS_CLIENT_BUILD = "3.8.30";
 
 function checkForAppUpdate() {
 	if (!("serviceWorker" in navigator)) return;
