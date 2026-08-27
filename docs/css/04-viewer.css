@@ -1,4 +1,4 @@
-.pdf-viewer-overlay {
+﻿.pdf-viewer-overlay {
 	position: fixed;
 	inset: 0;
 	z-index: var(--z-layer-viewer-overlay);
@@ -4425,21 +4425,53 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	padding: 0 2px;
 }
 
-/* Baris utama tidak membesar — judul & kontrol menyesuaikan */
+/* Baris utama: transport | judul | aksi */
 .lh-main {
-	gap: 5px;
+	gap: 6px;
 }
 
-.lh-main .lh-title h2 {
-	font-size: 0.95rem;
+.lh-transport,
+.lh-actions {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	flex-shrink: 0;
 }
 
-/* Judul boleh menyusut agar seek bernafas */
 .lh-title {
 	flex: 1 1 0;
 	min-width: 0;
+	display: flex;
+	align-items: baseline;
+	justify-content: center;
+	gap: 3px;
 	overflow: hidden;
+	padding: 0 2px;
 }
+
+/* Judul mulai menyusut di layar sedang, bukan langsung nol */
+@media (max-width: 900px) {
+	.lh-title {
+		flex: 0 1 220px;
+	}
+}
+
+/* Judul mobile: tampil hanya di baris tuning saat layar sempit */
+.lh-title-mobile {
+	display: none;
+}
+
+@media (max-width: 560px) {
+	.lh-title-mobile {
+		display: flex;
+		flex: 1 1 100%;
+		justify-content: center;
+		order: -1; /* paling atas dalam baris tuning */
+		margin-bottom: 1px;
+	}
+}
+
+/* Mobile sempit: SEMUA kontrol tetap satu baris — kompresi agresi */
 
 /* Area collapsible: baris luar disembunyikan via max-height (animasi) */
 .lyrics-extra {
@@ -4503,11 +4535,11 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	transform: rotate(180deg);
 }
 
-/* Seek kompak di baris utama */
+/* Seek kompak di baris utama — fleksibel tapi terkendali */
 .lyrics-main-seek {
-	flex: 0 1 130px;
-	min-width: 60px;
-	max-width: 170px;
+	flex: 1 1 90px;
+	min-width: 56px;
+	max-width: 220px;
 	height: 20px;
 }
 
@@ -4567,18 +4599,6 @@ body.lyrics-mode .pdf-viewer-page-controls {
 /* Seek lama di media-line (tak dipakai lagi, jaga kompatibilitas) */
 .lh-media .lyrics-midi-seek {
 	flex: 1;
-}
-
-@media (max-width: 420px) {
-	.lyrics-header {
-		padding: 4px 7px;
-	}
-	.lh-line {
-		gap: 3px;
-	}
-	.lyrics-tune-line .lyrics-midi-select {
-		max-width: 86px;
-	}
 }
 
 .lyrics-midi-group {
@@ -4985,4 +5005,43 @@ body .mini-instrument-capsule {
 }
 body .mini-tempo-toggle-btn {
 	min-width: 0;
+}
+
+@media (max-width: 560px) {
+	.lh-main {
+		gap: 3px;
+		flex-wrap: nowrap;
+	}
+	.lh-tune {
+		flex-wrap: wrap;
+		row-gap: 3px;
+	}
+	.lh-transport,
+	.lh-actions {
+		gap: 1px;
+	}
+	.lh-title {
+		display: none; /* judul pindah ke baris tuning (klon mobile) */
+	}
+	.lyrics-main-seek {
+		flex: 1 1 30px;
+		min-width: 28px;
+		height: 18px;
+	}
+	.lyrics-time-label {
+		min-width: 21px;
+		font-size: 0.58rem;
+	}
+	.lyrics-hdr-btn {
+		width: 24px;
+		height: 24px;
+		border-radius: 7px;
+	}
+	.lyrics-hdr-btn .material-symbols-outlined {
+		font-size: 13px;
+	}
+	.lyrics-play-toggle {
+		width: 26px;
+		height: 26px;
+	}
 }
