@@ -4591,9 +4591,11 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	font-size: 0.72rem;
 }
 
-/* Baris collapsible kedua: font/spasi kiri, transpose kanan */
-.lh-textline {
-	justify-content: space-between;
+/* Baris collapsible: semua tombol rapat dari kiri */
+.lh-textline,
+.lh-tune {
+	justify-content: flex-start;
+	gap: 3px;
 }
 
 /* Seek lama di media-line (tak dipakai lagi, jaga kompatibilitas) */

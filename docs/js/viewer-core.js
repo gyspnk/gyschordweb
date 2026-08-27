@@ -129,11 +129,15 @@ async function openPdfViewer(songId, backgroundLoad = false) {
 
   // Start fetching PDF immediately to overlap network with transition
   // (skipped when we can reuse the existing decoded document)
+  // Cache decoded doc: bila PDF ini pernah dibuka & masih di cache LRU,
+  // pakai dokumen yang sudah di-decode (hemat proses berat PDF.js).
+  const _cachedDoc = _canReuseDoc ? null : _takeCachedDecodedPdf(song.fileHref);
   const pdfOptions = {
     url: song.fileHref,
     standardFontDataUrl: "https://mozilla.github.io/pdf.js/standard_fonts/",
   };
-  const loadingTask = _canReuseDoc ? null : pdfjsLib.getDocument(pdfOptions);
+  const loadingTask =
+    _canReuseDoc || _cachedDoc ? null : pdfjsLib.getDocument(pdfOptions);
   if (loadingTask) {
     if (activePdfLoadingTask && activePdfLoadingTask !== loadingTask) {
       try { activePdfLoadingTask.destroy(); } catch (_err) {}
@@ -163,10 +167,13 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   }
 
   if (!_canReuseDoc) {
-    // Animate title/canvas only when actually switching content
+    // Animate title/canvas only when actually switching content.
+    // Delay dibuat sangat pendek — cukup untuk mencegah flicker lintas-
+    // navigasi, tanpa membuat buka PDF terasa lambat. PDF yang sudah
+    // ter-cache (decoded/prefetch) langsung render tanpa jeda.
     songTitleWrapper.classList.add("is-navigating");
     canvasWrapper.classList.add("is-navigating");
-    const navDelayMs = _earlyTargetIsPreloaded ? 0 : 150;
+    const navDelayMs = _earlyTargetIsPreloaded || _cachedDoc ? 0 : 40;
     if (navDelayMs > 0) {
       await new Promise((resolve) => setTimeout(resolve, navDelayMs));
     }
@@ -494,19 +501,30 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       canvasWrapper.classList.remove("is-navigating");
       songTitleWrapper.classList.remove("is-navigating");
     } else {
-      const loadedPdfDoc = await loadingTask.promise;
+      let loadedPdfDoc = _cachedDoc;
+      if (!loadedPdfDoc) {
+        loadedPdfDoc = await loadingTask.promise;
+      }
       if (_openPdfViewerGeneration !== thisOpenGeneration) {
         try { loadedPdfDoc.destroy(); } catch (_err) {}
         return;
       }
       const previousPdfDoc = pdfDoc;
       pdfDoc = loadedPdfDoc;
-      if (activePdfLoadingTask === loadingTask) {
+      if (loadingTask && activePdfLoadingTask === loadingTask) {
         activePdfLoadingTask = null;
         activePdfLoadingGeneration = 0;
       }
+      // Simpan ke cache decoded (dokumen lama tetap hidup untuk next/prev cepat)
+      _cacheDecodedPdf(song.fileHref, pdfDoc);
       if (previousPdfDoc && previousPdfDoc !== pdfDoc) {
-        try { previousPdfDoc.destroy(); } catch (_err) {}
+        // Jangan destroy jika masih disimpan di cache decoded
+        const stillCached = Array.from(_decodedPdfCache.values()).some(
+          (e) => e.doc === previousPdfDoc,
+        );
+        if (!stillCached) {
+          try { previousPdfDoc.destroy(); } catch (_err) {}
+        }
       }
 
       // Extract PDF Key
@@ -573,15 +591,16 @@ async function openPdfViewer(songId, backgroundLoad = false) {
 
       updateViewerUI();
       updateHideChordButton();
+      // Angkat fade SEBELUM render halaman pertama: halaman digambar di atas
+      // wrapper yang sudah terlihat (render progresif), jadi pengguna melihat
+      // konten secepat kanvas siap — tanpa layar kosong selama render berat.
+      void canvasWrapper.offsetWidth;
+      canvasWrapper.classList.remove("is-navigating");
+      songTitleWrapper.classList.remove("is-navigating");
       await renderPage(currentPageNum);
       if (_openPdfViewerGeneration !== thisOpenGeneration) return;
       updateSongNavButtons();
       fitViewerTitle();
-
-      // Force a reflow before removing the class to ensure proper transition
-      void canvasWrapper.offsetWidth;
-
-      canvasWrapper.classList.remove("is-navigating");
     }
   } catch (reason) {
     if (_openPdfViewerGeneration !== thisOpenGeneration || reason?.name === "RenderingCancelledException") {
@@ -1740,6 +1759,47 @@ function _prefetchPdf(url) {
   fetch(url, { priority: 'low' }).catch(function() {
     _prefetchedPdfs.delete(url);
   });
+}
+
+// ── Cache dokumen PDF yang sudah di-decode (LRU 3) ──
+// Saat next/prev, PDF tetangga yang sudah pernah dibuka tidak perlu
+// di-decode ulang oleh PDF.js (proses berat yang menyebabkan lag terasa).
+const _decodedPdfCache = new Map(); // url -> { doc, generation }
+const _DECODED_PDF_MAX = 3;
+
+function _cacheDecodedPdf(url, doc) {
+  if (!url || !doc) return;
+  if (_decodedPdfCache.has(url)) {
+    _decodedPdfCache.delete(url);
+  }
+  _decodedPdfCache.set(url, { doc });
+  while (_decodedPdfCache.size > _DECODED_PDF_MAX) {
+    const oldestKey = _decodedPdfCache.keys().next().value;
+    const entry = _decodedPdfCache.get(oldestKey);
+    _decodedPdfCache.delete(oldestKey);
+    if (entry && entry.doc && entry.doc !== pdfDoc) {
+      try { entry.doc.destroy(); } catch (_e) {}
+    }
+  }
+}
+
+function _takeCachedDecodedPdf(url) {
+  if (!url || !_decodedPdfCache.has(url)) return null;
+  const entry = _decodedPdfCache.get(url);
+  _decodedPdfCache.delete(url);
+  _decodedPdfCache.set(url, entry); // touch as most-recent
+  return entry.doc;
+}
+
+function _dropCachedDecodedPdf(url) {
+  if (!url) return;
+  const entry = _decodedPdfCache.get(url);
+  if (entry) {
+    _decodedPdfCache.delete(url);
+    if (entry.doc && entry.doc !== pdfDoc) {
+      try { entry.doc.destroy(); } catch (_e) {}
+    }
+  }
 }
 
 async function swapTranspose(step) {
