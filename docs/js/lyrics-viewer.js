@@ -1607,7 +1607,7 @@
 			return b;
 		}
 
-		/* ── Satu baris utama: prev · play · judul · seek-ringkas · next · collapse ── */
+		/* ── Header SATU baris: prev · play · judul · seek · next · toggle · collapse ── */
 		var lMain = document.createElement("div");
 		lMain.id = "lyrics-main-line";
 		lMain.className = "lh-line lh-main";
@@ -1644,21 +1644,19 @@
 
 		var si = document.createElement("div");
 		si.className = "lh-title";
-		si.style.cssText =
-			"display:flex;align-items:center;gap:6px;min-width:0;flex:1;justify-content:center";
 
 		var tiWrap = document.createElement("div");
 		tiWrap.style.cssText =
-			"display:flex;align-items:baseline;gap:3px;min-width:0;overflow:hidden";
+			"display:flex;align-items:baseline;gap:3px;min-width:0;overflow:hidden;flex-shrink:1";
 		var sn = document.createElement("span");
 		sn.id = "lyrics-song-number";
 		sn.style.cssText =
-			"font-size:0.72rem;font-weight:600;color:var(--md-sys-color-primary);white-space:nowrap";
+			"font-size:0.7rem;font-weight:600;color:var(--md-sys-color-primary);white-space:nowrap";
 		tiWrap.append(sn);
 		var st = document.createElement("h2");
 		st.id = "lyrics-song-title";
 		st.style.cssText =
-			"font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--md-sys-color-on-surface);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";
+			"font-family:var(--font-display);font-size:0.95rem;font-weight:700;color:var(--md-sys-color-on-surface);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";
 		tiWrap.append(st);
 		si.append(tiWrap);
 		lMain.append(si);
@@ -1672,40 +1670,10 @@
 		});
 		lMain.append(nv);
 
-		var colBtn = mkHdrBtn(
-			"lyrics-header-collapse",
-			_lyricsHeaderCollapsed ? "Tampilkan kontrol" : "Sembunyikan kontrol",
-			"expand_more",
-		);
-		colBtn.setAttribute("aria-expanded", _lyricsHeaderCollapsed ? "false" : "true");
-		colBtn.classList.add("lyrics-collapse-btn");
-		colBtn.addEventListener("click", (e) => {
-			e.stopPropagation();
-			toggleLyricsHeaderCollapse();
-			colBtn.setAttribute(
-				"aria-expanded",
-				_lyricsHeaderCollapsed ? "false" : "true",
-			);
-			colBtn.title = _lyricsHeaderCollapsed
-				? "Tampilkan kontrol"
-				: "Sembunyikan kontrol";
-		});
-		lMain.append(colBtn);
-		hd.append(lMain);
-
-		/* ── Area collapsible: seek penuh, tuning MIDI, pengaturan teks ── */
-		var xtra = document.createElement("div");
-		xtra.id = "lyrics-extra-lines";
-		xtra.className = "lyrics-extra";
-
-		/* Baris media — seek penuh */
-		var lMedia = document.createElement("div");
-		lMedia.id = "lyrics-media-line";
-		lMedia.className = "lh-line lh-media";
-
+		/* Seek kompak di baris utama */
 		var seek = document.createElement("input");
 		seek.id = "lyrics-seek";
-		seek.className = "lyrics-midi-seek";
+		seek.className = "lyrics-midi-seek lyrics-main-seek";
 		seek.type = "range";
 		seek.min = "0";
 		seek.max = "1000";
@@ -1734,16 +1702,70 @@
 			if (seek.dataset.seekEditing === "1") commitSeek();
 		});
 		seek.addEventListener("keydown", (e) => e.stopPropagation());
+		lMain.append(seek);
 
 		var endLabel = document.createElement("span");
 		endLabel.id = "lyrics-time-end";
 		endLabel.className = "lyrics-midi-label lyrics-time-label";
 		endLabel.textContent = "0:00";
+		lMain.append(endLabel);
 
-		lMedia.append(curLabel, seek, endLabel);
-		xtra.append(lMedia);
+		/* Toggle chord langsung di baris utama */
+		var ctg = mkCtrlBtn(
+			"lyrics-chord-toggle-btn",
+			lyricsShowChords ? "Sembunyikan chord" : "Tampilkan chord",
+			"music_note",
+		);
+		ctg.setAttribute("aria-pressed", lyricsShowChords ? "true" : "false");
+		if (lyricsShowChords) ctg.classList.add("active");
+		ctg.addEventListener("click", () => {
+			lyricsShowChords = !lyricsShowChords;
+			savePrefs();
+			ctg.setAttribute("aria-pressed", lyricsShowChords ? "true" : "false");
+			ctg.title = lyricsShowChords ? "Sembunyikan chord" : "Tampilkan chord";
+			ctg.classList.toggle("active", lyricsShowChords);
+			// Tanpa re-render: class di #lyrics-verse-text memicu transisi
+			// height/opacity baris chord (expand/collapse + fade) via CSS.
+			var vt = qs("#lyrics-verse-text");
+			if (vt) vt.classList.toggle("lyrics-chords-on", lyricsShowChords);
+			// Autofit ulang SETELAH animasi selesai (tinggi konten berubah)
+			clearTimeout(window.__lyricsChordsFitTimer);
+			window.__lyricsChordsFitTimer = setTimeout(autoFitLyricsVerse, 360);
+		});
+		lMain.append(ctg);
 
-		/* Baris tuning — instrumen/tempo/key/transpose/bait */
+		var cb = mkCtrlBtn("lyrics-close-btn", "Kembali ke PDF", "close");
+		cb.addEventListener("click", () => {
+			window.hideLyricsView();
+		});
+		lMain.append(cb);
+
+		var colBtn = mkHdrBtn(
+			"lyrics-header-collapse",
+			_lyricsHeaderCollapsed ? "Tampilkan kontrol lain" : "Sembunyikan kontrol lain",
+			"tune",
+		);
+		colBtn.setAttribute("aria-expanded", _lyricsHeaderCollapsed ? "false" : "true");
+		colBtn.classList.add("lyrics-collapse-btn");
+		colBtn.addEventListener("click", (e) => {
+			e.stopPropagation();
+			toggleLyricsHeaderCollapse();
+			colBtn.setAttribute(
+				"aria-expanded",
+				_lyricsHeaderCollapsed ? "false" : "true",
+			);
+			colBtn.title = _lyricsHeaderCollapsed
+				? "Tampilkan kontrol lain"
+				: "Sembunyikan kontrol lain";
+		});
+		lMain.append(colBtn);
+		hd.append(lMain);
+
+		/* ── Area collapsible: tuning MIDI + pengaturan teks, 2 baris mikro ── */
+		var xtra = document.createElement("div");
+		xtra.id = "lyrics-extra-lines";
+		xtra.className = "lyrics-extra";
+
 		var lTune = document.createElement("div");
 		lTune.id = "lyrics-tune-line";
 		lTune.className = "lh-line lh-tune";
@@ -1832,22 +1854,8 @@
 		kg.append(kbtn, kdd);
 		lTune.append(kg);
 
-		var trg = document.createElement("div");
-		trg.className = "lyrics-midi-group";
-		var trd = mkHdrBtn("lyrics-transpose-down", "Turunkan nada", "south");
-		addHoldRepeat(trd, () => onLyricsTranspose(-1), { delay: 300, interval: 90 });
-		var trl = document.createElement("span");
-		trl.id = "lyrics-transpose-label";
-		trl.className = "lyrics-midi-label lyrics-transpose-label";
-		trl.textContent = "0";
-		var tru = mkHdrBtn("lyrics-transpose-up", "Naikkan nada", "north");
-		addHoldRepeat(tru, () => onLyricsTranspose(1), { delay: 300, interval: 90 });
-		trg.append(trd, trl, tru);
-		lTune.append(trg);
-
 		xtra.append(lTune);
 
-		/* Baris teks — font/spasi/chord/close */
 		var lText = document.createElement("div");
 		lText.id = "lyrics-text-line";
 		lText.className = "lh-line lh-textline";
@@ -1872,33 +1880,20 @@
 			interval: 100,
 		});
 		lText.append(su);
-		var ctg = mkCtrlBtn(
-			"lyrics-chord-toggle-btn",
-			lyricsShowChords ? "Sembunyikan chord" : "Tampilkan chord",
-			"music_note",
-		);
-		ctg.setAttribute("aria-pressed", lyricsShowChords ? "true" : "false");
-		if (lyricsShowChords) ctg.classList.add("active");
-		ctg.addEventListener("click", () => {
-			lyricsShowChords = !lyricsShowChords;
-			savePrefs();
-			ctg.setAttribute("aria-pressed", lyricsShowChords ? "true" : "false");
-			ctg.title = lyricsShowChords ? "Sembunyikan chord" : "Tampilkan chord";
-			ctg.classList.toggle("active", lyricsShowChords);
-			// Tanpa re-render: class di #lyrics-verse-text memicu transisi
-			// height/opacity baris chord (expand/collapse + fade) via CSS.
-			var vt = qs("#lyrics-verse-text");
-			if (vt) vt.classList.toggle("lyrics-chords-on", lyricsShowChords);
-			// Autofit ulang SETELAH animasi selesai (tinggi konten berubah)
-			clearTimeout(window.__lyricsChordsFitTimer);
-			window.__lyricsChordsFitTimer = setTimeout(autoFitLyricsVerse, 360);
-		});
-		lText.append(ctg);
-		var cb = mkCtrlBtn("lyrics-close-btn", "Kembali ke PDF", "close");
-		cb.addEventListener("click", () => {
-			window.hideLyricsView();
-		});
-		lText.append(cb);
+
+		var trg = document.createElement("div");
+		trg.className = "lyrics-midi-group lyrics-transpose-inline";
+		var trd = mkHdrBtn("lyrics-transpose-down", "Turunkan nada", "south");
+		addHoldRepeat(trd, () => onLyricsTranspose(-1), { delay: 300, interval: 90 });
+		var trl = document.createElement("span");
+		trl.id = "lyrics-transpose-label";
+		trl.className = "lyrics-midi-label lyrics-transpose-label";
+		trl.textContent = "0";
+		var tru = mkHdrBtn("lyrics-transpose-up", "Naikkan nada", "north");
+		addHoldRepeat(tru, () => onLyricsTranspose(1), { delay: 300, interval: 90 });
+		trg.append(trd, trl, tru);
+		lText.append(trg);
+
 		xtra.append(lText);
 
 		hd.append(xtra);

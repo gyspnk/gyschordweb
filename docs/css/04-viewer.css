@@ -4427,11 +4427,18 @@ body.lyrics-mode .pdf-viewer-page-controls {
 
 /* Baris utama tidak membesar — judul & kontrol menyesuaikan */
 .lh-main {
-	gap: 3px;
+	gap: 5px;
 }
 
 .lh-main .lh-title h2 {
 	font-size: 0.95rem;
+}
+
+/* Judul boleh menyusut agar seek bernafas */
+.lh-title {
+	flex: 1 1 0;
+	min-width: 0;
+	overflow: hidden;
 }
 
 /* Area collapsible: baris luar disembunyikan via max-height (animasi) */
@@ -4496,16 +4503,15 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	transform: rotate(180deg);
 }
 
-/* Waktu di baris utama ringkas */
-.lh-main .lyrics-time-label {
-	min-width: 30px;
-	font-size: 0.68rem;
-	color: var(--md-sys-color-on-surface-variant);
-	flex-shrink: 0;
-	font-variant-numeric: tabular-nums;
+/* Seek kompak di baris utama */
+.lyrics-main-seek {
+	flex: 0 1 130px;
+	min-width: 60px;
+	max-width: 170px;
+	height: 20px;
 }
 
-/* Transport inline (bukan baris penuh) */
+/* Transport (durasi) ringkas */
 .lyrics-time-label {
 	min-width: 30px;
 	font-size: 0.68rem;
@@ -4513,12 +4519,16 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	flex-shrink: 0;
 }
 
+.lh-main .lyrics-time-label {
+	color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Seek (umum) — accent tema */
 .lyrics-midi-seek {
-	flex: 1;
-	min-width: 50px;
-	height: 22px;
+	height: 20px;
 	accent-color: var(--md-sys-color-primary);
 	cursor: pointer;
+	min-width: 50px;
 }
 
 .lyrics-midi-seek:disabled {
@@ -4526,7 +4536,7 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	cursor: default;
 }
 
-/* Baris tuning: kontrol makin rampas */
+/* Baris tuning & teks di area collapsible */
 .lyrics-tune-line .lyrics-midi-select {
 	max-width: 108px;
 	font-size: 0.72rem;
@@ -4543,21 +4553,18 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	text-align: center;
 }
 
-.lyrics-tune-line .lyrics-transpose-label {
+.lyrics-tune-line .lyrics-transpose-label,
+.lyrics-transpose-inline .lyrics-transpose-label {
 	min-width: 26px;
 	font-size: 0.72rem;
 }
 
-/* Baris teks & media rata kiri rapat */
-.lh-textline,
-.lh-media {
-	gap: 4px;
-}
-
+/* Baris collapsible kedua: font/spasi kiri, transpose kanan */
 .lh-textline {
-	justify-content: flex-start;
+	justify-content: space-between;
 }
 
+/* Seek lama di media-line (tak dipakai lagi, jaga kompatibilitas) */
 .lh-media .lyrics-midi-seek {
 	flex: 1;
 }
