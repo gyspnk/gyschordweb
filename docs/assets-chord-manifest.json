@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "af0bf93b2f943adabc825d1618dade56a98d8e47",
+  "sourceCommit": "60c3fabc4b385b5a154a1e6acfcb554d99804862",
   "files": [
     {
       "id": "KR:001",
@@ -1281,6 +1281,16 @@
       "formatVersion": 2,
       "size": 1830,
       "sha256": "dcd9971b992223154d827a8a44aa9cc4f3bb3a5bfffd6eb48be53fe2ccf4d26f"
+    },
+    {
+      "id": "KR:407",
+      "bookCode": "KR",
+      "songNumber": "407",
+      "title": "Dalam Taman",
+      "path": "docs/assets/chord/407_Dalam Taman.chord.json",
+      "formatVersion": 2,
+      "size": 1376,
+      "sha256": "53c07eb36d8ce9d93b0b2e5d8740a4619179dacca0ec2d436466764428cf28ed"
     },
     {
       "id": "KR:411",
