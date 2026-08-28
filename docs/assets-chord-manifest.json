@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "60c3fabc4b385b5a154a1e6acfcb554d99804862",
+  "sourceCommit": "ceeb52328501a19e691c3839ad9987243f67c63d",
   "files": [
     {
       "id": "KR:001",
@@ -1411,6 +1411,16 @@
       "formatVersion": 2,
       "size": 1346,
       "sha256": "2b7056cf07eddf37bc9d5ce4982cdb1ee44a10b533fbcdc1d65df2ed433d51b5"
+    },
+    {
+      "id": "KR:466",
+      "bookCode": "KR",
+      "songNumber": "466",
+      "title": "Tiap Hari, Tiap Waktu",
+      "path": "docs/assets/chord/466_Tiap Hari, Tiap Waktu.chord.json",
+      "formatVersion": 2,
+      "size": 1210,
+      "sha256": "14a210602217263d92dbddb28a9123772befaf0cdc13bd9c25c9838ff18c3031"
     },
     {
       "id": "KR:467",
