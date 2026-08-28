@@ -1133,9 +1133,6 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
 		align-items: center;
 		flex-wrap: nowrap;
 		grid-column: auto;
-		overflow-x: auto;
-		overflow-y: hidden;
-		scrollbar-width: none;
 	}
 
 	body:not(.is-expanded-layout):not(.measure-layout)
@@ -2509,6 +2506,26 @@ body:not(.is-expanded-layout):not(.measure-layout)
 	transform: translateX(-50%) translateY(0) scale(1);
 }
 
+/* Mobile portrait: panel is a full-width bar under the header, NOT a
+   centered popup — cancel the translateX(-50%) centering so the panel
+   (and its tempo/instrument popovers) don't shift off-screen. */
+@media (max-width: 767px) and (orientation: portrait) {
+	body:not(.is-expanded-layout):not(.measure-layout)
+		.midi-panel {
+		left: 0;
+		right: 0;
+		width: 100%;
+		max-width: 100%;
+		margin-top: 0;
+		transform: translateY(-8px) scale(0.98);
+	}
+	body:not(.is-expanded-layout):not(.measure-layout)
+		#midi-toggle-btn[aria-expanded="true"]
+		+ .midi-panel {
+		transform: translateY(0) scale(1);
+	}
+}
+
 body:not(.is-expanded-layout):not(.measure-layout)
 	.midi-panel
 	.custom-midi-player {
@@ -2967,8 +2984,8 @@ body.measure-layout .midi-collapse .custom-midi-player::after {
 .midi-tempo-popover {
 	position: absolute;
 	top: calc(100% + 10px);
-	left: auto;
-	right: 0;
+	left: 0;
+	right: auto;
 	min-width: 180px;
 	width: min(320px, calc(100vw - 24px));
 	border-radius: 16px;
@@ -2983,7 +3000,7 @@ body.measure-layout .midi-collapse .custom-midi-player::after {
 	visibility: hidden;
 	pointer-events: none;
 	transform: translateY(-8px) scale(0.96);
-	transform-origin: top right;
+	transform-origin: top left;
 	transition:
 		opacity 0.2s ease,
 		transform 0.2s cubic-bezier(0.2, 0, 0, 1),
@@ -3609,14 +3626,6 @@ body:not(.is-expanded-layout):not(.measure-layout)
 	flex-wrap: nowrap;
 	gap: 4px;
 	align-items: center;
-	overflow-x: auto;
-	overflow-y: hidden;
-	scrollbar-width: none;
-}
-body:not(.is-expanded-layout):not(.measure-layout)
-	.midi-panel
-	.custom-player-actions::-webkit-scrollbar {
-	display: none;
 }
 
 body:not(.is-expanded-layout):not(.measure-layout)
@@ -3671,8 +3680,8 @@ body:not(.is-expanded-layout):not(.measure-layout)
 body:not(.is-expanded-layout):not(.measure-layout)
 	.midi-panel
 	.midi-tempo-popover {
-	left: auto;
-	right: 0;
+	left: 0;
+	right: auto;
 	min-width: 160px;
 	width: min(280px, calc(100vw - 16px));
 }
@@ -3878,8 +3887,8 @@ body.measure-layout .midi-tempo-toggle-unit {
 
 body.is-expanded-layout .midi-tempo-popover,
 body.measure-layout .midi-tempo-popover {
-	left: auto;
-	right: 0;
+	left: 0;
+	right: auto;
 	min-width: 160px;
 	width: min(270px, calc(100vw - 20px));
 }
@@ -4020,14 +4029,6 @@ body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
 	.midi-panel
 	.custom-player-actions {
 	flex-wrap: nowrap;
-	overflow-x: auto;
-	overflow-y: hidden;
-	scrollbar-width: none;
-}
-body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
-	.midi-panel
-	.custom-player-actions::-webkit-scrollbar {
-	display: none;
 }
 
 body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
@@ -4201,20 +4202,11 @@ body.viewer-active #midi-player-loading {
 		.custom-player-actions {
 		display: flex;
 		flex-direction: row;
-		flex-wrap: nowrap;
+		flex-wrap: wrap;
 		align-items: center;
 		gap: 4px;
 		width: 100%;
 		min-width: 0;
-		overflow-x: auto;
-		overflow-y: hidden;
-		scrollbar-width: none;
-		-webkit-overflow-scrolling: touch;
-	}
-	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
-		.midi-panel
-		.custom-player-actions::-webkit-scrollbar {
-		display: none;
 	}
 	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
 		.midi-panel
@@ -5041,19 +5033,11 @@ body.lyrics-mode .pdf-viewer-page-controls {
 		#custom-midi-player .custom-player-actions {
 		display: flex !important;
 		flex-direction: row !important;
-		flex-wrap: nowrap !important;
+		flex-wrap: wrap !important;
 		align-items: center !important;
 		gap: 4px !important;
 		width: 100% !important;
 		min-width: 0 !important;
-		overflow-x: auto !important;
-		overflow-y: hidden !important;
-		scrollbar-width: none !important;
-		-webkit-overflow-scrolling: touch;
-	}
-	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
-		#custom-midi-player .custom-player-actions::-webkit-scrollbar {
-		display: none !important;
 	}
 	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
 		#custom-midi-player .midi-tempo-action {
@@ -5160,12 +5144,12 @@ body:not(.is-expanded-layout):not(.measure-layout)
 	min-width: 0 !important;
 	width: auto !important;
 }
-/* Popover tetap anchor ke kanan (tidak menggoyang layout) */
+/* Popover tetap anchor ke kiri (buka ke kanan, tidak terpotong tepi layar) */
 #custom-midi-player .midi-tempo-popover,
 #custom-midi-player .cis-menu-popover {
-	left: auto !important;
-	right: 0 !important;
-	transform-origin: top right;
+	left: 0 !important;
+	right: auto !important;
+	transform-origin: top left;
 }
 
 /* Mini player popups: force upward + high z-index */
@@ -5179,6 +5163,17 @@ body:not(.is-expanded-layout):not(.measure-layout)
 }
 .mini-player .mini-tempo-popover {
 	z-index: 9999 !important;
+}
+/* Mini tempo popover: center-kan relatif wrapper agar tidak terpotong
+   tepi layar (wrapper tempo berada di tengah baris extras). */
+.mini-player .mini-tempo-action .mini-tempo-popover {
+	left: 50% !important;
+	right: auto !important;
+	transform: translateX(-50%) translateY(6px) scale(0.98) !important;
+	transform-origin: bottom center !important;
+}
+.mini-player .mini-tempo-action.is-open .mini-tempo-popover {
+	transform: translateX(-50%) translateY(0) scale(1) !important;
 }
 
 /* === Mini player: extras rapi, content-sized === */
