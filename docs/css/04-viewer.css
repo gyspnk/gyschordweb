@@ -1131,8 +1131,11 @@ body:not(.chord-editor-enabled) .chord-editor-toolbar {
 		display: flex;
 		gap: 4px;
 		align-items: center;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		grid-column: auto;
+		overflow-x: auto;
+		overflow-y: hidden;
+		scrollbar-width: none;
 	}
 
 	body:not(.is-expanded-layout):not(.measure-layout)
@@ -3603,16 +3606,24 @@ body:not(.is-expanded-layout):not(.measure-layout)
 	.midi-panel
 	.custom-player-actions {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	gap: 4px;
 	align-items: center;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scrollbar-width: none;
+}
+body:not(.is-expanded-layout):not(.measure-layout)
+	.midi-panel
+	.custom-player-actions::-webkit-scrollbar {
+	display: none;
 }
 
 body:not(.is-expanded-layout):not(.measure-layout)
 	.midi-panel
 	.midi-instrument-action {
 	min-width: 0;
-	flex: 0 1 auto;
+	flex: 1 1 auto;
 }
 
 body:not(.is-expanded-layout):not(.measure-layout)
@@ -4008,7 +4019,15 @@ body.measure-layout .custom-midi-player .player-time {
 body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
 	.midi-panel
 	.custom-player-actions {
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scrollbar-width: none;
+}
+body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+	.midi-panel
+	.custom-player-actions::-webkit-scrollbar {
+	display: none;
 }
 
 body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
@@ -4152,9 +4171,8 @@ body.viewer-active #midi-player-loading {
 	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
 		.midi-panel
 		.custom-player-controls {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr);
-		grid-template-rows: auto auto;
+		display: flex;
+		flex-direction: column;
 		gap: 5px;
 		align-items: stretch;
 	}
@@ -4181,37 +4199,50 @@ body.viewer-active #midi-player-loading {
 	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
 		.midi-panel
 		.custom-player-actions {
-		display: grid;
-		grid-template-columns: auto minmax(0, 1fr) auto auto;
+		display: flex;
+		flex-direction: row;
+		flex-wrap: nowrap;
 		align-items: center;
 		gap: 4px;
 		width: 100%;
 		min-width: 0;
+		overflow-x: auto;
+		overflow-y: hidden;
+		scrollbar-width: none;
+		-webkit-overflow-scrolling: touch;
 	}
-
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		.midi-panel
+		.custom-player-actions::-webkit-scrollbar {
+		display: none;
+	}
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		.midi-panel
+		.midi-instrument-action {
+		flex: 1 1 auto;
+		min-width: 0;
+		max-width: none;
+	}
 	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
 		.midi-panel
 		.midi-tempo-action,
 	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
 		.midi-panel
-		.midi-instrument-action,
-	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
-		.midi-panel
 		.midi-icon-action {
+		flex: 0 0 auto;
 		min-width: 0;
-	}
-
-	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
-		.midi-panel
-		.midi-instrument-action {
-		width: 100%;
-		max-width: 100%;
 	}
 
 	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
 		.midi-panel
 		.midi-action-btn.instrument-capsule-btn {
 		width: 100%;
+	}
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		.midi-panel
+		.midi-icon-action .instrument-capsule-btn {
+		width: auto;
+		min-width: 30px;
 	}
 
 	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
@@ -4228,7 +4259,6 @@ body.viewer-active #midi-player-loading {
 	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
 		.midi-panel
 		.custom-player-actions {
-		grid-template-columns: minmax(42px, auto) minmax(0, 1fr) 28px 28px;
 		gap: 3px;
 	}
 
@@ -4951,42 +4981,112 @@ body.lyrics-mode .pdf-viewer-page-controls {
 	}
 }
 
-/* === MIDI Player: 1 baris di SEMUA layout (konsolidasi) === */
-/* Portrait, expanded, measure, kecil — selalu satu row.
-   Aturan ID (spec 110) mengalahkan media query (spec 41) dan base grid. */
+/* === MIDI Player: 1 baris di desktop, 2 baris di mobile (konsolidasi) ===
+   Desktop selalu satu row; mobile portrait memakai 2-row grid agar tidak
+   overlap. Aturan ID (spec 110) tetap mengalahkan media query biasa. */
 
-#custom-midi-player .custom-player-controls {
-	display: flex !important;
-	flex-direction: row !important;
-	flex-wrap: nowrap !important;
-	align-items: center;
-	gap: 8px !important;
+@media (min-width: 641px) {
+	#custom-midi-player .custom-player-controls {
+		display: flex !important;
+		flex-direction: row !important;
+		flex-wrap: nowrap !important;
+		align-items: center;
+		gap: 8px !important;
+	}
+	#custom-midi-player .custom-player-primary {
+		display: flex !important;
+		flex-direction: row !important;
+		align-items: center;
+		gap: 8px !important;
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+	#custom-midi-player .custom-player-actions {
+		display: flex !important;
+		flex-direction: row !important;
+		flex-wrap: nowrap !important;
+		align-items: center;
+		gap: 7px !important;
+		flex: 0 0 auto !important;
+		flex-shrink: 0 !important;
+		min-width: max-content !important;
+	}
+	#custom-midi-player .custom-player-actions .midi-action,
+	#custom-midi-player .custom-player-actions .instrument-selector-wrapper {
+		flex: 0 0 auto !important;
+		flex-shrink: 0 !important;
+		width: auto !important;
+		min-width: max-content !important;
+		margin: 0 !important;
+	}
 }
-#custom-midi-player .custom-player-primary {
-	display: flex !important;
-	flex-direction: row !important;
-	align-items: center;
-	gap: 8px !important;
-	flex: 1 1 auto;
-	min-width: 0;
-}
-#custom-midi-player .custom-player-actions {
-	display: flex !important;
-	flex-direction: row !important;
-	flex-wrap: nowrap !important;
-	align-items: center;
-	gap: 7px !important;
-	flex: 0 0 auto !important;
-	flex-shrink: 0 !important;
-	min-width: max-content !important;
-}
-#custom-midi-player .custom-player-actions .midi-action,
-#custom-midi-player .custom-player-actions .instrument-selector-wrapper {
-	flex: 0 0 auto !important;
-	flex-shrink: 0 !important;
-	width: auto !important;
-	min-width: max-content !important;
-	margin: 0 !important;
+@media (max-width: 640px) {
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		#custom-midi-player .custom-player-controls {
+		display: flex !important;
+		flex-direction: column !important;
+		gap: 6px !important;
+		align-items: stretch !important;
+	}
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		#custom-midi-player .custom-player-primary {
+		display: grid !important;
+		grid-template-columns: 36px minmax(0, 1fr) !important;
+		align-items: center !important;
+		gap: 6px !important;
+		width: 100% !important;
+		min-width: 0 !important;
+	}
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		#custom-midi-player .custom-player-actions {
+		display: flex !important;
+		flex-direction: row !important;
+		flex-wrap: nowrap !important;
+		align-items: center !important;
+		gap: 4px !important;
+		width: 100% !important;
+		min-width: 0 !important;
+		overflow-x: auto !important;
+		overflow-y: hidden !important;
+		scrollbar-width: none !important;
+		-webkit-overflow-scrolling: touch;
+	}
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		#custom-midi-player .custom-player-actions::-webkit-scrollbar {
+		display: none !important;
+	}
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		#custom-midi-player .midi-tempo-action {
+		flex: 0 0 auto !important;
+		width: auto !important;
+	}
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		#custom-midi-player .midi-instrument-action {
+		flex: 1 1 auto !important;
+		min-width: 0 !important;
+		width: auto !important;
+	}
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		#custom-midi-player .midi-icon-action,
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		#custom-midi-player .midi-autonext-action,
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		#custom-midi-player #midi-lyrics-toggle-btn {
+		flex: 0 0 auto !important;
+	}
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		#custom-midi-player .midi-action-btn.instrument-capsule-btn,
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		#custom-midi-player #midi-lyrics-toggle-btn {
+		width: auto !important;
+		min-width: 30px !important;
+		flex: 0 0 auto !important;
+	}
+	body.viewer-active:not(.is-expanded-layout):not(.measure-layout)
+		#custom-midi-player .midi-instrument-action .midi-action-btn {
+		width: 100% !important;
+		min-width: 0 !important;
+	}
 }
 /* Player padding: hemat ruang (hanya mode dropdown/portrait) */
 body:not(.is-expanded-layout):not(.measure-layout)

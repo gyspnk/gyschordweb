@@ -1,0 +1,3 @@
+- Prefers communication in Indonesian (Bahasa Indonesia), often mixing Indonesian with English technical terms. Confidence: 0.85
+- Prefers to verify UI/layout fixes via a live localhost preview before considering work done. Confidence: 0.75
+- Prefers MIDI player controls on mobile to stay in a single horizontal row (tempo, instrument selector, text mode, repeat, fullscreen together) with nowrap/horizontal scroll instead of wrapping or grid multi-row layouts to avoid overlapping. Confidence: 0.88
