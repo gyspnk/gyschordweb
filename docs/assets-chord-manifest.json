@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "ceeb52328501a19e691c3839ad9987243f67c63d",
+  "sourceCommit": "0fe05ca30599a8610de887768ab28b56e929e0c1",
   "files": [
     {
       "id": "KR:001",
@@ -1131,6 +1131,16 @@
       "formatVersion": 2,
       "size": 1499,
       "sha256": "1a1fc06efb7afd8f380c393bc1f6a082850e3e322dc90adde088e0b190b6f024"
+    },
+    {
+      "id": "KR:271",
+      "bookCode": "KR",
+      "songNumber": "271",
+      "title": "Jangan Takut",
+      "path": "docs/assets/chord/271_Jangan Takut.chord.json",
+      "formatVersion": 2,
+      "size": 1520,
+      "sha256": "26eed4cca1f837723260072550f2b3c3f188d3233a8abe71f3952240527d9f5f"
     },
     {
       "id": "KR:322",
