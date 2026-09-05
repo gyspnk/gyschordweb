@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "0fe05ca30599a8610de887768ab28b56e929e0c1",
+  "sourceCommit": "2826ef31864dc1787ebf7d29a3b6a1f3944ffa25",
   "files": [
     {
       "id": "KR:001",
@@ -433,6 +433,16 @@
       "sha256": "f4105afac7318f63e0e4bcb203f08134f399c527c0e612de65a2ca243ff9548e"
     },
     {
+      "id": "KR:108",
+      "bookCode": "KR",
+      "songNumber": "108",
+      "title": "Ikut Almasih",
+      "path": "docs/assets/chord/108_Ikut Almasih.chord.json",
+      "formatVersion": 2,
+      "size": 1946,
+      "sha256": "636277276d21840202e3fed796a70c0f169ca69e53f0560d585aabaea6ddd16f"
+    },
+    {
       "id": "KR:122",
       "bookCode": "KR",
       "songNumber": "122",
@@ -601,6 +611,16 @@
       "formatVersion": 2,
       "size": 1499,
       "sha256": "4c4628e8413cb1f9599a2bedff9a9b6c0ea47d842258d38783064b44fbb8c369"
+    },
+    {
+      "id": "KR:196",
+      "bookCode": "KR",
+      "songNumber": "196",
+      "title": "Surga Indah",
+      "path": "docs/assets/chord/196_Surga Indah.chord.json",
+      "formatVersion": 2,
+      "size": 3246,
+      "sha256": "85fbfa404966200fd59370cf2d2c77fd43a94035fdf5e4a573add0e3dc5d2d30"
     },
     {
       "id": "KR:200",
@@ -1461,6 +1481,16 @@
       "formatVersion": 2,
       "size": 2205,
       "sha256": "e493ca630d5fe5dc6ec8345a2f514f16d2656e9f815403d713c3d44baa911e40"
+    },
+    {
+      "id": "KR:492",
+      "bookCode": "KR",
+      "songNumber": "492",
+      "title": "Allahku Yang Ajaib",
+      "path": "docs/assets/chord/492_Allahku Yang Ajaib.chord.json",
+      "formatVersion": 2,
+      "size": 1584,
+      "sha256": "de24a98d06c99beb89639e435e8a4456aaae04ad14cdcd0ec5ab88bf985d79e7"
     },
     {
       "id": "KR:516",
