@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "2826ef31864dc1787ebf7d29a3b6a1f3944ffa25",
+  "sourceCommit": "299cb2aa7ade15a79829914f6d9e9bfe09d20429",
   "files": [
     {
       "id": "KR:001",
@@ -431,6 +431,16 @@
       "formatVersion": 2,
       "size": 1690,
       "sha256": "f4105afac7318f63e0e4bcb203f08134f399c527c0e612de65a2ca243ff9548e"
+    },
+    {
+      "id": "KR:106",
+      "bookCode": "KR",
+      "songNumber": "106",
+      "title": "Aku Murid Yesus",
+      "path": "docs/assets/chord/106_Aku Murid Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 1691,
+      "sha256": "16721dbf3cd417cd72bb4523a419d21618778fb4c935040a549916010d56c1d1"
     },
     {
       "id": "KR:108",
@@ -1211,6 +1221,16 @@
       "formatVersion": 2,
       "size": 1828,
       "sha256": "ef22c12ffc0d200ffce0513f0c0343db75cd666c0da7239cfb1fce1fc8b04bac"
+    },
+    {
+      "id": "KR:363",
+      "bookCode": "KR",
+      "songNumber": "363",
+      "title": "Berpegang Pada JanjiNya",
+      "path": "docs/assets/chord/363_Berpegang Pada JanjiNya.chord.json",
+      "formatVersion": 2,
+      "size": 1502,
+      "sha256": "837c72db7b07c789c2338ccf4649c15bc69b622c227cff2baf34065aa05fe8ee"
     },
     {
       "id": "KR:366",
