@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "299cb2aa7ade15a79829914f6d9e9bfe09d20429",
+  "sourceCommit": "53a481f744d939d478a52585226bf54303185099",
   "files": [
     {
       "id": "KR:001",
@@ -471,6 +471,16 @@
       "formatVersion": 2,
       "size": 1434,
       "sha256": "6c89e261433dfe74bdbd4f90842e1b96683e4585cdf80f9b5d1bd7ce01b9a806"
+    },
+    {
+      "id": "KR:128",
+      "bookCode": "KR",
+      "songNumber": "128",
+      "title": "Hari Kudus Nan Bahagia",
+      "path": "docs/assets/chord/128_Hari Kudus Nan Bahagia.chord.json",
+      "formatVersion": 2,
+      "size": 2153,
+      "sha256": "06cdeba2cb048594e181ffe6b312fab7c4d955bd01e31eefc670d349ce9be6e5"
     },
     {
       "id": "KR:129",
@@ -1311,6 +1321,16 @@
       "formatVersion": 2,
       "size": 1065,
       "sha256": "c9f8a8e4d626e682dd52e9f7319a66e60c4ce79f59dda59e4c222d4824c3f585"
+    },
+    {
+      "id": "KR:397",
+      "bookCode": "KR",
+      "songNumber": "397",
+      "title": "Nyatakan Yesus Dalammu",
+      "path": "docs/assets/chord/397_Nyatakan Yesus Dalammu.chord.json",
+      "formatVersion": 2,
+      "size": 1709,
+      "sha256": "c09144f3c03e9a156eb35f901747329b8bae5542707773c0285429c6f41efabc"
     },
     {
       "id": "KR:398",
