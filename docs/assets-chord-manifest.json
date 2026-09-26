@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "53a481f744d939d478a52585226bf54303185099",
+  "sourceCommit": "c8465f5fb95c64304bfd910664a6585361f46c91",
   "files": [
     {
       "id": "KR:001",
@@ -583,6 +583,16 @@
       "sha256": "efe72283ba1c08638f6b9512541aab918dd89126a3393328a59835a5641bc470"
     },
     {
+      "id": "KR:153",
+      "bookCode": "KR",
+      "songNumber": "153",
+      "title": "Setiap Waktu Berserah Pada Tuhan",
+      "path": "docs/assets/chord/153_Setiap Waktu Berserah Pada Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1772,
+      "sha256": "738d0bf08a6281aa9a3a2b7898a14df675cb3d1bf4f89a67fbda78a996bea4e8"
+    },
+    {
       "id": "KR:155",
       "bookCode": "KR",
       "songNumber": "155",
@@ -591,6 +601,16 @@
       "formatVersion": 2,
       "size": 1430,
       "sha256": "e0d8f67e0cc10983c6d6e4b8285d66a7dc5fc93a1484c0496976813713347f2d"
+    },
+    {
+      "id": "KR:156",
+      "bookCode": "KR",
+      "songNumber": "156",
+      "title": "Jalan Bersama Tuhan",
+      "path": "docs/assets/chord/156_Jalan Bersama Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1685,
+      "sha256": "52742d0f17b708e7e61d562e57240825dc0e42139799e0afdc84ac89d28b4ec9"
     },
     {
       "id": "KR:158",
@@ -611,6 +631,16 @@
       "formatVersion": 2,
       "size": 1006,
       "sha256": "27d1817e50f71efc7bde69c46bcfac463d52c80d794c01ae90823c47d7227a88"
+    },
+    {
+      "id": "KR:164",
+      "bookCode": "KR",
+      "songNumber": "164",
+      "title": "Cukuplah Kasih Karunia Tuhan",
+      "path": "docs/assets/chord/164_Cukuplah Kasih Karunia Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 827,
+      "sha256": "57a483696688bdd8dd471ff996afcf705ceb9da96603008c849399c246a99d47"
     },
     {
       "id": "KR:165",
@@ -1211,6 +1241,16 @@
       "formatVersion": 2,
       "size": 1711,
       "sha256": "6f30150324880b0ff0d8bf5ea2a66cb84101e518059ef0f4e4468db4dfe281ee"
+    },
+    {
+      "id": "KR:333",
+      "bookCode": "KR",
+      "songNumber": "333",
+      "title": "Tiap Minggu DijagaNya",
+      "path": "docs/assets/chord/333_Tiap Minggu DijagaNya.chord.json",
+      "formatVersion": 2,
+      "size": 1198,
+      "sha256": "b282cb00bdc2c4c0b05bca623a0788f339fcb083b7bdeaa158e49f59551ae264"
     },
     {
       "id": "KR:356",
