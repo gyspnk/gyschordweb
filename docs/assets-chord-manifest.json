@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "c8465f5fb95c64304bfd910664a6585361f46c91",
+  "sourceCommit": "6410749b5eb92a6b3c9b13e4124efc6592d4be8e",
   "files": [
     {
       "id": "KR:001",
@@ -361,6 +361,16 @@
       "formatVersion": 2,
       "size": 1001,
       "sha256": "231399717b0698ff194051e1a728f802705bfd4e688f463e887e285cb599a5fa"
+    },
+    {
+      "id": "KR:082",
+      "bookCode": "KR",
+      "songNumber": "082",
+      "title": "Bersiap dan Berjaga",
+      "path": "docs/assets/chord/082_Bersiap dan Berjaga.chord.json",
+      "formatVersion": 2,
+      "size": 1628,
+      "sha256": "2192acc8da343261b217b2ea8aead2f6e46185cb4447c0e7bd33015d5b80fc8a"
     },
     {
       "id": "KR:084",
@@ -1183,6 +1193,16 @@
       "sha256": "90331e7cde482f06777604954ba43591b85a5615aba3079fc0cd0e0e41d51d55"
     },
     {
+      "id": "KR:257",
+      "bookCode": "KR",
+      "songNumber": "257",
+      "title": "Berjaga-jaga dan Berdoa",
+      "path": "docs/assets/chord/257_Berjaga-jaga dan Berdoa.chord.json",
+      "formatVersion": 2,
+      "size": 1195,
+      "sha256": "dcbf1106b4c8769b2f9e40538eaaeffce8c10680d847aac0953515039624c47d"
+    },
+    {
       "id": "KR:259",
       "bookCode": "KR",
       "songNumber": "259",
@@ -1431,6 +1451,16 @@
       "formatVersion": 2,
       "size": 2061,
       "sha256": "836b383535c787640ee671393d91290d8ac9b002f36e5a5882dec8ea3321b119"
+    },
+    {
+      "id": "KR:421",
+      "bookCode": "KR",
+      "songNumber": "421",
+      "title": "Datanglah ke PestaNya",
+      "path": "docs/assets/chord/421_Datanglah ke PestaNya.chord.json",
+      "formatVersion": 2,
+      "size": 1319,
+      "sha256": "c96d75f3364af5de5a935cd4ea3d8e5f9a80e763bc68c778157d34b00b37d0d8"
     },
     {
       "id": "KR:422",
