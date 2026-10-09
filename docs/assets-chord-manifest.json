@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "6410749b5eb92a6b3c9b13e4124efc6592d4be8e",
+  "sourceCommit": "63dfa47ff22cc47ebbab74b45fd7bd4361abc882",
   "files": [
     {
       "id": "KR:001",
@@ -1223,6 +1223,16 @@
       "sha256": "1a1fc06efb7afd8f380c393bc1f6a082850e3e322dc90adde088e0b190b6f024"
     },
     {
+      "id": "KR:270",
+      "bookCode": "KR",
+      "songNumber": "270",
+      "title": "Ke Tempat Nan Jauh",
+      "path": "docs/assets/chord/270_Ke Tempat Nan Jauh.chord.json",
+      "formatVersion": 2,
+      "size": 1506,
+      "sha256": "194bf0e0e8298820f19fe1c4f1eb75d2ecaaeccd60de032bc2b7ec1c07ca818a"
+    },
+    {
       "id": "KR:271",
       "bookCode": "KR",
       "songNumber": "271",
@@ -1271,6 +1281,16 @@
       "formatVersion": 2,
       "size": 1198,
       "sha256": "b282cb00bdc2c4c0b05bca623a0788f339fcb083b7bdeaa158e49f59551ae264"
+    },
+    {
+      "id": "KR:334",
+      "bookCode": "KR",
+      "songNumber": "334",
+      "title": "Yesus Mawar Saron",
+      "path": "docs/assets/chord/334_Yesus Mawar Saron.chord.json",
+      "formatVersion": 2,
+      "size": 1387,
+      "sha256": "9e8317bf262f79cc1d971e98eaa5a51e6068a9f8dff03a61ef719039c14d67ff"
     },
     {
       "id": "KR:356",
