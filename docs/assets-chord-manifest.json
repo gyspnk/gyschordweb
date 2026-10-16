@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "63dfa47ff22cc47ebbab74b45fd7bd4361abc882",
+  "sourceCommit": "c5b428060e4d4b839505b1cb1a86a8e95641ece3",
   "files": [
     {
       "id": "KR:001",
@@ -321,6 +321,16 @@
       "formatVersion": 2,
       "size": 1769,
       "sha256": "3a803e4bd58e47534ef9416c9247d299efa9238f37f468a982ed294aba858a43"
+    },
+    {
+      "id": "KR:035",
+      "bookCode": "KR",
+      "songNumber": "035",
+      "title": "Hujan Malam Berlalu, Terbitlah Terang",
+      "path": "docs/assets/chord/035_Hujan Malam Berlalu, Terbitlah Terang.chord.json",
+      "formatVersion": 2,
+      "size": 1744,
+      "sha256": "77ebb9dc372217dd0f79af9162b891aaf17b8ea8e3901899f964f9a09db46e74"
     },
     {
       "id": "KR:036",
@@ -1293,6 +1303,16 @@
       "sha256": "9e8317bf262f79cc1d971e98eaa5a51e6068a9f8dff03a61ef719039c14d67ff"
     },
     {
+      "id": "KR:343",
+      "bookCode": "KR",
+      "songNumber": "343",
+      "title": "KasihNya Mengangkatku",
+      "path": "docs/assets/chord/343_KasihNya Mengangkatku.chord.json",
+      "formatVersion": 2,
+      "size": 2049,
+      "sha256": "8ff5e6949b032ef1b0d97f86ec131585d3bb1fd6cf56bffc79b259d7a9f27d60"
+    },
+    {
       "id": "KR:356",
       "bookCode": "KR",
       "songNumber": "356",
@@ -1473,6 +1493,16 @@
       "sha256": "836b383535c787640ee671393d91290d8ac9b002f36e5a5882dec8ea3321b119"
     },
     {
+      "id": "KR:418",
+      "bookCode": "KR",
+      "songNumber": "418",
+      "title": "Sudahkah Kau Persembahkan Semua",
+      "path": "docs/assets/chord/418_Sudahkah Kau Persembahkan Semua_.chord.json",
+      "formatVersion": 2,
+      "size": 1701,
+      "sha256": "f672db799e7796778c0a78f9bd4b3c6f6c216edc55f2271459143d96030ad9fb"
+    },
+    {
       "id": "KR:421",
       "bookCode": "KR",
       "songNumber": "421",
@@ -1531,6 +1561,16 @@
       "formatVersion": 2,
       "size": 2225,
       "sha256": "38577d902e69bdcd92f94512867e50b36f1c981be045cdf7383133f9b4c64873"
+    },
+    {
+      "id": "KR:436",
+      "bookCode": "KR",
+      "songNumber": "436",
+      "title": "Sepanjang Jalan Tuhan Memimpinku",
+      "path": "docs/assets/chord/436_Sepanjang Jalan Tuhan Memimpinku.chord.json",
+      "formatVersion": 2,
+      "size": 1506,
+      "sha256": "88e14e9482fd6fd5318e15f8472e423485b285aab10f6a30a0188f4adda64b43"
     },
     {
       "id": "KR:443",
