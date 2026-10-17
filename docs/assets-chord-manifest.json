@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "c5b428060e4d4b839505b1cb1a86a8e95641ece3",
+  "sourceCommit": "782504ab894213e9ab82e774514c700c3ba053af",
   "files": [
     {
       "id": "KR:001",
@@ -681,6 +681,26 @@
       "formatVersion": 2,
       "size": 1499,
       "sha256": "4c4628e8413cb1f9599a2bedff9a9b6c0ea47d842258d38783064b44fbb8c369"
+    },
+    {
+      "id": "KR:180",
+      "bookCode": "KR",
+      "songNumber": "180",
+      "title": "Jalan Hidup Kekal",
+      "path": "docs/assets/chord/180_Jalan Hidup Kekal.chord.json",
+      "formatVersion": 2,
+      "size": 1567,
+      "sha256": "c738c38b3ce67b1a15ebde91bd1b0dc6200cd8f7fcdb59514a395880b983c72b"
+    },
+    {
+      "id": "KR:182",
+      "bookCode": "KR",
+      "songNumber": "182",
+      "title": "Maju Terus",
+      "path": "docs/assets/chord/182_Maju Terus.chord.json",
+      "formatVersion": 2,
+      "size": 1373,
+      "sha256": "1e8ca1e7adda90e85308761d2cd05953cc281eb826c1f338f3fea67e4eb5b317"
     },
     {
       "id": "KR:196",
