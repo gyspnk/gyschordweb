@@ -1,0 +1,31 @@
+/* Font ikon Material Symbols — SUBSET (hanya ikon yang benar-benar dipakai
+ * aplikasi). Menggantikan unduhan penuh dari Google Fonts yang berukuran
+ * ~3.9 MB. Ukuran subset: ~56 KB. Sumbu variasi disamakan dengan yang
+ * benar-benar dipakai aplikasi (opsz 20..48, wght 100..700, FILL 0..1,
+ * GRAD 0) sehingga tampilan ikon tidak berubah.
+ *
+ * Jika menambah ikon baru di UI, tambahkan namanya ke daftar subset lalu
+ * buat ulang berkas woff2 (lihat test/icon-subset.test.mjs). */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: block;
+  src: url('../assets/fonts/material-symbols-subset.woff2?v=1') format('woff2');
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}

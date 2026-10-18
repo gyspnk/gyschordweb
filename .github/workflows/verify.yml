@@ -1,0 +1,53 @@
+name: Verify build & versions
+
+# Mencegah dua penyebab "update otomatis tidak jalan":
+#   1) versi/?v= di banyak berkas tidak sinkron (APP_VERSION vs GYS_CLIENT_BUILD,
+#      index.html vs nilai hardcoded di bundle React), dan
+#   2) bundle (app.bundle.min.js / sw.min.js) lupa di-build ulang dari sumber.
+
+on:
+  push:
+    paths:
+      - "docs/**"
+      - "tools/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/verify.yml"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "tools/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/verify.yml"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cek versi sinkron
+        run: npm run version:check
+
+      - name: Cek bundle sudah di-build ulang
+        run: |
+          npm run build
+          if ! git diff --quiet -- \
+            docs/js/app.bundle.min.js \
+            docs/sw.min.js \
+            docs/js/midi-render-worker.min.js; then
+            echo "::error::Bundle tidak sinkron dengan sumber. Jalankan 'npm run build' lalu commit hasilnya."
+            git --no-pager diff --stat -- \
+              docs/js/app.bundle.min.js \
+              docs/sw.min.js \
+              docs/js/midi-render-worker.min.js
+            exit 1
+          fi

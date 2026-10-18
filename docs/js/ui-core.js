@@ -106,107 +106,199 @@ async function init() {
 	checkForAppUpdate();
 }
 
-/**
- * App update detection — otomatis. Saat versi baru terdeteksi (service
- * worker baru aktif / versi SW berubah), pembaruan langsung dijalankan
- * tanpa perlu menekan tombol apa pun: tampil loading bar "Updating…",
- * cache dibersihkan, lalu halaman di-reload.
- */
 var _gysAutoUpdateStarted = false;
+var _gysUpdatePending = false;
 var _gysHadServiceWorkerController =
 	typeof navigator !== "undefined" &&
 	navigator.serviceWorker &&
 	!!navigator.serviceWorker.controller;
-// Versi build yang tertanam di bundle ini — pembanding utama vs versi SW.
-// HARUS sama dengan APP_VERSION di docs/sw.js (naikkan bersama).
-const GYS_CLIENT_BUILD = "3.8.32";
+// Versi build yang tertanam di bundle ini. Kini HANYA untuk telemetri —
+// BUKAN pemicu reload (lihat catatan di checkForAppUpdate).
+const GYS_CLIENT_BUILD = "3.8.41";
 
+// Bangun fingerprint shell dari sebuah Document. HANYA memakai elemen yang
+// berasal dari index.html (bukan nilai hardcoded di bundle React), sehingga
+// perbandingan "sekarang vs terbaru" aman dari loop reload.
+function _gysShellFingerprintFromDocument(root) {
+	try {
+		var bundle = root.querySelector(
+			'link[rel="preload"][href*="app.bundle.min.js"]',
+		);
+		var reactEntry = root.querySelector('script[src*="/web/index-"]');
+		return [
+			bundle ? bundle.getAttribute("href") || "" : "",
+			reactEntry ? reactEntry.getAttribute("src") || "" : "",
+		].join("|");
+	} catch (e) {
+		return "";
+	}
+}
+
+// Fingerprint shell yang SEDANG berjalan di tab ini.
+function _gysCurrentShellFingerprint() {
+	if (typeof document === "undefined") return null;
+	var fp = _gysShellFingerprintFromDocument(document);
+	return fp && fp !== "|" ? fp : null;
+}
+
+// Ambil fingerprint terbaru dari index.html di jaringan (bypass cache).
+function _gysFetchLatestShellFingerprint() {
+	return fetch("./index.html", { cache: "no-store" })
+		.then(function (res) {
+			return res && res.ok ? res.text() : null;
+		})
+		.then(function (html) {
+			if (!html || typeof DOMParser === "undefined") return null;
+			var doc = new DOMParser().parseFromString(html, "text/html");
+			var fp = _gysShellFingerprintFromDocument(doc);
+			return fp && fp !== "|" ? fp : null;
+		})
+		.catch(function () {
+			return null;
+		});
+}
+
+// Cek apakah ada shell (aset aplikasi) yang lebih baru dari yang berjalan.
+function _gysCheckShellFreshness() {
+	var current = _gysCurrentShellFingerprint();
+	if (current === null) return Promise.resolve(false);
+	return _gysFetchLatestShellFingerprint().then(function (latest) {
+		if (latest === null) return false;
+		if (latest !== current) {
+			console.log("[Update] Shell baru terdeteksi → perbarui otomatis.");
+			beginAppUpdate("shell");
+			return true;
+		}
+		// Sudah paling baru → reset pembatas percobaan update.
+		try {
+			sessionStorage.removeItem("gys-upd-attempts");
+		} catch (e) {}
+		return false;
+	});
+}
+
+/**
+ * Deteksi update aplikasi — otomatis & ANTI-DRIFT.
+ *
+ * Dulu deteksi membandingkan konstanta versi yang di-bump MANUAL di dua tempat
+ * (GYS_CLIENT_BUILD di bundle vs APP_VERSION di sw.min.js). Bila salah satu
+ * di-bump dan yang lain tidak:
+ *   - tak pernah terdeteksi (versi kebetulan sama), atau
+ *   - dianggap "beda versi" di SETIAP load → clear cache + reload berulang.
+ *
+ * Sekarang berbasis dua sinyal andal:
+ *   1) Siklus hidup service worker (updatefound/controllerchange) — SW benar-
+ *      benar baru terpasang.
+ *   2) Fingerprint aset (?v= app.bundle.min.js di index.html) — menangkap
+ *      deploy apa pun, termasuk saat versi SW kebetulan tak berubah.
+ */
 function checkForAppUpdate() {
 	if (!("serviceWorker" in navigator)) return;
 
-	// SW versi baru aktif dan memberi tahu halaman (broadcast saat activate).
-	// Bila versinya beda dengan build klien, jalankan pembaruan otomatis.
-	navigator.serviceWorker.addEventListener("message", (event) => {
-		if (
-			event.data &&
-			event.data.type === "SW_ACTIVATED" &&
-			event.data.version &&
-			event.data.version !== GYS_CLIENT_BUILD
-		) {
-			beginAppUpdate(event.data.version);
-		}
-	});
-
-	// Service worker baru mengambil alih halaman yang sedang berjalan → update.
-	navigator.serviceWorker.addEventListener("controllerchange", () => {
+	// (1) Service worker baru mengambil alih halaman → update.
+	navigator.serviceWorker.addEventListener("controllerchange", function () {
 		if (_gysHadServiceWorkerController) {
-			beginAppUpdate();
+			beginAppUpdate("controllerchange");
 		} else {
 			_gysHadServiceWorkerController = true;
 		}
 	});
 
-	document.addEventListener("visibilitychange", () => {
-		if (document.visibilityState === "visible") {
-			navigator.serviceWorker.ready
-				.then((registration) => registration.update())
-				.catch(() => {});
-		}
-	});
-
-	navigator.serviceWorker.ready.then((registration) => {
-		// Listen for new service worker installing (bukan installasi pertama)
-		registration.addEventListener("updatefound", () => {
-			const newWorker = registration.installing;
-			if (!newWorker) return;
-			newWorker.addEventListener("statechange", () => {
-				if (newWorker.state === "activated" && _gysHadServiceWorkerController) {
-					beginAppUpdate();
-				}
-			});
-		});
-
-		// Also ask the active worker for its version
-		if (registration.active) {
-			var msgChannel = new MessageChannel();
-			msgChannel.port1.onmessage = (event) => {
-				if (event.data && event.data.type === "VERSION") {
-					var swVersion = event.data.version;
-					// Versi SW beda dengan build klien → jalankan pembaruan otomatis.
-					if (swVersion && swVersion !== GYS_CLIENT_BUILD) {
-						beginAppUpdate(swVersion);
-						return;
+	navigator.serviceWorker.ready
+		.then(function (registration) {
+			// (1b) SW baru selesai terpasang (bukan installasi pertama) → update.
+			registration.addEventListener("updatefound", function () {
+				var newWorker = registration.installing;
+				if (!newWorker) return;
+				newWorker.addEventListener("statechange", function () {
+					if (
+						newWorker.state === "activated" &&
+						_gysHadServiceWorkerController
+					) {
+						beginAppUpdate("sw-activated");
 					}
-					// Versi sudah sinkron — reset pembatas percobaan update.
-					try {
-						sessionStorage.removeItem("gys-upd-attempts");
-					} catch (e) {}
-					localStorage.setItem("gys-app-version", swVersion);
-				}
-			};
-			registration.active.postMessage({ type: "GET_VERSION" }, [
-				msgChannel.port2,
-			]);
-		}
+				});
+			});
 
-		// Check for updates (non-blocking), berkala tiap 5 menit
-		var pollForUpdate = () => registration.update().catch(() => {});
-		pollForUpdate();
-		setInterval(pollForUpdate, 5 * 60 * 1000);
+			// Sinkronkan info versi SW — HANYA telemetri, JANGAN memicu reload.
+			if (registration.active) {
+				var ch = new MessageChannel();
+				ch.port1.onmessage = function (event) {
+					if (event.data && event.data.type === "VERSION") {
+						try {
+							localStorage.setItem(
+								"gys-app-version",
+								event.data.version || "",
+							);
+						} catch (e) {}
+					}
+				};
+				try {
+					registration.active.postMessage({ type: "GET_VERSION" }, [
+						ch.port2,
+					]);
+				} catch (e) {}
+			}
+
+			// (2) Cek fingerprint shell + update SW: saat load, saat tab kembali
+			// terlihat, dan berkala tiap 5 menit.
+			var refresh = function () {
+				try {
+					registration.update().catch(function () {});
+				} catch (e) {}
+				_gysCheckShellFreshness();
+			};
+			refresh();
+			setInterval(refresh, 5 * 60 * 1000);
+		})
+		.catch(function () {});
+
+	document.addEventListener("visibilitychange", function () {
+		if (document.visibilityState === "visible") {
+			_gysCheckShellFreshness();
+			navigator.serviceWorker.ready
+				.then(function (registration) {
+					return registration.update();
+				})
+				.catch(function () {});
+		}
 	});
 }
 
+// Apakah pemutar MIDI sedang berbunyi? (dipakai untuk menunda update).
+function _gysIsMidiPlaying() {
+	try {
+		return (
+			typeof MidiEngine !== "undefined" &&
+			typeof MidiEngine.isPlaying === "function" &&
+			MidiEngine.isPlaying() === true
+		);
+	} catch (e) {
+		return false;
+	}
+}
+
 /**
- * Jalankan pembaruan secara otomatis: tampilkan loading bar "Updating…",
- * bersihkan cache via service worker (dan localStorage kecuali data
- * playlist), lalu reload setelah service worker selesai / timeout.
+ * Jalankan pembaruan otomatis: tampilkan overlay "Updating…", bersihkan cache
+ * via service worker (dan localStorage kecuali data playlist), lalu reload.
  */
 function beginAppUpdate(version) {
+	// Jangan potong lagu: bila MIDI sedang diputar, tunda lalu coba lagi.
+	if (_gysIsMidiPlaying()) {
+		if (_gysUpdatePending) return;
+		_gysUpdatePending = true;
+		setTimeout(function () {
+			_gysUpdatePending = false;
+			beginAppUpdate(version);
+		}, 15000);
+		return;
+	}
+	_gysUpdatePending = false;
 	// Batasi jumlah auto-update per sesi tab agar deploy parsial (versi SW
 	// vs build klien tak pernah cocok) tidak menyebabkan reload tanpa henti.
 	try {
 		var attempts = parseInt(sessionStorage.getItem("gys-upd-attempts") || "0", 10);
-		if (attempts >= 2) return;
+		if (attempts >= 3) return;
 		sessionStorage.setItem("gys-upd-attempts", String(attempts + 1));
 	} catch (e) {}
 	if (_gysAutoUpdateStarted) return;
@@ -645,27 +737,83 @@ function fitViewerTitle() {
 	});
 }
 
-let _fontsWatchBound = false;
+const LIST_TITLE_FIT_OPTS = { maxPx: 16, minPx: 10 };
+
+// PENTING (performa): mengukur semua judul sekaligus memaksa ratusan reflow
+// sinkron (533 judul x baca/tulis layout saat boot) = long task ~0,8 s.
+// Sekarang hanya judul yang (hampir) terlihat yang diukur, sisanya diukur
+// saat masuk viewport lewat IntersectionObserver.
+let _listTitleObserver = null;
+let _listTitleRaf = 0;
+// Judul yang sudah terdaftar di observer — menghindari 533 x observe() sia-sia
+// pada tiap ketikan pencarian (daftar tidak berubah saat memfilter).
+const _listTitleObserved = new WeakSet();
+
+function _fitVisibleListTitle(titleEl) {
+	if (!titleEl || titleEl.offsetParent === null) return;
+	autoFitTextSingleLine(titleEl, LIST_TITLE_FIT_OPTS);
+}
+
+function _getListTitleObserver() {
+	if (_listTitleObserver || typeof IntersectionObserver !== "function")
+		return _listTitleObserver;
+	_listTitleObserver = new IntersectionObserver(
+		(entries) => {
+			for (const entry of entries) {
+				if (entry.isIntersecting) _fitVisibleListTitle(entry.target);
+			}
+		},
+		{ root: null, rootMargin: "150px 0px", threshold: 0 },
+	);
+	return _listTitleObserver;
+}
+
+// Daftarkan judul baru ke observer; yang sudah terdaftar tidak diulang.
 function fitListTitles() {
-	const run = () => {
+	_bindListTitleFontWatch();
+	if (_listTitleRaf) cancelAnimationFrame(_listTitleRaf);
+	_listTitleRaf = requestAnimationFrame(() => {
+		_listTitleRaf = 0;
+		const observer = _getListTitleObserver();
+		if (!observer) {
+			// Fallback browser tanpa IntersectionObserver (sangat jarang):
+			// kembali ke perilaku lama (ukur semua). `offsetParent` bukan
+			// penanda "terlihat", jadi anggap semua kandidat.
+			document.querySelectorAll(".pujian-title").forEach(_fitVisibleListTitle);
+			return;
+		}
 		document.querySelectorAll(".pujian-title").forEach((titleEl) => {
-			autoFitTextSingleLine(titleEl, {
-				maxPx: 16,
-				minPx: 10,
-			});
+			if (_listTitleObserved.has(titleEl)) return;
+			_listTitleObserved.add(titleEl);
+			observer.observe(titleEl);
 		});
-	};
-	run();
-	// Retry setelah layout settle + web font siap (pengukuran pertama bisa salah)
-	requestAnimationFrame(() => requestAnimationFrame(run));
-	if (document.fonts && !_fontsWatchBound) {
-		_fontsWatchBound = true;
-		document.fonts.ready.then(() => requestAnimationFrame(run));
-		// Google Fonts dimuat lazy (media=print onload) — re-fit tiap font selesai
-		document.fonts.addEventListener("loadingdone", () =>
-			requestAnimationFrame(run),
-		);
+	});
+}
+
+// Re-fit paksa (mis. setelah web font selesai dimuat): putuskan lalu pasang
+// ulang observer agar callback awal mengirim ulang judul yang terlihat saja.
+function _refitAllListTitles() {
+	const observer = _getListTitleObserver();
+	const titles = document.querySelectorAll(".pujian-title");
+	if (!observer) {
+		titles.forEach(_fitVisibleListTitle);
+		return;
 	}
+	observer.disconnect();
+	titles.forEach((titleEl) => {
+		_listTitleObserved.add(titleEl);
+		observer.observe(titleEl);
+	});
+}
+
+let _fontsWatchBound = false;
+function _bindListTitleFontWatch() {
+	if (_fontsWatchBound || !document.fonts) return;
+	_fontsWatchBound = true;
+	const rerun = () => requestAnimationFrame(_refitAllListTitles);
+	document.fonts.ready.then(rerun);
+	// Google Fonts dimuat lazy (media=print onload) — re-fit tiap font selesai
+	document.fonts.addEventListener("loadingdone", rerun);
 }
 
 const _textFitStateCache = new WeakMap();
@@ -2196,7 +2344,13 @@ function filterPujianList() {
 				(!!token && lyricHaystack.includes(token))
 			);
 		});
-		li.style.display = isMatch ? "flex" : "none";
+		// Tulis hanya bila status berubah: menulis style pada 533 item tiap
+		// ketikan memicu style-recalc besar padahal biasanya hanya beberapa
+		// baris yang berubah. "" = tampilan default CSS (flex).
+		const nextDisplay = isMatch ? "flex" : "none";
+		if ((li.style.display || "flex") !== nextDisplay) {
+			li.style.display = nextDisplay;
+		}
 	});
 	fitListTitles();
 }

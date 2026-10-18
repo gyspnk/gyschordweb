@@ -1,5 +1,5 @@
-﻿const CACHE_NAME = "gys-cache-v86";
-const APP_VERSION = "3.8.32";
+﻿const CACHE_NAME = "gys-cache-v95";
+const APP_VERSION = "3.8.41";
 
 self.addEventListener("install", (_event) => {
 	self.skipWaiting();
@@ -139,6 +139,8 @@ self.addEventListener("fetch", (event) => {
 		url.pathname.includes("assets-list.json") ||
 		url.pathname.includes("assets-lyrics.json") ||
 		url.pathname.includes("assets-chord-list.json") ||
+		url.pathname.includes("assets-chord-manifest.json") ||
+		url.pathname.includes("chord-sources.json") ||
 		// SoundFont besar (bisa ratusan MB) TIDAK di-cache di Cache API —
 		// ia dikelola sendiri via IndexedDB (gys-sf-cache). Cache ganda
 		// membuat quota storage cepat penuh dan browser bisa meng-evict
@@ -150,12 +152,13 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
-	// Local app files (JS, CSS, HTML): network-first, fallback to cache
+	// Local app files (JS, CSS, HTML, font): network-first, fallback to cache
 	var isLocalAppFile =
 		url.origin === self.location.origin &&
 		(url.pathname.endsWith(".js") ||
 			url.pathname.endsWith(".css") ||
 			url.pathname.endsWith(".html") ||
+			url.pathname.endsWith(".woff2") ||
 			url.pathname === "/" ||
 			url.pathname.endsWith("/"));
 
@@ -203,7 +206,39 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
-	// Modul/script CDN (pdf.mjs, pdf.worker.mjs, dsb): stale-while-revalidate.
+	// Modul PDF.js (pdf.mjs / pdf.worker.mjs): NETWORK-FIRST.
+	// pdf.js mensyaratkan versi API dan Worker SAMA. Stale-while-revalidate
+	// bisa menyajikan pdf.mjs lama + pdf.worker.mjs baru (atau sebaliknya) →
+	// "PDF gagal muat" acak. Network-first memastikan keduanya selalu dari
+	// deploy CDN yang sama saat online; cache tetap jadi fallback offline.
+	var isPdfjsModule =
+		url.origin !== self.location.origin &&
+		/(^|\/)pdf(\.worker)?\.mjs$/.test(url.pathname);
+	if (isPdfjsModule) {
+		event.respondWith(
+			caches.open(CACHE_NAME).then((cache) =>
+				fetch(event.request)
+					.then((networkResponse) => {
+						if (
+							networkResponse &&
+							(networkResponse.status === 200 ||
+								networkResponse.type === "opaque")
+						) {
+							cache.put(event.request, networkResponse.clone());
+						}
+						return networkResponse;
+					})
+					.catch(() =>
+						cache
+							.match(event.request)
+							.then((cached) => cached || Response.error()),
+					),
+			),
+		);
+		return;
+	}
+
+	// Modul/script CDN lain: stale-while-revalidate.
 	// Cache-first murni berbahaya — entri rusak di cache akan menyebabkan
 	// "PDF gagal muat" permanen sampai hapus data situs. Dengan SWR, salinan
 	// segar dari jaringan selalu memperbarui cache untuk muat berikutnya.

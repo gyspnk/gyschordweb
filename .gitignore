@@ -2,6 +2,7 @@ node_modules/
 
 # Local AI/tooling state
 .playwright-mcp/
+.commandcode/
 
 # OS / editor
 .DS_Store

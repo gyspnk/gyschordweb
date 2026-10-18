@@ -69,12 +69,105 @@ if (!WeakMap.prototype.getOrInsert) {
   });
 }
 
-const { pdfjsLib } = globalThis;
-if (pdfjsLib) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    "https://mozilla.github.io/pdf.js/build/pdf.worker.mjs";
-  pdfjsLib.verbosity = pdfjsLib.VerbosityLevel.ERRORS;
+// ── Konfigurasi PDF.js (anti-race) ──
+// SEBELUMNYA: workerSrc hanya di-set sekali saat bundle dievaluasi, dibungkus
+// `if (pdfjsLib)`. Bila pdf.mjs (CDN) belum selesai dimuat saat bundle jalan
+// (race), workerSrc TIDAK pernah di-set, sehingga PDF.js memakai worker default
+// yang salah → "PDF gagal muat" sampai halaman di-reload. Sekarang di-set lewat
+// fungsi yang bisa dipanggil ulang tepat sebelum PDF dibuka.
+const PDFJS_WORKER_SRC =
+  "https://mozilla.github.io/pdf.js/build/pdf.worker.mjs";
+const PDFJS_STANDARD_FONTS_URL =
+  "https://mozilla.github.io/pdf.js/standard_fonts/";
+const PDFJS_MODULE_URL = "https://mozilla.github.io/pdf.js/build/pdf.mjs";
+
+function gysGetPdfjsLib() {
+  try {
+    return (
+      (typeof globalThis !== "undefined" && globalThis.pdfjsLib) ||
+      (typeof window !== "undefined" && window.pdfjsLib) ||
+      null
+    );
+  } catch (_e) {
+    return null;
+  }
 }
+
+// Pastikan GlobalWorkerOptions.workerSrc + verbosity benar. Aman dipanggil
+// berkali-kali (idempoten). Mengembalikan true bila pdfjsLib siap dipakai.
+function gysEnsurePdfjsWorkerSrc(lib) {
+  const pdfjsLib = lib || gysGetPdfjsLib();
+  if (!pdfjsLib || typeof pdfjsLib.getDocument !== "function") return false;
+  try {
+    const opts =
+      pdfjsLib.GlobalWorkerOptions || (pdfjsLib.GlobalWorkerOptions = {});
+    if (opts.workerSrc !== PDFJS_WORKER_SRC) opts.workerSrc = PDFJS_WORKER_SRC;
+    if (pdfjsLib.VerbosityLevel) {
+      pdfjsLib.verbosity = pdfjsLib.VerbosityLevel.ERRORS;
+    }
+    return true;
+  } catch (_e) {
+    return false;
+  }
+}
+
+// Muat modul pdf.js (pdf.mjs) secara LAZY — hanya saat benar-benar dibutuhkan
+// (membuka PDF / inferensi transpose). Sebelumnya pdf.mjs (≈180 KB) SELALU
+// dimuat saat boot dan bahkan ditunggu sebelum bundle utama dieksekusi,
+// sehingga memperlambat & memperberat load awal. Idempoten & aman dipanggil
+// berulang; promise di-cache agar tidak ada unduhan ganda.
+let _gysPdfjsLoadPromise = null;
+function gysLoadPdfjs() {
+  const existing = gysGetPdfjsLib();
+  if (existing && typeof existing.getDocument === "function") {
+    gysEnsurePdfjsWorkerSrc(existing);
+    return Promise.resolve(existing);
+  }
+  if (_gysPdfjsLoadPromise) return _gysPdfjsLoadPromise;
+
+  _gysPdfjsLoadPromise = new Promise((resolve, reject) => {
+    const finish = () => {
+      const lib = gysGetPdfjsLib();
+      if (lib && typeof lib.getDocument === "function") {
+        gysEnsurePdfjsWorkerSrc(lib);
+        resolve(lib);
+      } else {
+        reject(new Error("pdfjsLib tidak tersedia setelah pdf.mjs dimuat"));
+      }
+    };
+    const fail = () => reject(new Error("gagal memuat pdf.mjs"));
+    let script = document.getElementById("gys-pdfjs-lazy");
+    if (script) {
+      script.addEventListener("load", finish, { once: true });
+      script.addEventListener("error", fail, { once: true });
+      return;
+    }
+    script = document.createElement("script");
+    script.id = "gys-pdfjs-lazy";
+    script.type = "module";
+    script.crossOrigin = "anonymous";
+    script.src = PDFJS_MODULE_URL;
+    script.addEventListener("load", finish, { once: true });
+    script.addEventListener("error", fail, { once: true });
+    document.head.appendChild(script);
+  }).catch((err) => {
+    // Biarkan bisa dicoba lagi pada pemanggilan berikutnya.
+    _gysPdfjsLoadPromise = null;
+    throw err;
+  });
+
+  return _gysPdfjsLoadPromise;
+}
+
+// Ekspose ke global untuk halaman/console & shell React (idempoten).
+try {
+  globalThis.gysLoadPdfjs = gysLoadPdfjs;
+  globalThis.gysEnsurePdfjsWorkerSrc = gysEnsurePdfjsWorkerSrc;
+  globalThis.gysGetPdfjsLib = gysGetPdfjsLib;
+  globalThis.PDFJS_WORKER_SRC = PDFJS_WORKER_SRC;
+} catch (_e) {}
+
+gysEnsurePdfjsWorkerSrc();
 
 /* SOURCE: 01a-data-cache.js */
 // --- Cache persisten data JSON (IndexedDB) ---
@@ -500,7 +593,7 @@ const APP_DEPENDENCY_CREDITS = [
     category: "SoundFont",
     provider: "Bundled asset",
     version: "2.0.3",
-    purpose: "SoundFont utama berukuran besar untuk playback MIDI dengan detail instrumen lebih kaya.",
+    purpose: "SoundFont opsional berukuran besar untuk playback MIDI dengan detail instrumen lebih kaya (dipilih di Pengaturan).",
     source: "docs/assets/soundfont/GeneralUser-GS.sf2",
   },
   {
@@ -509,7 +602,7 @@ const APP_DEPENDENCY_CREDITS = [
     category: "SoundFont",
     provider: "Bundled asset",
     version: "Compact set",
-    purpose: "Alternatif SoundFont ringan untuk perangkat dengan memori dan bandwidth lebih terbatas.",
+    purpose: "SoundFont default (≈6 MB) — ringan untuk memori dan bandwidth, tetap 128 instrumen General MIDI.",
     source: "docs/assets/soundfont/TimGM6mb.sf2",
   },
   {
@@ -585,7 +678,10 @@ const TRANSPOSE_DISSOLVE_OUT_MS = 180;
 const TRANSPOSE_DISSOLVE_IN_MS = 230;
 
 // --- MIDI Audio Transition Constants ---
-const MIDI_SF2_URL = 'assets/soundfont/GeneralUser-GS.sf2'; // GeneralUser GS 2.0.3 (128 GM + 13 drum kits, high quality)
+// Default SoundFont = TimGM6mb (≈6 MB) supaya unduhan saat boot ringan.
+// GeneralUser GS (≈30 MB, instrumen lebih kaya) tetap bisa dipilih pengguna
+// lewat Pengaturan → Pilih SoundFont (tidak ada kemampuan yang hilang).
+const MIDI_SF2_URL = 'assets/soundfont/TimGM6mb.sf2';
 const MIDI_GLOBAL_TRANSPOSE_OFFSET = 0;
 
 // Instrument lists are populated at runtime from the active .sf2 preset data.
@@ -1120,7 +1216,7 @@ let prefs = {
   defaultTwoPage: false,
   defaultVerticalScroll: false,
   preferNaturalChords: true,
-  midiSoundfont: "assets/soundfont/GeneralUser-GS.sf2",
+  midiSoundfont: "assets/soundfont/TimGM6mb.sf2",
   midiInstrument: "",
   midiInstrumentBySoundfont: {},
   midiInstrumentUserSelected: false,
@@ -2462,16 +2558,16 @@ function renderSettings() {
                 ${renderSettingLabel("piano", "Pilih SoundFont")}
                 <div class="settings-custom-dropdown">
                   <button class="settings-dropdown-btn" type="button" aria-haspopup="listbox">
-                    <span class="settings-dropdown-label" id="soundfont-dropdown-label">${prefs.midiSoundfont === "assets/soundfont/TimGM6mb.sf2" ? "TimGM6mb (6 MB, Compact)" : "GeneralUser GS (30 MB, High Quality)"}</span>
+                    <span class="settings-dropdown-label" id="soundfont-dropdown-label">${prefs.midiSoundfont === "assets/soundfont/GeneralUser-GS.sf2" ? "GeneralUser GS (30 MB, High Quality)" : "TimGM6mb (6 MB, Compact)"}</span>
                     <span class="material-symbols-outlined settings-dropdown-chevron">expand_more</span>
                   </button>
                   <div class="settings-dropdown-popover" role="listbox">
-                    <button class="settings-dropdown-option ${prefs.midiSoundfont !== 'assets/soundfont/TimGM6mb.sf2' ? 'selected' : ''}" type="button" data-settings-select="soundfont-select" data-value="assets/soundfont/GeneralUser-GS.sf2"><span class="material-symbols-outlined">check</span>GeneralUser GS (30 MB, High Quality)</button>
-                    <button class="settings-dropdown-option ${prefs.midiSoundfont === 'assets/soundfont/TimGM6mb.sf2' ? 'selected' : ''}" type="button" data-settings-select="soundfont-select" data-value="assets/soundfont/TimGM6mb.sf2"><span class="material-symbols-outlined">check</span>TimGM6mb (6 MB, Compact)</button>
+                    <button class="settings-dropdown-option ${prefs.midiSoundfont === 'assets/soundfont/GeneralUser-GS.sf2' ? 'selected' : ''}" type="button" data-settings-select="soundfont-select" data-value="assets/soundfont/GeneralUser-GS.sf2"><span class="material-symbols-outlined">check</span>GeneralUser GS (30 MB, High Quality)</button>
+                    <button class="settings-dropdown-option ${prefs.midiSoundfont !== 'assets/soundfont/GeneralUser-GS.sf2' ? 'selected' : ''}" type="button" data-settings-select="soundfont-select" data-value="assets/soundfont/TimGM6mb.sf2"><span class="material-symbols-outlined">check</span>TimGM6mb (6 MB, Compact · Default)</button>
                   </div>
                   <select id="soundfont-select" style="display:none;">
+                    <option value="assets/soundfont/TimGM6mb.sf2" ${prefs.midiSoundfont !== "assets/soundfont/GeneralUser-GS.sf2" ? "selected" : ""}>TimGM6mb (6 MB, Compact · Default)</option>
                     <option value="assets/soundfont/GeneralUser-GS.sf2" ${prefs.midiSoundfont === "assets/soundfont/GeneralUser-GS.sf2" ? "selected" : ""}>GeneralUser GS (30 MB, High Quality)</option>
-                    <option value="assets/soundfont/TimGM6mb.sf2" ${prefs.midiSoundfont === "assets/soundfont/TimGM6mb.sf2" ? "selected" : ""}>TimGM6mb (6 MB, Compact)</option>
                   </select>
                 </div>
               </div>

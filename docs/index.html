@@ -27,31 +27,26 @@
     <link rel="preconnect" href="https://mozilla.github.io" crossorigin />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link
-      rel="modulepreload"
-      href="https://mozilla.github.io/pdf.js/build/pdf.mjs"
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media = 'all'"
+    />
+    <link
+      rel="stylesheet"
+      href="./css/icons.css?v=1"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="./assets/fonts/material-symbols-subset.woff2?v=1"
       crossorigin
-    />
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-      media="print"
-      onload="this.media = 'all'"
-    />
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-      rel="stylesheet"
-      media="print"
-      onload="this.media = 'all'"
     />
 
     <noscript>
@@ -59,29 +54,48 @@
         href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
         rel="stylesheet"
       />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-        rel="stylesheet"
-      />
     </noscript>
 
     <link rel="stylesheet" href="./css/tailwind.css?v=10" />
     <link rel="stylesheet" href="./css/04-viewer.css?v=43" />
-    <link rel="stylesheet" href="./css/runtime-fixes.css?v=10" />
-    <link rel="preload" href="./js/app.bundle.min.js?v=38" as="script" />
+    <link rel="stylesheet" href="./css/runtime-fixes.css?v=14" />
+    <link rel="preload" href="./js/app.bundle.min.js?v=47" as="script" />
     <link
       rel="prefetch"
       href="./js/midi-render-worker.min.js?v=8"
       as="script"
     />
-    <link rel="preload" href="./js/lyrics-viewer.js?v=19" as="script" />
     <script
       type="module"
       crossorigin
       src="./web/index-mRq1ab6k.js?v=25"
     ></script>
     <link rel="modulepreload" crossorigin href="./web/react-GsrUiVJy.js" />
-    <script defer src="./js/lyrics-viewer.js?v=19"></script>
+    <script>
+      // Lyrics viewer (~72 KB) TIDAK dibutuhkan saat boot — ia hanya dipakai
+      // ketika pengguna membuka mode lirik. Muat secara idle setelah halaman
+      // selesai agar tidak memperberat/memperlambat load awal.
+      (function () {
+        var src = "./js/lyrics-viewer.js?v=19";
+        function inject() {
+          if (document.querySelector('script[data-lyrics-viewer]')) return;
+          var s = document.createElement("script");
+          s.src = src;
+          s.defer = true;
+          s.setAttribute("data-lyrics-viewer", "");
+          document.head.appendChild(s);
+        }
+        function schedule() {
+          if ("requestIdleCallback" in window) {
+            window.requestIdleCallback(inject, { timeout: 2500 });
+          } else {
+            window.setTimeout(inject, 1200);
+          }
+        }
+        if (document.readyState === "complete") schedule();
+        else window.addEventListener("load", schedule, { once: true });
+      })();
+    </script>
   </head>
   <body>
     <!-- Loading screen: tampil sampai elemen utama (font/icon + daftar
@@ -89,18 +103,18 @@
          bar sendiri. -->
     <div id="app-loading-screen" aria-hidden="true">
       <div class="app-loading-inner">
-        <img
-          class="app-loading-logo app-loading-logo-color"
-          src="./assets/logo/tjc_logo_indonesia_color.png"
-          alt="Gereja Yesus Sejati"
-          draggable="false"
-        />
-        <img
-          class="app-loading-logo app-loading-logo-white"
-          src="./assets/logo/tjc_logo_indonesia_white.png"
-          alt=""
-          draggable="false"
-        />
+        <picture>
+          <source
+            media="(prefers-color-scheme: dark)"
+            srcset="./assets/logo/tjc_logo_indonesia_white.png"
+          />
+          <img
+            class="app-loading-logo"
+            src="./assets/logo/tjc_logo_indonesia_color.png"
+            alt="Gereja Yesus Sejati"
+            draggable="false"
+          />
+        </picture>
         <div class="app-loading-bar" role="progressbar" aria-label="Memuat">
           <div class="app-loading-bar-fill"></div>
         </div>
@@ -134,9 +148,6 @@
           user-select: none;
           -webkit-user-drag: none;
         }
-        .app-loading-logo-white {
-          display: none;
-        }
         .app-loading-bar {
           width: 168px;
           height: 5px;
@@ -162,12 +173,6 @@
         @media (prefers-color-scheme: dark) {
           #app-loading-screen {
             background: #1a1714;
-          }
-          .app-loading-logo-color {
-            display: none;
-          }
-          .app-loading-logo-white {
-            display: block;
           }
           .app-loading-bar {
             background: rgba(201, 162, 39, 0.22);

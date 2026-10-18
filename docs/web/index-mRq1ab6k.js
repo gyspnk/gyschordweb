@@ -12600,8 +12600,8 @@ const e0 = `\uFEFF<header class="app-header">\r
     </div>\r
 `,
 	Us = "https://mozilla.github.io/pdf.js/build/pdf.mjs",
-	_s = "./js/app.bundle.min.js?v=38",
-	i0 = "./sw.min.js?v=20";
+	_s = "./js/app.bundle.min.js?v=47",
+	i0 = "./sw.min.js?v=29";
 let cn = null;
 const hu = new Map();
 function Hs({ id: l, src: a, type: t = "text/javascript" }) {
@@ -12657,19 +12657,12 @@ async function f0() {
 	return (
 		cn ||
 		((cn = (async () => {
-			Ns({
-				id: "pdfjs-runtime-modulepreload",
-				href: Us,
-				rel: "modulepreload",
-				crossOrigin: !0,
-			}),
 				Ns({
 					id: "legacy-app-runtime-preload",
 					href: _s,
 					rel: "preload",
 					as: "script",
 				}),
-				await Hs({ id: "pdfjs-runtime-module", src: Us, type: "module" }),
 				await Hs({ id: "legacy-app-runtime", src: _s }),
 				c0();
 		})().catch((l) => {

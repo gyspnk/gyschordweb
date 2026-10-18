@@ -28,38 +28,119 @@ function _postSwMessage(msg) {
   });
 }
 
-async function _recoverPdfStack() {
-  // Maksimal sekali per sesi tab dalam jendela 2 menit (anti loop reload).
-  let recent = null;
+async function _recoverPdfStack(force) {
+  // Anti-loop: batasi JUMLAH pemulihan per sesi tab + jarak minimum antar
+  // percobaan. Dulu hanya 1x / 2 menit; bila cache belum benar-benar bersih,
+  // pemulihan berhenti dan aplikasi terasa "mati total" sampai user menghapus
+  // data situs. Sekarang sampai 3x dengan jeda pendek, plus fallback purge
+  // langsung dari halaman (tak bergantung service worker).
+  let attempts = 0;
+  let lastAt = 0;
   try {
-    recent = sessionStorage.getItem("gys-pdf-recover-at");
+    attempts = parseInt(sessionStorage.getItem("gys-pdf-recover-count") || "0", 10);
+    lastAt = parseInt(sessionStorage.getItem("gys-pdf-recover-at") || "0", 10);
   } catch (_e) {}
   const now = Date.now();
-  if (recent && now - parseInt(recent, 10) < 120000) return false;
+  const MAX_ATTEMPTS = 3;
+  const MIN_GAP_MS = 4000;
+  if (!force) {
+    if (attempts >= MAX_ATTEMPTS) return false;
+    if (lastAt && now - lastAt < MIN_GAP_MS) return false;
+  }
   try {
+    sessionStorage.setItem("gys-pdf-recover-count", String(attempts + 1));
     sessionStorage.setItem("gys-pdf-recover-at", String(now));
   } catch (_e2) {}
-  await _postSwMessage({
-    type: "PURGE_URLS",
-    urls: ["pdf.mjs", "pdf.worker.mjs"],
-  });
+
+  const needles = ["pdf.mjs", "pdf.worker.mjs"];
+
+  // 1) Purge lewat service worker (semua cache Cache API).
+  await _postSwMessage({ type: "PURGE_URLS", urls: needles });
+
+  // 2) Fallback langsung dari halaman — berfungsi walau SW tak menjawab.
+  try {
+    if (typeof caches !== "undefined" && caches.keys) {
+      const names = await caches.keys();
+      await Promise.all(
+        names.map(async (name) => {
+          const cache = await caches.open(name);
+          const reqs = await cache.keys();
+          await Promise.all(
+            reqs.map((req) => {
+              const u = req.url || "";
+              return needles.some((n) => u.indexOf(n) !== -1)
+                ? cache.delete(req)
+                : Promise.resolve(false);
+            }),
+          );
+        }),
+      );
+    }
+  } catch (_e3) {}
+
   console.warn("[PDF] Cache PDF.js dibersihkan — memuat ulang otomatis...");
   return true;
 }
 
 function _pdfLibIsBroken() {
   try {
-    return !window.pdfjsLib || typeof window.pdfjsLib.getDocument !== "function";
+    const lib =
+      (typeof gysGetPdfjsLib === "function" ? gysGetPdfjsLib() : null) ||
+      (typeof window !== "undefined" ? window.pdfjsLib : null);
+    if (!lib || typeof lib.getDocument !== "function") return true;
+    // Setiap kali dipanggil, pastikan workerSrc benar. Ini menutup celah race
+    // (pdf.mjs selesai dimuat setelah bundle) yang dulu membuat PDF gagal muat.
+    if (typeof gysEnsurePdfjsWorkerSrc === "function") {
+      gysEnsurePdfjsWorkerSrc(lib);
+    }
+    return false;
   } catch (_e) {
     return true;
   }
 }
+
+// Deteksi kegagalan yang berasal dari LIBRARY/runtime PDF.js (worker, versi
+// API↔Worker tak cocok, modul gagal dimuat) — bukan dari file PDF tertentu.
+// Hanya jenis ini yang layak memicu purge cache + reload seluruh aplikasi.
+function _isPdfLibraryError(reason) {
+  try {
+    if (_pdfLibIsBroken()) return true;
+    const name = (reason && reason.name) || "";
+    if (name === "WorkerException" || name === "AbortException") return true;
+    const msg = String((reason && (reason.message || reason)) || reason || "");
+    return /worker|fake worker|dynamically imported module|importing a module|API version|GlobalWorkerOptions|Setting up fake worker/i.test(
+      msg,
+    );
+  } catch (_e) {
+    return false;
+  }
+}
+
+// Reset penghitung pemulihan PDF setelah PDF berhasil dimuat, sehingga
+// gangguan lain di masa depan tetap boleh memicu pemulihan lagi.
+function _resetPdfRecovery() {
+  try {
+    sessionStorage.removeItem("gys-pdf-recover-count");
+    sessionStorage.removeItem("gys-pdf-recover-at");
+  } catch (_e) {}
+}
+
+// Lebar judul tujuan yang menunggu dianimasikan saat fade-in.
+// Morfing lebar (`width`) dianimasikan di MAIN THREAD, bukan compositor.
+// Kalau dimulai sebelum render, raster kanvas PDF (~0,2-0,3 s) memblokir main
+// thread sehingga animasinya tak pernah terlihat (lebar langsung melompat),
+// lalu dipotong oleh reset style inline. Karena itu lebar lama ditahan dulu,
+// dan animasinya baru dijalankan ketika render sudah selesai.
+let _pendingTitleMorph = null;
 
 async function openPdfViewer(songId, backgroundLoad = false) {
   // Guard against rapid prev/next navigation: each call gets a generation number.
   // After the animation delay, stale calls (superseded by a newer navigation) abort
   // before touching any shared audio/MIDI/PDF state, preventing race conditions.
   const thisOpenGeneration = ++_openPdfViewerGeneration;
+  // Lebar kotak judul ditahan di ukuran lama selama layar blank, lalu dianimasikan
+  // ke ukuran judul baru pada langkah fade-in (lihat komentar di sana).
+  _pendingTitleMorph = null;
 
   // Library PDF.js tidak terpasang (modul CDN gagal/rusak) → pulihkan.
   if (!backgroundLoad && _pdfLibIsBroken()) {
@@ -135,9 +216,20 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   // Cache decoded doc: bila PDF ini pernah dibuka & masih di cache LRU,
   // pakai dokumen yang sudah di-decode (hemat proses berat PDF.js).
   const _cachedDoc = _canReuseDoc ? null : _takeCachedDecodedPdf(song.fileHref);
+  // Muat pustaka PDF.js secara lazy bila belum ada, lalu pastikan workerSrc
+  // ter-set TEPAT sebelum dipakai (anti-race + hemat beban load awal).
+  if (typeof gysLoadPdfjs === "function") {
+    try {
+      await gysLoadPdfjs();
+    } catch (_e) {}
+  }
+  if (typeof gysEnsurePdfjsWorkerSrc === "function") gysEnsurePdfjsWorkerSrc();
   const pdfOptions = {
     url: song.fileHref,
-    standardFontDataUrl: "https://mozilla.github.io/pdf.js/standard_fonts/",
+    standardFontDataUrl:
+      typeof PDFJS_STANDARD_FONTS_URL === "string"
+        ? PDFJS_STANDARD_FONTS_URL
+        : "https://mozilla.github.io/pdf.js/standard_fonts/",
   };
   const loadingTask =
     _canReuseDoc || _cachedDoc ? null : pdfjsLib.getDocument(pdfOptions);
@@ -183,13 +275,17 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       pdfViewerNumber.textContent = `No. ${song.nomor}`;
       fitViewerTitle();
     } else {
-      // ── NAVIGASI INTRA-VIEWER (Next/Prev/Playlist): Sekuens Fade-Out + Morphing ──
-      // 1) Fade-OUT teks judul dan canvas konten lama (animasi keluar)
+      // ── NAVIGASI INTRA-VIEWER (Next/Prev/Playlist): blank seketika → fade in ──
+      // Blank-nya instan (CSS mematikan transition saat `is-navigating`), jadi
+      // tidak ada tunggu tetap di sini. Dulu ada dua tunggu mati:
+      //   • setTimeout(260) untuk menunggu animasi fade-out lama, dan
+      //   • setTimeout(280) untuk menunggu morphing lebar kotak judul,
+      // total ~0,5 s layar blank. PDF sudah mulai di-fetch sejak awal fungsi,
+      // jadi menghapus tunggu ini membuat render konten baru mulai jauh lebih awal.
       songTitleWrapper.classList.add("is-navigating");
       canvasWrapper.classList.add("is-navigating");
-      await new Promise((resolve) => setTimeout(resolve, 260));
 
-      // Abort if a newer navigation started during the fade.
+      // Abort if a newer navigation started.
       if (_openPdfViewerGeneration !== thisOpenGeneration) {
         if (loadingTask) {
           try { loadingTask.destroy(); } catch (_err) {}
@@ -209,18 +305,17 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         songTitleWrapper.style.maxWidth = 'none';
         songTitleWrapper.style.flex = '0 1 auto';
         const targetWidth = songTitleWrapper.getBoundingClientRect().width;
+        // Kembalikan batas lebar alami (max-width dari CSS) supaya pill tidak
+        // melebar melebihi kebiasaan selama layar blank / animasi judul.
+        songTitleWrapper.style.maxWidth = '';
 
         if (oldWidth > 0 && targetWidth > 0 && Math.abs(oldWidth - targetWidth) >= 1) {
+          // Tahan lebar lama dulu; animasi ke `targetWidth` baru dijalankan pada
+          // langkah fade-in agar tidak macet di belakang raster kanvas (lihat
+          // _pendingTitleMorph).
           songTitleWrapper.style.width = `${oldWidth}px`;
           void songTitleWrapper.offsetWidth; // Force reflow
-
-          songTitleWrapper.style.transition = 'width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)';
-          songTitleWrapper.style.width = `${targetWidth}px`;
-
-          // Tunggu animasi morph selesai secara visual
-          await new Promise((resolve) => setTimeout(resolve, 280));
-        } else {
-          await new Promise((resolve) => setTimeout(resolve, 50));
+          _pendingTitleMorph = { targetWidth };
         }
       }
     }
@@ -561,41 +656,46 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         }
       }
 
-      // Extract PDF Key
-      try {
-        const page1 = await pdfDoc.getPage(1);
-        if (_openPdfViewerGeneration !== thisOpenGeneration) return;
-        const textContent = await page1.getTextContent();
-        if (_openPdfViewerGeneration !== thisOpenGeneration) return;
-        const pdfText = textContent.items.map((item) => item.str).join(" ");
-        const detectedTempo = _extractPdfTempoFromText(pdfText);
-
-        if (song && song.fileHref) {
-          _tempoByPdfHref.set(song.fileHref, detectedTempo);
-        }
+      // Extract PDF Key — pakai hasil yang sudah di-cache bila ada (jalur
+      // prefetch tetangga sudah menghitungnya di latar), sehingga getTextContent()
+      // tidak perlu dijalankan lagi saat next/prev.
+      const _metaCached =
+        song && song.fileHref ? _pdfMetaByHref.get(song.fileHref) : null;
+      if (_metaCached) {
+        originalPdfKey = _metaCached.key;
         if (!isSameSong && typeof setCurrentSongTempo === "function") {
-          setCurrentSongTempo(detectedTempo, {
+          setCurrentSongTempo(_metaCached.tempo, {
             resetCurrent: true,
             // Avoid an unnecessary render while/after the selected MIDI is
             // loading; base/current tempo state is enough for controls.
             skipApply: true,
           });
         }
+      } else {
+        try {
+          const meta = await _extractPdfMetaFromDoc(pdfDoc);
+          if (_openPdfViewerGeneration !== thisOpenGeneration) return;
 
-        const keyMatch = pdfText.match(
-          /(?:(?:do|la)\s*={1,2}\s*|[23469]\s*[\/|]\s*[248]\s+)([A-G](?:es|is|s|#|b)?(?:m)?)\b/i,
-        );
-        if (keyMatch) {
-          originalPdfKey = keyMatch[1];
-        } else {
+          if (song && song.fileHref) {
+            _pdfMetaByHref.set(song.fileHref, meta);
+            _tempoByPdfHref.set(song.fileHref, meta.tempo);
+          }
+          if (!isSameSong && typeof setCurrentSongTempo === "function") {
+            setCurrentSongTempo(meta.tempo, {
+              resetCurrent: true,
+              // Avoid an unnecessary render while/after the selected MIDI is
+              // loading; base/current tempo state is enough for controls.
+              skipApply: true,
+            });
+          }
+          originalPdfKey = meta.key;
+        } catch (err) {
+          console.warn(
+            "Gagal mengekstrak teks PDF untuk mendeteksi nada dasar:",
+            err,
+          );
           originalPdfKey = null;
         }
-      } catch (err) {
-        console.warn(
-          "Gagal mengekstrak teks PDF untuk mendeteksi nada dasar:",
-          err,
-        );
-        originalPdfKey = null;
       }
 
       [pageCountElPortrait, pageCountElLandscape].forEach((el) => {
@@ -644,21 +744,53 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         updateHideChordButton();
       }
 
-      if (songTitleWrapper) {
+      const pendingTitleMorph = _pendingTitleMorph;
+      _pendingTitleMorph = null;
+      if (songTitleWrapper && !pendingTitleMorph) {
         songTitleWrapper.style.width = '';
         songTitleWrapper.style.maxWidth = '';
         songTitleWrapper.style.flex = '';
         songTitleWrapper.style.transition = '';
       }
       void canvasWrapper.offsetWidth;
+      // Commit lebar lama sebagai titik mula animasi (bila ada morfing).
       void songTitleWrapper.offsetWidth;
+      if (songTitleWrapper && pendingTitleMorph) {
+        // Morfing lebar dijalankan DI SINI: render sudah selesai sehingga main
+        // thread bebas dan animasinya benar-benar terlihat (sebelumnya dimulai
+        // sebelum render → macet di belakang raster kanvas → lebar melompat).
+        songTitleWrapper.style.transition =
+          'width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)';
+        void songTitleWrapper.offsetWidth;
+        songTitleWrapper.style.width = `${pendingTitleMorph.targetWidth}px`;
+
+        // Lepas style inline setelah animasi selesai supaya layout alami
+        // (max-width/flex CSS) berlaku kembali tanpa lompatan.
+        const morphGeneration = thisOpenGeneration;
+        setTimeout(() => {
+          if (_openPdfViewerGeneration !== morphGeneration) return;
+          if (!songTitleWrapper) return;
+          songTitleWrapper.style.width = '';
+          songTitleWrapper.style.maxWidth = '';
+          songTitleWrapper.style.flex = '';
+          songTitleWrapper.style.transition = '';
+        }, 320);
+      }
       await new Promise((r) => requestAnimationFrame(r));
       canvasWrapper.classList.remove("is-navigating");
       songTitleWrapper.classList.remove("is-navigating");
 
       updateSongNavButtons();
       fitViewerTitle();
+
+      // Prefetch tetangga (dokumen PDF + payload chord) SEGERA setelah konten
+      // muncul. Sebelumnya prefetch hanya jalan lewat antrean preload MIDI yang
+      // baru selesai ~2 s kemudian, sehingga next/prev yang ditekan cepat masih
+      // harus menanggung parse PDF.js (~0,75-0,87 s terukur di DPR HP).
+      _scheduleNeighborAssetPrefetch();
     }
+    // PDF berhasil dimuat sepenuhnya → reset penghitung pemulihan.
+    _resetPdfRecovery();
   } catch (reason) {
     if (_openPdfViewerGeneration !== thisOpenGeneration || reason?.name === "RenderingCancelledException") {
       if (loadingTask) {
@@ -670,13 +802,22 @@ async function openPdfViewer(songId, backgroundLoad = false) {
     songTitleWrapper.classList.remove("is-navigating");
     canvasWrapper.classList.remove("is-navigating");
     console.error(`Gagal memuat PDF: ${reason}`);
-    // Self-healing: purge cache modul PDF.js yang mungkin terpoisoning lalu
-    // reload otomatis sekali — pengguna tidak perlu hard refresh manual.
-    if (await _recoverPdfStack()) {
-      window.location.reload();
-      return;
+
+    // Bedakan jenis kegagalan supaya tidak "mematikan" seluruh aplikasi:
+    //  • Kegagalan LIBRARY PDF.js (worker/versi API↔Worker/modul gagal dimuat)
+    //    → purge cache + reload otomatis (self-healing). Ini penyebab klasik
+    //    "PDF gagal terus, sembuh setelah hapus data situs".
+    //  • Kegagalan ambil FILE PDF tertentu (jaringan/404) → JANGAN nuklir
+    //    seluruh aplikasi; cukup beri pesan per-lagu.
+    if (_isPdfLibraryError(reason)) {
+      if (await _recoverPdfStack()) {
+        window.location.reload();
+        return;
+      }
+      alert("Gagal memuat komponen PDF. Silakan tutup lalu buka lagi aplikasi.");
+    } else {
+      alert("Gagal memuat PDF ini. Periksa koneksi lalu coba lagi.");
     }
-    alert("Gagal memuat PDF.");
     closePdfViewer();
   }
 }
@@ -765,7 +906,7 @@ async function renderPage(num) {
     // Extract notes for note-aligned chord editor
     if (typeof extractPageNotes === "function") {
       try {
-        const noteData = await extractPageNotes(page);
+        const noteData = await extractPageNotes(page, pageNumToRender);
         pageNotesCache[pageNumToRender] = noteData;
       } catch (e) {
         console.warn("Note extraction failed for page", pageNumToRender, e);
@@ -1551,6 +1692,9 @@ function _getNeighborSongs(count) {
 // Value: -1 or 0, based on detected PDF key and current preference.
 const _preloadTransposeByPdfHref = new Map();
 const _tempoByPdfHref = new Map();
+// Hasil ekstraksi teks halaman 1 (tempo + nada dasar), di-cache per fileHref
+// supaya next/prev tidak perlu menjalankan getTextContent() lagi (~0,1 s).
+const _pdfMetaByHref = new Map();
 
 function _extractPdfKeyFromText(pdfText) {
   if (!pdfText) return null;
@@ -1565,6 +1709,24 @@ function _normalizeDetectedTempoBpm(value) {
   if (!Number.isFinite(parsed)) return MIDI_TEMPO_FALLBACK_BPM;
   const rounded = Math.round(parsed);
   return Math.max(MIDI_TEMPO_MIN_BPM, Math.min(MIDI_TEMPO_MAX_BPM, rounded));
+}
+
+/**
+ * Ekstraksi metadata halaman 1 (tempo + nada dasar) dari dokumen PDF.
+ * Dipakai bersama oleh jalur navigasi dan prefetch tetangga, jadi hasilnya
+ * disimpan di `_pdfMetaByHref`.
+ */
+async function _extractPdfMetaFromDoc(doc) {
+  const page1 = await doc.getPage(1);
+  const textContent = await page1.getTextContent();
+  const pdfText = textContent.items.map((item) => item.str).join(" ");
+  const keyMatch = pdfText.match(
+    /(?:(?:do|la)\s*={1,2}\s*|[23469]\s*[\/|]\s*[248]\s+)([A-G](?:es|is|s|#|b)?(?:m)?)\b/i,
+  );
+  return {
+    tempo: _extractPdfTempoFromText(pdfText),
+    key: keyMatch ? keyMatch[1] : null,
+  };
 }
 
 function _extractPdfTempoFromText(pdfText) {
@@ -1647,14 +1809,26 @@ async function _inferSongDefaultPreloadTranspose(song) {
   }
 
   try {
-    if (typeof pdfjsLib === 'undefined' || !pdfjsLib.getDocument) {
+    let _lib =
+      (typeof gysGetPdfjsLib === "function" ? gysGetPdfjsLib() : null) ||
+      (typeof pdfjsLib !== "undefined" ? pdfjsLib : null);
+    if (!_lib || !_lib.getDocument) {
+      if (typeof gysLoadPdfjs === "function") {
+        try {
+          _lib = await gysLoadPdfjs();
+        } catch (_e) {
+          _lib = null;
+        }
+      }
+    }
+    if (!_lib || !_lib.getDocument) {
       if (!_preloadTransposeByPdfHref.has(pdfHref)) {
         _preloadTransposeByPdfHref.set(pdfHref, 0);
       }
       return _preloadTransposeByPdfHref.get(pdfHref) || 0;
     }
 
-    const loadingTask = pdfjsLib.getDocument({
+    const loadingTask = _lib.getDocument({
       url: pdfHref,
       standardFontDataUrl: "https://mozilla.github.io/pdf.js/standard_fonts/",
     });
@@ -1691,6 +1865,46 @@ function _resolveLoadTranspose(song, midiUrl, instrumentValue) {
 }
 
 /**
+ * Tunda preload tetangga di awal boot. Membuka PDF tiap tetangga (untuk
+ * inferensi transpose) memicu PDF.js worker ≈ 480 KB per dokumen + render
+ * audio MIDI — sangat membebani load awal. Preload tetap berjalan begitu
+ * pengguna berinteraksi (tap/scroll/ketik) atau setelah idle, sehingga
+ * kemampuan "pindah lagu instan" tidak hilang, hanya ditunda sedikit.
+ */
+var _gysPreloadUnlocked = false;
+var _gysPreloadUnlockArmed = false;
+function _gysUnlockPreload() {
+  if (_gysPreloadUnlocked) return;
+  _gysPreloadUnlocked = true;
+  _gysPreloadUnlockArmed = false;
+  try {
+    _preloadNextSong();
+  } catch (_e) {}
+}
+function _gysSchedulePreloadUnlock() {
+  if (_gysPreloadUnlockArmed || _gysPreloadUnlocked) return;
+  _gysPreloadUnlockArmed = true;
+  var events = ["pointerdown", "touchstart", "keydown", "wheel"];
+  function onInteract() {
+    events.forEach(function (ev) {
+      window.removeEventListener(ev, onInteract, true);
+    });
+    _gysUnlockPreload();
+  }
+  events.forEach(function (ev) {
+    window.addEventListener(ev, onInteract, { passive: true, capture: true });
+  });
+  // Fallback bila pengguna pasif: buka setelah idle agak lama.
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(function () {
+      window.setTimeout(onInteract, 3500);
+    }, { timeout: 6000 });
+  } else {
+    window.setTimeout(onInteract, 5000);
+  }
+}
+
+/**
  * Preload neighboring songs' MIDI + PDF in the background to make
  * transitions instant. Called after a song finishes loading.
  * Respects prefs.preloadEnabled, prefs.preloadCount, prefs.preloadShuffle.
@@ -1699,6 +1913,12 @@ function _preloadNextSong() {
   if (typeof MidiEngine === 'undefined') return;
   if (typeof prefs !== 'undefined' && !prefs.preloadEnabled) {
     console.log('[Preload] Preload disabled in settings');
+    return;
+  }
+
+  // Jangan preload tetangga selama boot: tunggu interaksi/idle pengguna.
+  if (!_gysPreloadUnlocked) {
+    _gysSchedulePreloadUnlock();
     return;
   }
 
@@ -1725,6 +1945,11 @@ function _preloadNextSong() {
 
     if (song.fileHref) {
       _prefetchPdf(song.fileHref);
+      // Decode dokumennya juga — ini yang membuat next/prev terasa instan.
+      _prefetchDecodedPdf(song.fileHref);
+      // Sekalian payload chord JSON-nya (fetch-nya `no-store`, jadi harus
+      // dipanaskan lewat cache memori, bukan HTTP cache).
+      _prefetchNoteChordConfig(song);
     }
 
     const midiUrl = _getMidiUrlForSong(song);
@@ -1811,6 +2036,57 @@ function _preloadNextSong() {
 }
 
 /**
+ * Jadwalkan prefetch tetangga segera setelah lagu tampil, tanpa menunggu
+ * antrean preload MIDI (yang baru selesai ~2 s). Ditunda 250ms agar tidak
+ * bersaing dengan fade-in/render yang baru selesai.
+ */
+var _neighborAssetPrefetchTimer = 0;
+function _scheduleNeighborAssetPrefetch() {
+  if (typeof prefs !== 'undefined' && !prefs.preloadEnabled) return;
+  if (!_gysPreloadUnlocked) {
+    _gysSchedulePreloadUnlock();
+    return;
+  }
+  if (_neighborAssetPrefetchTimer) return;
+  _neighborAssetPrefetchTimer = setTimeout(function () {
+    _neighborAssetPrefetchTimer = 0;
+    _prefetchNeighborAssets();
+  }, 420); // > durasi morfing lebar judul (0,28 s) agar animasinya tidak tersendat
+}
+
+/**
+ * Decode dokumen PDF + tarik payload chord untuk lagu tetangga (before/after),
+ * supaya navigasi next/prev tidak perlu menunggu pekerjaan berat itu lagi.
+ */
+function _prefetchNeighborAssets() {
+  if (typeof pujianItems === 'undefined' || !pujianItems || !pujianItems.length) return;
+  if (typeof currentSongIndex !== 'number' || currentSongIndex < 0) return;
+  if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+
+  const count =
+    typeof prefs !== 'undefined' && prefs.preloadCount ? prefs.preloadCount : 1;
+  let neighbors;
+  try {
+    neighbors = _getNeighborSongs(count);
+  } catch (_e) {
+    return;
+  }
+  if (!neighbors) return;
+
+  const list = (neighbors.after || []).concat(neighbors.before || []);
+  for (let i = 0; i < list.length; i += 1) {
+    const song = list[i];
+    if (!song || !song.fileHref) continue;
+    if (!_prefetchedPdfs.has(song.fileHref)) {
+      console.log('[Prefetch] Warm tetangga:', song.judul);
+    }
+    _prefetchPdf(song.fileHref);
+    _prefetchDecodedPdf(song.fileHref);
+    _prefetchNoteChordConfig(song);
+  }
+}
+
+/**
  * Prefetch a PDF file into browser cache for instant loading.
  */
 const _prefetchedPdfs = new Set();
@@ -1821,6 +2097,76 @@ function _prefetchPdf(url) {
   fetch(url, { priority: 'low' }).catch(function() {
     _prefetchedPdfs.delete(url);
   });
+}
+
+/**
+ * Prefetch + decode PDF tetangga dengan PDF.js.
+ *
+ * `_prefetchPdf` hanya menghangatkan HTTP cache; proses parse `getDocument`
+ * (~0,4-0,5 s terukur) tetap terjadi saat next/prev ditekan — inilah penyebab
+ * utama jeda. Dengan men-decode lebih awal, `_takeCachedDecodedPdf` tinggal
+ * mengembalikan dokumen yang siap pakai sehingga jeda tinggal render halaman.
+ * Memori dibatasi oleh LRU `_decodedPdfCache` (3 dokumen).
+ */
+const _prefetchingDocs = new Map(); // url -> Promise dokumen
+function _prefetchDecodedPdf(url) {
+  if (!url) return;
+  if (typeof pdfjsLib === "undefined" || typeof pdfjsLib.getDocument !== "function") return;
+  if (_decodedPdfCache.has(url) || _prefetchingDocs.has(url)) return;
+
+  let prom;
+  try {
+    prom = pdfjsLib.getDocument({
+      url: url,
+      standardFontDataUrl:
+        typeof PDFJS_STANDARD_FONTS_URL === "string"
+          ? PDFJS_STANDARD_FONTS_URL
+          : "https://mozilla.github.io/pdf.js/standard_fonts/",
+    }).promise;
+  } catch (_e) {
+    return;
+  }
+  _prefetchingDocs.set(url, prom);
+
+  prom
+    .then(function (doc) {
+      _prefetchingDocs.delete(url);
+      const currentUrl =
+        typeof pujianItems !== "undefined" && pujianItems[currentSongIndex]
+          ? pujianItems[currentSongIndex].fileHref
+          : null;
+      // Sudah dipakai/di-cache jalur navigasi (atau sedang dibuka) → buang.
+      if (_decodedPdfCache.has(url) || url === currentUrl) {
+        try { doc.destroy(); } catch (_e) {}
+        return;
+      }
+      // Sekalian hitung not halaman 1 (untuk layer chord) supaya render halaman
+      // tujuan tidak perlu getTextContent() lagi saat ditekan.
+      if (!_getCachedPageNotes(url, 1) && typeof extractPageNotes === "function") {
+        doc
+          .getPage(1)
+          .then(function (p) {
+            return extractPageNotes(p, 1, url);
+          })
+          .catch(function () {});
+      }
+      // Sekalian hitung tempo + nada dasar halaman 1 supaya jalur navigasi
+      // tidak perlu getTextContent() lagi.
+      if (!_pdfMetaByHref.has(url)) {
+        _extractPdfMetaFromDoc(doc)
+          .then(function (meta) {
+            if (!_pdfMetaByHref.has(url)) {
+              _pdfMetaByHref.set(url, meta);
+              _tempoByPdfHref.set(url, meta.tempo);
+            }
+          })
+          .catch(function () {});
+      }
+      _cacheDecodedPdf(url, doc);
+    })
+    .catch(function () {
+      _prefetchingDocs.delete(url);
+    });
 }
 
 // ── Cache dokumen PDF yang sudah di-decode (LRU 3) ──
@@ -2554,7 +2900,57 @@ function onToggleChordEditorCollapse(event) {
  * Extract music notation notes from a PDF page using pdf.js text content.
  * Returns an array of note objects with their positions.
  */
-async function extractPageNotes(page) {
+// Cache hasil ekstraksi not per PDF+halaman. `pageNotesCache` direset setiap
+// ganti lagu, jadi tanpa cache ini setiap next/prev harus menjalankan
+// getTextContent() + pengelompokan not lagi (~0,05-0,11 s di DPR HP). Prefetch
+// tetangga mengisi cache ini sehingga jalur navigasi bebas biaya tersebut.
+// Objeknya dipakai read-only oleh konsumen (createNoteAlignedChordLayer hanya
+// membaca), sehingga aman dibagikan antar kunjungan.
+const _notesByPdfPage = new Map();
+const _NOTES_BY_PAGE_CACHE_MAX = 12;
+
+function _notesCacheKey(url, pageNum) {
+  return url && pageNum ? `${url}#${pageNum}` : null;
+}
+
+function _getCachedPageNotes(url, pageNum) {
+  const key = _notesCacheKey(url, pageNum);
+  if (!key) return null;
+  return _notesByPdfPage.get(key) || null;
+}
+
+function _setCachedPageNotes(url, pageNum, notes) {
+  const key = _notesCacheKey(url, pageNum);
+  if (!key || !notes) return;
+  if (_notesByPdfPage.has(key)) _notesByPdfPage.delete(key);
+  _notesByPdfPage.set(key, notes);
+  while (_notesByPdfPage.size > _NOTES_BY_PAGE_CACHE_MAX) {
+    _notesByPdfPage.delete(_notesByPdfPage.keys().next().value);
+  }
+}
+
+/** URL PDF lagu yang sedang aktif (untuk kunci cache per lagu). */
+function _currentSongPdfUrl() {
+  if (typeof pujianItems === "undefined" || !pujianItems) return null;
+  const song = pujianItems[currentSongIndex];
+  return song && song.fileHref ? song.fileHref : null;
+}
+
+/**
+ * Ekstraksi not satu halaman dengan cache per PDF+halaman.
+ * `url` opsional (dipakai prefetch tetangga); default = lagu yang aktif.
+ */
+async function extractPageNotes(page, pageNum, url) {
+  const num = pageNum || 1;
+  const keyUrl = url || _currentSongPdfUrl();
+  const cached = _getCachedPageNotes(keyUrl, num);
+  if (cached) return cached;
+  const result = await _computePageNotes(page);
+  _setCachedPageNotes(keyUrl, num, result);
+  return result;
+}
+
+async function _computePageNotes(page) {
   const textContent = await page.getTextContent();
   const viewport = page.getViewport({ scale: 1 });
   const pageWidth = viewport.width;
@@ -2739,6 +3135,27 @@ function getNoteChordFilename(song) {
     .replace(/\.pdf$/i, ".chord.json");
 }
 
+// Cache payload chord JSON (sudah di-parse) per nama file. Fetch di bawah
+// memakai `cache: "no-store"` sehingga selalu menembus HTTP cache — tanpa cache
+// memori, setiap next/prev harus fetch + JSON.parse ulang (~0,15 s terukur pada
+// lagu padat chord). Jumlahnya dibatasi agar pemakaian memori tetap wajar.
+const _noteChordPayloadCache = new Map();
+const _NOTE_CHORD_PAYLOAD_CACHE_MAX = 12;
+
+/**
+ * Simpan payload chord JSON yang sudah di-parse. Yang disimpan adalah payload
+ * mentah (BUKAN hasil `sanitizeNoteChordConfig`) supaya tidak ada objek yang
+ * dipakai bersama antar lagu dan termutasi oleh editor chord.
+ */
+function _cacheNoteChordPayload(filename, parsed) {
+  if (!filename || !parsed) return;
+  if (_noteChordPayloadCache.has(filename)) _noteChordPayloadCache.delete(filename);
+  _noteChordPayloadCache.set(filename, parsed);
+  while (_noteChordPayloadCache.size > _NOTE_CHORD_PAYLOAD_CACHE_MAX) {
+    _noteChordPayloadCache.delete(_noteChordPayloadCache.keys().next().value);
+  }
+}
+
 /**
  * Load note-aligned chord configuration for the current song.
  */
@@ -2752,26 +3169,57 @@ async function loadNoteChordConfiguration(song) {
 
     if (_missingNoteChordAssetSet.has(filename)) return;
 
-    // Resolve note-aligned chord files dynamically from the PDF filename.
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) {
-      if (response.status === 404) {
-        noteChordAssets.delete(filename);
-        _missingNoteChordAssetSet.add(filename);
+    let parsed = _noteChordPayloadCache.get(filename);
+    if (parsed === undefined) {
+      // Resolve note-aligned chord files dynamically from the PDF filename.
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        if (response.status === 404) {
+          noteChordAssets.delete(filename);
+          _missingNoteChordAssetSet.add(filename);
+        }
+        return;
       }
-      return;
+      parsed = JSON.parse(await response.text());
+      _cacheNoteChordPayload(filename, parsed);
     }
 
     noteChordAssets.add(filename);
     _missingNoteChordAssetSet.delete(filename);
 
-    const payload = await response.text();
-    const parsed = JSON.parse(payload);
     if (parsed.version === 2 && parsed.type === "note-aligned") {
       noteChordConfig = sanitizeNoteChordConfig(parsed);
     }
   } catch {
     noteChordConfig = createDefaultNoteChordConfig();
+  }
+}
+
+/**
+ * Prefetch + parse payload chord JSON tetangga saat idle, supaya next/prev tidak
+ * perlu menunggu fetch `no-store` + JSON.parse di jalur kritis navigasi.
+ */
+async function _prefetchNoteChordConfig(song) {
+  if (!song || !song.fileHref) return;
+  const filename = getNoteChordFilename(song);
+  if (!filename) return;
+  if (_noteChordPayloadCache.has(filename)) return;
+  if (_missingNoteChordAssetSet.has(filename)) return;
+
+  const url = getNoteChordUrl(song);
+  if (!url) return;
+
+  try {
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) {
+      // Tandai permanen agar tidak 404 berulang (perilaku sama dengan loader).
+      if (response.status === 404) _missingNoteChordAssetSet.add(filename);
+      return;
+    }
+    const parsed = JSON.parse(await response.text());
+    _cacheNoteChordPayload(filename, parsed);
+  } catch (_e) {
+    /* prefetch bersifat best-effort */
   }
 }
 

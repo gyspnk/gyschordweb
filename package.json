@@ -1,7 +1,9 @@
 {
   "scripts": {
     "test": "node --test",
-    "build": "node tools/build-bundle.mjs"
+    "build": "node tools/build-bundle.mjs",
+    "version:check": "node tools/sync-version.mjs --check",
+    "version:bump": "node tools/sync-version.mjs --bump"
   },
   "dependencies": {
     "@playwright/test": "^1.59.1",

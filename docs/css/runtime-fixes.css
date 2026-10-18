@@ -148,3 +148,98 @@
     padding: 1.25rem;
   }
 }
+
+/* ===== Perf: daftar pujian panjang (533 item) =====
+   `content-visibility: auto` melewati layout+paint item di luar viewport.
+   Terukur (median 6 run, CPU 4x throttle): total long task saat boot
+   1617ms -> 1014ms, long task terpanjang 465ms -> 250ms, biaya filter
+   pencarian 184ms -> 83ms.
+
+   `contain-intrinsic-size` menentukan ukuran CONTENT-BOX (padding/border
+   ditambahkan browser di atasnya). Tinggi content item = anak tertinggi, yaitu
+   kotak nomor (--layout-number-size) atau tombol playlist (2.5rem) — `max()`
+   dari keduanya. Dengan begitu perkiraan tinggi presisi di semua gaya layout
+   → scrollbar tidak melar/loncat. Nilai tebakan tetap (mis. 66px) membuat item
+   jadi 92px (bukan 68px) dan tinggi daftar melar 40.240 -> 52.715px. */
+.pujian-list li {
+  content-visibility: auto;
+  contain-intrinsic-size: auto max(var(--layout-number-size), 2.5rem);
+}
+
+/* Entry animation bertahap hanya untuk item di layar pertama.
+   Versi lama menganimasikan seluruh 533 item serentak (transform+opacity),
+   yang membebani style-recalc & paint saat boot maupun saat filter. */
+.pujian-list li:nth-child(n + 13) {
+  animation: none;
+}
+
+/* Item daftar juga harus "blank lalu fade in", bukan meluncur.
+   Dasar (tailwind.css) memakai `listItemEnter` = translateY(16px) → 0; geseran
+   itulah yang terlihat sebagai transisi saat halaman daftar muncul. Cukup ganti
+   NAMA animasinya — durasi, delay bertahap (nth-child), dan `both` diwarisi dari
+   shorthand, jadi item tetap muncul bertahap, hanya tanpa geser.
+   `nth-child(n + 13)` di atas tidak terpengaruh: spesifisitasnya lebih tinggi. */
+@keyframes gysListItemEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pujian-list li {
+  animation-name: gysListItemEnter;
+}
+
+/* ===== Perpindahan antar-halaman: state awal blank, masuk murni fade-in =====
+   Sebelumnya kontainer halaman baru masuk lewat keyframes "fade up"
+   (`simpleFade` = translateY(12px), `elegantFadeInUp` = translateY(20px)),
+   sehingga terlihat seperti geseran/transisi, bukan sekadar muncul. Halaman
+   lama sendiri sudah langsung hilang karena #main-content ditulis ulang
+   (tidak ada animasi keluar), jadi yang perlu diperbaiki hanya sisi masuk:
+   mulai dari blank (opacity 0, tanpa geser) lalu fade in.
+
+   `both` (fill-mode) penting: tanpa itu frame pertama kontainer bisa
+   ter-paint penuh sebelum animasi mulai (kedip), terutama di perangkat
+   lambat. Dengan `both` frame pertama dijamin blank. */
+@keyframes gysPageEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pujian-list,
+.playlist-view-container,
+.settings-panel,
+.report-page {
+  animation: gysPageEnter 0.28s var(--ease-decelerate, cubic-bezier(0.2, 0, 0, 1)) both;
+}
+
+/* ===== Ganti lagu dari dalam viewer: blank seketika, lalu fade in =====
+   Alur lama (viewer-core.js): kelas `is-navigating` dipasang → canvas lama
+   memudar KELUAR 0.26s (opacity + scale .95, dari 04-viewer.css) dan teks judul
+   0.16s (opacity + geser 4px) → baru konten baru fade in. Jadi terlihat "yang
+   lama menghilang dulu", bukan langsung blank.
+
+   Dengan mematikan transisi HANYA pada state `is-navigating`, opacity 0
+   langsung terpakai (blank di frame itu juga); saat kelasnya dilepas, transisi
+   dasar tetap berjalan → konten baru fade in.
+   `transform: none` ikut dipasang agar saat muncul tidak ada gerakan sama
+   sekali (canvas: scale .95 → 1, judul: geser 4px). Aman untuk zoom: wrapper
+   halaman baru dibuat tanpa inline transform (renderPage → replaceWith,
+   viewer-core.js), dan kelas ini sudah dilepas sebelum pengguna melakukan zoom. */
+.canvas-wrapper.is-navigating {
+  transition: none !important;
+  transform: none !important;
+}
+
+.song-title-wrapper.is-navigating h2,
+.song-title-wrapper.is-navigating #pdf-viewer-title,
+.song-title-wrapper.is-navigating #pdf-viewer-number {
+  transition: none !important;
+  transform: none !important;
+}

@@ -224,7 +224,7 @@
 				if (!Array.isArray(entries) || entries.length === 0) continue;
 				var noteData =
 					typeof extractPageNotes === "function"
-						? await extractPageNotes(page)
+						? await extractPageNotes(page, p, song.fileHref)
 						: null;
 				var lyricLines = await extractLyricLines(page);
 				if (!noteData || !noteData.notes || noteData.notes.length === 0)
