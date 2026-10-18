@@ -1,15 +1,28 @@
 name: Generate assets-list.json
 
+# Manifest ini hanya menggambarkan berkas PDF & chord: docs/generate_assets_list.py
+# membaca docs/assets/pdf/*.pdf dan folder chord dari docs/chord-sources.json.
+# Karena itu trigger-nya dipersempit ke berkas yang benar-benar dibaca.
+# Sebelumnya memakai 'docs/assets/**', sehingga aset lain (fonts, midi,
+# soundfont, logo) memicu regenerasi + commit manifest `sourceCommit` + satu
+# deploy Pages tambahan yang sama sekali tidak perlu.
+#
+# Daftar path sengaja ditulis ulang di `push` dan `pull_request` (bukan YAML
+# anchor) agar berkas workflow ini tetap sederhana dibaca/di-diff; ingat ubah
+# keduanya bila menambah path.
+
 on:
   push:
     paths:
-      - 'docs/assets/**'
+      - 'docs/assets/chord/**'
+      - 'docs/assets/pdf/**'
       - 'docs/chord-sources.json'
       - 'docs/generate_assets_list.py'
       - '.github/workflows/generate-assets-list.yml'
   pull_request:
     paths:
-      - 'docs/assets/**'
+      - 'docs/assets/chord/**'
+      - 'docs/assets/pdf/**'
       - 'docs/chord-sources.json'
       - 'docs/generate_assets_list.py'
       - '.github/workflows/generate-assets-list.yml'
@@ -27,16 +40,17 @@ concurrency:
 jobs:
   generate-assets-list:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           # Rebase-based push retry needs full history of the branch tip.
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.x'
 
@@ -64,6 +78,32 @@ jobs:
             echo "Manifests are already up to date; nothing to commit."
             exit 0
           fi
+
+          # `sourceCommit` selalu berubah setiap kali workflow ini jalan (di-pin
+          # ke commit pemicu), padahal isi manifest belum tentu berubah. Bila
+          # HANYA baris itu yang berbeda, commit + satu deploy Pages tambahan
+          # tidak perlu: berkas aset di commit lama identik dengan di commit baru.
+          content_changed=0
+          for f in docs/assets-list.json docs/assets-chord-list.json docs/assets-chord-manifest.json; do
+            if ! diff -q \
+              <(git show "HEAD:$f" 2>/dev/null | grep -v '"sourceCommit"') \
+              <(grep -v '"sourceCommit"' "$f") > /dev/null; then
+              content_changed=1
+            fi
+          done
+          if [ "$content_changed" -eq 0 ]; then
+            echo "Only the sourceCommit line changed; manifest content is identical."
+            echo "_Hanya \`sourceCommit\` yang berubah (isi manifest identik) → commit & deploy tambahan dilewati._" \
+              > "$RUNNER_TEMP/manifest-note.txt"
+            exit 0
+          fi
+
+          # Ringkasan diambil SEBELUM commit: setelah commit, `git diff --cached`
+          # sudah kosong sehingga job summary lama selalu tampil tanpa isi.
+          git diff --cached --stat -- \
+            docs/assets-list.json \
+            docs/assets-chord-list.json \
+            docs/assets-chord-manifest.json > "$RUNNER_TEMP/manifest-diff.txt"
           git commit -m "Update asset manifests (PDFs + chords, SHA-256) [auto]"
           REMOTE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
           BRANCH="${GITHUB_REF#refs/heads/}"
@@ -78,13 +118,20 @@ jobs:
           echo "Failed to push asset manifests after 4 attempts."
           exit 1
 
+      # `always()` supaya ringkasan tetap ditulis walau langkah sebelumnya gagal.
       - name: Write job summary
-        if: github.event_name != 'pull_request'
+        if: always() && github.event_name != 'pull_request'
         run: |
           {
             echo "## Asset manifest generation"
             echo ""
-            git diff --stat --cached docs/assets-list.json docs/assets-chord-list.json docs/assets-chord-manifest.json
+            if [ -s "$RUNNER_TEMP/manifest-diff.txt" ]; then
+              cat "$RUNNER_TEMP/manifest-diff.txt"
+            elif [ -s "$RUNNER_TEMP/manifest-note.txt" ]; then
+              cat "$RUNNER_TEMP/manifest-note.txt"
+            else
+              echo "_Tidak ada perubahan manifest (sudah mutakhir)._"
+            fi
             echo ""
             echo "Chord entries: $(python -c "import json;print(len(json.load(open('docs/assets-chord-manifest.json','encoding=utf-8'))['files']))")"
           } >> "$GITHUB_STEP_SUMMARY"
