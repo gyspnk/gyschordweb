@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "279148b317b2e1349fa06726a7a15f4179fef2cf",
+  "sourceCommit": "0e42a69a036a0cb0139f1c616bb3ff6020bae891",
   "files": [
     {
       "id": "KR:001",
@@ -343,6 +343,16 @@
       "sha256": "596da989a6b56060835994db6c229df465840ea1736b09bf0133d6bbe12bc61f"
     },
     {
+      "id": "KR:048",
+      "bookCode": "KR",
+      "songNumber": "048",
+      "title": "Anugerah di Atas Salib",
+      "path": "docs/assets/chord/048_Anugerah di Atas Salib.chord.json",
+      "formatVersion": 2,
+      "size": 1696,
+      "sha256": "a7a3d85de3e22da3ee7b9194575ad636a8e38ba36d287e44d7ee24a7dd1e0631"
+    },
+    {
       "id": "KR:054",
       "bookCode": "KR",
       "songNumber": "054",
@@ -361,6 +371,16 @@
       "formatVersion": 2,
       "size": 1830,
       "sha256": "114345ce1010606ac659e48bb18dfee5f61d0958bb559129e37499bd966d70ef"
+    },
+    {
+      "id": "KR:065",
+      "bookCode": "KR",
+      "songNumber": "065",
+      "title": "Dekat Pada Tuhan",
+      "path": "docs/assets/chord/065_Dekat Pada Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1436,
+      "sha256": "12ad826b523ddafed0e830390a5bac9c54b61ed9adce54dc3d1b9a9118b04c0c"
     },
     {
       "id": "KR:067",
@@ -1271,6 +1291,26 @@
       "formatVersion": 2,
       "size": 1520,
       "sha256": "26eed4cca1f837723260072550f2b3c3f188d3233a8abe71f3952240527d9f5f"
+    },
+    {
+      "id": "KR:296",
+      "bookCode": "KR",
+      "songNumber": "296",
+      "title": "Memperingati Kematian Tuhan",
+      "path": "docs/assets/chord/296_Memperingati Kematian Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 815,
+      "sha256": "053c28204e77114773dfaa58398b12592e854cf079be7cbac5720fe619b626f5"
+    },
+    {
+      "id": "KR:297",
+      "bookCode": "KR",
+      "songNumber": "297",
+      "title": "Apakah Tekadku Untuk Tuhan",
+      "path": "docs/assets/chord/297_Apakah Tekadku Untuk Tuhan.chord.json",
+      "formatVersion": 2,
+      "size": 1692,
+      "sha256": "5bf161939a8c47724dc3ace4fe2cd96ea5b940060989beae48b09d0b9f7b9472"
     },
     {
       "id": "KR:322",
