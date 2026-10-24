@@ -114,7 +114,7 @@ var _gysHadServiceWorkerController =
 	!!navigator.serviceWorker.controller;
 // Versi build yang tertanam di bundle ini. Kini HANYA untuk telemetri —
 // BUKAN pemicu reload (lihat catatan di checkForAppUpdate).
-const GYS_CLIENT_BUILD = "3.8.42";
+const GYS_CLIENT_BUILD = "3.8.43";
 
 // Bangun fingerprint shell dari sebuah Document. HANYA memakai elemen yang
 // berasal dari index.html (bukan nilai hardcoded di bundle React), sehingga

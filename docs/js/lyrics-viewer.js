@@ -15,7 +15,6 @@
 	var _lyricsResizeHandler = null;
 	var _lastFitFontPx = 0; // font terakhir hasil autofit (histeresis anti-osilasi)
 	var _lyricsTempoPollTimer = null;
-	var _lastSeenPdfDoc = null; // pdfDoc viewer yang terakhir dipakai (anti race)
 
 	function loadPrefs() {
 		try {
@@ -117,30 +116,6 @@
 		return href.replace(/\/pdf\//i, "/chord/").replace(/\.pdf$/i, ".chord.json");
 	}
 
-	// Tunggu pdfDoc viewer sampai BERUBAH menjadi dokumen baru (viewer
-	// sedang memuat lagu ini). Judul viewer sudah berubah lebih dulu,
-	// jadi memakai pdfDoc lama = salah lagu. Referensi dokumen lama
-	// (oldRef) dipakai untuk membedakan "belum berubah" vs "sudah siap".
-	function waitForViewerPdfDocChange(oldRef, maxWaitMs) {
-		return new Promise((resolve) => {
-			var waited = 0;
-			var iv = setInterval(() => {
-				waited += 150;
-				var current =
-					typeof pdfDoc !== "undefined" &&
-					pdfDoc &&
-					typeof pdfDoc.getPage === "function"
-						? pdfDoc
-						: null;
-				var ready = current && current !== oldRef;
-				if (ready || waited >= maxWaitMs) {
-					clearInterval(iv);
-					resolve(ready ? current : null);
-				}
-			}, 150);
-		});
-	}
-
 	async function loadChordLayout(song) {
 		var url = resolveNoteChordUrl(song);
 		var resp;
@@ -165,31 +140,11 @@
 		)
 			return { pages: {} };
 
-		var doc = null;
+		// The title/selection changes before pdfDoc. Reuse only a document
+		// whose recorded source URL matches this song; otherwise load our own.
+		var doc = typeof _getViewerPdfDocForSong === "function"
+			? _getViewerPdfDocForSong(song) : null;
 		var ownDoc = false;
-		var viewerTitleEl = document.querySelector(
-			".pdf-viewer-title, #pdf-viewer-title",
-		);
-		var titleMatches =
-			viewerTitleEl &&
-			viewerTitleEl.textContent.trim() === (song.judul || "").trim();
-
-		if (titleMatches) {
-			// Hanya reuse pdfDoc viewer kalau dokumennya SUDAH berganti ke
-			// lagu ini (bukan sisa dokumen lagu sebelumnya). Kalau belum,
-			// tunggu sebentar; bila tak kunjung siap, load sendiri.
-			var currentDoc =
-				typeof pdfDoc !== "undefined" &&
-				pdfDoc &&
-				typeof pdfDoc.getPage === "function"
-					? pdfDoc
-					: null;
-			if (currentDoc && currentDoc !== _lastSeenPdfDoc) {
-				doc = currentDoc;
-			} else {
-				doc = await waitForViewerPdfDocChange(_lastSeenPdfDoc, 5000);
-			}
-		}
 
 		if (!doc) {
 			if (typeof pdfjsLib === "undefined" || !pdfjsLib.getDocument)
@@ -240,11 +195,6 @@
 		} catch (e) {
 			return { pages: {}, __error: true };
 		} finally {
-			// Catat pdfDoc viewer yang berhasil dipakai sebagai referensi
-			// anti-race untuk pemanggilan berikutnya.
-			if (!ownDoc && doc && _lastSeenPdfDoc !== doc) {
-				_lastSeenPdfDoc = doc;
-			}
 			if (ownDoc && doc && typeof doc.destroy === "function") {
 				try {
 					doc.destroy();

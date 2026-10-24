@@ -866,10 +866,14 @@ function updateCenteringAndOverflow() {
 
 async function renderPage(num) {
   if (!pdfDoc) return;
+  // Selection changes before the new PDF arrives. Resize/zoom must never
+  // render the previous document with the new song's chord data/cache key.
+  const songForRender = pujianItems[currentSongIndex];
+  if (_getViewerPdfDocForSong(songForRender) !== pdfDoc) return;
   const requestId = ++renderRequestId;
   const renderGeneration = _openPdfViewerGeneration;
   const docForRender = pdfDoc;
-  const urlForRender = _currentSongPdfUrl();
+  const urlForRender = _pdfDocumentUrls.get(docForRender);
   const isRenderStale = () => requestId !== renderRequestId || renderGeneration !== _openPdfViewerGeneration || docForRender !== pdfDoc;
   const oldWrapper = canvasWrapper;
   const nextWrapper = document.createElement("div");
@@ -2189,9 +2193,17 @@ function _prefetchDecodedPdf(url) {
 // di-decode ulang oleh PDF.js (proses berat yang menyebabkan lag terasa).
 const _decodedPdfCache = new Map(); // url -> { doc, generation }
 const _DECODED_PDF_MAX = 3;
+// Document ownership survives LRU eviction while the viewer still holds it.
+const _pdfDocumentUrls = new WeakMap();
+
+function _getViewerPdfDocForSong(song) {
+  return song && pdfDoc && _pdfDocumentUrls.get(pdfDoc) === song.fileHref
+    ? pdfDoc : null;
+}
 
 function _cacheDecodedPdf(url, doc) {
   if (!url || !doc) return;
+  _pdfDocumentUrls.set(doc, url);
   if (_decodedPdfCache.has(url)) {
     _decodedPdfCache.delete(url);
   }

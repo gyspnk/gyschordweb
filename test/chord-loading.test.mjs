@@ -177,6 +177,7 @@ test('late note extraction cannot overwrite the new PDF page cache', async () =>
   for (const name of ['updatePageIndicator', 'updatePageNavButtons', 'updateZoomIndicator', 'updateCenteringAndOverflow']) c[name] = () => {};
   // Exercise the real renderer; only the external raster/text operations pause.
   vm.runInContext(viewer.slice(viewer.indexOf('async function renderPage('), viewer.indexOf('\nfunction onPrevPage(')), c);
+  c._cacheDecodedPdf('/pdf/A.pdf', c.pdfDoc);
   c.extractPageNotes = () => notes.promise;
   const old = c.renderPage(1);
   await new Promise(resolve => setImmediate(resolve));
@@ -187,4 +188,91 @@ test('late note extraction cannot overwrite the new PDF page cache', async () =>
   notes.resolve({ notes: [{ x: 1 }], pageWidth: 100, pageHeight: 100 });
   await old;
   assert.equal(c.pageNotesCache[1], activeNotes);
+});
+
+function useRealRenderer(c) {
+  c.renderRequestId = 0;
+  c.zoomDeferInsert = false;
+  c.currentScale = 1;
+  c.currentScrollMode = 'horizontal';
+  c.currentViewMode = 'single';
+  c.canvasWrapper.className = 'canvas-wrapper';
+  c.canvasWrapper.replaceWith = () => {};
+  c.document.createElement = () => ({ ...element(), className: '', dataset: {}, appendChild() {}, addEventListener() {}, getContext() {} });
+  for (const name of ['updatePageIndicator', 'updatePageNavButtons', 'updateZoomIndicator', 'updateCenteringAndOverflow', 'onChordLayerClick']) c[name] = () => {};
+  c.createNoteAlignedChordLayer = () => element();
+  c.createChordLayer = () => element();
+  vm.runInContext(viewer.slice(viewer.indexOf('async function renderPage('), viewer.indexOf('\nfunction onPrevPage(')), c);
+}
+function pdfWithNotes(x) {
+  return { numPages: 1, getPage: async () => ({
+    getViewport: () => ({ width: 100, height: 100 }),
+    render: () => ({ promise: Promise.resolve(), cancel() {} }),
+    getTextContent: async () => ({ items: [0, 10].map(dx => ({ str: '1', width: 4, transform: [1, 0, 0, 10, x + dx, 70] })) }),
+  }) };
+}
+
+test('resize while B loads cannot cache A note positions under B', async () => {
+  const c = runtime();
+  c.pdfDoc = pdfWithNotes(10);
+  c._cacheDecodedPdf('/pdf/A.pdf', c.pdfDoc);
+  c.currentSongIndex = 1; // B selected; pdfDoc still A until the fetch finishes.
+  useRealRenderer(c);
+  await c.renderPage(1);
+  const pageB = await pdfWithNotes(60).getPage(1);
+  const b = await c.extractPageNotes(pageB, 1, '/pdf/B.pdf');
+  assert.equal(b.notes[0].xPct, 62, 'B must use its own PDF coordinates, even on repeated navigation');
+});
+
+test('lyrics starting during navigation must not read the previous viewer PDF', async () => {
+  const c = runtime();
+  c.pdfDoc = pdfWithNotes(10);
+  c._cacheDecodedPdf('/pdf/A.pdf', c.pdfDoc);
+  c.currentSongIndex = 1;
+  // The title already says B, but the document still belongs to A.
+  c.document.querySelector = () => ({ textContent: 'B' });
+  c.fetch = async () => response('G');
+  c.pdfjsLib = { getDocument: () => ({ promise: Promise.resolve(pdfWithNotes(60)) }) };
+  c._lastSeenPdfDoc = null;
+  c.extractLyricLines = async () => [];
+  c.buildChordedLines = () => [];
+  const lyrics = readFileSync(new URL('../docs/js/lyrics-viewer.js', import.meta.url), 'utf8');
+  vm.runInContext(lyrics.slice(lyrics.indexOf('\tfunction resolveNoteChordUrl('), lyrics.indexOf('\n\t// Baris lirik dari teks PDF:')), c);
+  await c.loadChordLayout(c.pujianItems[1]);
+  const b = await c.extractPageNotes(await pdfWithNotes(60).getPage(1), 1, '/pdf/B.pdf');
+  assert.equal(b.notes[0].xPct, 62);
+});
+
+test('chord marker coordinates stay correct over A-B-A-B navigation without refresh', async () => {
+  const c = runtime();
+  const docs = { '/pdf/A.pdf': pdfWithNotes(10), '/pdf/B.pdf': pdfWithNotes(60) };
+  c.pdfjsLib = { getDocument: ({ url }) => ({ promise: Promise.resolve(docs[url]) }) };
+  c.fetch = async () => response('G');
+  vm.runInContext(app.slice(app.indexOf('const NOTE_CHORD_Y_OFFSET_PCT'), app.indexOf('\nfunction isPerRowSentinel')), c);
+  c.chordUiPrefs = { theme: 'default', fill: 'none', fillColor: 'default', fillOpacityPercent: 100, fillPaddingPercent: 100 };
+  c.formatChordForDisplay = text => text;
+  c.getChordFontSizeRem = () => 1;
+  function node() {
+    const n = { ...element(), className: '', dataset: {}, children: [],
+      appendChild(child) { this.children.push(child); }, addEventListener() {},
+      getContext() {}, replaceWith() {},
+    };
+    n.style.setProperty = () => {};
+    return n;
+  }
+  c.getComputedStyle = () => ({});
+  c.pdfViewerContent = { clientWidth: 800, clientHeight: 600 };
+  const layerFn = c.createNoteAlignedChordLayer;
+  for (const [songIndex, expectedLeft] of [[0, '12%'], [1, '62%'], [0, '12%'], [1, '62%']]) {
+    // Simulate a resize between selection and the new PDF becoming available.
+    c.currentSongIndex = songIndex;
+    useRealRenderer(c);
+    c.document.createElement = node;
+    c.createNoteAlignedChordLayer = layerFn;
+    if (c.pdfDoc) await c.renderPage(1);
+    await c.openPdfViewer(songIndex);
+    const marker = c.canvasWrapper.children[0].children[1].children[0];
+    assert.equal(marker.style.left, expectedLeft);
+    assert.ok(Math.abs(parseFloat(marker.style.top) - 27.5) < 0.000001);
+  }
 });

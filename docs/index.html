@@ -59,7 +59,7 @@
     <link rel="stylesheet" href="./css/tailwind.css?v=10" />
     <link rel="stylesheet" href="./css/04-viewer.css?v=43" />
     <link rel="stylesheet" href="./css/runtime-fixes.css?v=14" />
-    <link rel="preload" href="./js/app.bundle.min.js?v=48" as="script" />
+    <link rel="preload" href="./js/app.bundle.min.js?v=49" as="script" />
     <link
       rel="prefetch"
       href="./js/midi-render-worker.min.js?v=8"
@@ -76,7 +76,7 @@
       // ketika pengguna membuka mode lirik. Muat secara idle setelah halaman
       // selesai agar tidak memperberat/memperlambat load awal.
       (function () {
-        var src = "./js/lyrics-viewer.js?v=19";
+        var src = "./js/lyrics-viewer.js?v=20";
         function inject() {
           if (document.querySelector('script[data-lyrics-viewer]')) return;
           var s = document.createElement("script");
