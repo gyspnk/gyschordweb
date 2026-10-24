@@ -132,6 +132,9 @@ function _resetPdfRecovery() {
 // lalu dipotong oleh reset style inline. Karena itu lebar lama ditahan dulu,
 // dan animasinya baru dijalankan ketika render sudah selesai.
 let _pendingTitleMorph = null;
+// Only a completed PDF + chord render may use the same-song fast path.
+// MIDI can become ready while the previous PDF is still on screen.
+let _renderedPdfHref = null;
 
 async function openPdfViewer(songId, backgroundLoad = false) {
   // Guard against rapid prev/next navigation: each call gets a generation number.
@@ -176,7 +179,12 @@ async function openPdfViewer(songId, backgroundLoad = false) {
   const _earlyIsSameSong = window._midiCurrentlyLoadedRawUrl === _earlyRawUrl;
   // If the same song is already decoded and the canvas is still rendered, we can
   // skip the heavy PDF re-load/render to avoid audio jank during the transition.
-  const _canReuseDoc = _earlyIsSameSong && !!pdfDoc;
+  const _canReuseDoc = _earlyIsSameSong && !!pdfDoc &&
+    _renderedPdfHref === song.fileHref;
+  if (!_canReuseDoc) {
+    _renderedPdfHref = null;
+    if (typeof setChordStatus === "function") setChordStatus("loading");
+  }
 
   // Detect whether the target MIDI is already preloaded with the exact
   // transpose/instrument profile we are about to load. If yes, avoid blocking
@@ -223,6 +231,7 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       await gysLoadPdfjs();
     } catch (_e) {}
   }
+  if (_openPdfViewerGeneration !== thisOpenGeneration) return;
   if (typeof gysEnsurePdfjsWorkerSrc === "function") gysEnsurePdfjsWorkerSrc();
   const pdfOptions = {
     url: song.fileHref,
@@ -702,7 +711,7 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         el.textContent = pdfDoc.numPages;
       });
 
-      if (!isSameSong) {
+      if (!_canReuseDoc) {
         // Muat konfigurasi chord sebelum render halaman agar marker chord
         // langsung terbentuk di DOM dan deteksi nada dasar akurat.
         try {
@@ -735,6 +744,7 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       // renderPage menukar wrapper seketika; elemen baru mewarisi status is-navigating.
       await renderPage(currentPageNum);
       if (_openPdfViewerGeneration !== thisOpenGeneration) return;
+      _renderedPdfHref = song.fileHref;
 
       // ── 4) Fade-IN: konten baru sudah siap sepenuhnya di DOM ──
       // Terapkan perubahan status tombol chord & transisi pergeseran box transpose saat konten baru mulai muncul
@@ -777,6 +787,7 @@ async function openPdfViewer(songId, backgroundLoad = false) {
         }, 320);
       }
       await new Promise((r) => requestAnimationFrame(r));
+      if (_openPdfViewerGeneration !== thisOpenGeneration) return;
       canvasWrapper.classList.remove("is-navigating");
       songTitleWrapper.classList.remove("is-navigating");
 
@@ -799,6 +810,7 @@ async function openPdfViewer(songId, backgroundLoad = false) {
       return;
     }
     viewerLoader.classList.remove("visible");
+    if (typeof setChordStatus === "function") setChordStatus("none");
     songTitleWrapper.classList.remove("is-navigating");
     canvasWrapper.classList.remove("is-navigating");
     console.error(`Gagal memuat PDF: ${reason}`);
@@ -857,6 +869,7 @@ async function renderPage(num) {
   const requestId = ++renderRequestId;
   const renderGeneration = _openPdfViewerGeneration;
   const docForRender = pdfDoc;
+  const urlForRender = _currentSongPdfUrl();
   const isRenderStale = () => requestId !== renderRequestId || renderGeneration !== _openPdfViewerGeneration || docForRender !== pdfDoc;
   const oldWrapper = canvasWrapper;
   const nextWrapper = document.createElement("div");
@@ -906,9 +919,11 @@ async function renderPage(num) {
     // Extract notes for note-aligned chord editor
     if (typeof extractPageNotes === "function") {
       try {
-        const noteData = await extractPageNotes(page, pageNumToRender);
+        const noteData = await extractPageNotes(page, pageNumToRender, urlForRender);
+        if (isRenderStale()) return null;
         pageNotesCache[pageNumToRender] = noteData;
       } catch (e) {
+        if (isRenderStale()) return null;
         console.warn("Note extraction failed for page", pageNumToRender, e);
         pageNotesCache[pageNumToRender] = { notes: [], pageWidth: 0, pageHeight: 0 };
       }
@@ -3160,6 +3175,7 @@ function _cacheNoteChordPayload(filename, parsed) {
  * Load note-aligned chord configuration for the current song.
  */
 async function loadNoteChordConfiguration(song) {
+  const generation = _openPdfViewerGeneration;
   noteChordConfig = createDefaultNoteChordConfig();
   const url = getNoteChordUrl(song);
   const filename = getNoteChordFilename(song);
@@ -3188,9 +3204,11 @@ async function loadNoteChordConfiguration(song) {
     _missingNoteChordAssetSet.delete(filename);
 
     if (parsed.version === 2 && parsed.type === "note-aligned") {
+      if (generation !== _openPdfViewerGeneration) return;
       noteChordConfig = sanitizeNoteChordConfig(parsed);
     }
   } catch {
+    if (generation !== _openPdfViewerGeneration) return;
     noteChordConfig = createDefaultNoteChordConfig();
   }
 }

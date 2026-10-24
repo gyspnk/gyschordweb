@@ -12600,8 +12600,8 @@ const e0 = `\uFEFF<header class="app-header">\r
     </div>\r
 `,
 	Us = "https://mozilla.github.io/pdf.js/build/pdf.mjs",
-	_s = "./js/app.bundle.min.js?v=47",
-	i0 = "./sw.min.js?v=29";
+	_s = "./js/app.bundle.min.js?v=48",
+	i0 = "./sw.min.js?v=30";
 let cn = null;
 const hu = new Map();
 function Hs({ id: l, src: a, type: t = "text/javascript" }) {

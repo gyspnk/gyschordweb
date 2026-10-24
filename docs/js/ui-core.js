@@ -114,7 +114,7 @@ var _gysHadServiceWorkerController =
 	!!navigator.serviceWorker.controller;
 // Versi build yang tertanam di bundle ini. Kini HANYA untuk telemetri —
 // BUKAN pemicu reload (lihat catatan di checkForAppUpdate).
-const GYS_CLIENT_BUILD = "3.8.41";
+const GYS_CLIENT_BUILD = "3.8.42";
 
 // Bangun fingerprint shell dari sebuah Document. HANYA memakai elemen yang
 // berasal dari index.html (bukan nilai hardcoded di bundle React), sehingga
@@ -2632,6 +2632,18 @@ function updateHideChordButton() {
 				btn.style.display = "none";
 			});
 		}
+		return;
+	}
+
+	// Config is reset/fetched before the PDF has finished rendering. Hold the
+	// previous button state until the new PDF and its chord layers are ready.
+	if (_chordStatus === "loading") {
+		if (_chordBtnFadeTimer) {
+			clearTimeout(_chordBtnFadeTimer);
+			_chordBtnFadeTimer = null;
+		}
+		if (_chordButtonVisible === "fading-out") _chordButtonVisible = true;
+		hideChordBtns.forEach((btn) => btn.classList.remove("is-fading-out", "is-fading-in"));
 		return;
 	}
 
