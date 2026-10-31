@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "da1efb9dbe64edc028763bbbabd3c2a4d00f59cb",
+  "sourceCommit": "e431ccb1f839210ad4b4bf9c5c6df5c8f30d256b",
   "files": [
     {
       "id": "KR:001",
@@ -371,6 +371,36 @@
       "formatVersion": 2,
       "size": 1830,
       "sha256": "114345ce1010606ac659e48bb18dfee5f61d0958bb559129e37499bd966d70ef"
+    },
+    {
+      "id": "KR:062",
+      "bookCode": "KR",
+      "songNumber": "062",
+      "title": "Semoga Tuhan Menyertai",
+      "path": "docs/assets/chord/062_Semoga Tuhan Menyertai.chord.json",
+      "formatVersion": 2,
+      "size": 1256,
+      "sha256": "53a6ad903192a8b92cdbe7755acf615366d848ad2e21179b846fec19249f5119"
+    },
+    {
+      "id": "KR:063",
+      "bookCode": "KR",
+      "songNumber": "063",
+      "title": "Semoga Tuhan Pimpin",
+      "path": "docs/assets/chord/063_Semoga Tuhan Pimpin.chord.json",
+      "formatVersion": 2,
+      "size": 1707,
+      "sha256": "9691a9e6279bc6d4ed4a3eb7edc8f98750fc9d36a8c9dde5a372b47b1d57159c"
+    },
+    {
+      "id": "KR:064",
+      "bookCode": "KR",
+      "songNumber": "064",
+      "title": "Terang Tuhan Memimpin",
+      "path": "docs/assets/chord/064_Terang Tuhan Memimpin.chord.json",
+      "formatVersion": 2,
+      "size": 1393,
+      "sha256": "9ae5ce5ac652e39d67eb1ab0f956e9b3f0728d966e19f8dde11e336c923c2074"
     },
     {
       "id": "KR:065",
@@ -1291,6 +1321,26 @@
       "formatVersion": 2,
       "size": 1520,
       "sha256": "26eed4cca1f837723260072550f2b3c3f188d3233a8abe71f3952240527d9f5f"
+    },
+    {
+      "id": "KR:275",
+      "bookCode": "KR",
+      "songNumber": "275",
+      "title": "Bawa Berkas ke Rumah",
+      "path": "docs/assets/chord/275_Bawa Berkas ke Rumah.chord.json",
+      "formatVersion": 2,
+      "size": 1875,
+      "sha256": "2ab7abf88bbc6ee89d1b264dd06c47588eb975a1533ed81cb5686d65e4d94240"
+    },
+    {
+      "id": "KR:277",
+      "bookCode": "KR",
+      "songNumber": "277",
+      "title": "Girang Memberitakan Injil",
+      "path": "docs/assets/chord/277_Girang Memberitakan Injil.chord.json",
+      "formatVersion": 2,
+      "size": 1962,
+      "sha256": "e40186fba582726fba1d77defe20378a02e65cd7041c55a1267ca84af4a617d8"
     },
     {
       "id": "KR:296",
