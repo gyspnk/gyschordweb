@@ -1,0 +1,104 @@
+{
+  "version": 2,
+  "type": "note-aligned",
+  "pages": {
+    "1": [
+      {
+        "noteIdx": 1,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 9,
+        "chord": "Cm"
+      },
+      {
+        "noteIdx": 13,
+        "chord": "Fm"
+      },
+      {
+        "noteIdx": 16,
+        "chord": "A#m"
+      },
+      {
+        "noteIdx": 20,
+        "chord": "D#"
+      },
+      {
+        "noteIdx": 23,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 114,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 122,
+        "chord": "Cm"
+      },
+      {
+        "noteIdx": 126,
+        "chord": "Fm"
+      },
+      {
+        "noteIdx": 129,
+        "chord": "A#m"
+      },
+      {
+        "noteIdx": 133,
+        "chord": "D#"
+      },
+      {
+        "noteIdx": 136,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 234,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 240,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 244,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 251,
+        "chord": "Cm"
+      },
+      {
+        "noteIdx": 254,
+        "chord": "A#"
+      },
+      {
+        "noteIdx": 257,
+        "chord": "D#"
+      },
+      {
+        "noteIdx": 338,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 344,
+        "chord": "C#"
+      },
+      {
+        "noteIdx": 348,
+        "chord": "G#"
+      },
+      {
+        "noteIdx": 355,
+        "chord": "Fm"
+      },
+      {
+        "noteIdx": 359,
+        "chord": "D#"
+      },
+      {
+        "noteIdx": 363,
+        "chord": "G#"
+      }
+    ]
+  }
+}
