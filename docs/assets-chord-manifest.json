@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "e431ccb1f839210ad4b4bf9c5c6df5c8f30d256b",
+  "sourceCommit": "0e60034fa7662862040a2ee41ff8244ed79f3e6e",
   "files": [
     {
       "id": "KR:001",
@@ -351,6 +351,16 @@
       "formatVersion": 2,
       "size": 1696,
       "sha256": "a7a3d85de3e22da3ee7b9194575ad636a8e38ba36d287e44d7ee24a7dd1e0631"
+    },
+    {
+      "id": "KR:050",
+      "bookCode": "KR",
+      "songNumber": "050",
+      "title": "Hanya Yesus",
+      "path": "docs/assets/chord/050_Hanya Yesus.chord.json",
+      "formatVersion": 2,
+      "size": 1309,
+      "sha256": "69cd45fb4092d74827b3d9eb1792a284a84cce37b183367c5e6eabeb6cd8ae7b"
     },
     {
       "id": "KR:054",
@@ -1691,6 +1701,16 @@
       "formatVersion": 2,
       "size": 1506,
       "sha256": "88e14e9482fd6fd5318e15f8472e423485b285aab10f6a30a0188f4adda64b43"
+    },
+    {
+      "id": "KR:442",
+      "bookCode": "KR",
+      "songNumber": "442",
+      "title": "Tuhan Memimpin Kita",
+      "path": "docs/assets/chord/442_Tuhan Memimpin Kita.chord.json",
+      "formatVersion": 2,
+      "size": 1584,
+      "sha256": "dc4ba7974c50f05f966d29f09ae3138a36afae11c27fad0a82ce8c66b8961e76"
     },
     {
       "id": "KR:443",
