@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "0e60034fa7662862040a2ee41ff8244ed79f3e6e",
+  "sourceCommit": "b00bfad54733ddf8aed92d44cae1423655b2e4f6",
   "files": [
     {
       "id": "KR:001",
@@ -1353,6 +1353,16 @@
       "sha256": "e40186fba582726fba1d77defe20378a02e65cd7041c55a1267ca84af4a617d8"
     },
     {
+      "id": "KR:294",
+      "bookCode": "KR",
+      "songNumber": "294",
+      "title": "Aku Menghampiri Mu",
+      "path": "docs/assets/chord/294_Aku Menghampiri Mu.chord.json",
+      "formatVersion": 2,
+      "size": 1253,
+      "sha256": "b65f13c718be1bf0d450c031611c8868de1aa54716868bd9e41e9ab29a4ff20b"
+    },
+    {
       "id": "KR:296",
       "bookCode": "KR",
       "songNumber": "296",
@@ -1433,6 +1443,16 @@
       "sha256": "8ff5e6949b032ef1b0d97f86ec131585d3bb1fd6cf56bffc79b259d7a9f27d60"
     },
     {
+      "id": "KR:352",
+      "bookCode": "KR",
+      "songNumber": "352",
+      "title": "Dia Menaungi Jiwaku",
+      "path": "docs/assets/chord/352_Dia Menaungi Jiwaku.chord.json",
+      "formatVersion": 2,
+      "size": 2016,
+      "sha256": "63dd818dc2aae73baceb6d9d34e5745abc886e4bba00235647242fdd720132e7"
+    },
+    {
       "id": "KR:356",
       "bookCode": "KR",
       "songNumber": "356",
@@ -1451,6 +1471,16 @@
       "formatVersion": 2,
       "size": 1828,
       "sha256": "ef22c12ffc0d200ffce0513f0c0343db75cd666c0da7239cfb1fce1fc8b04bac"
+    },
+    {
+      "id": "KR:360",
+      "bookCode": "KR",
+      "songNumber": "360",
+      "title": "Adakah Tempat Bagi Yesus",
+      "path": "docs/assets/chord/360_Adakah Tempat Bagi Yesus_.chord.json",
+      "formatVersion": 2,
+      "size": 1648,
+      "sha256": "16caabad4688d9098d0703cb0689a4849b6359177a775ba96312aa208a015ee9"
     },
     {
       "id": "KR:363",
