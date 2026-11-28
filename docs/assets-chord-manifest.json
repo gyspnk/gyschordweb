@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceCommit": "b00bfad54733ddf8aed92d44cae1423655b2e4f6",
+  "sourceCommit": "77973e863cd6833796c7b628e6be6ccd0caa3204",
   "files": [
     {
       "id": "KR:001",
@@ -1303,6 +1303,16 @@
       "sha256": "2bcb4d122ad72383ae8066579c3697ae77970f17ee7145ffb568ec6c0d919346"
     },
     {
+      "id": "KR:261",
+      "bookCode": "KR",
+      "songNumber": "261",
+      "title": "Doa di Malam Hari",
+      "path": "docs/assets/chord/261_Doa di Malam Hari.chord.json",
+      "formatVersion": 2,
+      "size": 816,
+      "sha256": "2fba57b29745c169164c85516ebd49e592cb7fb1ae096ac527f56b3d9ef45e06"
+    },
+    {
       "id": "KR:262",
       "bookCode": "KR",
       "songNumber": "262",
@@ -1381,6 +1391,16 @@
       "formatVersion": 2,
       "size": 1692,
       "sha256": "5bf161939a8c47724dc3ace4fe2cd96ea5b940060989beae48b09d0b9f7b9472"
+    },
+    {
+      "id": "KR:318",
+      "bookCode": "KR",
+      "songNumber": "318",
+      "title": "Pelabuhan Jiwa",
+      "path": "docs/assets/chord/318_Pelabuhan Jiwa.chord.json",
+      "formatVersion": 2,
+      "size": 1703,
+      "sha256": "3678ac99266853ed613fbf5ab236173fbcd6eedcf387afe29cbb45a475666eef"
     },
     {
       "id": "KR:322",
